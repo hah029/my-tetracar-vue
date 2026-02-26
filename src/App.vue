@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted } from "vue";
+import { ref, onMounted, computed } from "vue";
 import { useThree } from "./composables/useThree";
 import { useGame } from "./composables/useGame";
 import { useGameState } from "./store/gameState";
@@ -18,6 +18,20 @@ const gameState = useGameState();
 useControls();
 gameState.setState("menu");
 
+const getUIComponent = computed(() => {
+  switch (gameState.currentState) {
+    case 'menu':
+      return MainMenu;
+    case 'paused':
+      return PauseMenu;
+    case 'gameover':
+      return GameOverMenu;
+    case 'playing':
+      return HUD;
+  }
+});
+
+
 onMounted(() => {
   const scene = getScene();
   const camera = getCamera();
@@ -31,20 +45,22 @@ onMounted(() => {
 </script>
 
 <template>
+  <!-- canvas -->
   <div ref="threeRoot" class="three-root"></div>
-  <MainMenu v-if="gameState.currentState == 'menu'" />
-  <PauseMenu v-if="gameState.currentState == 'paused'" />
-  <GameOverMenu v-if="gameState.currentState == 'gameover'" />
-  <HUD v-if="gameState.currentState == 'playing'" />
+  <!-- UI -->
+  <component :is="getUIComponent" />
 </template>
 
 <style>
-html, body, #app {
+html,
+body,
+#app {
   margin: 0;
   width: 100%;
   height: 100%;
   overflow: hidden;
 }
+
 .three-root {
   width: 100%;
   height: 100%;

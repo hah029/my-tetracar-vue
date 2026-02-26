@@ -57,7 +57,7 @@ export function GameLoop(game: ReturnType<typeof useGame>, scene: Scene, camera:
     let currentSpeed = gameState.baseSpeed;
     if (gameState.isNitroEnabled && !game.car.value.isDestroyed) {
       currentSpeed *= gameState.NITRO_MULTIPLIER;
-      // pulseNitro();
+      hud.pulseNitro();
     }
 
     if (!game.car.value.isDestroyed) {
