@@ -24,7 +24,7 @@
 
     <div class="lane-indicator">
       <div
-        v-for="i in 4"
+        v-for="i in laneCount"
         :key="i"
         :class="['lane-dot', { active: gameState.currentLane === i-1 }]"
       ></div>
@@ -41,6 +41,14 @@ import { computed } from "vue";
 import { useGameState } from "../store/gameState";
 
 const gameState = useGameState();
+
+const laneCount = computed(() => {
+  try {
+    return gameState.getLanesCount?.() ?? 4;
+  } catch {
+    return 4;
+  }
+});
 
 const warningStyle = computed(() => {
   const dangerLevel = gameState.getDangerLevel?.() ?? 0;

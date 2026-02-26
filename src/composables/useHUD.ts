@@ -1,4 +1,3 @@
-// src/composables/useHUD.ts
 import { ref } from "vue";
 import { useGameState } from "../store/gameState";
 
@@ -13,7 +12,7 @@ export function useHUD() {
   const nitroBar = ref(0); // процент
   const warningOpacity = ref(0);
   const warningColor = ref("rgb(255,255,255)");
-  const laneDots = ref([false, false, false, false]);
+  const laneDots = ref<boolean[]>([]);
 
   // --- Обновление HUD ---
   function updateHUD(speed: number, currentLane: number, dangerLevel: number) {
@@ -33,8 +32,9 @@ export function useHUD() {
       nitroStatus.value = "INACTIVE";
     }
 
-    // полосы движения
-    laneDots.value = laneDots.value.map((_, idx) => idx === currentLane);
+    // полосы движения - динамически обновляем размер массива
+    const lanesCount = gameState.getLanesCount?.() ?? 4;
+    laneDots.value = Array(lanesCount).fill(false).map((_, idx) => idx === currentLane);
 
     // предупреждение об опасности
     warningOpacity.value = Math.min(dangerLevel, 1);
@@ -45,7 +45,7 @@ export function useHUD() {
   // --- Пульсация нитро ---
   function pulseNitro() {
     if (!gameState.isNitroEnabled) return;
-    nitroBar.value = 110; // лёгкая анимация "пульсации"
+    nitroBar.value = 110;
     setTimeout(() => {
       nitroBar.value = 100;
     }, 100);

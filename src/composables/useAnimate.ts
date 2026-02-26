@@ -1,51 +1,32 @@
-import { onMounted, onUnmounted, type Ref } from "vue";
+// src/composables/useAnimate.ts
+import * as THREE from "three";
+import { onMounted, onUnmounted } from "vue";
 import { useGameState } from "../store/gameState";
 import { useHUD } from "./useHUD";
 import type { useGame } from "./useGame";
-import type { Camera, Scene, WebGLRenderer } from "three";
+import type { PerspectiveCamera, Scene, WebGLRenderer } from "three";
+import { carManager } from "@/game/sceneStaticObjects/car";
 
-export function GameLoop(game: ReturnType<typeof useGame>, scene: Scene, camera: Camera, renderer: WebGLRenderer) {
+export function GameLoop(game: ReturnType<typeof useGame>, scene: Scene, camera: PerspectiveCamera, renderer: WebGLRenderer) {
   const gameState = useGameState();
   const hud = useHUD();
 
-  // let collisionCooldown = false;
   let gameOverTimer: number | null = null;
 
-  // function animate() {
-  //   const currentSpeed = gameStore.getCurrentSpeed();
-
-  //   renderer.render(scene, camera);
-
-  //   if (gameStore.currentState !== "playing") return;
-
-  //   game.updatePlayer();
-  //   game.updateObstacles(currentSpeed);
-  //   game.updateRoad(currentSpeed);
-
-  //   if (!game.car.value.isDestroyed) {
-  //     gameStore.baseSpeed += gameStore.baseSpeed < gameStore.maxSpeed ? 0.0005 : 0;
-  //     gameStore.speed = currentSpeed;
-
-  //     // Обновление машины
-  //     const deltaX = game.car.value.targetX - game.car.value.mesh.position.x;
-  //     game.car.value.mesh.rotation.y += (-deltaX * 0.3 - game.car.value.mesh.rotation.y) * 0.1;
-  //     game.car.value.mesh.position.x += deltaX * 0.1;
-  //   }
-
-  //   // Обновление HUD
-  //   const dangerLevel = game.getDangerLevel(currentSpeed);
-  //   hud.updateHUD(currentSpeed, gameStore.currentLane, dangerLevel);
-
-  //   requestAnimationFrame(animate);
-  // }
   function animate() {
     requestAnimationFrame(animate);
 
     renderer.render(scene, camera);
 
-    // Инициализация дебаг коллайдера
-    // if (!debugCollider) {
-    //   debugCollider = createDebugCollider();
+    // // ВРЕМЕННО: фиксируем камеру для отладки
+    // if (gameState.currentState === "playing") {
+    //   // Принудительно ставим камеру позади машины
+    //   const car = game.car.value.mesh;
+    //   if (car) {
+    //     camera.position.set(car.position.x, 4, car.position.z - 8);
+    //     camera.lookAt(car.position.clone().add(new THREE.Vector3(0, 1, 5)));
+    //     console.log('Debug camera set:', camera.position);
+    //   }
     // }
 
     // Если не в игре, просто рендерим
@@ -53,36 +34,42 @@ export function GameLoop(game: ReturnType<typeof useGame>, scene: Scene, camera:
       return;
     }
 
-    // Обновляем скорость
-    let currentSpeed = gameState.baseSpeed;
-    if (gameState.isNitroEnabled && !game.car.value.isDestroyed) {
-      currentSpeed *= gameState.NITRO_MULTIPLIER;
-      hud.pulseNitro();
-    }
+    // ВАЖНО: синхронизируем currentLane в gameState
+  try {
+    const realCar = carManager.getCar();
+    gameState.currentLane = realCar.getCurrentLane();
+  } catch (e) {
+    // Машина еще не создана
+  }
 
-    if (!game.car.value.isDestroyed) {
+    // Получаем текущую скорость
+    let currentSpeed = gameState.getCurrentSpeed();
+
+    // Увеличиваем базовую скорость со временем (только если машина не разрушена)
+    if (!game.car.value.isDestroyed) {  // ← здесь isDestroyed это свойство, не функция!
       gameState.baseSpeed += gameState.baseSpeed < gameState.maxSpeed ? 0.0005 : 0.0;
     }
-    gameState.speed = currentSpeed;
 
-    // Обновляем счёт и HUD
-    if (!game.car.value.isDestroyed) {
+    // Обновляем счёт (только если машина не разрушена)
+    if (!game.car.value.isDestroyed) {  // ← здесь isDestroyed это свойство, не функция!
       gameState.addScore(currentSpeed * 1.0);
     }
-    const dangerLevel = gameState.getDangerLevel();
+
+    // Получаем уровень опасности
+    const dangerLevel = game.getDangerLevel(currentSpeed);
+
+    // Обновляем HUD
     hud.updateHUD(currentSpeed, gameState.currentLane, dangerLevel);
 
-    // // Если машина разрушена, обновляем анимацию разлёта
-    if (game.car.value.isDestroyed) {
+    // Если машина разрушена, обновляем анимацию разлёта
+    if (game.car.value.isDestroyed) {  // ← здесь isDestroyed это свойство, не функция!
       game.updateDestroyedCubes(scene);
       game.updateCameraForDestroyedState(camera);
     } else {
       // Нормальное обновление игры
       game.updateCar();
       game.updateObstacles(currentSpeed);
-
-      // game.updateJumps(currentSpeed);
-      // game.applyJump();
+      game.updateRoad(currentSpeed);
 
       // Проверка столкновений
       const collisionResult = game.checkObstacleCollision();
@@ -92,22 +79,14 @@ export function GameLoop(game: ReturnType<typeof useGame>, scene: Scene, camera:
 
         // Запускаем таймер для показа меню Game Over
         if (gameOverTimer) clearTimeout(gameOverTimer);
-        gameState.setState("gameover");
+        gameState.endGame();
 
-        return; // Выходим, чтобы не обновлять камеру дальше
+        return;
       }
     }
 
-    // // Обновляем дебаг коллайдер
-    // if (debugCollider) {
-    //   debugCollider.updateDebug();
-    // }
-
     // Обновляем камеру
     game.updateCamera(camera, currentSpeed);
-
-    // Обновляем дорожные объекты
-    game.updateRoad(currentSpeed);
   }
 
   onMounted(() => animate());

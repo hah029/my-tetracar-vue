@@ -1,6 +1,7 @@
 // src/store/gameState.ts
 import { defineStore } from "pinia";
 import { ref } from "vue";
+import { RoadManager } from "@/game/sceneStaticObjects/road";
 
 export const useGameState = defineStore("gameState", () => {
   // ---- Основные константы ----
@@ -80,6 +81,14 @@ export const useGameState = defineStore("gameState", () => {
     return 0;
   }
 
+  function getLanesCount() {
+    try {
+      return RoadManager.getInstance().getLanesCount();
+    } catch {
+      return 4; // значение по умолчанию
+    }
+  }
+
   return {
     // state
     NITRO_MULTIPLIER,
@@ -106,5 +115,6 @@ export const useGameState = defineStore("gameState", () => {
     endGame,
     goToMenu,
     getDangerLevel,
+    getLanesCount,
   };
 });
