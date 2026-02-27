@@ -1,5 +1,4 @@
 // src/composables/useAnimate.ts
-import * as THREE from "three";
 import { onMounted, onUnmounted } from "vue";
 import { useGameState } from "../store/gameState";
 import { useHUD } from "./useHUD";
@@ -45,15 +44,15 @@ export function GameLoop(game: ReturnType<typeof useGame>, scene: Scene, camera:
     }
 
     // Получаем уровень опасности
-    const dangerLevel = game.getDangerLevel(currentSpeed);
+    const dangerLevel = game.getDangerLevel();
 
     // Обновляем HUD
     hud.updateHUD(currentSpeed, gameState.currentLane, dangerLevel);
 
     // Если машина разрушена, обновляем анимацию разлёта
     if (game.car.value.isDestroyed) {  // ← здесь isDestroyed это свойство, не функция!
-      game.updateDestroyedCubes(scene);
-      game.updateCameraForDestroyedState(camera);
+      game.updateDestroyedCubes();
+      // game.updateCameraForDestroyedState(camera);
     } else {
       // Нормальное обновление игры
       game.updateCar();
