@@ -1,11 +1,13 @@
 // src/composables/usePlayer.ts
+import { carManager } from "../game/sceneStaticObjects/car/CarManager";
+
 export function usePlayer() {
   function moveLeft() {
-    console.log("PLAYER moves LEFT (stub)");
+    carManager.moveLeft();
   }
 
   function moveRight() {
-    console.log("PLAYER moves RIGHT (stub)");
+    carManager.moveRight();
   }
 
   return { moveLeft, moveRight };
