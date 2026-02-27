@@ -292,7 +292,7 @@ export function useGame() {
     const targetCamPos = new THREE.Vector3(
       carPos.x,
       CAMERA_HEIGHT,
-      carPos.z - CAMERA_DISTANCE
+      carPos.z + CAMERA_DISTANCE
     );
 
     camera.position.lerp(targetCamPos, 0.1);
@@ -300,7 +300,7 @@ export function useGame() {
     const lookAtPos = new THREE.Vector3(
       carPos.x,
       carPos.y + 1,
-      carPos.z + CAMERA_LOOKAHEAD
+      carPos.z - CAMERA_LOOKAHEAD
     );
 
     camera.lookAt(lookAtPos);
@@ -324,7 +324,7 @@ export function useGame() {
       });
       center.divideScalar(cubes.length);
 
-      const targetCamPos = center.clone().add(new THREE.Vector3(0, 3, 8));
+      const targetCamPos = center.clone().add(new THREE.Vector3(0, 3, -8));
       camera.position.lerp(targetCamPos, 0.05);
       camera.lookAt(center);
     }

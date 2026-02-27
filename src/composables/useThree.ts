@@ -35,8 +35,8 @@ export function useThree(container: Ref<HTMLElement | null>) {
     // ---- Camera ----
     const aspect = container.value.clientWidth / container.value.clientHeight;
     camera = new THREE.PerspectiveCamera(75, aspect, 0.1, 1000);
-    camera.position.set(0, 4, -5);
-    camera.lookAt(0, 1, 10);
+    camera.position.set(0, 4, 5);
+    camera.lookAt(0, 1, -10);
 
     // ---- Renderer ----
     renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false });
