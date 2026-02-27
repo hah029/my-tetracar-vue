@@ -18,7 +18,7 @@ export function GameLoop(game: ReturnType<typeof useGame>, scene: Scene, camera:
     renderer.render(scene, camera);
 
     // Если не в игре, просто рендерим
-    if (gameState.currentState !== "playing") {
+    if (gameState.currentState !== "playing" && gameState.currentState !== "gameover") {
       return;
     }
 
@@ -39,7 +39,7 @@ export function GameLoop(game: ReturnType<typeof useGame>, scene: Scene, camera:
     }
 
     // Обновляем счёт (только если машина не разрушена)
-    if (!game.car.value.isDestroyed) {  // ← здесь isDestroyed это свойство, не функция!
+    if (!game.car.value.isDestroyed) {
       gameState.addScore(currentSpeed * 1.0);
     }
 
@@ -50,7 +50,7 @@ export function GameLoop(game: ReturnType<typeof useGame>, scene: Scene, camera:
     hud.updateHUD(currentSpeed, gameState.currentLane, dangerLevel);
 
     // Если машина разрушена, обновляем анимацию разлёта
-    if (game.car.value.isDestroyed) {  // ← здесь isDestroyed это свойство, не функция!
+    if (game.car.value.isDestroyed) {
       game.updateDestroyedCubes();
       // game.updateCameraForDestroyedState(camera);
     } else {

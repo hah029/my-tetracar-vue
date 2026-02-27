@@ -48,8 +48,8 @@ onMounted(() => {
   <!-- canvas -->
   <div ref="threeRoot" class="three-root"></div>
   <!-- UI -->
-  <component :is="getUIComponent" />
-  <!-- <HUD /> -->
+  <!-- <component :is="getUIComponent" /> -->
+  <GameOverMenu />
 </template>
 
 <style>
@@ -60,6 +60,7 @@ body,
   width: 100%;
   height: 100%;
   overflow: hidden;
+  font-family: Helvetica, Arial, sans-serif;
 }
 
 .three-root {
