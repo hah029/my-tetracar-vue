@@ -48,8 +48,8 @@ onMounted(() => {
   <!-- canvas -->
   <div ref="threeRoot" class="three-root"></div>
   <!-- UI -->
-  <!-- <component :is="getUIComponent" /> -->
-  <GameOverMenu />
+  <component :is="getUIComponent" />
+  <!-- <GameOverMenu /> -->
 </template>
 
 <style>
