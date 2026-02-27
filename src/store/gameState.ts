@@ -19,6 +19,8 @@ export const useGameState = defineStore("gameState", () => {
   const maxSpeed = ref(MAX_SPEED);
   const score = ref(0);
   const highScore = ref(0);
+  const carPosition = ref({x: 0, y: 0, z: 0});
+  const cameraPosition = ref({x: 0, y: 0, z: 0});
 
   // ---- Actions ----
   function setState(state: "menu" | "playing" | "gameover" | "paused") {
@@ -100,6 +102,8 @@ export const useGameState = defineStore("gameState", () => {
     maxSpeed,
     score,
     highScore,
+    carPosition,
+    cameraPosition,
 
     // actions
     setState,

@@ -49,6 +49,7 @@ onMounted(() => {
   <div ref="threeRoot" class="three-root"></div>
   <!-- UI -->
   <component :is="getUIComponent" />
+  <!-- <HUD /> -->
 </template>
 
 <style>

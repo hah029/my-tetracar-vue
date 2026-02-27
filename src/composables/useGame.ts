@@ -4,15 +4,16 @@ import { ref } from "vue";
 import { RoadManager } from "@/game/sceneStaticObjects/road/RoadManager";
 import { CarManager } from "@/game/sceneStaticObjects/car/CarManager";
 import { ObstacleManager } from "@/game/obstacles";
-import HUD from "@/components/HUD.vue";
+// import HUD from "@/components/HUD.vue";
+import { useGameState } from "@/store/gameState";
 
 // Константы для камеры
 const CAMERA_HEIGHT = 4;
-const CAMERA_DISTANCE = 8;
+// const CAMERA_DISTANCE = 8;
 const CAMERA_LOOKAHEAD = 10;
 const DANGER_DISTANCE = 30;
 const CAMERA_FOLLOW_SPEED = 0.08;
-const CAMERA_Y_OFFSET = 4;
+// const CAMERA_Y_OFFSET = 4;
 const CAMERA_SPEED_Z_MIN = 3;
 const CAMERA_SPEED_Z_MAX = 1;
 const SPEED_FOR_MAX_Z = 2;
@@ -36,6 +37,7 @@ export function useGame() {
     isDestroyed: false,
     cubes: [],
   });
+  const gameState = useGameState();
 
   const obstacles = ref<{ mesh: THREE.Mesh; position: THREE.Vector3 }[]>([]);
   const collisionCooldown = ref(false);
@@ -182,6 +184,7 @@ export function useGame() {
     carManager.update();
 
     const realCar = carManager.getCar();
+    
     car.value.mesh = realCar as unknown as THREE.Group;
     car.value.isDestroyed = realCar.isDestroyed();
 
@@ -351,6 +354,18 @@ export function useGame() {
       );
 
       camera.lookAt(lookAtPos);
+
+      gameState.carPosition = {
+        x: carPos.x,
+        y: carPos.y,
+        z: carPos.z,
+      }
+
+      gameState.cameraPosition = {
+        x: camera.position.x,
+        y: camera.position.y,
+        z: camera.position.z,
+      }
 
       // // 5. Добавляем проверку на NaN
       // if (!isNaN(carPos.x) && !isNaN(carPos.z)) {

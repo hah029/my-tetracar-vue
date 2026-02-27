@@ -30,6 +30,18 @@
       ></div>
     </div>
 
+    <div class="debug-panel">
+      <div>
+        <span>carPosition: </span>
+        <span>{{ gameState.carPosition }}</span>
+      </div>
+      <div>
+        <span>cameraPosition: </span>
+        <span>{{ gameState.cameraPosition }}</span>
+      </div>
+      
+    </div>
+
     <div class="warning-message" :style="warningStyle">
       ⚠️ DANGER ⚠️
     </div>
@@ -202,6 +214,21 @@ const warningStyle = computed(() => {
   padding: 10px;
   border-radius: 50px;
   border: 1px solid rgba(255,255,255,0.1);
+}
+.debug-panel {
+  position: absolute;
+  top: 150px;
+  right: 20px;
+  background: rgba(0,0,0,0.6);
+  backdrop-filter: blur(5px);
+  padding: 10px;
+  border-radius: 10px;
+  text-align: right;
+  color: white;
+  font-size: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
 }
 
 .lane-dot {
