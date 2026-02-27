@@ -18,25 +18,25 @@ export class CarManager {
   }
 
   public initialize(scene: THREE.Scene): void {
-    console.log('CarManager.initialize called with scene:', scene);
+    // console.log('CarManager.initialize called with scene:', scene);
     this.scene = scene;
   }
 
   public createCar(config?: CarConfig): Car {
-    console.log('CarManager.createCar called');
+    // console.log('CarManager.createCar called');
     
     if (!this.scene) {
       throw new Error('CarManager not initialized with scene. Call initialize() first.');
     }
     
     if (this.car) {
-      console.log('Destroying existing car');
+      // console.log('Destroying existing car');
       this.destroyCar();
     }
     
-    console.log('Creating new Car with scene:', this.scene);
+    // console.log('Creating new Car with scene:', this.scene);
     this.car = new Car(this.scene, config);
-    console.log('Car created successfully');
+    // console.log('Car created successfully');
     return this.car;
   }
 
@@ -49,7 +49,7 @@ export class CarManager {
 
   public destroyCar(): void {
     if (this.car) {
-      console.log('Destroying car');
+      // console.log('Destroying car');
       // Очищаем ресурсы
       if (this.scene) {
         this.scene.remove(this.car);

@@ -66,7 +66,7 @@ export class RoadManager {
   }
 
   private createStandardRoad(): void {
-    console.log('Creating standard road');
+    // console.log('Creating standard road');
     this.road = new Road(this.config);
     this.scene.add(this.road);
     this.addEdges();
@@ -74,7 +74,7 @@ export class RoadManager {
   }
 
   private createNeonRoad(): void {
-    console.log('Creating neon road');
+    // console.log('Creating neon road');
     const neonConfig = { ...this.config, ...NEON_ROAD_CONFIG };
     this.road = new Road(neonConfig);
     this.scene.add(this.road);

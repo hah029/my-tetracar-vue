@@ -7,8 +7,8 @@ import { CarCollider } from "./CarCollider";
 import { CarCubesBuilder } from "./CarCubesBuilder";
 import { CarPhysics } from "./CarPhysics";
 
-console.log('Car.ts loading...');
-console.log('cameraTarget import:', cameraTarget);
+// console.log('Car.ts loading...');
+// console.log('cameraTarget import:', cameraTarget);
 
 export class Car extends THREE.Group {
   private scene: THREE.Scene;
@@ -24,7 +24,7 @@ export class Car extends THREE.Group {
   constructor(scene: THREE.Scene, config: Partial<CarConfig> = {}) {
     super();
 
-    console.log('Car constructor with config:', config);
+    // console.log('Car constructor with config:', config);
 
     // Сначала сохраняем scene
     this.scene = scene;
@@ -54,7 +54,7 @@ export class Car extends THREE.Group {
     this.scene = scene;
     this.scene.add(this); // ← Используем переданную сцену
 
-    console.log('Car added to scene at position:', this.position);
+    // console.log('Car added to scene at position:', this.position);
     
     // Добавляем камеру-таргет
     cameraTarget.position.set(0, 0, -10);
@@ -144,7 +144,7 @@ export class Car extends THREE.Group {
 
   // Построение машины
   public async build(useGLB: boolean = true, cubeModelUrl: string = ''): Promise<void> {
-    console.log('🚗 Building car');
+    // console.log('🚗 Building car');
 
     // Очищаем текущую машину
     this.clearCubes();
@@ -162,7 +162,7 @@ export class Car extends THREE.Group {
     // Обновляем коллайдер
     this.collider.updateFromObject(this);
     
-    console.log('✅ Car built, total cubes:', this.cubes.length);
+    // console.log('✅ Car built, total cubes:', this.cubes.length);
   }
 
   // Разрушение
@@ -181,7 +181,7 @@ export class Car extends THREE.Group {
 
   // Сброс
   public reset(): void {
-    console.log('Resetting car');
+    // console.log('Resetting car');
 
     // Очищаем все кубики
     this.cubes.forEach(cube => this.scene.remove(cube));
@@ -213,7 +213,7 @@ export class Car extends THREE.Group {
     // Перестраиваем машину из примитивов
     this.build(false);
 
-    console.log('Car reset finished');
+    // console.log('Car reset finished');
   }
 
   private clearCubes(): void {

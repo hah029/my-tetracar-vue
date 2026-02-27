@@ -23,7 +23,7 @@ export const useGameState = defineStore("gameState", () => {
   // ---- Actions ----
   function setState(state: "menu" | "playing" | "gameover" | "paused") {
     currentState.value = state;
-    console.log("Current state: ", currentState.value)
+    // console.log("Current state: ", currentState.value)
   }
 
   function startGame() {

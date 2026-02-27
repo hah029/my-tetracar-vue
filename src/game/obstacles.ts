@@ -140,7 +140,7 @@ export class ObstacleManager {
   }
 
   public initialize(scene: THREE.Scene): void {
-      console.log('ObstacleManager.initialize called with scene:', scene);
+      // console.log('ObstacleManager.initialize called with scene:', scene);
       this.scene = scene;
     }
 

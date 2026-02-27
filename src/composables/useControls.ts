@@ -17,7 +17,6 @@ export function useControls() {
         gameStore.resumeGame();
         break;
       case "menu":
-        console.log("Already in menu");
         break;
       case "gameover":
         gameStore.goToMenu();

@@ -12,12 +12,12 @@ export class Road extends THREE.Mesh {
     // lanes обязателен, поэтому не используем DEFAULT_ROAD_CONFIG полностью
     const finalConfig = { ...DEFAULT_ROAD_CONFIG, ...config };
 
-    console.log('Road constructor with config:', {
-    lanes: finalConfig.lanes,
-    width: finalConfig.width,
-    length: finalConfig.length,
-    position: [-finalConfig.length/2 + 10, finalConfig.yPosition, 0]
-  });
+  //   console.log('Road constructor with config:', {
+  //   lanes: finalConfig.lanes,
+  //   width: finalConfig.width,
+  //   length: finalConfig.length,
+  //   position: [-finalConfig.length/2 + 10, finalConfig.yPosition, 0]
+  // });
     
     if (!finalConfig.lanes || finalConfig.lanes.length === 0) {
       throw new Error('Road must have at least one lane');
@@ -55,11 +55,11 @@ export class Road extends THREE.Mesh {
     this.position.y = finalConfig.yPosition;
     this.receiveShadow = true;
 
-    console.log('Road mesh created with geometry:', {
-    width: this.width,
-    length: this.length,
-    position: this.position
-  });
+  //   console.log('Road mesh created with geometry:', {
+  //   width: this.width,
+  //   length: this.length,
+  //   position: this.position
+  // });
   }
 
   // Получить позицию полосы по индексу

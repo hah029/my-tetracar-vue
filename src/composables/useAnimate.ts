@@ -18,17 +18,6 @@ export function GameLoop(game: ReturnType<typeof useGame>, scene: Scene, camera:
 
     renderer.render(scene, camera);
 
-    // // ВРЕМЕННО: фиксируем камеру для отладки
-    // if (gameState.currentState === "playing") {
-    //   // Принудительно ставим камеру позади машины
-    //   const car = game.car.value.mesh;
-    //   if (car) {
-    //     camera.position.set(car.position.x, 4, car.position.z - 8);
-    //     camera.lookAt(car.position.clone().add(new THREE.Vector3(0, 1, 5)));
-    //     console.log('Debug camera set:', camera.position);
-    //   }
-    // }
-
     // Если не в игре, просто рендерим
     if (gameState.currentState !== "playing") {
       return;
