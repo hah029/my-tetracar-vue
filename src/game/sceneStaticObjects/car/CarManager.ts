@@ -49,7 +49,6 @@ export class CarManager {
 
   public destroyCar(): void {
     if (this.car) {
-      // console.log('Destroying car');
       // Очищаем ресурсы
       if (this.scene) {
         this.scene.remove(this.car);
@@ -57,7 +56,6 @@ export class CarManager {
       this.car = null;
     }
   }
-
   public update(): void {
     if (this.car) {
       this.car.update();

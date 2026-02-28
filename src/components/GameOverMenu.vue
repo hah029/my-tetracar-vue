@@ -29,9 +29,10 @@
 <script setup lang="ts">
 import { computed } from "vue";
 import { useGameState } from "../store/gameState";
-// import { useScore } from "../composables/useScore";
+import { useGame } from "../composables/useGame";
 
 const gameState = useGameState();
+const game = useGame();
 
 // Проверяем, есть ли новый рекорд
 const isNewRecord = computed(() => gameState.score >= gameState.highScore);
@@ -41,9 +42,19 @@ const scoreRounded = computed(() => Math.floor(gameState.score));
 const highScoreRounded = computed(() => Math.floor(gameState.highScore));
 
 function restartGame() {
+  console.log('🎮 Перезапуск игры из GameOverMenu...');
+  
+  // 1. Сбрасываем состояние игры (очки и т.д.)
   gameState.resetScore();
   gameState.resetGameData();
+  
+  // 2. Сбрасываем ВСЕ игровые объекты через useGame
+  game.reset(); // ← ВЫЗЫВАЕМ СБРОС
+  
+  // 3. Переключаем состояние на playing
   gameState.setState("playing");
+  
+  console.log('✅ Игра перезапущена');
 }
 
 function goToMainMenu() {

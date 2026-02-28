@@ -42,7 +42,7 @@ export function useGame() {
   const jumps = ref<{ active: boolean; progress: number }[]>([]);
 
   let sceneRef: THREE.Scene | null = null;
-  
+
   // Менеджеры
   let roadManager: RoadManager;
   let carManager: CarManager;
@@ -117,7 +117,9 @@ export function useGame() {
     // Спавн препятствий
     setTimeout(() => {
       // console.log('Starting obstacle spawn interval');
-      setInterval(() => {
+
+      // Сохраняем интервал в глобальной переменной или в ref
+      (window as any).obstacleInterval = setInterval(() => {
         if (sceneRef && carManager && !carManager.getCar().isDestroyed()) {
           const lane = Math.floor(Math.random() * 4);
           const obstacle = obstacleManager.spawnObstacleRow(lane, -60);
@@ -135,7 +137,7 @@ export function useGame() {
 
   function updatePlayer() {
     if (!carManager) return;
-    
+
     carManager.update();
 
     const realCar = carManager.getCar();
@@ -149,7 +151,7 @@ export function useGame() {
 
   function destroyCar(impactPoint?: THREE.Vector3) {
     if (!carManager) return;
-    
+
     const realCar = carManager.getCar();
     realCar.destroy(impactPoint || null);
     car.value.isDestroyed = true;
@@ -158,7 +160,7 @@ export function useGame() {
 
   function resetPlayer() {
     if (!carManager) return;
-    
+
     carManager.resetCar();
     collisionCooldown.value = false;
 
@@ -193,7 +195,7 @@ export function useGame() {
 
   function updateObstacles(speed: number) {
     if (!obstacleManager) return;
-    
+
     obstacleManager.update(speed);
     obstacles.value = obstacleManager.getObstacles().map(obs => ({
       mesh: obs,
@@ -203,7 +205,7 @@ export function useGame() {
 
   function resetObstacles() {
     if (!obstacleManager) return;
-    
+
     obstacleManager.reset();
     obstacles.value = [];
   }
@@ -215,7 +217,7 @@ export function useGame() {
 
   function getDangerLevel() {
     if (!carManager || !obstacleManager) return 0;
-    
+
     const realCar = carManager.getCar();
     if (realCar.isDestroyed()) return 0;
 
@@ -245,7 +247,7 @@ export function useGame() {
 
   function updateCameraForDestroyedState(camera: THREE.PerspectiveCamera) {
     if (!carManager) return;
-    
+
     const realCar = carManager.getCar();
     const cubes = realCar.getCubes();
 
@@ -263,52 +265,68 @@ export function useGame() {
   }
 
   function updateCamera(camera: THREE.PerspectiveCamera, speed: number) {
-      if (!carManager) return;
-      
-      const realCar = carManager.getCar();
+    if (!carManager) return;
 
-      if (realCar.isDestroyed()) {
-        // updateCameraForDestroyedState(camera);
-        return;
-      }
+    const realCar = carManager.getCar();
 
-      const carPos = realCar.position.clone();
-      
-      const targetCamPos = new THREE.Vector3(
-        carPos.x,
-        CAMERA_HEIGHT,
-        carPos.z + CAMERA_DISTANCE
-      );
+    if (realCar.isDestroyed()) {
+      // updateCameraForDestroyedState(camera);
+      return;
+    }
 
-      // 2. Используем константу для плавности
-      camera.position.lerp(targetCamPos, CAMERA_FOLLOW_SPEED);
+    const carPos = realCar.position.clone();
 
-      // 3. Восстанавливаем наклон при поворотах
-      const targetTilt = -realCar.rotation.y * 0.5;
-      camera.rotation.z += (targetTilt - camera.rotation.z) * CAMERA_FOLLOW_SPEED;
+    const targetCamPos = new THREE.Vector3(
+      carPos.x,
+      CAMERA_HEIGHT,
+      carPos.z + CAMERA_DISTANCE
+    );
 
-      // 4. Восстанавливаем динамический FOV
-      const speedFactorFOV = Math.min(speed / SPEED_FOR_MAX_FOV, 1);
-      const targetFOV = FOV_MIN + (FOV_MAX - FOV_MIN) * speedFactorFOV;
-      camera.fov = THREE.MathUtils.clamp(
-        camera.fov + (targetFOV - camera.fov) * CAMERA_FOLLOW_SPEED, 
-        10, 170
-      );
-      camera.updateProjectionMatrix();
+    // 2. Используем константу для плавности
+    camera.position.lerp(targetCamPos, CAMERA_FOLLOW_SPEED);
 
-      const lookAtPos = new THREE.Vector3(
-        carPos.x,
-        carPos.y + 1,
-        carPos.z - CAMERA_LOOKAHEAD
-      );
+    // 3. Восстанавливаем наклон при поворотах
+    const targetTilt = -realCar.rotation.y * 0.5;
+    camera.rotation.z += (targetTilt - camera.rotation.z) * CAMERA_FOLLOW_SPEED;
 
-      camera.lookAt(lookAtPos);
+    // 4. Восстанавливаем динамический FOV
+    const speedFactorFOV = Math.min(speed / SPEED_FOR_MAX_FOV, 1);
+    const targetFOV = FOV_MIN + (FOV_MAX - FOV_MIN) * speedFactorFOV;
+    camera.fov = THREE.MathUtils.clamp(
+      camera.fov + (targetFOV - camera.fov) * CAMERA_FOLLOW_SPEED,
+      10, 170
+    );
+    camera.updateProjectionMatrix();
+
+    const lookAtPos = new THREE.Vector3(
+      carPos.x,
+      carPos.y + 1,
+      carPos.z - CAMERA_LOOKAHEAD
+    );
+
+    camera.lookAt(lookAtPos);
+  }
+
+  function resetCameraPosition(camera: THREE.PerspectiveCamera) {
+    if (!carManager) return;
+    
+    const realCar = carManager.getCar();
+    const carPos = realCar.position.clone();
+    
+    // Устанавливаем камеру в начальную позицию
+    camera.position.set(carPos.x, CAMERA_HEIGHT, carPos.z + CAMERA_DISTANCE);
+    camera.lookAt(carPos.x, carPos.y + 1, carPos.z - CAMERA_LOOKAHEAD);
+    camera.fov = FOV_MIN;
+    camera.updateProjectionMatrix();
+    camera.rotation.z = 0;
+    
+    console.log('📷 Камера сброшена вручную');
   }
 
 
   function updateDestroyedCubes() {
     if (!carManager) return;
-    
+
     const realCar = carManager.getCar();
     if (realCar.isDestroyed()) {
       realCar.update();
@@ -318,7 +336,7 @@ export function useGame() {
 
   function updateCar() {
     if (!carManager) return;
-    
+
     carManager.update();
 
     const realCar = carManager.getCar();
@@ -341,6 +359,61 @@ export function useGame() {
 
   function resetJumps() {
     jumps.value = [];
+  }
+
+  function reset() {
+    if (!carManager || !obstacleManager || !roadManager || !sceneRef) return;
+
+    console.log('🔄 Полный сброс игры...');
+
+    // 1. Очищаем интервал спавна препятствий
+    if ((window as any).obstacleInterval) {
+      clearInterval((window as any).obstacleInterval);
+      (window as any).obstacleInterval = null;
+    }
+
+    // 2. Сбрасываем машину
+    carManager.resetCar();
+
+    // 3. Очищаем все препятствия
+    obstacleManager.reset();
+    obstacles.value = [];
+
+    // 4. Полностью пересоздаем дорогу
+    roadManager.clear(); // удаляем старую
+    roadManager.createRoad(false); // создаем новую
+    roadManager.addSpeedLines({ count: 30 }); // добавляем линии скорости
+
+    // 5. Сбрасываем прыжки
+    resetJumps();
+
+    // 6. Сбрасываем состояние машины в реактивной ссылке
+    const realCar = carManager.getCar();
+    car.value = {
+      mesh: realCar as unknown as THREE.Group,
+      targetX: roadManager.getLanePosition(realCar.getCurrentLane()),
+      isDestroyed: false,
+      cubes: [],
+    };
+
+    // 7. Сбрасываем кулдаун коллизий
+    collisionCooldown.value = false;
+
+    // 8. Перезапускаем спавн препятствий
+    (window as any).obstacleInterval = setInterval(() => {
+      if (sceneRef && carManager && !carManager.getCar().isDestroyed()) {
+        const lane = Math.floor(Math.random() * 4);
+        const obstacle = obstacleManager.spawnObstacleRow(lane, -60);
+        if (obstacle) {
+          obstacles.value.push({
+            mesh: obstacle,
+            position: obstacle.position.clone()
+          });
+        }
+      }
+    }, 1500);
+
+    console.log('✅ Сброс игры завершен');
   }
 
   return {
@@ -370,5 +443,8 @@ export function useGame() {
     updateCameraForDestroyedState,
     updateDestroyedCubes,
     updateCar,
+
+    reset,
+    resetCameraPosition,
   };
 }

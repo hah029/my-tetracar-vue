@@ -12,10 +12,18 @@ export function GameLoop(game: ReturnType<typeof useGame>, scene: Scene, camera:
 
   let gameOverTimer: number | null = null;
 
+  let previousState = gameState.currentState;
+
   function animate() {
     requestAnimationFrame(animate);
 
     renderer.render(scene, camera);
+
+    if (previousState === 'gameover' && gameState.currentState === 'playing') {
+      console.log('🔄 Рестарт detected, сбрасываем камеру');
+      game.resetCameraPosition(camera); // ← вызываем сброс камеры
+    }
+    previousState = gameState.currentState;
 
     // Если не в игре, просто рендерим
     if (gameState.currentState !== "playing" && gameState.currentState !== "gameover") {
@@ -23,18 +31,22 @@ export function GameLoop(game: ReturnType<typeof useGame>, scene: Scene, camera:
     }
 
     // ВАЖНО: синхронизируем currentLane в gameState
-  try {
-    const realCar = carManager.getCar();
-    gameState.currentLane = realCar.getCurrentLane();
-  } catch (e) {
-    // Машина еще не создана
-  }
+    try {
+      const realCar = carManager.getCar();
+      gameState.currentLane = realCar.getCurrentLane();
+    } catch (e) {
+      // Машина еще не создана
+    }
 
     // Получаем текущую скорость
     let currentSpeed = gameState.getCurrentSpeed();
 
     // Увеличиваем базовую скорость со временем (только если машина не разрушена)
-    if (!game.car.value.isDestroyed) {  // ← здесь isDestroyed это свойство, не функция!
+    if (!game.car.value.isDestroyed) {
+      // Проверяем, не был ли сброшен baseSpeed
+      if (gameState.baseSpeed < 0.5) { // Если скорость слишком мала, возможно был сброс
+        gameState.baseSpeed = 0.5; // Устанавливаем начальную скорость
+      }
       gameState.baseSpeed += gameState.baseSpeed < gameState.maxSpeed ? 0.0005 : 0.0;
     }
 
