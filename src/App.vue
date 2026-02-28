@@ -9,6 +9,7 @@ import PauseMenu from "./components/PauseMenu.vue";
 import HUD from "./components/HUD.vue";
 import GameOverMenu from "./components/GameOverMenu.vue";
 import { GameLoop } from "./composables/useAnimate";
+import { CameraSystem } from "@/game/camera/CameraSystem";
 
 const threeRoot = ref<HTMLDivElement | null>(null);
 const { getScene, getCamera, getRenderer } = useThree(threeRoot);
@@ -39,6 +40,8 @@ onMounted(() => {
 
   // Инициализация игры
   game.init(scene);
+  CameraSystem.initialize(camera);
+
   const loop = GameLoop(game, scene, camera, renderer);
   loop.animate();
 });

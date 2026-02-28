@@ -3,23 +3,11 @@ import * as THREE from "three";
 import { ref } from "vue";
 import { RoadManager } from "@/game/road/RoadManager";
 import { CarManager } from "@/game/car/CarManager";
-import { ObstacleManager } from "@/game/obstacles";
-// import HUD from "@/components/HUD.vue";
+import { ObstacleManager } from "@/game/Obstacle";
+import { CollisionSystem } from "@/game/collision/CollisionSystem";
 
 // Константы для камеры
-const CAMERA_HEIGHT = 4;
-const CAMERA_DISTANCE = 8;
-const CAMERA_LOOKAHEAD = 10;
-const DANGER_DISTANCE = 30;
-const CAMERA_FOLLOW_SPEED = 0.08;
-// const CAMERA_Y_OFFSET = 4;
-// const CAMERA_SPEED_Z_MIN = 3;
-// const CAMERA_SPEED_Z_MAX = 1;
-// const SPEED_FOR_MAX_Z = 2;
-const FOV_MIN = 55;
-const FOV_MAX = 120;
-const SPEED_FOR_MAX_FOV = 3;
-
+// const DANGER_DISTANCE = 30;
 
 // Интерфейс для реактивной ссылки car
 interface CarRef {
@@ -38,7 +26,7 @@ export function useGame() {
   });
 
   const obstacles = ref<{ mesh: THREE.Mesh; position: THREE.Vector3 }[]>([]);
-  const collisionCooldown = ref(false);
+  // const collisionCooldown = ref(false);
   const jumps = ref<{ active: boolean; progress: number }[]>([]);
 
   let sceneRef: THREE.Scene | null = null;
@@ -74,7 +62,7 @@ export function useGame() {
       [5, 5, 5],
       [-5, 5, 5],
       [5, 5, -5],
-      [-5, 5, -5]
+      [-5, 5, -5],
     ];
 
     positions.forEach((pos, i) => {
@@ -84,11 +72,14 @@ export function useGame() {
     });
 
     // ВАЖНО: Инициализируем ВСЕ менеджеры с переданной сценой
-    roadManager = RoadManager.initialize({
-      lanes: [-3, -1, 1, 3],
-      edgeOffset: 1.5,
-      length: 200,
-    }, scene);
+    roadManager = RoadManager.initialize(
+      {
+        lanes: [-3, -1, 1, 3],
+        edgeOffset: 1.5,
+        length: 200,
+      },
+      scene,
+    );
 
     obstacleManager = ObstacleManager.getInstance();
     obstacleManager.initialize(scene);
@@ -126,7 +117,7 @@ export function useGame() {
           if (obstacle) {
             obstacles.value.push({
               mesh: obstacle,
-              position: obstacle.position.clone()
+              position: obstacle.position.clone(),
             });
             // console.log('Obstacle spawned at:', obstacle.position);
           }
@@ -162,7 +153,7 @@ export function useGame() {
     if (!carManager) return;
 
     carManager.resetCar();
-    collisionCooldown.value = false;
+    // collisionCooldown.value = false;
 
     const realCar = carManager.getCar();
     car.value.mesh = realCar as unknown as THREE.Group;
@@ -171,35 +162,33 @@ export function useGame() {
     car.value.cubes = [];
   }
 
-  function checkObstacleCollision(): { collision: boolean; impactPoint?: THREE.Vector3 } {
-    if (!carManager || !obstacleManager) return { collision: false };
-    if (car.value.isDestroyed || collisionCooldown.value) return { collision: false };
-
-    const realCar = carManager.getCar();
-    const collidingObstacle = obstacleManager.checkCollision(realCar.getCollider());
-
-    if (collidingObstacle) {
-      collisionCooldown.value = true;
-      setTimeout(() => {
-        collisionCooldown.value = false;
-      }, 1000);
-
-      return {
-        collision: true,
-        impactPoint: collidingObstacle.position.clone()
-      };
+  function checkCollision() {
+    if (!carManager || !obstacleManager) {
+      return { collision: false };
     }
 
-    return { collision: false };
+    return CollisionSystem.checkCollision(
+      carManager.getCar(),
+      obstacleManager.getObstacles(),
+    );
+  }
+
+  function getDangerLevel() {
+    if (!carManager || !obstacleManager) return 0;
+
+    return CollisionSystem.getDangerLevel(
+      carManager.getCar(),
+      obstacleManager.getObstacles(),
+    );
   }
 
   function updateObstacles(speed: number) {
     if (!obstacleManager) return;
 
     obstacleManager.update(speed);
-    obstacles.value = obstacleManager.getObstacles().map(obs => ({
+    obstacles.value = obstacleManager.getObstacles().map((obs) => ({
       mesh: obs,
-      position: obs.position.clone()
+      position: obs.position.clone(),
     }));
   }
 
@@ -214,115 +203,6 @@ export function useGame() {
     if (!roadManager) return;
     roadManager.update(speed);
   }
-
-  function getDangerLevel() {
-    if (!carManager || !obstacleManager) return 0;
-
-    const realCar = carManager.getCar();
-    if (realCar.isDestroyed()) return 0;
-
-    const carPos = realCar.position.clone();
-    let maxDanger = 0;
-
-    const obstacles = obstacleManager.getObstacles();
-    for (const obstacle of obstacles) {
-      const obstaclePos = obstacle.position.clone();
-
-      if (obstaclePos.z >= carPos.z) continue;
-
-      const zDiff = Math.abs(obstaclePos.z - carPos.z);
-      const xDiff = Math.abs(obstaclePos.x - carPos.x);
-
-      if (zDiff > DANGER_DISTANCE * 2 || xDiff > 1.0) continue;
-
-      const dangerByZ = Math.max(0, 1 - (zDiff / DANGER_DISTANCE));
-      const dangerByX = Math.max(0, 1 - (xDiff / 1.0));
-      const danger = (dangerByZ * 0.7 + dangerByX * 0.3);
-
-      maxDanger = Math.max(maxDanger, danger);
-    }
-
-    return maxDanger;
-  }
-
-  function updateCameraForDestroyedState(camera: THREE.PerspectiveCamera) {
-    if (!carManager) return;
-
-    const realCar = carManager.getCar();
-    const cubes = realCar.getCubes();
-
-    if (cubes.length > 0) {
-      const center = new THREE.Vector3();
-      cubes.forEach(cube => {
-        center.add(cube.position);
-      });
-      center.divideScalar(cubes.length);
-
-      const targetCamPos = center.clone().add(new THREE.Vector3(0, 3, -8));
-      camera.position.lerp(targetCamPos, 0.05);
-      camera.lookAt(center);
-    }
-  }
-
-  function updateCamera(camera: THREE.PerspectiveCamera, speed: number) {
-    if (!carManager) return;
-
-    const realCar = carManager.getCar();
-
-    if (realCar.isDestroyed()) {
-      // updateCameraForDestroyedState(camera);
-      return;
-    }
-
-    const carPos = realCar.position.clone();
-
-    const targetCamPos = new THREE.Vector3(
-      carPos.x,
-      CAMERA_HEIGHT,
-      carPos.z + CAMERA_DISTANCE
-    );
-
-    // 2. Используем константу для плавности
-    camera.position.lerp(targetCamPos, CAMERA_FOLLOW_SPEED);
-
-    // 3. Восстанавливаем наклон при поворотах
-    const targetTilt = -realCar.rotation.y * 0.5;
-    camera.rotation.z += (targetTilt - camera.rotation.z) * CAMERA_FOLLOW_SPEED;
-
-    // 4. Восстанавливаем динамический FOV
-    const speedFactorFOV = Math.min(speed / SPEED_FOR_MAX_FOV, 1);
-    const targetFOV = FOV_MIN + (FOV_MAX - FOV_MIN) * speedFactorFOV;
-    camera.fov = THREE.MathUtils.clamp(
-      camera.fov + (targetFOV - camera.fov) * CAMERA_FOLLOW_SPEED,
-      10, 170
-    );
-    camera.updateProjectionMatrix();
-
-    const lookAtPos = new THREE.Vector3(
-      carPos.x,
-      carPos.y + 1,
-      carPos.z - CAMERA_LOOKAHEAD
-    );
-
-    camera.lookAt(lookAtPos);
-  }
-
-  function resetCameraPosition(camera: THREE.PerspectiveCamera) {
-    if (!carManager) return;
-    
-    const realCar = carManager.getCar();
-    const carPos = realCar.position.clone();
-    
-    // Устанавливаем камеру в начальную позицию
-    camera.position.set(carPos.x, CAMERA_HEIGHT, carPos.z + CAMERA_DISTANCE);
-    camera.lookAt(carPos.x, carPos.y + 1, carPos.z - CAMERA_LOOKAHEAD);
-    camera.fov = FOV_MIN;
-    camera.updateProjectionMatrix();
-    camera.rotation.z = 0;
-    
-    console.log('📷 Камера сброшена вручную');
-  }
-
 
   function updateDestroyedCubes() {
     if (!carManager) return;
@@ -349,7 +229,7 @@ export function useGame() {
   }
 
   function updateJumps(speed: number) {
-    jumps.value.forEach(jump => {
+    jumps.value.forEach((jump) => {
       if (jump.active) {
         jump.progress += speed * 0.05;
         if (jump.progress >= 1) jump.active = false;
@@ -364,30 +244,33 @@ export function useGame() {
   function reset() {
     if (!carManager || !obstacleManager || !roadManager || !sceneRef) return;
 
-    console.log('🔄 Полный сброс игры...');
+    console.log("🔄 Полный сброс игры...");
 
-    // 1. Очищаем интервал спавна препятствий
+    // 1. стопаем спавн
     if ((window as any).obstacleInterval) {
       clearInterval((window as any).obstacleInterval);
       (window as any).obstacleInterval = null;
     }
 
-    // 2. Сбрасываем машину
+    // 2. сбрасываем машину
     carManager.resetCar();
 
-    // 3. Очищаем все препятствия
+    // 3. сбрасываем препятствия
     obstacleManager.reset();
     obstacles.value = [];
 
-    // 4. Полностью пересоздаем дорогу
-    roadManager.clear(); // удаляем старую
-    roadManager.createRoad(false); // создаем новую
-    roadManager.addSpeedLines({ count: 30 }); // добавляем линии скорости
+    // 🔥 3.5 СБРОС COLLISION SYSTEM
+    CollisionSystem.reset();
 
-    // 5. Сбрасываем прыжки
+    // 4. пересоздаём дорогу
+    roadManager.clear();
+    roadManager.createRoad(false);
+    roadManager.addSpeedLines({ count: 30 });
+
+    // 5. прыжки
     resetJumps();
 
-    // 6. Сбрасываем состояние машины в реактивной ссылке
+    // 6. состояние машины
     const realCar = carManager.getCar();
     car.value = {
       mesh: realCar as unknown as THREE.Group,
@@ -396,10 +279,7 @@ export function useGame() {
       cubes: [],
     };
 
-    // 7. Сбрасываем кулдаун коллизий
-    collisionCooldown.value = false;
-
-    // 8. Перезапускаем спавн препятствий
+    // 7. перезапуск спавна
     (window as any).obstacleInterval = setInterval(() => {
       if (sceneRef && carManager && !carManager.getCar().isDestroyed()) {
         const lane = Math.floor(Math.random() * 4);
@@ -407,26 +287,24 @@ export function useGame() {
         if (obstacle) {
           obstacles.value.push({
             mesh: obstacle,
-            position: obstacle.position.clone()
+            position: obstacle.position.clone(),
           });
         }
       }
     }, 1500);
 
-    console.log('✅ Сброс игры завершен');
+    console.log("✅ Сброс игры завершён");
   }
 
   return {
     car,
     obstacles,
     jumps,
-    collisionCooldown,
 
     init,
     updatePlayer,
     destroyCar,
     resetPlayer,
-    checkObstacleCollision,
 
     addObstacle: (obstacle: THREE.Mesh) => {
       if (sceneRef) sceneRef.add(obstacle);
@@ -438,13 +316,12 @@ export function useGame() {
     resetJumps,
 
     updateRoad,
-    getDangerLevel,
-    updateCamera,
-    updateCameraForDestroyedState,
     updateDestroyedCubes,
     updateCar,
 
+    checkCollision,
+    getDangerLevel,
+
     reset,
-    resetCameraPosition,
   };
 }

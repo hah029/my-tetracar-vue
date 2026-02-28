@@ -1,6 +1,6 @@
 // src/game/Obstacle.ts
 import * as THREE from "three";
-import { RoadManager } from ".//road/RoadManager";
+import { RoadManager } from "./road/RoadManager";
 
 // Интерфейсы и типы
 export interface ObstacleConfig {
@@ -13,7 +13,7 @@ export interface ObstacleConfig {
 
 export interface ObstaclePatternOptions {
   zPos?: number;
-  pattern?: 'wall' | 'zigzag' | 'random';
+  pattern?: "wall" | "zigzag" | "random";
   count?: number;
   spacing?: number;
 }
@@ -21,13 +21,22 @@ export interface ObstaclePatternOptions {
 // Класс для отдельного препятствия
 export class Obstacle extends THREE.Mesh {
   public userData: ObstacleConfig;
+  public collider: THREE.Box3;
 
-  constructor(laneIndex: number, scene: THREE.Scene, zPos: number = -60, variant: number | null = null) {
+  constructor(
+    laneIndex: number,
+    scene: THREE.Scene,
+    zPos: number = -60,
+    variant: number | null = null,
+  ) {
     // Создаём материалы для препятствий
     const materials = Obstacle.createMaterials();
-    
+
     // Выбираем материал
-    const materialIndex = variant !== null ? variant % materials.length : Math.floor(Math.random() * materials.length);
+    const materialIndex =
+      variant !== null
+        ? variant % materials.length
+        : Math.floor(Math.random() * materials.length);
     const material = materials[materialIndex].clone();
 
     // Используем единую геометрию
@@ -42,7 +51,7 @@ export class Obstacle extends THREE.Mesh {
       x = roadManager.getLanePosition(laneIndex);
     } catch (error) {
       // Fallback на случай, если RoadManager еще не инициализирован
-      console.warn('RoadManager not initialized, using default lane positions');
+      console.warn("RoadManager not initialized, using default lane positions");
       const defaultLanes = [-3, -1, 1, 3];
       x = defaultLanes[laneIndex] || 0;
     }
@@ -60,8 +69,9 @@ export class Obstacle extends THREE.Mesh {
       variant: materialIndex,
       baseColor: (material as THREE.MeshStandardMaterial).color.clone(),
       pulseSpeed: 0.5 + Math.random() * 0.5,
-      pulsePhase: Math.random() * Math.PI * 2
+      pulsePhase: Math.random() * Math.PI * 2,
     };
+    this.collider = new THREE.Box3().setFromObject(this);
 
     // Добавляем в сцену
     scene.add(this);
@@ -75,29 +85,29 @@ export class Obstacle extends THREE.Mesh {
         emissive: 0x440011,
         emissiveIntensity: 1.5,
         transparent: true,
-        opacity: 0.9
+        opacity: 0.9,
       }),
       new THREE.MeshStandardMaterial({
         color: 0xffaa00,
         emissive: 0x442200,
         emissiveIntensity: 1.5,
         transparent: true,
-        opacity: 0.9
+        opacity: 0.9,
       }),
       new THREE.MeshStandardMaterial({
         color: 0x44ff88,
         emissive: 0x004422,
         emissiveIntensity: 1.5,
         transparent: true,
-        opacity: 0.9
+        opacity: 0.9,
       }),
       new THREE.MeshStandardMaterial({
         color: 0xaa44ff,
         emissive: 0x220044,
         emissiveIntensity: 1.5,
         transparent: true,
-        opacity: 0.9
-      })
+        opacity: 0.9,
+      }),
     ];
   }
 
@@ -105,15 +115,17 @@ export class Obstacle extends THREE.Mesh {
   public update(speed: number): boolean {
     this.position.z += speed;
 
-    // Анимация свечения
+    this.collider.setFromObject(this);
+
+    // анимация
     const material = this.material as THREE.MeshStandardMaterial;
     if (material.emissive) {
-      const pulse = Math.sin(Date.now() * 0.005 + this.userData.pulsePhase) * 0.5 + 0.5;
+      const pulse =
+        Math.sin(Date.now() * 0.005 + this.userData.pulsePhase) * 0.5 + 0.5;
       material.emissiveIntensity = 1.0 + pulse * 1.0;
       this.rotation.y += 0.02;
     }
 
-    // Возвращаем true, если препятствие нужно удалить
     return this.position.z > 10;
   }
 
@@ -128,7 +140,7 @@ export class ObstacleManager {
   private static instance: ObstacleManager;
   private obstacles: Obstacle[] = [];
   private scene: THREE.Scene | null = null;
-  
+
   private constructor() {}
 
   // Получение экземпляра (синглтон)
@@ -140,9 +152,9 @@ export class ObstacleManager {
   }
 
   public initialize(scene: THREE.Scene): void {
-      // console.log('ObstacleManager.initialize called with scene:', scene);
-      this.scene = scene;
-    }
+    // console.log('ObstacleManager.initialize called with scene:', scene);
+    this.scene = scene;
+  }
 
   // Получить все препятствия
   public getObstacles(): Obstacle[] {
@@ -161,16 +173,25 @@ export class ObstacleManager {
   }
 
   // Создать одно препятствие
-  public spawnObstacle(laneIndex: number, zPos: number = -60, variant: number | null = null): Obstacle | null {
+  public spawnObstacle(
+    laneIndex: number,
+    zPos: number = -60,
+    variant: number | null = null,
+  ): Obstacle | null {
     const lanesCount = this.getLanesCount();
-    
+
     if (laneIndex < 0 || laneIndex >= lanesCount) {
       console.warn(`Invalid lane index ${laneIndex}, max is ${lanesCount - 1}`);
       return null;
     }
 
     // Проверяем на дубликаты
-    if (this.obstacles.some(o => Math.abs(o.position.z - zPos) < 0.1 && o.userData.lane === laneIndex)) {
+    if (
+      this.obstacles.some(
+        (o) =>
+          Math.abs(o.position.z - zPos) < 0.1 && o.userData.lane === laneIndex,
+      )
+    ) {
       return null;
     }
 
@@ -179,30 +200,31 @@ export class ObstacleManager {
       this.obstacles.push(obstacle);
       return obstacle;
     } catch (error) {
-      console.error('Failed to spawn obstacle:', error);
+      console.error("Failed to spawn obstacle:", error);
       return null;
     }
   }
 
   // Создать ряд препятствий
-  public spawnObstacleRow(laneIndex: number, zPos: number = -60, variant: number | null = null): Obstacle | null {
+  public spawnObstacleRow(
+    laneIndex: number,
+    zPos: number = -60,
+    variant: number | null = null,
+  ): Obstacle | null {
     return this.spawnObstacle(laneIndex, zPos, variant);
   }
 
   // Создать паттерн препятствий
-  public spawnObstaclePattern(options: ObstaclePatternOptions = {}): Obstacle[] {
-    const {
-      zPos = -60,
-      pattern = 'random',
-      count,
-      spacing = 4
-    } = options;
+  public spawnObstaclePattern(
+    options: ObstaclePatternOptions = {},
+  ): Obstacle[] {
+    const { zPos = -60, pattern = "random", count, spacing = 4 } = options;
 
     const spawned: Obstacle[] = [];
     const lanesCount = this.getLanesCount();
 
     switch (pattern) {
-      case 'wall':
+      case "wall":
         // Стена из препятствий на всех полосах
         for (let i = 0; i < lanesCount; i++) {
           const obstacle = this.spawnObstacle(i, zPos, i);
@@ -210,7 +232,7 @@ export class ObstacleManager {
         }
         break;
 
-      case 'zigzag':
+      case "zigzag":
         // Зигзаг
         for (let i = 0; i < lanesCount; i++) {
           const obstacle = this.spawnObstacle(i, zPos - i * spacing, i);
@@ -218,10 +240,10 @@ export class ObstacleManager {
         }
         break;
 
-      case 'random':
+      case "random":
       default:
         // Случайные препятствия
-        const obstacleCount = count ?? (2 + Math.floor(Math.random() * 3));
+        const obstacleCount = count ?? 2 + Math.floor(Math.random() * 3);
         for (let i = 0; i < obstacleCount; i++) {
           const lane = Math.floor(Math.random() * lanesCount);
           const obstacle = this.spawnObstacle(lane, zPos - i * spacing);
@@ -248,7 +270,7 @@ export class ObstacleManager {
 
   // Сбросить все препятствия
   public reset(): void {
-    this.obstacles.forEach(obstacle => {
+    this.obstacles.forEach((obstacle) => {
       this.scene.remove(obstacle);
     });
     this.obstacles = [];
@@ -256,8 +278,8 @@ export class ObstacleManager {
 
   // Получить препятствия в определенном диапазоне
   public getObstaclesInRange(zMin: number, zMax: number): Obstacle[] {
-    return this.obstacles.filter(obstacle => 
-      obstacle.position.z >= zMin && obstacle.position.z <= zMax
+    return this.obstacles.filter(
+      (obstacle) => obstacle.position.z >= zMin && obstacle.position.z <= zMax,
     );
   }
 
@@ -289,15 +311,15 @@ export class ObstacleManager {
   // Получить статистику по препятствиям
   public getStats(): { total: number; byLane: Map<number, number> } {
     const byLane = new Map<number, number>();
-    
-    this.obstacles.forEach(obstacle => {
+
+    this.obstacles.forEach((obstacle) => {
       const lane = obstacle.userData.lane;
       byLane.set(lane, (byLane.get(lane) || 0) + 1);
     });
 
     return {
       total: this.obstacles.length,
-      byLane
+      byLane,
     };
   }
 }
@@ -307,9 +329,14 @@ export const obstacleManager = ObstacleManager.getInstance();
 
 // Для обратной совместимости экспортируем также функции
 export const obstacles = obstacleManager.getObstacles();
-export const spawnObstacleRow = (laneIndex: number, zPos: number = -60, variant: number | null = null) => 
-  obstacleManager.spawnObstacleRow(laneIndex, zPos, variant);
+export const spawnObstacleRow = (
+  laneIndex: number,
+  zPos: number = -60,
+  variant: number | null = null,
+) => obstacleManager.spawnObstacleRow(laneIndex, zPos, variant);
 export const updateObstacles = (speed: number) => obstacleManager.update(speed);
 export const resetObstacles = () => obstacleManager.reset();
-export const spawnObstaclePattern = (zPos: number = -60, pattern: 'wall' | 'zigzag' | 'random' = 'random') => 
-  obstacleManager.spawnObstaclePattern({ zPos, pattern });
+export const spawnObstaclePattern = (
+  zPos: number = -60,
+  pattern: "wall" | "zigzag" | "random" = "random",
+) => obstacleManager.spawnObstaclePattern({ zPos, pattern });
