@@ -1,7 +1,7 @@
 // src/game/Player.ts
 import * as THREE from "three";
 
-import { Car } from "./sceneStaticObjects/car";
+import { Car } from ".//car";
 
 
 export class Player {

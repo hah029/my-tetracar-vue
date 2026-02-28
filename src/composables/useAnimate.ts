@@ -4,7 +4,7 @@ import { useGameState } from "../store/gameState";
 import { useHUD } from "./useHUD";
 import type { useGame } from "./useGame";
 import type { PerspectiveCamera, Scene, WebGLRenderer } from "three";
-import { carManager } from "@/game/sceneStaticObjects/car";
+import { carManager } from "@/game/car";
 
 export function GameLoop(game: ReturnType<typeof useGame>, scene: Scene, camera: PerspectiveCamera, renderer: WebGLRenderer) {
   const gameState = useGameState();

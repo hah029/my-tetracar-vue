@@ -1,6 +1,6 @@
 // src/game/Obstacle.ts
 import * as THREE from "three";
-import { RoadManager } from "./sceneStaticObjects/road/RoadManager";
+import { RoadManager } from ".//road/RoadManager";
 
 // Интерфейсы и типы
 export interface ObstacleConfig {

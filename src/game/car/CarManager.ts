@@ -1,4 +1,4 @@
-// src/game/sceneStaticObjects/car/CarManager.ts
+// src/game/car/CarManager.ts
 import { Car } from "./Car";
 import { type CarConfig, type CarStats } from "./types";
 import * as THREE from "three";

@@ -1,7 +1,7 @@
 // src/store/gameState.ts
 import { defineStore } from "pinia";
 import { ref } from "vue";
-import { RoadManager } from "@/game/sceneStaticObjects/road";
+import { RoadManager } from "@/game/road";
 
 export const useGameState = defineStore("gameState", () => {
   // ---- Основные константы ----

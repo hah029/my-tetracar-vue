@@ -1,5 +1,5 @@
 // src/composables/usePlayer.ts
-import { carManager } from "../game/sceneStaticObjects/car/CarManager";
+import { carManager } from "../game/car/CarManager";
 
 export function usePlayer() {
   function moveLeft() {

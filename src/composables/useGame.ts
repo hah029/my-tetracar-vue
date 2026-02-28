@@ -1,8 +1,8 @@
 // src/composables/useGame.ts
 import * as THREE from "three";
 import { ref } from "vue";
-import { RoadManager } from "@/game/sceneStaticObjects/road/RoadManager";
-import { CarManager } from "@/game/sceneStaticObjects/car/CarManager";
+import { RoadManager } from "@/game/road/RoadManager";
+import { CarManager } from "@/game/car/CarManager";
 import { ObstacleManager } from "@/game/obstacles";
 // import HUD from "@/components/HUD.vue";
 
