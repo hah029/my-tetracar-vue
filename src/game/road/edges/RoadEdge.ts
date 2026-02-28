@@ -24,7 +24,7 @@ export class RoadEdge extends THREE.Mesh {
       metalness: 0.3,
       roughness: 0.7,
       emissive: 0x00ffff,
-      opacity: 0.5,
+      opacity: 0.2,
       emissiveIntensity: 2.0,
       transparent: true,
     });
