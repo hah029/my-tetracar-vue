@@ -141,15 +141,6 @@ export function GameLoop(
     }
   }
 
-  // onMounted(() => {
-  //   rafId = requestAnimationFrame(animate);
-  // });
-  // onUnmounted(() => {
-  //   if (rafId !== null) cancelAnimationFrame(rafId);
-  //   if (intervalId !== null) clearInterval(intervalId);
-  //   if (gameOverTimer) clearTimeout(gameOverTimer);
-  // });
-
   return {
     start,
     stop,

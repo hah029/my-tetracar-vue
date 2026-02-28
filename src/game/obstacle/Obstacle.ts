@@ -103,13 +103,13 @@ export class Obstacle extends THREE.Mesh {
     this.collider.setFromObject(this);
 
     // анимация
-    const material = this.material as THREE.MeshStandardMaterial;
-    if (material.emissive) {
-      const pulse =
-        Math.sin(Date.now() * 0.005 + this.userData.pulsePhase) * 0.5 + 0.5;
-      material.emissiveIntensity = 1.0 + pulse * 1.0;
-      this.rotation.y += 0.02;
-    }
+    // const material = this.material as THREE.MeshStandardMaterial;
+    // if (material.emissive) {
+    //   const pulse =
+    //     Math.sin(Date.now() * 0.005 + this.userData.pulsePhase) * 0.5 + 0.5;
+    //   material.emissiveIntensity = 1.0 + pulse * 1.0;
+    //   this.rotation.y += 0.02;
+    // }
 
     return this.position.z > 10;
   }

@@ -7,7 +7,7 @@ import type { ObstaclePatternOptions } from "./types";
 export class ObstacleManager {
   private static instance: ObstacleManager;
   private obstacles: Obstacle[] = [];
-  private scene: THREE.Scene | null = null;
+  private scene: THREE.Scene = new THREE.Scene();
 
   private constructor() {}
 
@@ -20,7 +20,9 @@ export class ObstacleManager {
   }
 
   public initialize(scene: THREE.Scene): void {
-    // console.log('ObstacleManager.initialize called with scene:', scene);
+    if (scene === undefined) {
+      throw new Error("scene is null");
+    }
     this.scene = scene;
   }
 
@@ -127,6 +129,9 @@ export class ObstacleManager {
   public update(speed: number): void {
     for (let i = this.obstacles.length - 1; i >= 0; i--) {
       const obstacle = this.obstacles[i];
+      if (obstacle === undefined) {
+        continue;
+      }
       const shouldRemove = obstacle.update(speed);
 
       if (shouldRemove) {
