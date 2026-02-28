@@ -3,7 +3,7 @@ import * as THREE from "three";
 import { ref } from "vue";
 import { RoadManager } from "@/game/road/RoadManager";
 import { CarManager } from "@/game/car/CarManager";
-import { ObstacleManager } from "@/game/Obstacle";
+import { ObstacleManager } from "@/game/obstacle/ObstacleManager";
 import { CollisionSystem } from "@/game/collision/CollisionSystem";
 
 // Константы для камеры

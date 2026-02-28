@@ -1,5 +1,5 @@
 import * as THREE from "three";
-import type { Obstacle } from "../Obstacle";
+import type { Obstacle } from "../obstacle/Obstacle";
 
 const DANGER_DISTANCE = 30;
 const COLLISION_COOLDOWN_MS = 1000;
