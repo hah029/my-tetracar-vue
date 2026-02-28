@@ -73,7 +73,7 @@ export function useGame() {
 
     // === Инициализация менеджеров ===
     roadManager = RoadManager.initialize(
-      { lanes: [-4, -2, 0, 2, 4], edgeOffset: 1, length: 250 },
+      { lanes: [-4, -2, 0, 2, 4], edgeOffset: 0, length: 250 },
       scene,
     );
 
@@ -84,11 +84,11 @@ export function useGame() {
     carManager.initialize(scene);
 
     // === Создание дороги и машины ===
-    roadManager.createRoad(true);
+    roadManager.createRoad();
     roadManager.addSpeedLines({ count: 30 });
 
     const newCar = carManager.createCar({
-      startLane: 1,
+      startLane: 2,
       startPosition: new THREE.Vector3(0, 0.25, 3),
     });
 
@@ -223,7 +223,7 @@ export function useGame() {
     roadManager.clear();
 
     // 3️⃣ Пересоздание дороги
-    roadManager.createRoad(true);
+    roadManager.createRoad();
     roadManager.addSpeedLines({ count: 30 });
 
     // 4️⃣ Обновление машины и синхронизация car.value

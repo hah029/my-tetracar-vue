@@ -3,6 +3,8 @@
 import * as THREE from "three";
 import { type CarConfig } from "./types";
 import { DEFAULT_CAR_CONFIG } from "./config";
+import { RoadManager } from "../road/RoadManager";
+import { RoadEdge } from "../road/edges/RoadEdge";
 
 export class CarPhysics {
   private config: Required<CarConfig>;
@@ -121,72 +123,100 @@ export class CarPhysics {
     const groundY = 0; // высота дороги
     const bounceFactor = 0.4; // упругость при ударе
     const friction = 0.85; // трение по земле
-    const collisionFactor = 0.2; // реакция при столкновении кубиков
+    const collisionFactor = 0.2; // сила отталкивания между кубиками
 
-    // Обновляем движение и вращение
+    // Получаем бортики с коллайдерами
+    const edges = RoadManager.getInstance().edges.filter(
+      (e) => e instanceof RoadEdge,
+    ) as RoadEdge[];
+
+    // Обновляем коллайдеры бортиков
+    edges.forEach((edge) => edge.updateCollider());
+
     for (let i = 0; i < cubes.length; i++) {
       const cube = cubes[i];
-      if (cube === undefined) {
-        continue;
-      }
       const userData = cube.userData as any;
 
-      // движение
-      cube.position.add(userData.velocity);
+      // --- Предсказанная позиция ---
+      const nextPos = cube.position.clone().add(userData.velocity);
 
-      // вращение
-      cube.rotation.x += userData.rotationSpeed.x;
-      cube.rotation.y += userData.rotationSpeed.y;
-      cube.rotation.z += userData.rotationSpeed.z;
+      // --- Столкновение с бортиками ---
+      edges.forEach((edge) => {
+        const edgeBox = edge.collider.clone().expandByScalar(0.01); // чуть расширяем для надежности
+        const cubeBoxNext = new THREE.Box3().setFromCenterAndSize(
+          nextPos,
+          new THREE.Vector3(0.5, 0.5, 0.5),
+        );
 
-      // гравитация
-      userData.velocity.y -= this.config.cubeGravity;
+        if (cubeBoxNext.intersectsBox(edgeBox)) {
+          // Определяем направление отталкивания
+          const dir = nextPos.x < edge.position.x ? -1 : 1;
 
-      // столкновение с землей
-      if (cube.position.y < groundY) {
-        cube.position.y = groundY;
+          // Ширина бортика и кубика
+          const edgeHalfWidth =
+            (edge.geometry as THREE.BoxGeometry).parameters.width / 2;
+          const cubeHalfWidth = 0.25;
+
+          // Ограничиваем следующую позицию
+          nextPos.x = edge.position.x + dir * (edgeHalfWidth + cubeHalfWidth);
+
+          // Отражение скорости по X и трение по Z
+          userData.velocity.x *= -0.5;
+          userData.velocity.z *= 0.9;
+        }
+      });
+
+      // --- Столкновение с землёй ---
+      if (nextPos.y < groundY) {
+        nextPos.y = groundY;
         userData.velocity.y *= -bounceFactor;
         userData.velocity.x *= friction;
         userData.velocity.z *= friction;
+      } else {
+        // гравитация
+        userData.velocity.y -= this.config.cubeGravity;
       }
 
-      // столкновение с другими кубиками (простое)
+      // --- Столкновения между кубиками ---
       for (let j = i + 1; j < cubes.length; j++) {
         const other = cubes[j];
-        if (other === undefined) {
-          continue;
-        }
-        const dir = cube.position.clone().sub(other.position);
+        const otherUserData = other.userData as any;
+        const otherNext = other.position.clone().add(otherUserData.velocity);
+
+        const dir = nextPos.clone().sub(otherNext);
         const dist = dir.length();
-        const minDist = 0.5; // минимальная дистанция между кубиками
+        const minDist = 0.5;
 
         if (dist < minDist && dist > 0) {
           dir.normalize();
           const push = (minDist - dist) * collisionFactor;
-          cube.position.add(dir.clone().multiplyScalar(push / 2));
+
+          nextPos.add(dir.clone().multiplyScalar(push / 2));
           other.position.add(dir.clone().multiplyScalar(-push / 2));
 
-          // слегка меняем скорости
           userData.velocity.add(dir.clone().multiplyScalar(push * 0.5));
-          (other.userData as any).velocity.add(
-            dir.clone().multiplyScalar(-push * 0.5),
-          );
+          otherUserData.velocity.add(dir.clone().multiplyScalar(-push * 0.5));
         }
       }
 
-      // удаление кубиков ниже минимальной границы
+      // --- Применяем позицию и вращение ---
+      cube.position.copy(nextPos);
+      cube.rotation.x += userData.rotationSpeed.x;
+      cube.rotation.y += userData.rotationSpeed.y;
+      cube.rotation.z += userData.rotationSpeed.z;
+
+      // --- Удаление кубиков ниже минимальной границы ---
       if (cube.position.y < this.config.removalHeight) {
         scene.remove(cube);
       }
     }
 
-    // центр масс для камеры
+    // --- Центр масс для камеры ---
     if (cubes.length > 0) {
       const center = new THREE.Vector3();
       cubes.forEach((cube) => center.add(cube.position));
       center.divideScalar(cubes.length);
 
-      // камера выше и дальше кубиков
       const targetCamPos = center.clone().add(new THREE.Vector3(0, 5, 12));
       cameraTarget.position.lerp(targetCamPos, 0.05);
     }

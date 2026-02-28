@@ -4,25 +4,35 @@ import { RoadLine } from "./RoadLine";
 import { SpeedLine } from "./SpeedLine";
 import { RoadEdge, NeonEdge } from "./edges";
 import { type RoadConfig, type SpeedLineConfig, type RoadStats } from "./types";
-import { DEFAULT_ROAD_CONFIG, NEON_ROAD_CONFIG, getEdgePositions } from "./config";
+import {
+  DEFAULT_ROAD_CONFIG,
+  NEON_ROAD_CONFIG,
+  getEdgePositions,
+} from "./config";
 import { SideObject, type SideObjectConfig } from "./SideObject";
 
 export class RoadManager {
   private static instance: RoadManager | null = null;
-  
+
   private road: Road | null = null;
   private roadLines: RoadLine[] = [];
   private speedLines: SpeedLine[] = [];
-  private edges: THREE.Line[] = [];
+  private edges: THREE.Mesh[] = [];
   private sideObjects: SideObject[] = [];
   private sideObjectConfig: Required<SideObjectConfig>;
-  
+
   private config: Required<RoadConfig>;
   private scene: THREE.Scene;
 
-  private constructor(config: RoadConfig, scene: THREE.Scene, sideObjectConfig: SideObjectConfig = {}) {
+  private constructor(
+    config: RoadConfig,
+    scene: THREE.Scene,
+    sideObjectConfig: SideObjectConfig = {},
+  ) {
     if (!config.lanes) {
-      throw new Error('RoadManager must be initialized with lanes configuration');
+      throw new Error(
+        "RoadManager must be initialized with lanes configuration",
+      );
     }
     this.config = { ...DEFAULT_ROAD_CONFIG, ...config };
     this.sideObjectConfig = {
@@ -31,14 +41,20 @@ export class RoadManager {
       radius: sideObjectConfig.radius ?? 0.1,
       radialSegments: sideObjectConfig.radialSegments ?? 8,
       offset: sideObjectConfig.offset ?? 1.5,
-      spacing: sideObjectConfig.spacing ?? 7
+      spacing: sideObjectConfig.spacing ?? 7,
     };
     this.scene = scene;
   }
 
-  public static initialize(config: RoadConfig, scene: THREE.Scene, sideObjectConfig: SideObjectConfig = {}): RoadManager {
+  public static initialize(
+    config: RoadConfig,
+    scene: THREE.Scene,
+    sideObjectConfig: SideObjectConfig = {},
+  ): RoadManager {
     if (!config.lanes) {
-      throw new Error('Cannot initialize RoadManager without lanes configuration');
+      throw new Error(
+        "Cannot initialize RoadManager without lanes configuration",
+      );
     }
     RoadManager.instance = new RoadManager(config, scene, sideObjectConfig);
     return RoadManager.instance;
@@ -50,7 +66,9 @@ export class RoadManager {
 
   public static getInstance(): RoadManager {
     if (!RoadManager.instance) {
-      throw new Error('RoadManager not initialized. Call RoadManager.initialize() first.');
+      throw new Error(
+        "RoadManager not initialized. Call RoadManager.initialize() first.",
+      );
     }
     return RoadManager.instance;
   }
@@ -86,12 +104,16 @@ export class RoadManager {
     this.clearSideObjects();
 
     if (!this.road) return;
-    
+
     const { left, right } = this.road.getEdgePositions();
     const leftX = left - this.sideObjectConfig.offset;
     const rightX = right + this.sideObjectConfig.offset;
 
-    for (let z = -this.config.length; z <= 10; z += this.sideObjectConfig.spacing) {
+    for (
+      let z = -this.config.length;
+      z <= 10;
+      z += this.sideObjectConfig.spacing
+    ) {
       // Левый столбик
       const leftObj = new SideObject(-1, z, this.sideObjectConfig);
       leftObj.setPosition(leftX, z);
@@ -107,7 +129,7 @@ export class RoadManager {
   }
 
   private clearSideObjects(): void {
-    this.sideObjects.forEach(obj => {
+    this.sideObjects.forEach((obj) => {
       this.scene.remove(obj);
     });
     this.sideObjects = [];
@@ -115,35 +137,35 @@ export class RoadManager {
 
   private addEdges(): void {
     if (!this.road) return;
-    
+
     const { left, right } = this.road.getEdgePositions();
-    
-    const leftEdge = new RoadEdge(left);
+
+    const leftEdge = new RoadEdge(left, 0.5, this.config.length);
     this.scene.add(leftEdge);
     this.edges.push(leftEdge);
 
-    const rightEdge = new RoadEdge(right);
+    const rightEdge = new RoadEdge(right, 0.5, this.config.length);
     this.scene.add(rightEdge);
     this.edges.push(rightEdge);
   }
 
   private addNeonEdges(): void {
     if (!this.road) return;
-    
+
     const { left, right } = this.road.getEdgePositions();
-    
-    const leftEdge = new NeonEdge(left);
+
+    const leftEdge = new NeonEdge(left, 1, this.config.length);
     this.scene.add(leftEdge);
     this.edges.push(leftEdge);
 
-    const rightEdge = new NeonEdge(right);
+    const rightEdge = new NeonEdge(right, 1, this.config.length);
     this.scene.add(rightEdge);
     this.edges.push(rightEdge);
   }
 
   private addRoadLines(color?: number, emissive?: number): void {
     if (!this.road) return;
-    
+
     const { segmentLength, gap, length } = this.config;
     const lanes = this.road.getLanePositions();
     const totalSegments = Math.ceil(length / (segmentLength + gap)) + 10;
@@ -159,7 +181,7 @@ export class RoadManager {
           segmentLength,
           gap,
           color: color ?? 0x44ffff,
-          emissive: emissive ?? 0x226688
+          emissive: emissive ?? 0x226688,
         });
 
         this.roadLines.push(line);
@@ -170,27 +192,27 @@ export class RoadManager {
 
   public addSpeedLines(config: SpeedLineConfig = {}): void {
     if (!this.road) return;
-    
+
     const count = config.count ?? 20;
     const lanes = this.road.getLanePositions();
     const { left, right } = this.road.getEdgePositions();
-    
+
     for (let i = 0; i < count; i++) {
       const line = new SpeedLine({
         ...config,
         lanes,
-        bounds: { left, right }
+        bounds: { left, right },
       });
-      
+
       this.speedLines.push(line);
       this.scene.add(line); // ← ИСПРАВЛЕНО: было scene.add(line)
     }
   }
 
   public update(speed: number): void {
-    this.roadLines.forEach(line => line.update(speed));
-    this.speedLines.forEach(line => line.update(speed));
-    this.sideObjects.forEach(obj => obj.update(speed, this.config.length));
+    this.roadLines.forEach((line) => line.update(speed));
+    this.speedLines.forEach((line) => line.update(speed));
+    this.sideObjects.forEach((obj) => obj.update(speed, this.config.length));
   }
 
   public clear(): void {
@@ -199,13 +221,13 @@ export class RoadManager {
       this.road = null;
     }
 
-    this.roadLines.forEach(line => this.scene.remove(line));
+    this.roadLines.forEach((line) => this.scene.remove(line));
     this.roadLines = [];
 
-    this.speedLines.forEach(line => this.scene.remove(line));
+    this.speedLines.forEach((line) => this.scene.remove(line));
     this.speedLines = [];
 
-    this.edges.forEach(edge => this.scene.remove(edge));
+    this.edges.forEach((edge) => this.scene.remove(edge));
     this.edges = [];
 
     this.clearSideObjects();
@@ -248,7 +270,7 @@ export class RoadManager {
 
   public updateConfig(config: Partial<RoadConfig>): void {
     this.config = { ...this.config, ...config };
-    const useNeon = this.edges.some(edge => edge instanceof NeonEdge);
+    const useNeon = this.edges.some((edge) => edge instanceof NeonEdge);
     this.createRoad(useNeon);
   }
 
@@ -269,24 +291,24 @@ export class RoadManager {
       speedLinesCount: this.speedLines.length,
       edgesCount: this.edges.length,
       sideObjectsCount: this.sideObjects.length,
-      lanePositions: lanes
+      lanePositions: lanes,
     };
   }
 
   // Добавьте этот метод в класс RoadManager
   public reset(): void {
-    console.log('🧹 Сброс RoadManager...');
-    
+    console.log("🧹 Сброс RoadManager...");
+
     // Полностью очищаем все
     this.clear();
-    
+
     // Сбрасываем внутренние счетчики/состояние если есть
     // (добавьте здесь сброс любых внутренних переменных)
-    
+
     // Создаем дорогу заново с теми же настройками
-    this.createRoad(false);
+    this.createRoad();
     this.addSpeedLines({ count: 30 });
-    
-    console.log('✅ RoadManager сброшен');
+
+    console.log("✅ RoadManager сброшен");
   }
 }

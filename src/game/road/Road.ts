@@ -34,7 +34,7 @@ export class Road extends THREE.Mesh {
     this.lanes = [...finalConfig.lanes];
     this.width = width;
     this.length = finalConfig.length;
-    this.edgeOffset = finalConfig.edgeOffset;
+    this.edgeOffset = finalConfig.edgeOffset + 1;
 
     this.rotation.x = -Math.PI / 2;
     this.position.z = -finalConfig.length / 2 + finalConfig.length / 2;
