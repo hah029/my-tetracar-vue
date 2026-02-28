@@ -17,7 +17,6 @@ export function GameLoop(
   const hud = useHUD();
 
   let gameOverTimer: number | null = null;
-
   let previousState = gameState.currentState;
 
   function animate() {
@@ -25,6 +24,7 @@ export function GameLoop(
 
     renderer.render(scene, camera);
 
+    // Сброс камеры при переходе в игру
     if (previousState === "gameover" && gameState.currentState === "playing") {
       const car = carManager.getCar();
       CameraSystem.reset(car.position.clone());
@@ -39,46 +39,43 @@ export function GameLoop(
       return;
     }
 
-    // ВАЖНО: синхронизируем currentLane в gameState
+    // Синхронизация полосы
     try {
       const realCar = carManager.getCar();
       gameState.currentLane = realCar.getCurrentLane();
     } catch (e) {
-      // Машина еще не создана
+      // Машина ещё не создана
     }
 
-    // Получаем текущую скорость
+    // Текущая скорость
     let currentSpeed = gameState.getCurrentSpeed();
 
-    // Увеличиваем базовую скорость со временем (только если машина не разрушена)
+    // Увеличиваем базовую скорость со временем (если машина не разрушена)
     if (!game.car.value.isDestroyed) {
-      // Проверяем, не был ли сброшен baseSpeed
       if (gameState.baseSpeed < 0.5) {
-        // Если скорость слишком мала, возможно был сброс
-        gameState.baseSpeed = 0.5; // Устанавливаем начальную скорость
+        gameState.baseSpeed = 0.5;
       }
       gameState.baseSpeed +=
-        gameState.baseSpeed < gameState.maxSpeed ? 0.0005 : 0.0;
+        gameState.baseSpeed < gameState.maxSpeed ? 0.0005 : 0;
     }
 
-    // Обновляем счёт (только если машина не разрушена)
+    // Обновляем счёт
     if (!game.car.value.isDestroyed) {
       gameState.addScore(currentSpeed * 1.0);
     }
 
-    // Получаем уровень опасности
+    // Уровень опасности
     const dangerLevel = game.getDangerLevel();
-
-    // Обновляем HUD
     hud.updateHUD(currentSpeed, gameState.currentLane, dangerLevel);
 
     const realCar = carManager.getCar();
+    game.updatePlayer();
 
     if (realCar.isDestroyed()) {
-      game.updateDestroyedCubes();
       CameraSystem.updateDestroyed(realCar.getCubes());
     } else {
-      game.updateCar();
+      // === Основное обновление игрока ===
+
       game.updateObstacles(currentSpeed);
       game.updateRoad(currentSpeed);
 
@@ -90,35 +87,9 @@ export function GameLoop(
       }
 
       CameraSystem.update(realCar, currentSpeed);
-
-      // // Если машина разрушена, обновляем анимацию разлёта
-      // if (game.car.value.isDestroyed) {
-      //   game.updateDestroyedCubes();
-      //   // game.updateCameraForDestroyedState(camera);
-      // } else {
-      //   // Нормальное обновление игры
-      //   game.updateCar();
-      //   game.updateObstacles(currentSpeed);
-      //   game.updateRoad(currentSpeed);
-
-      //   // Проверка столкновений
-      //   const collisionResult = game.checkObstacleCollision();
-      //   if (collisionResult.collision) {
-      //     // Разрушаем машину
-      //     game.destroyCar(collisionResult.impactPoint);
-
-      //     // Запускаем таймер для показа меню Game Over
-      //     if (gameOverTimer) clearTimeout(gameOverTimer);
-      //     gameState.endGame();
-
-      //     return;
-      //   }
-      // }
-
-      // // Обновляем камеру
-      // CameraSystem.update(realCar, currentSpeed);
     }
   }
+
   onMounted(() => animate());
   onUnmounted(() => {
     if (gameOverTimer) clearTimeout(gameOverTimer);

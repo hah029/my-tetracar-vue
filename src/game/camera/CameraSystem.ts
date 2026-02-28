@@ -21,11 +21,14 @@ class CameraSystemClass {
     this.camera = camera;
   }
 
-  update(car: {
-    position: THREE.Vector3;
-    rotation: THREE.Euler;
-    isDestroyed(): boolean;
-  }, speed: number) {
+  update(
+    car: {
+      position: THREE.Vector3;
+      rotation: THREE.Euler;
+      isDestroyed(): boolean;
+    },
+    speed: number,
+  ) {
     if (!this.camera) return;
     if (car.isDestroyed()) return;
 
@@ -35,7 +38,7 @@ class CameraSystemClass {
     const targetCamPos = new THREE.Vector3(
       carPos.x,
       CAMERA_HEIGHT,
-      carPos.z + CAMERA_DISTANCE
+      carPos.z + CAMERA_DISTANCE,
     );
 
     this.camera.position.lerp(targetCamPos, CAMERA_FOLLOW_SPEED);
@@ -50,10 +53,9 @@ class CameraSystemClass {
     const targetFOV = FOV_MIN + (FOV_MAX - FOV_MIN) * speedFactor;
 
     this.camera.fov = THREE.MathUtils.clamp(
-      this.camera.fov +
-        (targetFOV - this.camera.fov) * CAMERA_FOLLOW_SPEED,
+      this.camera.fov + (targetFOV - this.camera.fov) * CAMERA_FOLLOW_SPEED,
       10,
-      170
+      170,
     );
     this.camera.updateProjectionMatrix();
 
@@ -61,7 +63,7 @@ class CameraSystemClass {
     const lookAtPos = new THREE.Vector3(
       carPos.x,
       carPos.y + 1,
-      carPos.z - CAMERA_LOOKAHEAD
+      carPos.z - CAMERA_LOOKAHEAD,
     );
     this.camera.lookAt(lookAtPos);
   }
@@ -71,10 +73,10 @@ class CameraSystemClass {
     if (cubes.length === 0) return;
 
     const center = new THREE.Vector3();
-    cubes.forEach(cube => center.add(cube.position));
+    cubes.forEach((cube) => center.add(cube.position));
     center.divideScalar(cubes.length);
 
-    const targetCamPos = center.clone().add(new THREE.Vector3(0, 3, -8));
+    const targetCamPos = center.clone().add(new THREE.Vector3(0, 3, 8));
     this.camera.position.lerp(targetCamPos, 0.05);
     this.camera.lookAt(center);
   }
@@ -85,7 +87,7 @@ class CameraSystemClass {
     this.camera.position.set(
       carPosition.x,
       CAMERA_HEIGHT,
-      carPosition.z + CAMERA_DISTANCE
+      carPosition.z + CAMERA_DISTANCE,
     );
 
     this.camera.fov = FOV_MIN;
@@ -95,7 +97,7 @@ class CameraSystemClass {
     this.camera.lookAt(
       carPosition.x,
       carPosition.y + 1,
-      carPosition.z - CAMERA_LOOKAHEAD
+      carPosition.z - CAMERA_LOOKAHEAD,
     );
   }
 }

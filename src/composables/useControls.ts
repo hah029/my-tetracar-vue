@@ -1,11 +1,9 @@
 // src/composables/useControls.ts
 import { onMounted, onUnmounted } from "vue";
-import { useGameState } from "../store/gameState";
-import { usePlayer } from "../composables/usePlayer";
+import { useGameState } from "@/store/gameState";
+import type { useGame } from "./useGame";
 
-const { moveLeft, moveRight } = usePlayer();
-
-export function useControls() {
+export function useControls(game: ReturnType<typeof useGame>) {
   const gameStore = useGameState();
 
   function processEscape() {
@@ -29,10 +27,10 @@ export function useControls() {
 
     switch (e.key) {
       case "ArrowLeft":
-        moveLeft();
+        game.movePlayerLeft();
         break;
       case "ArrowRight":
-        moveRight();
+        game.movePlayerRight();
         break;
       case " ":
         gameStore.enableNitro();

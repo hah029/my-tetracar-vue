@@ -16,7 +16,7 @@ const { getScene, getCamera, getRenderer } = useThree(threeRoot);
 const game = useGame();
 const gameState = useGameState();
 
-useControls();
+useControls(game);
 gameState.setState("menu");
 
 const getUIComponent = computed(() => {

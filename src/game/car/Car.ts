@@ -17,7 +17,7 @@ export class Car extends THREE.Group {
   private builder: CarCubesBuilder;
   private physics: CarPhysics;
   private config: Required<CarConfig>;
-  
+
   private currentLane: number;
   private cubes: THREE.Object3D[] = [];
 
@@ -28,23 +28,23 @@ export class Car extends THREE.Group {
 
     // Сначала сохраняем scene
     this.scene = scene;
-    
+
     this.config = { ...DEFAULT_CAR_CONFIG, ...config };
     this.currentLane = this.config.startLane;
-    
+
     this.state = {
       isJumping: false,
       jumpVelocity: 0,
       targetPitch: 0,
       isDestroyed: false,
-      cubes: []
+      cubes: [],
     };
 
     this.collider = new CarCollider({
       shrinkX: this.config.colliderShrinkX,
       shrinkZ: this.config.colliderShrinkZ,
       yOffset: this.config.colliderYOffset,
-      heightFactor: this.config.colliderHeightFactor
+      heightFactor: this.config.colliderHeightFactor,
     });
 
     this.builder = new CarCubesBuilder();
@@ -55,7 +55,7 @@ export class Car extends THREE.Group {
     this.scene.add(this); // ← Используем переданную сцену
 
     // console.log('Car added to scene at position:', this.position);
-    
+
     // Добавляем камеру-таргет
     cameraTarget.position.set(0, 0, -10);
     this.add(cameraTarget);
@@ -81,7 +81,7 @@ export class Car extends THREE.Group {
   public moveRight(): void {
     const roadManager = RoadManager.getInstance();
     const maxLane = roadManager.getLanesCount() - 1;
-    
+
     if (this.currentLane < maxLane && !this.state.isDestroyed) {
       this.currentLane++;
     }
@@ -103,17 +103,20 @@ export class Car extends THREE.Group {
 
     const roadManager = RoadManager.getInstance();
     const lanes = roadManager.getLanes();
-    
+
     // Обновляем позицию по полосам
-    const clampedLane = Math.min(Math.max(this.currentLane, 0), lanes.length - 1);
+    const clampedLane = Math.min(
+      Math.max(this.currentLane, 0),
+      lanes.length - 1,
+    );
     const targetX = lanes[clampedLane] || 0;
-    
+
     const { newX, newRotationY } = this.physics.updateLaneMovement(
       this.position.x,
       targetX,
-      this.rotation.y
+      this.rotation.y,
     );
-    
+
     this.position.x = newX;
     this.rotation.y = newRotationY;
 
@@ -143,25 +146,32 @@ export class Car extends THREE.Group {
   }
 
   // Построение машины
-  public async build(useGLB: boolean = true, cubeModelUrl: string = ''): Promise<void> {
+  public async build(
+    useGLB: boolean = true,
+    cubeModelUrl: string = "",
+  ): Promise<void> {
     // console.log('🚗 Building car');
 
     // Очищаем текущую машину
     this.clearCubes();
 
     // Строим новые кубики
-    this.cubes = await this.builder.buildFromCubes(useGLB, cubeModelUrl, (cube) => {
-      this.add(cube);
-    });
+    this.cubes = await this.builder.buildFromCubes(
+      useGLB,
+      cubeModelUrl,
+      (cube) => {
+        this.add(cube);
+      },
+    );
 
     this.state.cubes = this.cubes;
-    
+
     // Добавляем камеру обратно
     this.add(cameraTarget);
 
     // Обновляем коллайдер
     this.collider.updateFromObject(this);
-    
+
     // console.log('✅ Car built, total cubes:', this.cubes.length);
   }
 
@@ -176,7 +186,12 @@ export class Car extends THREE.Group {
     this.scene.add(cameraTarget);
 
     // Разбрасываем кубики
-    this.physics.createExplosionCubes(this.cubes, this, this.scene, impactPoint);
+    this.physics.createExplosionCubes(
+      this.cubes,
+      this,
+      this.scene,
+      impactPoint,
+    );
   }
 
   // Сброс
@@ -184,7 +199,7 @@ export class Car extends THREE.Group {
     // console.log('Resetting car');
 
     // Очищаем все кубики
-    this.cubes.forEach(cube => this.scene.remove(cube));
+    this.cubes.forEach((cube) => this.scene.remove(cube));
     this.cubes = [];
 
     // Очищаем группу
@@ -199,13 +214,13 @@ export class Car extends THREE.Group {
     this.currentLane = this.config.startLane;
     this.position.copy(this.config.startPosition);
     this.rotation.set(0, 0, 0);
-    
+
     this.state = {
       isJumping: false,
       jumpVelocity: 0,
       targetPitch: 0,
       isDestroyed: false,
-      cubes: []
+      cubes: [],
     };
 
     this.physics.reset();
@@ -217,7 +232,7 @@ export class Car extends THREE.Group {
   }
 
   private clearCubes(): void {
-    this.cubes.forEach(cube => {
+    this.cubes.forEach((cube) => {
       this.remove(cube);
     });
     this.cubes = [];
@@ -240,16 +255,23 @@ export class Car extends THREE.Group {
     return { ...this.state };
   }
 
-  public getStats(): { currentLane: number; position: THREE.Vector3; isDestroyed: boolean } {
+  public getStats(): {
+    currentLane: number;
+    position: THREE.Vector3;
+    isDestroyed: boolean;
+  } {
     return {
       currentLane: this.currentLane,
       position: this.position.clone(),
-      isDestroyed: this.state.isDestroyed
+      isDestroyed: this.state.isDestroyed,
     };
   }
 
   // Отладка
-  public createDebugCollider(): { debugMesh: THREE.Mesh; updateDebug: () => void } {
+  public createDebugCollider(): {
+    debugMesh: THREE.Mesh;
+    updateDebug: () => void;
+  } {
     return this.collider.createDebugCollider(this.scene);
   }
 }
