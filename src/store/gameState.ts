@@ -5,10 +5,10 @@ import { RoadManager } from "@/game/road";
 
 export const useGameState = defineStore("gameState", () => {
   // ---- Основные константы ----
-  const BASE_SPEED = 0.5;
-  const NITRO_MULTIPLIER = 2.5;
+  const BASE_SPEED = 0.1;
+  const NITRO_MULTIPLIER = 2.0;
   const MAX_SPEED = 3.0;
-  const ACCELERATION = 0.002;
+  const ACCELERATION = 0.001;
 
   // ---- Состояния ----
   const currentState = ref<"menu" | "playing" | "gameover" | "paused">("menu");
@@ -17,10 +17,11 @@ export const useGameState = defineStore("gameState", () => {
   const isNitroEnabled = ref(false);
   const currentLane = ref(1); // 0..3 для полос
   const maxSpeed = ref(MAX_SPEED);
+  const acceleration = ref(ACCELERATION);
   const score = ref(0);
   const highScore = ref(0);
-  const carPosition = ref({x: 0, y: 0, z: 0});
-  const cameraPosition = ref({x: 0, y: 0, z: 0});
+  const carPosition = ref({ x: 0, y: 0, z: 0 });
+  const cameraPosition = ref({ x: 0, y: 0, z: 0 });
 
   // ---- Actions ----
   function setState(state: "menu" | "playing" | "gameover" | "paused") {
@@ -35,15 +36,15 @@ export const useGameState = defineStore("gameState", () => {
   }
 
   function pauseGame() {
-    if (currentState.value === "playing") setState("paused");;
+    if (currentState.value === "playing") setState("paused");
   }
 
   function resumeGame() {
-    if (currentState.value === "paused") setState("playing");;
+    if (currentState.value === "paused") setState("playing");
   }
 
   function endGame() {
-    setState("gameover");;
+    setState("gameover");
     if (score.value > highScore.value) highScore.value = score.value;
   }
 
@@ -67,7 +68,16 @@ export const useGameState = defineStore("gameState", () => {
   }
 
   function getCurrentSpeed() {
-    return isNitroEnabled.value ? baseSpeed.value * NITRO_MULTIPLIER : baseSpeed.value;
+    return isNitroEnabled.value
+      ? baseSpeed.value * NITRO_MULTIPLIER
+      : baseSpeed.value;
+  }
+
+  function getCurrentAcceleration() {
+    return acceleration.value * (1 - baseSpeed.value / maxSpeed.value);
+    // return isNitroEnabled.value
+    //   ? acceleration.value * NITRO_MULTIPLIER
+    //   : acceleration.value;
   }
 
   function addScore(amount: number) {
@@ -94,12 +104,14 @@ export const useGameState = defineStore("gameState", () => {
   return {
     // state
     NITRO_MULTIPLIER,
+    BASE_SPEED,
     currentState,
     speed,
     baseSpeed,
     isNitroEnabled,
     currentLane,
     maxSpeed,
+    acceleration,
     score,
     highScore,
     carPosition,
@@ -111,6 +123,7 @@ export const useGameState = defineStore("gameState", () => {
     disableNitro,
     resetGameData,
     getCurrentSpeed,
+    getCurrentAcceleration,
     addScore,
     resetScore,
     startGame,

@@ -21,7 +21,7 @@ export function useHUD() {
     bestValue.value = Math.floor(gameState.highScore);
 
     // скорость
-    speedValue.value = +(speed * 100).toFixed(1);
+    speedValue.value = +speed.toFixed(3);
 
     // нитро
     if (gameState.isNitroEnabled) {
@@ -34,7 +34,9 @@ export function useHUD() {
 
     // полосы движения - динамически обновляем размер массива
     const lanesCount = gameState.getLanesCount?.() ?? 4;
-    laneDots.value = Array(lanesCount).fill(false).map((_, idx) => idx === currentLane);
+    laneDots.value = Array(lanesCount)
+      .fill(false)
+      .map((_, idx) => idx === currentLane);
 
     // предупреждение об опасности
     warningOpacity.value = Math.min(dangerLevel, 1);

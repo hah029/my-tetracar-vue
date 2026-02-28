@@ -4,8 +4,9 @@ import { useGameState } from "../store/gameState";
 import { useHUD } from "./useHUD";
 import type { useGame } from "./useGame";
 import type { PerspectiveCamera, Scene, WebGLRenderer } from "three";
-import { carManager } from "@/game/car";
+// import { carManager } from "@/game/car";
 import { CameraSystem } from "@/game/camera/CameraSystem";
+import Stats from "three/examples/jsm/libs/stats.module.js";
 
 export function GameLoop(
   game: ReturnType<typeof useGame>,
@@ -18,9 +19,12 @@ export function GameLoop(
 
   let gameOverTimer: number | null = null;
   let previousState = gameState.currentState;
+  const stats = new Stats();
+  document.body.appendChild(stats.dom);
 
   function animate() {
     requestAnimationFrame(animate);
+    stats.begin();
 
     renderer.render(scene, camera);
 
@@ -58,9 +62,9 @@ export function GameLoop(
 
     // Увеличение базовой скорости
     if (!game.car.value.isDestroyed) {
-      if (gameState.baseSpeed < 0.5) gameState.baseSpeed = 0.5;
-      gameState.baseSpeed +=
-        gameState.baseSpeed < gameState.maxSpeed ? 0.0005 : 0;
+      if (gameState.baseSpeed < gameState.BASE_SPEED)
+        gameState.baseSpeed = gameState.BASE_SPEED;
+      gameState.baseSpeed += gameState.getCurrentAcceleration();
     }
 
     // Обновление счёта
@@ -90,6 +94,7 @@ export function GameLoop(
 
       CameraSystem.update(realCar, currentSpeed);
     }
+    stats.end();
   }
 
   onMounted(() => animate());

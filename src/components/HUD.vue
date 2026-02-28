@@ -8,14 +8,15 @@
 
     <div class="speed-panel">
       <div class="label">SPEED</div>
-      <div class="value">{{ (gameState.getCurrentSpeed() * 100).toFixed(1) }}</div>
+      <div class="value">{{ gameState.getCurrentSpeed().toFixed(2) }}</div>
       <div class="unit">KM/H</div>
     </div>
 
     <div class="nitro-container">
       <div class="nitro-header">
         <span>NITRO</span>
-        <span :class="{active: gameState.isNitroEnabled}">{{ gameState.isNitroEnabled ? 'ACTIVE' : 'INACTIVE' }}</span>
+        <span :class="{ active: gameState.isNitroEnabled }">{{ gameState.isNitroEnabled ? 'ACTIVE' : 'INACTIVE'
+          }}</span>
       </div>
       <div class="nitro-bar-bg">
         <div class="nitro-bar" :style="{ width: gameState.isNitroEnabled ? '100%' : '0%' }"></div>
@@ -23,11 +24,7 @@
     </div>
 
     <div class="lane-indicator">
-      <div
-        v-for="i in laneCount"
-        :key="i"
-        :class="['lane-dot', { active: gameState.currentLane === i-1 }]"
-      ></div>
+      <div v-for="i in laneCount" :key="i" :class="['lane-dot', { active: gameState.currentLane === i - 1 }]"></div>
     </div>
 
     <div class="debug-panel">
@@ -39,7 +36,7 @@
         <span>cameraPosition: </span>
         <span>{{ gameState.cameraPosition }}</span>
       </div>
-      
+
     </div>
 
     <div class="warning-message" :style="warningStyle">
@@ -97,13 +94,13 @@ const warningStyle = computed(() => {
   position: absolute;
   top: 20px;
   left: 20px;
-  background: rgba(0,0,0,0.6);
+  background: rgba(0, 0, 0, 0.6);
   backdrop-filter: blur(5px);
   border-radius: 15px;
   padding: 15px 25px;
   color: white;
   border-left: 4px solid #ffd700;
-  box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
 }
 
 .score-panel .label {
@@ -116,7 +113,7 @@ const warningStyle = computed(() => {
   font-size: 36px;
   font-weight: bold;
   color: #ffd700;
-  text-shadow: 0 0 10px rgba(255,215,0,0.3);
+  text-shadow: 0 0 10px rgba(255, 215, 0, 0.3);
 }
 
 .score-panel .best {
@@ -130,13 +127,13 @@ const warningStyle = computed(() => {
   position: absolute;
   top: 20px;
   right: 20px;
-  background: rgba(0,0,0,0.6);
+  background: rgba(0, 0, 0, 0.6);
   backdrop-filter: blur(5px);
   border-radius: 15px;
   padding: 15px 25px;
   color: white;
   border-right: 4px solid #00ffff;
-  box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
   text-align: right;
 }
 
@@ -150,7 +147,7 @@ const warningStyle = computed(() => {
   font-size: 36px;
   font-weight: bold;
   color: #00ffff;
-  text-shadow: 0 0 10px rgba(0,255,255,0.3);
+  text-shadow: 0 0 10px rgba(0, 255, 255, 0.3);
 }
 
 .speed-panel .unit {
@@ -165,12 +162,12 @@ const warningStyle = computed(() => {
   left: 50%;
   transform: translateX(-50%);
   width: 300px;
-  background: rgba(0,0,0,0.5);
+  background: rgba(0, 0, 0, 0.5);
   backdrop-filter: blur(5px);
   border-radius: 50px;
   padding: 10px 15px;
-  border: 1px solid rgba(255,255,255,0.1);
-  box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
 }
 
 .nitro-header {
@@ -190,7 +187,7 @@ const warningStyle = computed(() => {
 .nitro-bar-bg {
   width: 100%;
   height: 20px;
-  background: rgba(255,255,255,0.1);
+  background: rgba(255, 255, 255, 0.1);
   border-radius: 10px;
   overflow: hidden;
 }
@@ -209,17 +206,18 @@ const warningStyle = computed(() => {
   left: 30px;
   display: flex;
   gap: 10px;
-  background: rgba(0,0,0,0.5);
+  background: rgba(0, 0, 0, 0.5);
   backdrop-filter: blur(5px);
   padding: 10px;
   border-radius: 50px;
-  border: 1px solid rgba(255,255,255,0.1);
+  border: 1px solid rgba(255, 255, 255, 0.1);
 }
+
 .debug-panel {
   position: absolute;
   top: 150px;
   right: 20px;
-  background: rgba(0,0,0,0.6);
+  background: rgba(0, 0, 0, 0.6);
   backdrop-filter: blur(5px);
   padding: 10px;
   border-radius: 10px;
@@ -235,8 +233,8 @@ const warningStyle = computed(() => {
   width: 15px;
   height: 15px;
   border-radius: 50%;
-  background: rgba(255,255,255,0.3);
-  border: 2px solid rgba(255,255,255,0.5);
+  background: rgba(255, 255, 255, 0.3);
+  border: 2px solid rgba(255, 255, 255, 0.5);
   transition: all 0.2s ease;
 }
 
@@ -253,7 +251,7 @@ const warningStyle = computed(() => {
   left: 50%;
   font-size: 48px;
   font-weight: bold;
-  text-shadow: 0 0 20px rgba(255,0,0,0.5);
+  text-shadow: 0 0 20px rgba(255, 0, 0, 0.5);
   pointer-events: none;
   z-index: 10;
   transform: translate(-50%, -50%);
