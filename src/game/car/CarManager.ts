@@ -24,16 +24,18 @@ export class CarManager {
 
   public createCar(config?: CarConfig): Car {
     // console.log('CarManager.createCar called');
-    
+
     if (!this.scene) {
-      throw new Error('CarManager not initialized with scene. Call initialize() first.');
+      throw new Error(
+        "CarManager not initialized with scene. Call initialize() first.",
+      );
     }
-    
+
     if (this.car) {
       // console.log('Destroying existing car');
       this.destroyCar();
     }
-    
+
     // console.log('Creating new Car with scene:', this.scene);
     this.car = new Car(this.scene, config);
     // console.log('Car created successfully');
@@ -42,7 +44,7 @@ export class CarManager {
 
   public getCar(): Car {
     if (!this.car) {
-      throw new Error('Car not created. Call createCar() first.');
+      throw new Error("Car not created. Call createCar() first.");
     }
     return this.car;
   }
@@ -80,27 +82,30 @@ export class CarManager {
     }
   }
 
-  public async buildCar(useGLB: boolean = true, cubeModelUrl: string = ''): Promise<void> {
+  public async buildCar(
+    useGLB: boolean = true,
+    cubeModelUrl: string = "",
+  ): Promise<void> {
     if (this.car) {
       await this.car.build(useGLB, cubeModelUrl);
     }
   }
 
-  public resetCar(): void {
+  public resetCar(cubeGLB: string): void {
     if (this.car) {
-      this.car.reset();
+      this.car.reset(cubeGLB);
     }
   }
 
   public getStats(): CarStats | null {
     if (!this.car) return null;
-    
+
     return {
       currentLane: this.car.getCurrentLane(),
       position: this.car.position.clone(),
       isDestroyed: this.car.isDestroyed(),
       isJumping: this.car.isJumping(),
-      cubesCount: this.car.getCubes().length
+      cubesCount: this.car.getCubes().length,
     };
   }
 

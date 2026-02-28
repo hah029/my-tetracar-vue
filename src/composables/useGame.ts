@@ -6,17 +6,20 @@ import { CarManager } from "@/game/car/CarManager";
 import { ObstacleManager } from "@/game/obstacle/ObstacleManager";
 import { CollisionSystem } from "@/game/collision/CollisionSystem";
 
+import cubeGLB from "@/assets/models/cube.glb";
+// const cubeGLB = "";
+
 // Интерфейс для реактивной ссылки car
 interface CarRef {
   mesh: THREE.Group;
   targetX: number;
   isDestroyed: boolean;
+  isJumping: boolean;
   cubes: THREE.Object3D[];
 }
 
 // Вынесенная функция для создания всех источников света
 function setupLights(scene: THREE.Scene) {
-  // Основное освещение
   const ambientLight = new THREE.AmbientLight(0xffffff, 1.0);
   scene.add(ambientLight);
 
@@ -33,9 +36,8 @@ function setupLights(scene: THREE.Scene) {
   backLight.position.set(0, 5, -10);
   scene.add(backLight);
 
-  // Тестовые разноцветные источники света
   const colors = [0xff0000, 0x00ff00, 0x0000ff, 0xffff00];
-  const positions = [
+  const positions: number[][] = [
     [5, 5, 5],
     [-5, 5, 5],
     [5, 5, -5],
@@ -97,23 +99,7 @@ export function useGame() {
     car.value.isDestroyed = false;
     car.value.cubes = [];
 
-    carManager.buildCar(false);
-
-    // === Спавн препятствий ===
-    setTimeout(() => {
-      (window as any).obstacleInterval = setInterval(() => {
-        if (sceneRef && carManager && !carManager.getCar().isDestroyed()) {
-          const lane = Math.floor(Math.random() * 4);
-          const obstacle = obstacleManager.spawnObstacleRow(lane, -60);
-          if (obstacle) {
-            obstacles.value.push({
-              mesh: obstacle,
-              position: obstacle.position.clone(),
-            });
-          }
-        }
-      }, 1500);
-    }, 500);
+    carManager.buildCar(true, cubeGLB);
   }
 
   // === Обновление позиции и состояния машины (вызывать каждый кадр) ===
@@ -145,7 +131,7 @@ export function useGame() {
     if (!carManager) return;
 
     carManager.resetCar();
-    updatePlayer(); // сразу синхронизируем реф
+    updatePlayer();
   }
 
   function movePlayerLeft() {
@@ -158,9 +144,21 @@ export function useGame() {
     updatePlayer();
   }
 
-  function updateObstacles(speed: number) {
+  function jumpPlayer() {
+    carManager.getCar().jump();
+    car.value.isJumping = true;
+    updatePlayer();
+  }
+
+  // ==========================
+  // Обновление препятствий (привязка к игровому циклу)
+  // ==========================
+  function updateObstacles(deltaTime: number, speed: number) {
     if (!obstacleManager) return;
-    obstacleManager.update(speed);
+
+    obstacleManager.update(deltaTime, speed);
+
+    // Синхронизация с реактивным массивом
     obstacles.value = obstacleManager.getObstacles().map((obs) => ({
       mesh: obs,
       position: obs.position.clone(),
@@ -179,15 +177,31 @@ export function useGame() {
   }
 
   function updateJumps(speed: number) {
-    jumps.value.forEach((jump) => {
-      if (jump.active) {
-        jump.progress += speed * 0.05;
-        if (jump.progress >= 1) jump.active = false;
+    if (!obstacleManager) return;
+
+    // Обновление трамплинов через ObstacleManager
+    // Сам менеджер уже двигает трамплины и удаляет их из своего массива
+    obstacleManager.getJumps().forEach((jump, index) => {
+      if (jump.update(speed)) {
+        // remove уже выполняется в менеджере, тут синхронизируем реактивный массив
+        jumps.value.splice(index, 1);
       }
     });
+
+    // Синхронизация реактивного массива
+    jumps.value = obstacleManager.getJumps().map((jump) => ({
+      mesh: jump,
+      lane: jump.userData.lane,
+      z: jump.position.z,
+    }));
   }
 
   function resetJumps() {
+    if (!obstacleManager) return;
+    obstacleManager.getJumps().forEach((jump) => {
+      sceneRef?.remove(jump);
+    });
+    obstacleManager.getJumps().length = 0;
     jumps.value = [];
   }
 
@@ -196,6 +210,7 @@ export function useGame() {
     return CollisionSystem.checkCollision(
       carManager.getCar(),
       obstacleManager.getObstacles(),
+      obstacleManager.getJumps(),
     );
   }
 
@@ -210,49 +225,23 @@ export function useGame() {
   function reset() {
     if (!carManager || !obstacleManager || !roadManager || !sceneRef) return;
 
-    // 1️⃣ Очистка старого интервала
-    if ((window as any).obstacleInterval) {
-      clearInterval((window as any).obstacleInterval);
-      (window as any).obstacleInterval = null;
-    }
-
-    // 2️⃣ Сброс всех менеджеров
-    carManager.resetCar();
+    carManager.resetCar(cubeGLB);
     obstacleManager.reset();
     CollisionSystem.reset();
     roadManager.clear();
 
-    // 3️⃣ Пересоздание дороги
     roadManager.createRoad();
     roadManager.addSpeedLines({ count: 30 });
 
-    // 4️⃣ Обновление машины и синхронизация car.value
     const newCar = carManager.getCar();
     car.value.mesh = newCar;
     car.value.targetX = roadManager.getLanePosition(newCar.getCurrentLane());
     car.value.isDestroyed = false;
     car.value.cubes = [];
 
-    // 5️⃣ Сброс прыжков
     resetJumps();
-
-    // 6️⃣ Очистка препятствий и установка пустого массива
     obstacles.value = [];
-    updateObstacles(0); // чтобы синхронизировать массив obstacles.value с менеджером
-
-    // 7️⃣ Новый интервал спавна препятствий
-    (window as any).obstacleInterval = setInterval(() => {
-      if (sceneRef && carManager && !carManager.getCar().isDestroyed()) {
-        const lane = Math.floor(Math.random() * 4);
-        const obstacle = obstacleManager.spawnObstacleRow(lane, -60);
-        if (obstacle) {
-          obstacles.value.push({
-            mesh: obstacle,
-            position: obstacle.position.clone(),
-          });
-        }
-      }
-    }, 1500);
+    updateObstacles(0, 0); // синхронизация
   }
 
   return {
@@ -266,6 +255,7 @@ export function useGame() {
     resetPlayer,
     movePlayerLeft,
     movePlayerRight,
+    jumpPlayer,
 
     addObstacle: (obstacle: THREE.Mesh) => {
       if (sceneRef) sceneRef.add(obstacle);

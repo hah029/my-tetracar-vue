@@ -106,15 +106,20 @@ export function GameLoop(
     if (game.car.value.isDestroyed) {
       CameraSystem.updateDestroyed(game.car.value.cubes);
     } else {
-      game.updateObstacles(currentSpeed);
+      const deltaTime = time - lastTime; // или FRAME_TIME, если используешь лимит FPS
+      game.updateObstacles(deltaTime, currentSpeed);
       game.updateRoad(currentSpeed);
 
       const collisionResult = game.checkCollision();
       if (collisionResult.collision) {
-        game.destroyCar(collisionResult.impactPoint);
-        gameState.endGame();
-        stats.end();
-        return;
+        if (collisionResult.jump) {
+          game.jumpPlayer();
+        } else {
+          game.destroyCar(collisionResult.impactPoint);
+          gameState.endGame();
+          stats.end();
+          return;
+        }
       }
 
       CameraSystem.update(realCar, currentSpeed);

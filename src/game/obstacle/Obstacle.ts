@@ -18,10 +18,11 @@ export class Obstacle extends THREE.Mesh {
     const materials = Obstacle.createMaterials();
 
     // Выбираем материал
-    const materialIndex =
-      variant !== null
-        ? variant % materials.length
-        : Math.floor(Math.random() * materials.length);
+    const materialIndex = 0;
+    // const materialIndex =
+    //   variant !== null
+    //     ? variant % materials.length
+    //     : Math.floor(Math.random() * materials.length);
     const material = materials[materialIndex].clone();
 
     // Используем единую геометрию
@@ -46,7 +47,7 @@ export class Obstacle extends THREE.Mesh {
     }
 
     this.position.set(x, 0.25, zPos);
-    this.rotation.y = Math.random() * Math.PI;
+    // this.rotation.y = Math.random() * Math.PI;
 
     // Настраиваем userData
     this.userData = {
@@ -65,6 +66,13 @@ export class Obstacle extends THREE.Mesh {
   // Статический метод для создания материалов
   private static createMaterials(): THREE.MeshStandardMaterial[] {
     return [
+      new THREE.MeshStandardMaterial({
+        color: 0xffffff,
+        emissive: 0x000000,
+        emissiveIntensity: 1.5,
+        transparent: true,
+        opacity: 0.9,
+      }),
       new THREE.MeshStandardMaterial({
         color: 0xff3366,
         emissive: 0x440011,

@@ -1,17 +1,27 @@
+// src/composables/ObstacleManager.ts
 import * as THREE from "three";
-
 import { Obstacle } from "./Obstacle";
+import { Jump } from "./Jump";
 import { RoadManager } from "@/game/road/RoadManager";
 import type { ObstaclePatternOptions } from "./types";
 
 export class ObstacleManager {
   private static instance: ObstacleManager;
   private obstacles: Obstacle[] = [];
+  private jumps: Jump[] = [];
   private scene: THREE.Scene = new THREE.Scene();
+
+  private spawnTimer: number = 0;
+  private lastSpawnTime: number = 0;
+  private baseSpawnInterval: number = 500; // мс
+
+  private jumpChance: number = 0.02; // шанс на трамплин перед препятствием
+  private jumpDistanceMin: number = 2;
+  private jumpDistanceMax: number = 8;
+  private speedForMaxJump: number = 3;
 
   private constructor() {}
 
-  // Получение экземпляра (синглтон)
   public static getInstance(): ObstacleManager {
     if (!ObstacleManager.instance) {
       ObstacleManager.instance = new ObstacleManager();
@@ -20,62 +30,61 @@ export class ObstacleManager {
   }
 
   public initialize(scene: THREE.Scene): void {
-    if (scene === undefined) {
-      throw new Error("scene is null");
-    }
+    if (!scene) throw new Error("scene is null");
     this.scene = scene;
   }
 
-  // Получить все препятствия
+  // ==========================
+  // Публичные методы для спавна
+  // ==========================
   public getObstacles(): Obstacle[] {
     return this.obstacles;
   }
 
-  // Получить количество полос из RoadManager
-  private getLanesCount(): number {
-    try {
-      const roadManager = RoadManager.getInstance();
-      return roadManager.getLanesCount();
-    } catch {
-      // Fallback
-      return 4;
-    }
+  public getJumps(): Jump[] {
+    return this.jumps;
   }
 
-  // Создать одно препятствие
   public spawnObstacle(
     laneIndex: number,
     zPos: number = -60,
     variant: number | null = null,
   ): Obstacle | null {
     const lanesCount = this.getLanesCount();
+    if (laneIndex < 0 || laneIndex >= lanesCount) return null;
 
-    if (laneIndex < 0 || laneIndex >= lanesCount) {
-      console.warn(`Invalid lane index ${laneIndex}, max is ${lanesCount - 1}`);
-      return null;
-    }
-
-    // Проверяем на дубликаты
     if (
       this.obstacles.some(
         (o) =>
           Math.abs(o.position.z - zPos) < 0.1 && o.userData.lane === laneIndex,
       )
-    ) {
+    )
       return null;
-    }
 
     try {
       const obstacle = new Obstacle(laneIndex, this.scene, zPos, variant);
       this.obstacles.push(obstacle);
       return obstacle;
-    } catch (error) {
-      console.error("Failed to spawn obstacle:", error);
+    } catch (e) {
+      console.error("Failed to spawn obstacle:", e);
       return null;
     }
   }
 
-  // Создать ряд препятствий
+  public spawnJump(laneIndex: number, zPos: number = -60): Jump | null {
+    const lanesCount = this.getLanesCount();
+    if (laneIndex < 0 || laneIndex >= lanesCount) return null;
+
+    try {
+      const jump = new Jump(laneIndex, this.scene, zPos);
+      this.jumps.push(jump);
+      return jump;
+    } catch (e) {
+      console.error("Failed to spawn jump:", e);
+      return null;
+    }
+  }
+
   public spawnObstacleRow(
     laneIndex: number,
     zPos: number = -60,
@@ -84,18 +93,15 @@ export class ObstacleManager {
     return this.spawnObstacle(laneIndex, zPos, variant);
   }
 
-  // Создать паттерн препятствий
   public spawnObstaclePattern(
     options: ObstaclePatternOptions = {},
   ): Obstacle[] {
     const { zPos = -60, pattern = "random", count, spacing = 4 } = options;
-
     const spawned: Obstacle[] = [];
     const lanesCount = this.getLanesCount();
 
     switch (pattern) {
       case "wall":
-        // Стена из препятствий на всех полосах
         for (let i = 0; i < lanesCount; i++) {
           const obstacle = this.spawnObstacle(i, zPos, i);
           if (obstacle) spawned.push(obstacle);
@@ -103,7 +109,6 @@ export class ObstacleManager {
         break;
 
       case "zigzag":
-        // Зигзаг
         for (let i = 0; i < lanesCount; i++) {
           const obstacle = this.spawnObstacle(i, zPos - i * spacing, i);
           if (obstacle) spawned.push(obstacle);
@@ -112,7 +117,6 @@ export class ObstacleManager {
 
       case "random":
       default:
-        // Случайные препятствия
         const obstacleCount = count ?? 2 + Math.floor(Math.random() * 3);
         for (let i = 0; i < obstacleCount; i++) {
           const lane = Math.floor(Math.random() * lanesCount);
@@ -125,74 +129,119 @@ export class ObstacleManager {
     return spawned;
   }
 
-  // Обновить все препятствия
-  public update(speed: number): void {
-    for (let i = this.obstacles.length - 1; i >= 0; i--) {
-      const obstacle = this.obstacles[i];
-      if (obstacle === undefined) {
-        continue;
-      }
-      const shouldRemove = obstacle.update(speed);
+  // ==========================
+  // Обновление
+  // ==========================
+  public update(deltaTime: number, speed: number): void {
+    this.spawnTimer += deltaTime;
 
-      if (shouldRemove) {
-        this.scene.remove(obstacle);
+    // динамический интервал
+    const spawnInterval = Math.max(300, this.baseSpawnInterval - speed * 5);
+
+    if (this.spawnTimer - this.lastSpawnTime >= spawnInterval) {
+      const lanesCount = this.getLanesCount();
+      const emptyLane = Math.floor(Math.random() * lanesCount);
+
+      for (let lane = 0; lane < lanesCount; lane++) {
+        if (lane === emptyLane) continue;
+
+        // 10% шанс на трамплин перед препятствием
+        if (Math.random() < this.jumpChance) {
+          const jumpDistance = this.getJumpDistance(speed);
+          this.spawnJump(lane, -60 + jumpDistance);
+        }
+
+        // // 5% шанс на паттерн, иначе обычный препятствие
+        // if (Math.random() < 0.02) {
+        //   this.spawnObstaclePattern({ pattern: "random", zPos: -60 });
+        // } else {
+        // }
+        this.spawnObstacleRow(lane, -60);
+      }
+
+      this.lastSpawnTime = this.spawnTimer;
+    }
+
+    // Обновление препятствий
+    for (let i = this.obstacles.length - 1; i >= 0; i--) {
+      const obs = this.obstacles[i];
+      if (obs === undefined) continue;
+      if (obs.update(speed)) {
+        this.scene.remove(obs);
         this.obstacles.splice(i, 1);
+      }
+    }
+
+    // Обновление трамплинов
+    for (let i = this.jumps.length - 1; i >= 0; i--) {
+      const jump = this.jumps[i];
+      if (jump === undefined) continue;
+      if (jump.update(speed)) {
+        this.scene.remove(jump);
+        this.jumps.splice(i, 1);
       }
     }
   }
 
-  // Сбросить все препятствия
   public reset(): void {
-    this.obstacles.forEach((obstacle) => {
-      this.scene.remove(obstacle);
-    });
+    this.obstacles.forEach((o) => this.scene.remove(o));
+    this.jumps.forEach((j) => this.scene.remove(j));
     this.obstacles = [];
+    this.jumps = [];
+    this.spawnTimer = 0;
+    this.lastSpawnTime = 0;
   }
 
-  // Получить препятствия в определенном диапазоне
   public getObstaclesInRange(zMin: number, zMax: number): Obstacle[] {
     return this.obstacles.filter(
-      (obstacle) => obstacle.position.z >= zMin && obstacle.position.z <= zMax,
+      (o) => o.position.z >= zMin && o.position.z <= zMax,
     );
   }
 
-  // Проверить коллизию с препятствием
   public checkCollision(box: THREE.Box3): Obstacle | null {
-    for (const obstacle of this.obstacles) {
-      const obstacleBox = obstacle.getBoundingBox();
-      if (box.intersectsBox(obstacleBox)) {
-        return obstacle;
-      }
+    for (const obs of this.obstacles) {
+      if (box.intersectsBox(obs.getBoundingBox())) return obs;
     }
     return null;
   }
 
-  // Удалить конкретное препятствие
   public removeObstacle(obstacle: Obstacle): void {
-    const index = this.obstacles.indexOf(obstacle);
-    if (index !== -1) {
+    const idx = this.obstacles.indexOf(obstacle);
+    if (idx !== -1) {
       this.scene.remove(obstacle);
-      this.obstacles.splice(index, 1);
+      this.obstacles.splice(idx, 1);
     }
   }
 
-  // Получить количество препятствий
   public getCount(): number {
     return this.obstacles.length;
   }
 
-  // Получить статистику по препятствиям
   public getStats(): { total: number; byLane: Map<number, number> } {
     const byLane = new Map<number, number>();
-
-    this.obstacles.forEach((obstacle) => {
-      const lane = obstacle.userData.lane;
+    this.obstacles.forEach((obs) => {
+      const lane = obs.userData.lane;
       byLane.set(lane, (byLane.get(lane) || 0) + 1);
     });
+    return { total: this.obstacles.length, byLane };
+  }
 
-    return {
-      total: this.obstacles.length,
-      byLane,
-    };
+  // ==========================
+  // Вспомогательные методы
+  // ==========================
+  private getLanesCount(): number {
+    try {
+      return RoadManager.getInstance().getLanesCount();
+    } catch {
+      return 4;
+    }
+  }
+
+  private getJumpDistance(speed: number): number {
+    const factor = Math.min(speed / this.speedForMaxJump, 1);
+    return (
+      this.jumpDistanceMin +
+      (this.jumpDistanceMax - this.jumpDistanceMin) * factor
+    );
   }
 }

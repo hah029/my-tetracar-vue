@@ -1,5 +1,7 @@
+// src/game/collision/CollisionSystem.ts
 import * as THREE from "three";
 import type { Obstacle } from "../obstacle/Obstacle";
+import type { Jump } from "../jump/Jump";
 
 const DANGER_DISTANCE = 30;
 const COLLISION_COOLDOWN_MS = 1000;
@@ -7,6 +9,7 @@ const COLLISION_COOLDOWN_MS = 1000;
 type CollisionResult = {
   collision: boolean;
   impactPoint?: THREE.Vector3;
+  jump?: boolean; // добавлено для трамплина
 };
 
 class CollisionSystemClass {
@@ -31,15 +34,17 @@ class CollisionSystemClass {
       getCollider(): THREE.Box3 | THREE.Sphere;
     },
     obstacles: Obstacle[],
+    jumps: Jump[] = [], // теперь поддерживаем трамплины
   ): CollisionResult {
     if (car.isDestroyed()) return { collision: false };
     if (this.collisionCooldown) return { collision: false };
 
+    const carCollider = car.getCollider();
+
+    // Проверка препятствий
     for (const obstacle of obstacles) {
       const obstacleCollider = obstacle.collider;
       if (!obstacleCollider) continue;
-
-      const carCollider = car.getCollider();
 
       const intersects =
         obstacleCollider instanceof THREE.Box3
@@ -48,7 +53,6 @@ class CollisionSystemClass {
 
       if (intersects) {
         this.collisionCooldown = true;
-
         this.cooldownTimer = window.setTimeout(() => {
           this.collisionCooldown = false;
         }, COLLISION_COOLDOWN_MS);
@@ -56,6 +60,27 @@ class CollisionSystemClass {
         return {
           collision: true,
           impactPoint: obstacle.position.clone(),
+        };
+      }
+    }
+
+    // Проверка трамплинов
+    for (const jump of jumps) {
+      if (jump.userData.activated) continue; // если уже активирован
+
+      const jumpBox = jump.getBoundingBox();
+      if (jumpBox.intersectsBox(carCollider as THREE.Box3)) {
+        jump.userData.activated = true;
+
+        this.collisionCooldown = true;
+        this.cooldownTimer = window.setTimeout(() => {
+          this.collisionCooldown = false;
+        }, COLLISION_COOLDOWN_MS);
+
+        return {
+          collision: true,
+          impactPoint: jump.position.clone(),
+          jump: true, // отметка, что это трамплин
         };
       }
     }
@@ -68,9 +93,7 @@ class CollisionSystemClass {
       position: THREE.Vector3;
       isDestroyed(): boolean;
     },
-    obstacles: {
-      position: THREE.Vector3;
-    }[],
+    obstacles: { position: THREE.Vector3 }[],
   ): number {
     if (car.isDestroyed()) return 0;
 
@@ -80,7 +103,6 @@ class CollisionSystemClass {
     for (const obstacle of obstacles) {
       const obstaclePos = obstacle.position.clone();
 
-      // препятствие впереди — не опасно
       if (obstaclePos.z >= carPos.z) continue;
 
       const zDiff = Math.abs(obstaclePos.z - carPos.z);

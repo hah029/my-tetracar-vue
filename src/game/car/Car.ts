@@ -7,9 +7,6 @@ import { CarCollider } from "./CarCollider";
 import { CarCubesBuilder } from "./CarCubesBuilder";
 import { CarPhysics } from "./CarPhysics";
 
-// console.log('Car.ts loading...');
-// console.log('cameraTarget import:', cameraTarget);
-
 export class Car extends THREE.Group {
   private scene: THREE.Scene;
   private state: CarState;
@@ -23,9 +20,6 @@ export class Car extends THREE.Group {
 
   constructor(scene: THREE.Scene, config: Partial<CarConfig> = {}) {
     super();
-
-    // console.log('Car constructor with config:', config);
-
     // Сначала сохраняем scene
     this.scene = scene;
 
@@ -52,11 +46,8 @@ export class Car extends THREE.Group {
 
     this.position.copy(this.config.startPosition);
     this.scene = scene;
-    this.scene.add(this); // ← Используем переданную сцену
+    this.scene.add(this);
 
-    // console.log('Car added to scene at position:', this.position);
-
-    // Добавляем камеру-таргет
     cameraTarget.position.set(0, 0, -10);
     this.add(cameraTarget);
   }
@@ -195,7 +186,7 @@ export class Car extends THREE.Group {
   }
 
   // Сброс
-  public reset(): void {
+  public reset(cubeGLB: string): void {
     // console.log('Resetting car');
 
     // Очищаем все кубики
@@ -226,7 +217,11 @@ export class Car extends THREE.Group {
     this.physics.reset();
 
     // Перестраиваем машину из примитивов
-    this.build(false);
+    if (cubeGLB === "") {
+      this.build(false);
+    } else {
+      this.build(true, cubeGLB);
+    }
 
     // console.log('Car reset finished');
   }
