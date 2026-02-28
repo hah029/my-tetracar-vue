@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted, computed } from "vue";
+import { ref, onMounted, computed, watch, nextTick } from "vue";
 import { useThree } from "./composables/useThree";
 import { useGame } from "./composables/useGame";
 import { useGameState } from "./store/gameState";
@@ -45,6 +45,28 @@ onMounted(() => {
   const loop = GameLoop(game, scene, camera, renderer);
   loop.animate();
 });
+
+watch(
+  () => gameState.currentState,
+  async (newState, oldState) => {
+    if ((oldState === "gameover" || oldState === "menu") && newState === "playing") {
+      console.log("🔄 Game restart detected, resetting game...");
+
+      // 1️⃣ Ждём обновления DOM/реактивных данных
+      await nextTick();
+
+      // 2️⃣ Сбрасываем игру
+      game.reset();
+
+      const carMesh = game.car.value.mesh;
+      if (carMesh) {
+        CameraSystem.reset(carMesh.position.clone());
+      }
+
+      console.log("✅ Game reset complete");
+    }
+  }
+);
 </script>
 
 <template>

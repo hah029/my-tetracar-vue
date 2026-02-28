@@ -24,10 +24,14 @@ export function GameLoop(
 
     renderer.render(scene, camera);
 
-    // Сброс камеры при переходе в игру
+    // Сброс камеры при рестарте игры
     if (previousState === "gameover" && gameState.currentState === "playing") {
-      const car = carManager.getCar();
-      CameraSystem.reset(car.position.clone());
+      game.reset();
+
+      const carMesh = game.car.value.mesh;
+      if (carMesh) {
+        CameraSystem.reset(carMesh.position.clone());
+      }
     }
     previousState = gameState.currentState;
 
@@ -40,26 +44,26 @@ export function GameLoop(
     }
 
     // Синхронизация полосы
-    try {
-      const realCar = carManager.getCar();
-      gameState.currentLane = realCar.getCurrentLane();
-    } catch (e) {
-      // Машина ещё не создана
+    const realCar = game.car.value.mesh;
+    if (realCar) {
+      try {
+        gameState.currentLane = (realCar as any).getCurrentLane();
+      } catch (e) {
+        // машина ещё не создана
+      }
     }
 
     // Текущая скорость
     let currentSpeed = gameState.getCurrentSpeed();
 
-    // Увеличиваем базовую скорость со временем (если машина не разрушена)
+    // Увеличение базовой скорости
     if (!game.car.value.isDestroyed) {
-      if (gameState.baseSpeed < 0.5) {
-        gameState.baseSpeed = 0.5;
-      }
+      if (gameState.baseSpeed < 0.5) gameState.baseSpeed = 0.5;
       gameState.baseSpeed +=
         gameState.baseSpeed < gameState.maxSpeed ? 0.0005 : 0;
     }
 
-    // Обновляем счёт
+    // Обновление счёта
     if (!game.car.value.isDestroyed) {
       gameState.addScore(currentSpeed * 1.0);
     }
@@ -68,14 +72,12 @@ export function GameLoop(
     const dangerLevel = game.getDangerLevel();
     hud.updateHUD(currentSpeed, gameState.currentLane, dangerLevel);
 
-    const realCar = carManager.getCar();
+    // === Основное обновление игрока ===
     game.updatePlayer();
 
-    if (realCar.isDestroyed()) {
-      CameraSystem.updateDestroyed(realCar.getCubes());
+    if (game.car.value.isDestroyed) {
+      CameraSystem.updateDestroyed(game.car.value.cubes);
     } else {
-      // === Основное обновление игрока ===
-
       game.updateObstacles(currentSpeed);
       game.updateRoad(currentSpeed);
 

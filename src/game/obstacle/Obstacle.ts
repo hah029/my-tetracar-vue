@@ -37,7 +37,7 @@ export class Obstacle extends THREE.Mesh {
     } catch (error) {
       // Fallback на случай, если RoadManager еще не инициализирован
       console.warn("RoadManager not initialized, using default lane positions");
-      const defaultLanes = [-3, -1, 1, 3];
+      const defaultLanes = [-4, -2, 0, 2, 4];
       x = defaultLanes[laneIndex] || 0;
     }
 

@@ -14,7 +14,7 @@ export class RoadLine extends THREE.Mesh {
       gap = 1.5,
       color = 0x44ffff,
       emissive = 0x226688,
-      opacity = 0.9
+      opacity = 0.9,
     } = config;
 
     const geometry = new THREE.BoxGeometry(0.1, 0.02, segmentLength);
@@ -23,7 +23,7 @@ export class RoadLine extends THREE.Mesh {
       emissive,
       emissiveIntensity: 1.2,
       transparent: true,
-      opacity
+      opacity,
     });
 
     super(geometry, material);
@@ -40,8 +40,9 @@ export class RoadLine extends THREE.Mesh {
   public update(speed: number): void {
     this.position.z += speed;
 
-    if (this.position.z > 10) {
-      const totalSegments = Math.ceil(this.totalLength / (this.segmentLength + this.gap)) + 10;
+    if (this.position.z > 50) {
+      const totalSegments =
+        Math.ceil(this.totalLength / (this.segmentLength + this.gap)) + 10;
       this.position.z -= totalSegments * (this.segmentLength + this.gap);
 
       if ((this.material as THREE.MeshStandardMaterial).emissive) {

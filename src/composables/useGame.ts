@@ -73,7 +73,7 @@ export function useGame() {
 
     // === Инициализация менеджеров ===
     roadManager = RoadManager.initialize(
-      { lanes: [-3, -1, 1, 3], edgeOffset: 1.5, length: 200 },
+      { lanes: [-4, -2, 0, 2, 4], edgeOffset: 1, length: 250 },
       scene,
     );
 
@@ -84,7 +84,7 @@ export function useGame() {
     carManager.initialize(scene);
 
     // === Создание дороги и машины ===
-    roadManager.createRoad(false);
+    roadManager.createRoad(true);
     roadManager.addSpeedLines({ count: 30 });
 
     const newCar = carManager.createCar({
@@ -210,20 +210,37 @@ export function useGame() {
   function reset() {
     if (!carManager || !obstacleManager || !roadManager || !sceneRef) return;
 
+    // 1️⃣ Очистка старого интервала
     if ((window as any).obstacleInterval) {
       clearInterval((window as any).obstacleInterval);
       (window as any).obstacleInterval = null;
     }
 
+    // 2️⃣ Сброс всех менеджеров
     carManager.resetCar();
     obstacleManager.reset();
     CollisionSystem.reset();
     roadManager.clear();
-    roadManager.createRoad(false);
-    roadManager.addSpeedLines({ count: 30 });
-    resetJumps();
-    updatePlayer();
 
+    // 3️⃣ Пересоздание дороги
+    roadManager.createRoad(true);
+    roadManager.addSpeedLines({ count: 30 });
+
+    // 4️⃣ Обновление машины и синхронизация car.value
+    const newCar = carManager.getCar();
+    car.value.mesh = newCar;
+    car.value.targetX = roadManager.getLanePosition(newCar.getCurrentLane());
+    car.value.isDestroyed = false;
+    car.value.cubes = [];
+
+    // 5️⃣ Сброс прыжков
+    resetJumps();
+
+    // 6️⃣ Очистка препятствий и установка пустого массива
+    obstacles.value = [];
+    updateObstacles(0); // чтобы синхронизировать массив obstacles.value с менеджером
+
+    // 7️⃣ Новый интервал спавна препятствий
     (window as any).obstacleInterval = setInterval(() => {
       if (sceneRef && carManager && !carManager.getCar().isDestroyed()) {
         const lane = Math.floor(Math.random() * 4);

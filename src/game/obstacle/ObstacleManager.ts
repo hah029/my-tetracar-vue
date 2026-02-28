@@ -191,20 +191,3 @@ export class ObstacleManager {
     };
   }
 }
-
-// // Создаем и экспортируем синглтон для удобства
-// export const obstacleManager = ObstacleManager.getInstance();
-
-// // Для обратной совместимости экспортируем также функции
-// export const obstacles = obstacleManager.getObstacles();
-// export const spawnObstacleRow = (
-//   laneIndex: number,
-//   zPos: number = -60,
-//   variant: number | null = null,
-// ) => obstacleManager.spawnObstacleRow(laneIndex, zPos, variant);
-// export const updateObstacles = (speed: number) => obstacleManager.update(speed);
-// export const resetObstacles = () => obstacleManager.reset();
-// export const spawnObstaclePattern = (
-//   zPos: number = -60,
-//   pattern: "wall" | "zigzag" | "random" = "random",
-// ) => obstacleManager.spawnObstaclePattern({ zPos, pattern });
