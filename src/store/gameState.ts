@@ -5,7 +5,8 @@ import { RoadManager } from "@/game/road";
 
 export const useGameState = defineStore("gameState", () => {
   // ---- Основные константы ----
-  const BASE_SPEED = 0.1;
+  const BASE_SPEED = 2.0;
+  // const BASE_SPEED = 0.5;
   const NITRO_MULTIPLIER = 2.0;
   const MAX_SPEED = 3.0;
   const ACCELERATION = 0.001;
@@ -68,16 +69,19 @@ export const useGameState = defineStore("gameState", () => {
   }
 
   function getCurrentSpeed() {
-    return isNitroEnabled.value
-      ? baseSpeed.value * NITRO_MULTIPLIER
-      : baseSpeed.value;
+    let multiplier = 1.0;
+    if (isNitroEnabled.value) {
+      multiplier = NITRO_MULTIPLIER;
+    }
+    let curSpeed = baseSpeed.value * multiplier;
+    if (curSpeed > maxSpeed.value) {
+      return maxSpeed.value;
+    }
+    return curSpeed;
   }
 
   function getCurrentAcceleration() {
-    return acceleration.value * (1 - baseSpeed.value / maxSpeed.value);
-    // return isNitroEnabled.value
-    //   ? acceleration.value * NITRO_MULTIPLIER
-    //   : acceleration.value;
+    return acceleration.value * (1 - getCurrentSpeed() / maxSpeed.value);
   }
 
   function addScore(amount: number) {

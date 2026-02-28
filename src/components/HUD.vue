@@ -16,7 +16,7 @@
       <div class="nitro-header">
         <span>NITRO</span>
         <span :class="{ active: gameState.isNitroEnabled }">{{ gameState.isNitroEnabled ? 'ACTIVE' : 'INACTIVE'
-          }}</span>
+        }}</span>
       </div>
       <div class="nitro-bar-bg">
         <div class="nitro-bar" :style="{ width: gameState.isNitroEnabled ? '100%' : '0%' }"></div>
@@ -27,7 +27,7 @@
       <div v-for="i in laneCount" :key="i" :class="['lane-dot', { active: gameState.currentLane === i - 1 }]"></div>
     </div>
 
-    <div class="debug-panel">
+    <!-- <div class="debug-panel">
       <div>
         <span>carPosition: </span>
         <span>{{ gameState.carPosition }}</span>
@@ -37,7 +37,7 @@
         <span>{{ gameState.cameraPosition }}</span>
       </div>
 
-    </div>
+    </div> -->
 
     <div class="warning-message" :style="warningStyle">
       ⚠️ DANGER ⚠️

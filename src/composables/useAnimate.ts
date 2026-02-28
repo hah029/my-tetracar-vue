@@ -1,10 +1,8 @@
 // src/composables/useAnimate.ts
-// import { onMounted, onUnmounted } from "vue";
 import { useGameState } from "../store/gameState";
 import { useHUD } from "./useHUD";
 import type { useGame } from "./useGame";
 import type { PerspectiveCamera, Scene, WebGLRenderer } from "three";
-// import { carManager } from "@/game/car";
 import { CameraSystem } from "@/game/camera/CameraSystem";
 import Stats from "three/examples/jsm/libs/stats.module.js";
 
@@ -90,8 +88,14 @@ export function GameLoop(
       if (gameState.baseSpeed < gameState.BASE_SPEED) {
         gameState.baseSpeed = gameState.BASE_SPEED;
       }
+
+      // увеличение скорости
       gameState.baseSpeed += gameState.getCurrentAcceleration();
-      // gameState.addScore(currentSpeed);
+
+      // ограничение baseSpeed
+      if (gameState.baseSpeed > gameState.maxSpeed) {
+        gameState.baseSpeed = gameState.maxSpeed;
+      }
     }
 
     const dangerLevel = game.getDangerLevel();
