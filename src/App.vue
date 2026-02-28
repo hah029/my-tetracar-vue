@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted, computed, watch, nextTick } from "vue";
+import { ref, onMounted, onUnmounted, computed, watch, nextTick } from "vue";
 import { useThree } from "./composables/useThree";
 import { useGame } from "./composables/useGame";
 import { useGameState } from "./store/gameState";
@@ -31,19 +31,22 @@ const getUIComponent = computed(() => {
       return HUD;
   }
 });
-
+let loop: ReturnType<typeof GameLoop>;
 
 onMounted(() => {
   const scene = getScene();
   const camera = getCamera();
   const renderer = getRenderer();
 
-  // Инициализация игры
   game.init(scene);
   CameraSystem.initialize(camera);
 
-  const loop = GameLoop(game, scene, camera, renderer);
-  loop.animate();
+  loop = GameLoop(game, scene, camera, renderer);
+  loop.start(); // ✅ ЗДЕСЬ старт
+});
+
+onUnmounted(() => {
+  loop?.stop(); // ✅ корректная остановка
 });
 
 watch(

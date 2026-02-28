@@ -1,5 +1,5 @@
 // src/composables/useAnimate.ts
-import { onMounted, onUnmounted } from "vue";
+// import { onMounted, onUnmounted } from "vue";
 import { useGameState } from "../store/gameState";
 import { useHUD } from "./useHUD";
 import type { useGame } from "./useGame";
@@ -17,21 +17,49 @@ export function GameLoop(
   const gameState = useGameState();
   const hud = useHUD();
 
-  let gameOverTimer: number | null = null;
+  // let gameOverTimer: number | null = null;
   let previousState = gameState.currentState;
   const stats = new Stats();
   document.body.appendChild(stats.dom);
 
-  function animate() {
-    requestAnimationFrame(animate);
+  // FPS limiter
+  const FPS = 30;
+  const FRAME_TIME = 1000 / FPS;
+  let lastTime = 0;
+  let started = false;
+
+  // let renders = 0;
+  let rafId: number | null = null;
+  let intervalId: number | null = null;
+
+  // intervalId = window.setInterval(() => {
+  //   console.log("renders/sec =", renders);
+  //   renders = 0;
+  // }, 1000);
+
+  function animate(time: number) {
+    rafId = requestAnimationFrame(animate);
+
+    // ✅ Инициализация первого кадра
+    if (!started) {
+      lastTime = time;
+      started = true;
+      return;
+    }
+
+    const delta = time - lastTime;
+    if (delta < FRAME_TIME) return;
+
+    lastTime = time - (delta % FRAME_TIME);
+
     stats.begin();
 
-    renderer.render(scene, camera);
+    // =========================
+    // ЛОГИКА ИГРЫ
+    // =========================
 
-    // Сброс камеры при рестарте игры
     if (previousState === "gameover" && gameState.currentState === "playing") {
       game.reset();
-
       const carMesh = game.car.value.mesh;
       if (carMesh) {
         CameraSystem.reset(carMesh.position.clone());
@@ -39,44 +67,36 @@ export function GameLoop(
     }
     previousState = gameState.currentState;
 
-    // Если не в игре, просто рендерим
     if (
       gameState.currentState !== "playing" &&
       gameState.currentState !== "gameover"
     ) {
+      renderer.render(scene, camera);
+      stats.end();
       return;
     }
 
-    // Синхронизация полосы
     const realCar = game.car.value.mesh;
+
     if (realCar) {
       try {
         gameState.currentLane = (realCar as any).getCurrentLane();
-      } catch (e) {
-        // машина ещё не создана
-      }
+      } catch {}
     }
 
-    // Текущая скорость
     let currentSpeed = gameState.getCurrentSpeed();
 
-    // Увеличение базовой скорости
     if (!game.car.value.isDestroyed) {
-      if (gameState.baseSpeed < gameState.BASE_SPEED)
+      if (gameState.baseSpeed < gameState.BASE_SPEED) {
         gameState.baseSpeed = gameState.BASE_SPEED;
+      }
       gameState.baseSpeed += gameState.getCurrentAcceleration();
+      // gameState.addScore(currentSpeed);
     }
 
-    // Обновление счёта
-    if (!game.car.value.isDestroyed) {
-      gameState.addScore(currentSpeed * 1.0);
-    }
-
-    // Уровень опасности
     const dangerLevel = game.getDangerLevel();
     hud.updateHUD(currentSpeed, gameState.currentLane, dangerLevel);
 
-    // === Основное обновление игрока ===
     game.updatePlayer();
 
     if (game.car.value.isDestroyed) {
@@ -89,18 +109,45 @@ export function GameLoop(
       if (collisionResult.collision) {
         game.destroyCar(collisionResult.impactPoint);
         gameState.endGame();
+        stats.end();
         return;
       }
 
       CameraSystem.update(realCar, currentSpeed);
     }
+
+    // renders++;
+    renderer.render(scene, camera);
     stats.end();
   }
 
-  onMounted(() => animate());
-  onUnmounted(() => {
-    if (gameOverTimer) clearTimeout(gameOverTimer);
-  });
+  function start() {
+    if (rafId !== null) return; // защита от двойного запуска
+    rafId = requestAnimationFrame(animate);
+  }
 
-  return { animate };
+  function stop() {
+    if (rafId !== null) {
+      cancelAnimationFrame(rafId);
+      rafId = null;
+    }
+    if (intervalId !== null) {
+      clearInterval(intervalId);
+      intervalId = null;
+    }
+  }
+
+  // onMounted(() => {
+  //   rafId = requestAnimationFrame(animate);
+  // });
+  // onUnmounted(() => {
+  //   if (rafId !== null) cancelAnimationFrame(rafId);
+  //   if (intervalId !== null) clearInterval(intervalId);
+  //   if (gameOverTimer) clearTimeout(gameOverTimer);
+  // });
+
+  return {
+    start,
+    stop,
+  };
 }
