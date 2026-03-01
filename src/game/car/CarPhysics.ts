@@ -5,28 +5,30 @@ import { type CarConfig } from "./types";
 import { DEFAULT_CAR_CONFIG } from "./config";
 import { RoadManager } from "../road/RoadManager";
 import { RoadEdge } from "../road/edges/RoadEdge";
+import { JumpSimulator, type JumpState } from "./JumpSimulator";
 
 export class CarPhysics {
   private config: Required<CarConfig>;
-
-  // Состояние прыжка
-  private isJumping: boolean = false;
-  private jumpVelocity: number = 0;
-  private targetPitch: number = 0;
-  private originalY: number = 0;
+  private jumpSimulator: JumpSimulator;
+  private jumpState: JumpState;
 
   constructor(config: Partial<CarConfig> = {}) {
     this.config = { ...DEFAULT_CAR_CONFIG, ...config };
+    this.jumpSimulator = new JumpSimulator({
+      gravity: this.config.gravity,
+      jumpHeight: this.config.jumpHeight,
+      groundY: 0.8,
+    });
+
+    this.jumpState = this.jumpSimulator.createInitialState();
   }
 
-  public startJump(): void {
-    if (this.isJumping) return;
-
-    this.isJumping = true;
-    this.jumpVelocity = Math.sqrt(
-      2 * this.config.gravity * this.config.jumpHeight,
-    );
-    this.targetPitch = 0.2;
+  public startJump(currentY: number): void {
+    this.jumpSimulator.setGroundY(currentY);
+    this.jumpState = this.jumpSimulator.startJump({
+      ...this.jumpState,
+      y: currentY,
+    });
   }
 
   public updateJump(currentY: number): {
@@ -34,27 +36,27 @@ export class CarPhysics {
     isJumping: boolean;
     pitch: number;
   } {
-    if (!this.isJumping) {
-      return { newY: currentY, isJumping: false, pitch: 0 };
+    // Если прыжок не активен – просто возвращаем текущую высоту,
+    // а внутреннее состояние подгоняем под неё (для корректного старта в будущем)
+    if (!this.jumpState.isJumping) {
+      this.jumpState.y = currentY;
+      return {
+        newY: currentY,
+        isJumping: false,
+        pitch: 0,
+      };
     }
 
-    let newY = currentY + this.jumpVelocity;
-    this.jumpVelocity -= this.config.gravity;
+    // Активная фаза прыжка – используем симуляцию
+    const prevVelocity = this.jumpState.velocity;
+    this.jumpState = this.jumpSimulator.step(this.jumpState);
 
-    // Плавный наклон при прыжке
-    this.targetPitch = this.jumpVelocity > 0 ? 0.2 : -0.1;
-
-    if (newY <= this.originalY) {
-      newY = this.originalY;
-      this.isJumping = false;
-      this.jumpVelocity = 0;
-      this.targetPitch = 0;
-    }
+    const pitch = prevVelocity > 0 ? 0.2 : -0.1;
 
     return {
-      newY,
-      isJumping: this.isJumping,
-      pitch: this.targetPitch,
+      newY: this.jumpState.y,
+      isJumping: this.jumpState.isJumping,
+      pitch,
     };
   }
 
@@ -225,16 +227,18 @@ export class CarPhysics {
   }
 
   public reset(): void {
-    this.isJumping = false;
-    this.jumpVelocity = 0;
-    this.targetPitch = 0;
+    this.jumpState = this.jumpSimulator.createInitialState();
   }
 
   public getState() {
     return {
-      isJumping: this.isJumping,
-      jumpVelocity: this.jumpVelocity,
-      targetPitch: this.targetPitch,
+      isJumping: this.jumpState.isJumping,
+      jumpVelocity: this.jumpState.velocity,
+      targetPitch: this.jumpState.isJumping
+        ? this.jumpState.velocity > 0
+          ? 0.2
+          : -0.1
+        : 0,
     };
   }
 }

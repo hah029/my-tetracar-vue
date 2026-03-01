@@ -15,12 +15,11 @@ export class SideObject extends THREE.Mesh {
     height: 0.5,
     radius: 0.1,
     radialSegments: 8,
-    offset: 1.5, // Дополнительный отступ от границы дороги
+    offset: 1,
     spacing: 7,
   };
 
   private config: Required<SideObjectConfig>;
-  // private side: -1 | 1; // -1 слева, 1 справа
   private baseZ: number;
 
   constructor(zPos: number, config: SideObjectConfig = {}) {
@@ -39,7 +38,6 @@ export class SideObject extends THREE.Mesh {
     super(geometry, material);
 
     this.config = finalConfig;
-    // this.side = side;
     this.baseZ = zPos;
 
     this.castShadow = true;

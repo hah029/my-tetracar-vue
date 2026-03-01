@@ -82,7 +82,7 @@ export class Car extends THREE.Group {
   // Прыжок
   public jump(): void {
     if (!this.state.isDestroyed && !this.state.isJumping) {
-      this.physics.startJump();
+      this.physics.startJump(this.position.y);
     }
   }
 

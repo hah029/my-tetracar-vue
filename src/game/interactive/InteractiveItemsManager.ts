@@ -2,7 +2,9 @@
 // import type * as THREE from "three";
 import { ObstacleManager } from "@/game/obstacle/ObstacleManager";
 import { RoadManager } from "@/game/road/RoadManager";
-import type { CoinManager } from "../coin/CoinManager";
+import type { CoinManager } from "@/game/coin/CoinManager";
+import { simulateJumpTrajectory } from "@/game/car/carTrajectory";
+import { DEFAULT_CAR_CONFIG } from "@/game/car/config";
 
 export class InteractiveItemsManager {
   private obstacleManager: ObstacleManager;
@@ -82,17 +84,18 @@ export class InteractiveItemsManager {
     const jumpZ = -60 + this.getJumpDistance(speed);
     this.obstacleManager.spawnJump(lane, jumpZ);
 
-    const coinCount = 5;
-    const jumpLength = 12;
-    const maxHeight = Math.min(6 + speed * 0.3, 14);
+    const trajectory = simulateJumpTrajectory({
+      startY: 0,
+      jumpHeight: DEFAULT_CAR_CONFIG.jumpHeight,
+      gravity: DEFAULT_CAR_CONFIG.gravity,
+      forwardSpeed: speed,
+    });
 
-    for (let i = 0; i < coinCount; i++) {
-      const t = i / (coinCount - 1); // 0..1
-
-      const z = -60 - t * jumpLength;
-      const y = 0.8 + Math.sin(Math.PI * t) * maxHeight;
-
-      this.coinManager.spawnCoin(lane, z, y);
+    const step = Math.max(2, Math.floor(trajectory.length / 6));
+    for (let i = 0; i < trajectory.length; i += step) {
+      const point = trajectory[i];
+      if (point === undefined) continue;
+      this.coinManager.spawnCoin(lane, -60 + point.zOffset, point.y, 2);
     }
   }
 
