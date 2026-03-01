@@ -1,7 +1,7 @@
 // src/game/collision/CollisionSystem.ts
 import * as THREE from "three";
-import type { Obstacle } from "../obstacle/Obstacle";
-import type { Jump } from "../jump/Jump";
+import type { Obstacle } from "@/game/obstacle/Obstacle";
+import type { Jump } from "@/game/obstacle/Jump";
 
 const DANGER_DISTANCE = 30;
 const COLLISION_COOLDOWN_MS = 1000;
@@ -34,7 +34,7 @@ class CollisionSystemClass {
       getCollider(): THREE.Box3 | THREE.Sphere;
     },
     obstacles: Obstacle[],
-    jumps: Jump[] = [], // теперь поддерживаем трамплины
+    jumps: Jump[] = [],
   ): CollisionResult {
     if (car.isDestroyed()) return { collision: false };
     if (this.collisionCooldown) return { collision: false };
@@ -46,10 +46,9 @@ class CollisionSystemClass {
       const obstacleCollider = obstacle.collider;
       if (!obstacleCollider) continue;
 
-      const intersects =
-        obstacleCollider instanceof THREE.Box3
-          ? obstacleCollider.intersectsBox(carCollider as THREE.Box3)
-          : obstacleCollider.intersectsSphere(carCollider as THREE.Sphere);
+      const intersects = obstacleCollider.intersectsBox(
+        carCollider as THREE.Box3,
+      );
 
       if (intersects) {
         this.collisionCooldown = true;
@@ -71,12 +70,6 @@ class CollisionSystemClass {
       const jumpBox = jump.getBoundingBox();
       if (jumpBox.intersectsBox(carCollider as THREE.Box3)) {
         jump.userData.activated = true;
-
-        this.collisionCooldown = true;
-        this.cooldownTimer = window.setTimeout(() => {
-          this.collisionCooldown = false;
-        }, COLLISION_COOLDOWN_MS);
-
         return {
           collision: true,
           impactPoint: jump.position.clone(),
@@ -84,7 +77,6 @@ class CollisionSystemClass {
         };
       }
     }
-
     return { collision: false };
   }
 

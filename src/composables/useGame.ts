@@ -5,9 +5,10 @@ import { RoadManager } from "@/game/road/RoadManager";
 import { CarManager } from "@/game/car/CarManager";
 import { ObstacleManager } from "@/game/obstacle/ObstacleManager";
 import { CollisionSystem } from "@/game/collision/CollisionSystem";
+import { InteractiveItemsManager } from "@/game/interactive/InteractiveItemsManager";
 
 import cubeGLB from "@/assets/models/cube.glb";
-// const cubeGLB = "";
+import { CoinManager } from "@/game/coin/CoinManager";
 
 // Интерфейс для реактивной ссылки car
 interface CarRef {
@@ -56,16 +57,27 @@ export function useGame() {
     mesh: new THREE.Group(),
     targetX: 0,
     isDestroyed: false,
-    cubes: [],
+    cubes: [] as THREE.Object3D[],
+    isJumping: false,
   });
 
   const obstacles = ref<{ mesh: THREE.Mesh; position: THREE.Vector3 }[]>([]);
-  const jumps = ref<{ active: boolean; progress: number }[]>([]);
+  const jumps = ref<
+    {
+      mesh: THREE.Mesh;
+      lane: number;
+      z: number;
+      active?: boolean;
+      progress?: number;
+    }[]
+  >([]);
   let sceneRef: THREE.Scene | null = null;
 
   let roadManager: RoadManager;
   let carManager: CarManager;
   let obstacleManager: ObstacleManager;
+  let coinManager: CoinManager;
+  let interactiveManager: InteractiveItemsManager;
 
   function init(scene: THREE.Scene) {
     sceneRef = scene;
@@ -81,6 +93,14 @@ export function useGame() {
 
     obstacleManager = ObstacleManager.getInstance();
     obstacleManager.initialize(scene);
+    coinManager = CoinManager.getInstance();
+    coinManager.initialize(scene);
+
+    interactiveManager = new InteractiveItemsManager(
+      obstacleManager,
+      coinManager,
+      roadManager,
+    );
 
     carManager = CarManager.getInstance();
     carManager.initialize(scene);
@@ -130,7 +150,7 @@ export function useGame() {
   function resetPlayer() {
     if (!carManager) return;
 
-    carManager.resetCar();
+    carManager.resetCar(cubeGLB);
     updatePlayer();
   }
 
@@ -153,15 +173,18 @@ export function useGame() {
   // ==========================
   // Обновление препятствий (привязка к игровому циклу)
   // ==========================
-  function updateObstacles(deltaTime: number, speed: number) {
-    if (!obstacleManager) return;
+  function updateInteractiveItems(deltaTime: number, speed: number) {
+    interactiveManager.update(deltaTime, speed);
 
-    obstacleManager.update(deltaTime, speed);
+    obstacles.value = interactiveManager.getObstacles().map((o) => ({
+      mesh: o,
+      position: o.position.clone(),
+    }));
 
-    // Синхронизация с реактивным массивом
-    obstacles.value = obstacleManager.getObstacles().map((obs) => ({
-      mesh: obs,
-      position: obs.position.clone(),
+    jumps.value = interactiveManager.getJumps().map((j) => ({
+      mesh: j,
+      lane: j.userData.lane,
+      z: j.position.z,
     }));
   }
 
@@ -214,6 +237,11 @@ export function useGame() {
     );
   }
 
+  function checkCoinCollision() {
+    if (!carManager || !coinManager) return 0;
+    return coinManager.checkCarCollision(carManager.getCar());
+  }
+
   function getDangerLevel() {
     if (!carManager || !obstacleManager) return 0;
     return CollisionSystem.getDangerLevel(
@@ -226,7 +254,7 @@ export function useGame() {
     if (!carManager || !obstacleManager || !roadManager || !sceneRef) return;
 
     carManager.resetCar(cubeGLB);
-    obstacleManager.reset();
+    interactiveManager.reset();
     CollisionSystem.reset();
     roadManager.clear();
 
@@ -241,7 +269,7 @@ export function useGame() {
 
     resetJumps();
     obstacles.value = [];
-    updateObstacles(0, 0); // синхронизация
+    updateInteractiveItems(0, 0); // синхронизация
   }
 
   return {
@@ -260,12 +288,13 @@ export function useGame() {
     addObstacle: (obstacle: THREE.Mesh) => {
       if (sceneRef) sceneRef.add(obstacle);
     },
-    updateObstacles,
+    updateInteractiveItems,
     resetObstacles,
     updateRoad,
     updateJumps,
     resetJumps,
     checkCollision,
+    checkCoinCollision,
     getDangerLevel,
     reset,
   };

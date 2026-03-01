@@ -15,7 +15,6 @@ export function GameLoop(
   const gameState = useGameState();
   const hud = useHUD();
 
-  // let gameOverTimer: number | null = null;
   let previousState = gameState.currentState;
   const stats = new Stats();
   document.body.appendChild(stats.dom);
@@ -107,10 +106,11 @@ export function GameLoop(
       CameraSystem.updateDestroyed(game.car.value.cubes);
     } else {
       const deltaTime = time - lastTime; // или FRAME_TIME, если используешь лимит FPS
-      game.updateObstacles(deltaTime, currentSpeed);
+      game.updateInteractiveItems(deltaTime, currentSpeed);
       game.updateRoad(currentSpeed);
 
       const collisionResult = game.checkCollision();
+      console.log(collisionResult);
       if (collisionResult.collision) {
         if (collisionResult.jump) {
           game.jumpPlayer();
@@ -121,6 +121,8 @@ export function GameLoop(
           return;
         }
       }
+      const coins = game.checkCoinCollision();
+      if (coins > 0) gameState.addScore(coins);
 
       CameraSystem.update(realCar, currentSpeed);
     }

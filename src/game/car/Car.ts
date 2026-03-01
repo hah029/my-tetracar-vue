@@ -40,6 +40,7 @@ export class Car extends THREE.Group {
       yOffset: this.config.colliderYOffset,
       heightFactor: this.config.colliderHeightFactor,
     });
+    // this.collider.createDebugCollider(scene);
 
     this.builder = new CarCubesBuilder();
     this.physics = new CarPhysics(this.config);

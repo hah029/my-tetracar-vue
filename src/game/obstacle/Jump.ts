@@ -7,6 +7,7 @@ export interface JumpConfig {
   materialIndex: number;
   pulseSpeed: number;
   pulsePhase: number;
+  activated: boolean;
 }
 
 export class Jump extends THREE.Mesh {
@@ -55,7 +56,11 @@ export class Jump extends THREE.Mesh {
 
     const materialIndex: number = 0;
     // const materialIndex = Math.floor(Math.random() * materials.length);
-    super(geometry, materials[materialIndex].clone());
+    const material = materials[materialIndex];
+    if (material === undefined) {
+      throw new Error("Material for jump is undefined");
+    }
+    super(geometry, material.clone());
 
     // Позиция по полосе через RoadManager
     let x: number;
@@ -74,6 +79,7 @@ export class Jump extends THREE.Mesh {
       materialIndex,
       pulseSpeed: 0.3 + Math.random() * 0.3,
       pulsePhase: Math.random() * Math.PI * 2,
+      activated: false,
     };
 
     this.collider = new THREE.Box3().setFromObject(this);

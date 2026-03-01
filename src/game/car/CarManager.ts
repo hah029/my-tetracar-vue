@@ -23,22 +23,16 @@ export class CarManager {
   }
 
   public createCar(config?: CarConfig): Car {
-    // console.log('CarManager.createCar called');
-
     if (!this.scene) {
       throw new Error(
         "CarManager not initialized with scene. Call initialize() first.",
       );
     }
-
     if (this.car) {
-      // console.log('Destroying existing car');
       this.destroyCar();
     }
 
-    // console.log('Creating new Car with scene:', this.scene);
     this.car = new Car(this.scene, config);
-    // console.log('Car created successfully');
     return this.car;
   }
 
@@ -113,6 +107,3 @@ export class CarManager {
     return this.car !== null;
   }
 }
-
-// Экспортируем единственный экземпляр
-export const carManager = CarManager.getInstance();
