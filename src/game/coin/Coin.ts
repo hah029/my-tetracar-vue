@@ -6,7 +6,12 @@ export class Coin extends THREE.Mesh {
   public collider: THREE.Sphere;
   public value: number;
 
-  constructor(laneIndex: number, zPos: number, value: number = 1) {
+  constructor(
+    laneIndex: number,
+    zPos: number,
+    yPos: number = 0.2,
+    value: number = 10,
+  ) {
     const geometry = new THREE.SphereGeometry(0.4, 16, 16);
     const material = new THREE.MeshStandardMaterial({
       color: 0xffd700,
@@ -19,7 +24,7 @@ export class Coin extends THREE.Mesh {
     const road = RoadManager.getInstance();
     const x = road.getLanePosition(laneIndex);
 
-    this.position.set(x, 0.2, zPos);
+    this.position.set(x, yPos, zPos);
     this.value = value;
 
     this.collider = new THREE.Sphere(this.position, 0.45);

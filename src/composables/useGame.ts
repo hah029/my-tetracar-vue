@@ -47,7 +47,13 @@ function setupLights(scene: THREE.Scene) {
 
   positions.forEach((pos, i) => {
     const light = new THREE.PointLight(colors[i], 0.5);
-    light.position.set(pos[0], pos[1], pos[2]);
+    const x = pos[0];
+    const y = pos[1];
+    const z = pos[2];
+    if (x === undefined || y === undefined || z === undefined) {
+      throw new Error("Light position is undefined");
+    }
+    light.position.set(x, y, z);
     scene.add(light);
   });
 }

@@ -35,4 +35,7 @@ export interface RoadStats {
   linesCount: number;
   speedLinesCount: number;
   edgesCount: number;
+  lanesCount: number;
+  sideObjectsCount: number;
+  lanePositions: number[];
 }

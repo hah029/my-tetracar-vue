@@ -9,10 +9,6 @@ export class InteractiveItemsManager {
   private coinManager: CoinManager;
   private roadManager: RoadManager;
 
-  // private spawnTimer = 0;
-  // private lastSpawnTime = 0;
-  // private baseSpawnInterval = 500;
-
   private obstacleTimer = 0;
   private coinTimer = 0;
 
@@ -60,8 +56,7 @@ export class InteractiveItemsManager {
       if (lane === emptyLane) continue;
 
       if (Math.random() < 0.1) {
-        const z = -60 + this.getJumpDistance(speed);
-        this.obstacleManager.spawnJump(lane, z);
+        this.spawnJumpWithCoins(lane, speed);
       }
 
       this.obstacleManager.spawnObstacle(lane, -60);
@@ -83,27 +78,23 @@ export class InteractiveItemsManager {
     }
   }
 
-  // private spawnLine(speed: number) {
-  //   const lanesCount = this.roadManager.getLanesCount();
-  //   const emptyLane = Math.floor(Math.random() * lanesCount);
+  private spawnJumpWithCoins(lane: number, speed: number) {
+    const jumpZ = -60 + this.getJumpDistance(speed);
+    this.obstacleManager.spawnJump(lane, jumpZ);
 
-  //   for (let lane = 0; lane < lanesCount; lane++) {
-  //     if (lane === emptyLane) {
-  //       if (Math.random() < 0.6) {
-  //         this.coinManager.spawnCoin(lane, -60);
-  //       }
-  //       continue;
-  //     }
+    const coinCount = 5;
+    const jumpLength = 12;
+    const maxHeight = Math.min(6 + speed * 0.3, 14);
 
-  //     // jump как часть паттерна
-  //     if (Math.random() < 0.1) {
-  //       const z = -60 + this.getJumpDistance(speed);
-  //       this.obstacleManager.spawnJump(lane, z);
-  //     }
+    for (let i = 0; i < coinCount; i++) {
+      const t = i / (coinCount - 1); // 0..1
 
-  //     this.obstacleManager.spawnObstacle(lane, -60);
-  //   }
-  // }
+      const z = -60 - t * jumpLength;
+      const y = 0.8 + Math.sin(Math.PI * t) * maxHeight;
+
+      this.coinManager.spawnCoin(lane, z, y);
+    }
+  }
 
   private getJumpDistance(speed: number): number {
     const min = 2;
@@ -122,8 +113,8 @@ export class InteractiveItemsManager {
   }
 
   public reset() {
-    this.spawnTimer = 0;
-    this.lastSpawnTime = 0;
+    this.obstacleTimer = 0;
+    this.coinTimer = 0;
     this.obstacleManager.reset();
     this.coinManager.reset();
   }

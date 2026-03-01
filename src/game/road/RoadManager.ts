@@ -7,7 +7,7 @@ import { type RoadConfig, type SpeedLineConfig, type RoadStats } from "./types";
 import {
   DEFAULT_ROAD_CONFIG,
   NEON_ROAD_CONFIG,
-  getEdgePositions,
+  // getEdgePositions,
 } from "./config";
 import { SideObject, type SideObjectConfig } from "./SideObject";
 
@@ -115,13 +115,13 @@ export class RoadManager {
       z += this.sideObjectConfig.spacing
     ) {
       // Левый столбик
-      const leftObj = new SideObject(-1, z, this.sideObjectConfig);
+      const leftObj = new SideObject(z, this.sideObjectConfig);
       leftObj.setPosition(leftX, z);
       this.scene.add(leftObj);
       this.sideObjects.push(leftObj);
 
       // Правый столбик
-      const rightObj = new SideObject(1, z, this.sideObjectConfig);
+      const rightObj = new SideObject(z, this.sideObjectConfig);
       rightObj.setPosition(rightX, z);
       this.scene.add(rightObj);
       this.sideObjects.push(rightObj);
@@ -172,7 +172,10 @@ export class RoadManager {
 
     // Создаем линии МЕЖДУ полосами
     for (let i = 0; i < lanes.length - 1; i++) {
-      const x = (lanes[i] + lanes[i + 1]) / 2;
+      const prev_ = lanes[i];
+      const next_ = lanes[i + 1];
+      if (prev_ == undefined || next_ == undefined) continue;
+      const x = (prev_ + next_) / 2;
 
       for (let j = 0; j < totalSegments; j++) {
         const line = new RoadLine({
@@ -265,7 +268,8 @@ export class RoadManager {
     if (this.road) {
       return this.road.getLanePosition(index);
     }
-    return this.config.lanes[index];
+    const lane = this.config.lanes[index];
+    return lane ? lane : 0;
   }
 
   public updateConfig(config: Partial<RoadConfig>): void {
@@ -293,6 +297,10 @@ export class RoadManager {
       sideObjectsCount: this.sideObjects.length,
       lanePositions: lanes,
     };
+  }
+
+  public getEdges(): THREE.Mesh[] {
+    return this.edges;
   }
 
   // Добавьте этот метод в класс RoadManager

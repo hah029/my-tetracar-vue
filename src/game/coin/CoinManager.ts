@@ -22,8 +22,14 @@ export class CoinManager {
      SPAWN
      ======================= */
 
-  public spawnCoin(laneIndex: number, zPos: number, value: number = 10): void {
-    const coin = new Coin(laneIndex, zPos, value);
+  public spawnCoin(
+    laneIndex: number,
+    zPos: number,
+    yPos: number = 0.2,
+    value: number = 10,
+  ): void {
+    const coin = new Coin(laneIndex, zPos, yPos, value);
+    console.log("jump coin", coin.position);
     this.coins.push(coin);
     this.scene.add(coin);
   }

@@ -44,7 +44,11 @@ export class Road extends THREE.Mesh {
 
   // Получить позицию полосы по индексу
   public getLanePosition(index: number): number {
-    if (index < 0 || index >= this.lanes.length) {
+    if (
+      index < 0 ||
+      index >= this.lanes.length ||
+      this.lanes[index] === undefined
+    ) {
       throw new Error(`Lane index ${index} out of range`);
     }
     return this.lanes[index];

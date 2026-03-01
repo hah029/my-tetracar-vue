@@ -124,7 +124,14 @@ export function GameLoop(
       const coins = game.checkCoinCollision();
       if (coins > 0) gameState.addScore(coins);
 
-      CameraSystem.update(realCar, currentSpeed);
+      CameraSystem.update(
+        {
+          position: realCar.position,
+          rotation: realCar.rotation,
+          isDestroyed: () => game.car.value.isDestroyed,
+        },
+        currentSpeed,
+      );
     }
 
     // renders++;

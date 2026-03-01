@@ -12,18 +12,18 @@ export class Obstacle extends THREE.Mesh {
     laneIndex: number,
     scene: THREE.Scene,
     zPos: number = -60,
-    variant: number | null = null,
+    _variant: number | null = null,
   ) {
     // Создаём материалы для препятствий
     const materials = Obstacle.createMaterials();
 
     // Выбираем материал
     const materialIndex = 0;
-    // const materialIndex =
-    //   variant !== null
-    //     ? variant % materials.length
-    //     : Math.floor(Math.random() * materials.length);
-    const material = materials[materialIndex].clone();
+    let material: THREE.Material;
+    if (materials[materialIndex] === undefined) {
+      throw new Error("Obstacle material is undefined");
+    }
+    material = materials[materialIndex].clone();
 
     // Используем единую геометрию
     const geometry = new THREE.BoxGeometry(1.8, 0.5, 1.2);

@@ -126,15 +126,16 @@ export class CarPhysics {
     const collisionFactor = 0.2; // сила отталкивания между кубиками
 
     // Получаем бортики с коллайдерами
-    const edges = RoadManager.getInstance().edges.filter(
-      (e) => e instanceof RoadEdge,
-    ) as RoadEdge[];
+    const edges = RoadManager.getInstance()
+      .getEdges()
+      .filter((e) => e instanceof RoadEdge) as RoadEdge[];
 
     // Обновляем коллайдеры бортиков
     edges.forEach((edge) => edge.updateCollider());
 
     for (let i = 0; i < cubes.length; i++) {
       const cube = cubes[i];
+      if (cube === undefined) continue;
       const userData = cube.userData as any;
 
       // --- Предсказанная позиция ---
@@ -180,6 +181,7 @@ export class CarPhysics {
       // --- Столкновения между кубиками ---
       for (let j = i + 1; j < cubes.length; j++) {
         const other = cubes[j];
+        if (other === undefined) continue;
         const otherUserData = other.userData as any;
         const otherNext = other.position.clone().add(otherUserData.velocity);
 
