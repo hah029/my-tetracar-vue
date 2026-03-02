@@ -5,6 +5,7 @@ import type { useGame } from "./useGame";
 import type { PerspectiveCamera, Scene, WebGLRenderer } from "three";
 import { CameraSystem } from "@/game/camera/CameraSystem";
 import Stats from "three/examples/jsm/libs/stats.module.js";
+import { UpdateMode } from "@/game/core/UpdateMode";
 
 export function GameLoop(
   game: ReturnType<typeof useGame>,
@@ -25,27 +26,64 @@ export function GameLoop(
   let lastTime = 0;
   let started = false;
   let rafId: number | null = null;
-  let intervalId: number | null = null;
+
+  function updateDestruction(deltaTime: number) {
+    // 🔥 ТОЛЬКО разрушения
+    CameraSystem.updateDestroyed(game.car.value.cubes);
+    game.updateInteractiveItems(deltaTime, 0, UpdateMode.Destruction);
+  }
+
+  function updateGame(deltaTime: number, currentSpeed: number) {
+    game.updateInteractiveItems(deltaTime, currentSpeed, UpdateMode.Gameplay);
+    game.updateRoad(currentSpeed);
+
+    const collisionResult = game.checkCollision(performance.now());
+    if (collisionResult.collision) {
+      if (collisionResult.jump) {
+        game.jumpPlayer();
+      } else {
+        game.destroyCar(collisionResult.impactPoint);
+        game.destroyObstacles(collisionResult.impactPoint);
+        gameState.endGame();
+        return false; // ❗ сигнал «игра закончена»
+      }
+    }
+
+    const coins = game.checkCoinCollision();
+    if (coins > 0) gameState.addScore(coins);
+
+    const realCar = game.car.value.mesh;
+    if (realCar) {
+      CameraSystem.update(
+        {
+          position: realCar.position,
+          rotation: realCar.rotation,
+          isDestroyed: () => game.car.value.isDestroyed,
+        },
+        currentSpeed,
+      );
+    }
+
+    return true;
+  }
 
   function animate(time: number) {
     rafId = requestAnimationFrame(animate);
 
-    // ✅ Инициализация первого кадра
     if (!started) {
-      lastTime = time;
       started = true;
       return;
     }
 
-    const delta = time - lastTime;
-    if (delta < FRAME_TIME) return;
+    const deltaTime = time - lastTime;
+    if (deltaTime < FRAME_TIME) return;
 
-    lastTime = time - (delta % FRAME_TIME);
+    lastTime = time;
 
     stats.begin();
 
     // =========================
-    // ЛОГИКА ИГРЫ
+    // STATE TRANSITIONS
     // =========================
 
     if (previousState === "gameover" && gameState.currentState === "playing") {
@@ -67,24 +105,21 @@ export function GameLoop(
     }
 
     const realCar = game.car.value.mesh;
-
     if (realCar) {
       try {
         gameState.currentLane = (realCar as any).getCurrentLane();
       } catch {}
     }
 
+    const isGameOver = game.car.value.isDestroyed;
     let currentSpeed = gameState.getCurrentSpeed();
 
-    if (!game.car.value.isDestroyed) {
+    if (!isGameOver) {
       if (gameState.baseSpeed < gameState.BASE_SPEED) {
         gameState.baseSpeed = gameState.BASE_SPEED;
       }
 
-      // увеличение скорости
       gameState.baseSpeed += gameState.getCurrentAcceleration();
-
-      // ограничение baseSpeed
       if (gameState.baseSpeed > gameState.maxSpeed) {
         gameState.baseSpeed = gameState.maxSpeed;
       }
@@ -95,44 +130,26 @@ export function GameLoop(
 
     game.updatePlayer();
 
-    if (game.car.value.isDestroyed) {
-      CameraSystem.updateDestroyed(game.car.value.cubes);
+    // =========================
+    // MAIN UPDATE
+    // =========================
+
+    if (isGameOver) {
+      updateDestruction(deltaTime);
     } else {
-      const deltaTime = time - lastTime; // или FRAME_TIME, если используешь лимит FPS
-      game.updateInteractiveItems(deltaTime, currentSpeed);
-      game.updateRoad(currentSpeed);
-
-      const collisionResult = game.checkCollision();
-      if (collisionResult.collision) {
-        if (collisionResult.jump) {
-          game.jumpPlayer();
-        } else {
-          game.destroyCar(collisionResult.impactPoint);
-          gameState.endGame();
-          stats.end();
-          return;
-        }
+      const stillPlaying = updateGame(deltaTime, currentSpeed);
+      if (!stillPlaying) {
+        stats.end();
+        return;
       }
-      const coins = game.checkCoinCollision();
-      if (coins > 0) gameState.addScore(coins);
-
-      CameraSystem.update(
-        {
-          position: realCar.position,
-          rotation: realCar.rotation,
-          isDestroyed: () => game.car.value.isDestroyed,
-        },
-        currentSpeed,
-      );
     }
 
-    // renders++;
     renderer.render(scene, camera);
     stats.end();
   }
 
   function start() {
-    if (rafId !== null) return; // защита от двойного запуска
+    if (rafId !== null) return;
     rafId = requestAnimationFrame(animate);
   }
 
@@ -140,10 +157,6 @@ export function GameLoop(
     if (rafId !== null) {
       cancelAnimationFrame(rafId);
       rafId = null;
-    }
-    if (intervalId !== null) {
-      clearInterval(intervalId);
-      intervalId = null;
     }
   }
 

@@ -3,8 +3,9 @@
 import { ObstacleManager } from "@/game/obstacle/ObstacleManager";
 import { RoadManager } from "@/game/road/RoadManager";
 import type { CoinManager } from "@/game/coin/CoinManager";
-import { simulateJumpTrajectory } from "@/game/car/carTrajectory";
+import { simulateJumpTrajectory } from "@/game/car/CarTrajectory";
 import { DEFAULT_CAR_CONFIG } from "@/game/car/config";
+import { UpdateMode } from "../core/UpdateMode";
 
 export class InteractiveItemsManager {
   private obstacleManager: ObstacleManager;
@@ -13,9 +14,8 @@ export class InteractiveItemsManager {
 
   private obstacleTimer = 0;
   private coinTimer = 0;
-
-  private obstacleInterval = 500;
-  private coinInterval = 300;
+  private obstacleInterval = 1500;
+  private coinInterval = 600;
 
   constructor(
     obstacleManager: ObstacleManager,
@@ -27,16 +27,22 @@ export class InteractiveItemsManager {
     this.roadManager = roadManager;
   }
 
-  public update(deltaTime: number, speed: number) {
+  public update(deltaTime: number, speed: number, mode: UpdateMode) {
     // obstacles / jumps
     this.obstacleTimer += deltaTime;
     const obstacleInterval = Math.max(300, this.obstacleInterval - speed * 5);
 
-    if (this.obstacleTimer >= obstacleInterval) {
-      this.spawnObstacleLine(speed);
-      this.obstacleTimer = 0;
+    this.obstacleManager.update(speed);
+    this.coinManager.update(speed);
+
+    if (mode === UpdateMode.Destruction) {
+      return; // ⛔ стоп спавн, таймеры, геймплей
     }
 
+    if (this.obstacleTimer >= obstacleInterval) {
+      this.spawnObstacleFromCubes(speed);
+      this.obstacleTimer = 0;
+    }
     // coins (независимо)
     this.coinTimer += deltaTime;
     const coinInterval = Math.max(200, this.coinInterval - speed * 2);
@@ -45,12 +51,24 @@ export class InteractiveItemsManager {
       this.spawnCoins();
       this.coinTimer = 0;
     }
-
-    this.obstacleManager.update(speed);
-    this.coinManager.update(speed);
   }
 
-  private spawnObstacleLine(speed: number) {
+  // private spawnObstacleLine(speed: number) {
+  //   const lanesCount = this.roadManager.getLanesCount();
+  //   const emptyLane = Math.floor(Math.random() * lanesCount);
+
+  //   for (let lane = 0; lane < lanesCount; lane++) {
+  //     if (lane === emptyLane) continue;
+
+  //     if (Math.random() < 0.1) {
+  //       this.spawnJumpWithCoins(lane, speed);
+  //     }
+
+  //     this.obstacleManager.spawnObstacle(lane, -60);
+  //   }
+  // }
+
+  private spawnObstacleFromCubes(speed: number) {
     const lanesCount = this.roadManager.getLanesCount();
     const emptyLane = Math.floor(Math.random() * lanesCount);
 
@@ -61,7 +79,7 @@ export class InteractiveItemsManager {
         this.spawnJumpWithCoins(lane, speed);
       }
 
-      this.obstacleManager.spawnObstacle(lane, -60);
+      this.obstacleManager.spawnObstacleFromCubes(lane, -60, 0);
     }
   }
 

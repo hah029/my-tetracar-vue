@@ -1,7 +1,7 @@
-// src/game/collision/CollisionSystem.ts
 import * as THREE from "three";
 import type { Obstacle } from "@/game/obstacle/Obstacle";
 import type { Jump } from "@/game/obstacle/Jump";
+import type { ObstacleFromCubes } from "@/game/obstacle/ObstacleFromCubes";
 
 const DANGER_DISTANCE = 30;
 const COLLISION_COOLDOWN_MS = 1000;
@@ -9,53 +9,41 @@ const COLLISION_COOLDOWN_MS = 1000;
 type CollisionResult = {
   collision: boolean;
   impactPoint?: THREE.Vector3;
-  jump?: boolean; // добавлено для трамплина
+  jump?: boolean;
 };
 
 class CollisionSystemClass {
-  private collisionCooldown = false;
-  private cooldownTimer: number | null = null;
-
-  initialize() {
-    this.reset();
-  }
+  private lastCollisionTime = 0;
 
   reset() {
-    this.collisionCooldown = false;
-    if (this.cooldownTimer) {
-      clearTimeout(this.cooldownTimer);
-      this.cooldownTimer = null;
-    }
+    this.lastCollisionTime = 0;
   }
 
   checkCollision(
     car: {
       isDestroyed(): boolean;
       getCollider(): THREE.Box3 | THREE.Sphere;
+      checkObstacleCollision(obstacle: THREE.Object3D): boolean;
+      checkJumpCollision(jump: THREE.Object3D): boolean;
     },
     obstacles: Obstacle[],
     jumps: Jump[] = [],
+    obstaclesFromCubes: ObstacleFromCubes[] = [],
+    now?: number, // текущее время в миллисекундах (опционально)
   ): CollisionResult {
     if (car.isDestroyed()) return { collision: false };
-    if (this.collisionCooldown) return { collision: false };
 
-    const carCollider = car.getCollider();
+    const currentTime = now ?? performance.now();
+    if (currentTime - this.lastCollisionTime < COLLISION_COOLDOWN_MS) {
+      return { collision: false };
+    }
 
-    // Проверка препятствий
-    for (const obstacle of obstacles) {
-      const obstacleCollider = obstacle.collider;
-      if (!obstacleCollider) continue;
-
-      const intersects = obstacleCollider.intersectsBox(
-        carCollider as THREE.Box3,
-      );
-
-      if (intersects) {
-        this.collisionCooldown = true;
-        this.cooldownTimer = window.setTimeout(() => {
-          this.collisionCooldown = false;
-        }, COLLISION_COOLDOWN_MS);
-
+    // Проверка препятствий из кубиков
+    for (const obstacle of obstaclesFromCubes) {
+      if (car.checkObstacleCollision(obstacle)) {
+        console.log("Collision with obstacle, destroying");
+        this.lastCollisionTime = currentTime;
+        obstacle.destroy();
         return {
           collision: true,
           impactPoint: obstacle.position.clone(),
@@ -65,18 +53,18 @@ class CollisionSystemClass {
 
     // Проверка трамплинов
     for (const jump of jumps) {
-      if (jump.userData.activated) continue; // если уже активирован
-
-      const jumpBox = jump.getBoundingBox();
-      if (jumpBox.intersectsBox(carCollider as THREE.Box3)) {
+      if (jump.userData.activated) continue;
+      if (car.checkJumpCollision(jump)) {
         jump.userData.activated = true;
+        this.lastCollisionTime = currentTime;
         return {
           collision: true,
           impactPoint: jump.position.clone(),
-          jump: true, // отметка, что это трамплин
+          jump: true,
         };
       }
     }
+
     return { collision: false };
   }
 

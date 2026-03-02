@@ -4,7 +4,7 @@ export interface CubeConfig {
   pos: [number, number, number];
   scale: [number, number, number];
   color: number;
-  name: string;
+  name?: string;
 }
 
 export interface CubeUserData {
@@ -27,23 +27,23 @@ export interface CarConfig {
   // Позиционирование
   startPosition?: THREE.Vector3;
   startLane?: number;
-  
+
   // Размеры и коллайдер
   colliderShrinkX?: number;
   colliderShrinkZ?: number;
   colliderYOffset?: number;
   colliderHeightFactor?: number;
-  
+
   // Управление
   laneChangeSpeed?: number;
   maxTilt?: number;
   tiltSmoothing?: number;
-  
+
   // Прыжки
   jumpHeight?: number;
   jumpDuration?: number;
   gravity?: number;
-  
+
   // Разрушение
   explosionForce?: number;
   explosionUpward?: number;

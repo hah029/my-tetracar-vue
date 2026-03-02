@@ -122,6 +122,14 @@ export class Obstacle extends THREE.Mesh {
     return this.position.z > 10;
   }
 
+  // Разрушение препятствия
+  public destroy(): void {
+    const scene = this.parent;
+    if (scene) {
+      scene.remove(this);
+    }
+  }
+
   // Получить bounding box для коллизий
   public getBoundingBox(): THREE.Box3 {
     return new THREE.Box3().setFromObject(this);
