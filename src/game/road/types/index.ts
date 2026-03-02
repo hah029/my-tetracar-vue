@@ -20,6 +20,7 @@ export interface RoadConfig {
   segmentLength?: number;
   gap?: number;
   edgeOffset?: number;
+  textureUrl?: string;
 }
 
 export interface SpeedLineConfig {

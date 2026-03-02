@@ -1,5 +1,7 @@
 import { type RoadConfig } from "../types";
 
+import textureUrl from "@/assets/textures/road_tile.jpg";
+
 // Конфигурация по умолчанию
 export const DEFAULT_LANES = [-4, -2, 0, 2, 4];
 
@@ -14,6 +16,7 @@ export const DEFAULT_ROAD_CONFIG: Required<RoadConfig> = {
   segmentLength: 1.5,
   gap: 1.5,
   edgeOffset: 0, // Отступ от крайних полос до границ
+  textureUrl: textureUrl,
 };
 
 export const NEON_ROAD_CONFIG: Required<RoadConfig> = {

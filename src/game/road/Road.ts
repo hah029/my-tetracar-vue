@@ -20,14 +20,51 @@ export class Road extends THREE.Mesh {
       calculateRoadWidth(finalConfig.lanes, finalConfig.edgeOffset);
 
     const geometry = new THREE.PlaneGeometry(width, finalConfig.length);
-    const material = new THREE.MeshStandardMaterial({
-      color: 0x88ccff,
-      emissive: 0x224466,
-      emissiveIntensity: 3.0,
-      transparent: true,
-      opacity: 0.8,
-      side: THREE.DoubleSide,
-    });
+    let material: THREE.Material;
+
+    if (finalConfig.textureUrl) {
+      const loader = new THREE.TextureLoader();
+      const texture = loader.load(
+        finalConfig.textureUrl,
+        () => {
+          console.log("✅ Текстура успешно загружена");
+          // можно принудительно обновить материал, если нужно
+        },
+        undefined,
+        (err) => {
+          console.error("❌ Ошибка загрузки текстуры:", err);
+        },
+      );
+      // console.log(texture);
+
+      // Настраиваем повторение
+      texture.wrapS = THREE.RepeatWrapping;
+      texture.wrapT = THREE.RepeatWrapping;
+
+      // Допустим, размер одного квадрата текстуры в реальном мире = 1 единица.
+      // Тогда, чтобы квадрат заполнил всю ширину и длину без искажений,
+      // repeat по X = width, по Y = length.
+      // Если текстура должна повторяться чаще (например, каждый метр),
+      // можно использовать width / tileSize, где tileSize – желаемый размер плитки.
+      const tileSize = 0.7; // размер плитки в мировых единицах
+      texture.repeat.set(width / tileSize, finalConfig.length / tileSize);
+
+      material = new THREE.MeshStandardMaterial({
+        map: texture,
+        // transparent: false,
+        emissive: 0x224466,
+        emissiveIntensity: 2.0,
+        side: THREE.DoubleSide,
+      });
+    } else {
+      // Запасной вариант, если текстура не передана
+      material = new THREE.MeshStandardMaterial({
+        color: 0xff00ff,
+        side: THREE.DoubleSide,
+      });
+    }
+
+    // console.log(material);
 
     super(geometry, material);
 
@@ -37,9 +74,9 @@ export class Road extends THREE.Mesh {
     this.edgeOffset = finalConfig.edgeOffset + 1;
 
     this.rotation.x = -Math.PI / 2;
-    this.position.z = -finalConfig.length / 2 + finalConfig.length / 2;
+    this.position.z = 0;
     this.position.y = finalConfig.yPosition;
-    this.receiveShadow = true;
+    this.receiveShadow = false;
   }
 
   // Получить позицию полосы по индексу
