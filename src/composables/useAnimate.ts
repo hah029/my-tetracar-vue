@@ -24,15 +24,8 @@ export function GameLoop(
   const FRAME_TIME = 1000 / FPS;
   let lastTime = 0;
   let started = false;
-
-  // let renders = 0;
   let rafId: number | null = null;
   let intervalId: number | null = null;
-
-  // intervalId = window.setInterval(() => {
-  //   console.log("renders/sec =", renders);
-  //   renders = 0;
-  // }, 1000);
 
   function animate(time: number) {
     rafId = requestAnimationFrame(animate);
@@ -110,7 +103,6 @@ export function GameLoop(
       game.updateRoad(currentSpeed);
 
       const collisionResult = game.checkCollision();
-      console.log(collisionResult);
       if (collisionResult.collision) {
         if (collisionResult.jump) {
           game.jumpPlayer();

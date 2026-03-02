@@ -2,11 +2,11 @@ import * as THREE from "three";
 import { type CarConfig, type CubeConfig } from "../types";
 
 // Конфигурация кубиков машины
-const COLS: [number, number, number] = [-0.5, 0, 0.5];
-const ROWS: [number, number, number, number] = [0.72, 0.25, -0.25, -0.72];
+const COLS: [number, number, number] = [-0.6, 0, 0.6];
+const ROWS: [number, number, number, number] = [0.84, 0.3, -0.3, -0.84];
 const HEIGHT = 0.17;
 // const GLB_SCALES: [number, number, number] = [0.5, 0.5, 0.5];
-const GLB_SCALES: [number, number, number] = [0.25, 0.25, 0.25];
+const GLB_SCALES: [number, number, number] = [0.3, 0.3, 0.3];
 
 export const CAR_CUBES_CONFIG: CubeConfig[] = [
   {
@@ -60,8 +60,8 @@ export const DEFAULT_CAR_CONFIG: Required<CarConfig> = {
   startLane: 1,
 
   // Размеры и коллайдер
-  colliderShrinkX: 0.9,
-  colliderShrinkZ: 0.9,
+  colliderShrinkX: 0.5,
+  colliderShrinkZ: 0.5,
   colliderYOffset: 0.0,
   colliderHeightFactor: 0.8,
 

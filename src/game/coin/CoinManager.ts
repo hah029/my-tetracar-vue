@@ -29,7 +29,6 @@ export class CoinManager {
     value: number = 10,
   ): void {
     const coin = new Coin(laneIndex, zPos, yPos, value);
-    console.log("jump coin", coin.position);
     this.coins.push(coin);
     this.scene.add(coin);
   }
