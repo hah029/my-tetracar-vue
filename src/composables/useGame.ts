@@ -118,7 +118,7 @@ export function useGame() {
 
     // === Создание дороги и машины ===
     roadManager.createRoad();
-    roadManager.addSpeedLines({ count: 30 });
+    // roadManager.addSpeedLines({ count: 30 });
 
     const newCar = carManager.createCar({
       startLane: 2,
@@ -153,7 +153,7 @@ export function useGame() {
     if (!obstacleManager) return;
     const obstacles = obstacleManager.getObstaclesFromCubes();
     obstacles.forEach((o) => {
-      o.destroy(impactPoint || null);
+      o.destroy(impactPoint);
     });
     // Не нужно обновлять obstacles.value здесь, т.к. следующий кадр updateInteractiveItems сделает это
   }
@@ -195,7 +195,11 @@ export function useGame() {
   // ==========================
   // Обновление препятствий (привязка к игровому циклу)
   // ==========================
-  function updateInteractiveItems(deltaTime, speed, mode) {
+  function updateInteractiveItems(
+    deltaTime: number,
+    speed: number,
+    mode: UpdateMode,
+  ) {
     interactiveManager.update(deltaTime, speed, mode);
 
     obstacleSyncTimer += deltaTime;
@@ -280,7 +284,7 @@ export function useGame() {
     roadManager.clear();
 
     roadManager.createRoad();
-    roadManager.addSpeedLines({ count: 30 });
+    // roadManager.addSpeedLines({ count: 30 });
 
     const newCar = carManager.getCar();
     car.value.mesh = newCar;
@@ -290,7 +294,7 @@ export function useGame() {
 
     resetJumps();
     obstacles.value = [];
-    updateInteractiveItems(0, 0); // синхронизация
+    updateInteractiveItems(0, 0, UpdateMode.Destruction); // синхронизация
   }
 
   return {

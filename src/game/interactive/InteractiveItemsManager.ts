@@ -5,7 +5,7 @@ import { RoadManager } from "@/game/road/RoadManager";
 import type { CoinManager } from "@/game/coin/CoinManager";
 import { simulateJumpTrajectory } from "@/game/car/CarTrajectory";
 import { DEFAULT_CAR_CONFIG } from "@/game/car/config";
-import { UpdateMode } from "../core/UpdateMode";
+import { UpdateMode } from "@/game/core/UpdateMode";
 
 export class InteractiveItemsManager {
   private obstacleManager: ObstacleManager;
@@ -14,8 +14,8 @@ export class InteractiveItemsManager {
 
   private obstacleTimer = 0;
   private coinTimer = 0;
-  private obstacleInterval = 1500;
-  private coinInterval = 600;
+  private obstacleInterval = 1600;
+  private coinInterval = 1000;
 
   constructor(
     obstacleManager: ObstacleManager,
@@ -71,16 +71,19 @@ export class InteractiveItemsManager {
   private spawnObstacleFromCubes(speed: number) {
     const lanesCount = this.roadManager.getLanesCount();
     const emptyLane = Math.floor(Math.random() * lanesCount);
+    let isJumpSpawned = false;
 
     for (let lane = 0; lane < lanesCount; lane++) {
       if (lane === emptyLane) continue;
 
-      if (Math.random() < 0.1) {
+      if (Math.random() < 0.05 && isJumpSpawned == false) {
+        isJumpSpawned = true;
         this.spawnJumpWithCoins(lane, speed);
       }
 
       this.obstacleManager.spawnObstacleFromCubes(lane, -60, 0);
     }
+    isJumpSpawned = false;
   }
 
   private spawnCoins() {
@@ -88,12 +91,12 @@ export class InteractiveItemsManager {
     const lane = Math.floor(Math.random() * lanesCount);
 
     // одиночная монетка
-    this.coinManager.spawnCoin(lane, -60);
+    // this.coinManager.spawnCoin(lane, -60);
 
     // шанс на цепочку
-    if (Math.random() < 0.3) {
+    if (Math.random() < 0.1) {
       for (let i = 1; i <= 3; i++) {
-        this.coinManager.spawnCoin(lane, -60 - i * 1.2);
+        this.coinManager.spawnCoin(lane, -60 - i * 5);
       }
     }
   }
@@ -103,7 +106,7 @@ export class InteractiveItemsManager {
     this.obstacleManager.spawnJump(lane, jumpZ);
 
     const trajectory = simulateJumpTrajectory({
-      startY: 0,
+      startY: 0.5,
       jumpHeight: DEFAULT_CAR_CONFIG.jumpHeight,
       gravity: DEFAULT_CAR_CONFIG.gravity,
       forwardSpeed: speed,
@@ -113,7 +116,7 @@ export class InteractiveItemsManager {
     for (let i = 0; i < trajectory.length; i += step) {
       const point = trajectory[i];
       if (point === undefined) continue;
-      this.coinManager.spawnCoin(lane, -60 + point.zOffset, point.y, 2);
+      this.coinManager.spawnCoin(lane, jumpZ + 2 + point.zOffset, point.y, 5);
     }
   }
 

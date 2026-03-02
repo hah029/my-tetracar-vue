@@ -12,7 +12,8 @@ export class Coin extends THREE.Mesh {
     yPos: number = 0.2,
     value: number = 10,
   ) {
-    const geometry = new THREE.SphereGeometry(0.4, 16, 16);
+    // const geometry = new THREE.SphereGeometry(0.4, 16, 16);
+    const geometry = new THREE.BoxGeometry(0.4, 0.4, 0.4);
     const material = new THREE.MeshStandardMaterial({
       color: 0xffd700,
       emissive: 0xaa8800,

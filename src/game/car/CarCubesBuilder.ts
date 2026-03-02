@@ -24,9 +24,9 @@ export class CarCubesBuilder {
 
     if (useGLB && cubeModelUrl) {
       try {
-        console.log("📦 Loading GLB model from:", cubeModelUrl);
+        // console.log("📦 Loading GLB model from:", cubeModelUrl);
         const cubeModel = await this.loadCubeModel(cubeModelUrl);
-        console.log("✅ GLB model loaded, building cubes...");
+        // console.log("✅ GLB model loaded, building cubes...");
 
         CAR_CUBES_CONFIG.forEach((config, index) => {
           const cube = this.createCubeFromGLB(cubeModel, config, index);
@@ -41,7 +41,7 @@ export class CarCubesBuilder {
         return this.buildFromPrimitives(onCubeCreated);
       }
     } else {
-      console.log("🔨 Building car from primitives");
+      // console.log("🔨 Building car from primitives");
       return this.buildFromPrimitives(onCubeCreated);
     }
 

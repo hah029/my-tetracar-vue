@@ -1,55 +1,37 @@
 import * as THREE from "three";
-import { type RoadLineConfig } from "./types";
+import type { RoadLineConfig } from "./types";
 
 export class RoadLine extends THREE.Mesh {
-  private segmentLength: number;
-  private gap: number;
-  private totalLength: number;
+  private readonly resetZ: number;
+  private readonly length: number;
 
   constructor(config: RoadLineConfig) {
-    const {
-      x,
-      z,
-      segmentLength = 1.5,
-      gap = 1.5,
-      color = 0x44ffff,
-      emissive = 0x226688,
-      opacity = 0.9,
-    } = config;
+    const { x, z, length = 250, color = 0x000000, opacity = 0.9 } = config;
 
-    const geometry = new THREE.BoxGeometry(0.1, 0.02, segmentLength);
+    const geometry = new THREE.BoxGeometry(0.05, 0.02, length);
     const material = new THREE.MeshStandardMaterial({
       color,
-      emissive,
-      emissiveIntensity: 1.2,
       transparent: true,
       opacity,
+      emissive: new THREE.Color(color),
+      emissiveIntensity: 0.6,
     });
 
     super(geometry, material);
 
-    this.segmentLength = segmentLength;
-    this.gap = gap;
-    this.totalLength = 200;
+    this.length = length;
+    this.resetZ = z - length;
 
-    this.position.set(x, 0.06, z);
+    this.position.set(x, 0.06, z + 10);
     this.castShadow = false;
     this.receiveShadow = false;
+    this.frustumCulled = true; // ✅ важно
   }
 
   public update(speed: number): void {
-    this.position.z += speed;
-
-    if (this.position.z > 50) {
-      const totalSegments =
-        Math.ceil(this.totalLength / (this.segmentLength + this.gap)) + 10;
-      this.position.z -= totalSegments * (this.segmentLength + this.gap);
-
-      if ((this.material as THREE.MeshStandardMaterial).emissive) {
-        const material = this.material as THREE.MeshStandardMaterial;
-        const hue = Math.random() * 0.2 + 0.5;
-        material.emissive.setHSL(hue, 1, 0.3);
-      }
-    }
+    // this.position.z += speed;
+    // if (this.position.z > this.length * 0.5) {
+    //   this.position.z = this.resetZ;
+    // }
   }
 }

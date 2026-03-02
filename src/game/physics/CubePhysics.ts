@@ -25,9 +25,6 @@ export class CubePhysics {
       const ud = cube.userData as any;
 
       const nextPos = cube.position.clone().add(ud.velocity);
-      console.log(
-        `Before: cube.position.y = ${cube.position.y}, velocity.y = ${ud.velocity.y}`,
-      );
 
       // Коллизии с бортиками
       edges.forEach((edge) => {
@@ -84,7 +81,6 @@ export class CubePhysics {
       cube.rotation.x += ud.rotationSpeed.x;
       cube.rotation.y += ud.rotationSpeed.y;
       cube.rotation.z += ud.rotationSpeed.z;
-      console.log(`After: nextPos.y = ${nextPos.y}`);
 
       if (cube.position.y < config.removalHeight) {
         if (onRemove) onRemove(cube);

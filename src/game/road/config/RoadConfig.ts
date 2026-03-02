@@ -5,21 +5,21 @@ import textureUrl from "@/assets/textures/road_tile.jpg";
 // Конфигурация по умолчанию
 export const DEFAULT_LANES = [-4, -2, 0, 2, 4];
 
-export const DEFAULT_ROAD_CONFIG: Required<RoadConfig> = {
+export const DEFAULT_ROAD_CONFIG: RoadConfig = {
   lanes: DEFAULT_LANES,
-  width: 12, // Можно вычислять: (max lane - min lane) + edgeOffset*2
+  width: 11, // Можно вычислять: (max lane - min lane) + edgeOffset*2
   length: 250,
   color: 0x88ccff,
   emissive: 0x224466,
   opacity: 0.6,
   yPosition: 0.0,
-  segmentLength: 1.5,
-  gap: 1.5,
-  edgeOffset: 0, // Отступ от крайних полос до границ
+  segmentLength: 250,
+  gap: 0,
+  edgeOffset: 1.5, // Отступ от крайних полос до границ
   textureUrl: textureUrl,
 };
 
-export const NEON_ROAD_CONFIG: Required<RoadConfig> = {
+export const NEON_ROAD_CONFIG: RoadConfig = {
   ...DEFAULT_ROAD_CONFIG,
   color: 0x3366aa,
   emissive: 0x112244,

@@ -1,12 +1,15 @@
 import * as THREE from "three";
 import { RoadEdge } from "@/game/road/edges/RoadEdge";
 import { RoadManager } from "@/game/road/RoadManager";
-import { type CubeConfig } from "@/game/car/types";
+import { type CubeConfig, type CubeUserData } from "@/game/car/types";
 import type { PhysicsConfig } from "../physics/types";
 import { CubePhysics } from "@/game/physics/CubePhysics";
 import { ObstacleManager } from "./ObstacleManager";
 
+import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
+
 export class ObstacleFromCubes extends THREE.Group {
+  private cubeModelCache: THREE.Group | null = null;
   private cubes: THREE.Object3D[] = [];
   private isDestroyed: boolean = false;
   private physicsConfig: Required<PhysicsConfig>;
@@ -42,36 +45,118 @@ export class ObstacleFromCubes extends THREE.Group {
     this.build(formConfig, useGLB, cubeModelUrl);
   }
 
-  private build(
+  private async build(
     formConfig: CubeConfig[],
     useGLB: boolean,
     cubeModelUrl: string,
   ) {
-    // Для простоты используем примитивы, но можно расширить для GLB
-    formConfig.forEach((cfg, index) => {
-      const geometry = new THREE.BoxGeometry(1, 0.5, 1);
-      const material = new THREE.MeshStandardMaterial({
-        color: cfg.color,
-        roughness: 0.5,
-        metalness: 0.1,
-      });
-      const cube = new THREE.Mesh(geometry, material);
-      cube.position.set(cfg.pos[0], cfg.pos[1], cfg.pos[2]);
-      cube.scale.set(cfg.scale[0], cfg.scale[1], cfg.scale[2]);
-      cube.castShadow = true;
-      cube.receiveShadow = true;
+    const cubes: THREE.Object3D[] = [];
 
-      cube.userData = {
-        originalPos: [...cfg.pos],
-        originalScale: [...cfg.scale],
-        configIndex: index,
-        velocity: new THREE.Vector3(0, 0, 0),
-        rotationSpeed: new THREE.Vector3(0, 0, 0),
-      };
+    if (useGLB && cubeModelUrl) {
+      try {
+        // console.log("📦 Loading GLB model from:", cubeModelUrl);
+        const cubeModel = await this.loadCubeModel(cubeModelUrl);
+        // console.log("✅ GLB model loaded, building cubes...");
 
-      this.add(cube);
-      this.cubes.push(cube);
+        formConfig.forEach((config, index) => {
+          const cube = this.createCubeFromGLB(cubeModel, config, index);
+          this.add(cube);
+          cubes.push(cube);
+          // if (onCubeCreated) onCubeCreated(cube);
+        });
+      } catch (error) {
+        console.error(
+          "❌ Error loading GLB model, falling back to primitives:",
+          error,
+        );
+        return this.buildFromPrimitives(formConfig);
+      }
+    } else {
+      // console.log("🔨 Building car from primitives");
+      return this.buildFromPrimitives(formConfig);
+    }
+
+    return cubes;
+  }
+
+  /**
+   * Создание кубика из GLB модели
+   */
+  private createCubeFromGLB(
+    model: THREE.Group,
+    config: CubeConfig,
+    index: number,
+  ): THREE.Object3D {
+    const cube = model.clone();
+    cube.position.set(config.pos[0], config.pos[1], config.pos[2]);
+    cube.scale.set(config.scale[0], config.scale[1], config.scale[2]);
+
+    // Обходим все меши и заменяем материалы на MeshStandardMaterial
+    cube.traverse((child) => {
+      if ((child as THREE.Mesh).isMesh) {
+        const mesh = child as THREE.Mesh;
+        // mesh.material = new THREE.MeshStandardMaterial({
+        //   // color: config.color,
+        //   roughness: 0.5,
+        //   metalness: 0.1,
+        // });
+        mesh.castShadow = true;
+        mesh.receiveShadow = true;
+      }
     });
+
+    cube.userData = this.createCubeUserData(config, index);
+    return cube;
+  }
+
+  /**
+   * Построение кубиков из примитивов
+   */
+  private buildFromPrimitives(formConfig: CubeConfig[]): THREE.Object3D[] {
+    const cubes: THREE.Object3D[] = [];
+
+    formConfig.forEach((config, index) => {
+      const cube = this.createPrimitiveCube(config, index);
+      this.add(cube);
+      cubes.push(cube);
+    });
+
+    return cubes;
+  }
+
+  /**
+   * Создание одного примитивного кубика
+   */
+  private createPrimitiveCube(config: CubeConfig, index: number): THREE.Mesh {
+    const geometry = new THREE.BoxGeometry(1, 0.5, 1);
+    const material = new THREE.MeshStandardMaterial({
+      color: config.color,
+      roughness: 0.5,
+      metalness: 0.1,
+    });
+    const cube = new THREE.Mesh(geometry, material);
+
+    cube.position.set(config.pos[0], config.pos[1], config.pos[2]);
+    cube.scale.set(config.scale[0], config.scale[1], config.scale[2]);
+
+    cube.castShadow = true;
+    cube.receiveShadow = true;
+
+    cube.userData = this.createCubeUserData(config, index);
+    return cube;
+  }
+
+  /**
+   * Создание userData для кубика
+   */
+  private createCubeUserData(config: CubeConfig, index: number): CubeUserData {
+    return {
+      originalPos: [...config.pos],
+      originalScale: [...config.scale],
+      configIndex: index,
+      velocity: new THREE.Vector3(0, 0, 0),
+      rotationSpeed: new THREE.Vector3(0, 0, 0),
+    };
   }
 
   public update(speed: number): boolean {
@@ -82,9 +167,9 @@ export class ObstacleFromCubes extends THREE.Group {
       return this.position.z > 10;
     } else {
       // Обновляем разлетающиеся кубики
-      console.log("Updating destroyed cubes, count:", this.cubes.length);
+      // console.log("Updating destroyed cubes, count:", this.cubes.length);
       this.updateDestroyedCubes();
-      console.log("After updateDestroyedCubes, count:", this.cubes.length);
+      // console.log("After updateDestroyedCubes, count:", this.cubes.length);
       // Если все кубики удалены, возвращаем true для удаления группы
       return this.cubes.length === 0;
     }
@@ -151,5 +236,25 @@ export class ObstacleFromCubes extends THREE.Group {
 
   public isFullyDestroyed() {
     return this.isDestroyed && this.cubes.length === 0;
+  }
+
+  /**
+   * Загрузка GLB модели с кешированием
+   */
+  private async loadCubeModel(url: string): Promise<THREE.Group> {
+    if (this.cubeModelCache) return this.cubeModelCache.clone();
+
+    return new Promise((resolve, reject) => {
+      const loader = new GLTFLoader();
+      loader.load(
+        url,
+        (gltf) => {
+          this.cubeModelCache = gltf.scene;
+          resolve(gltf.scene.clone());
+        },
+        undefined,
+        reject,
+      );
+    });
   }
 }

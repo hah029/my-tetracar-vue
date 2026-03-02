@@ -7,6 +7,7 @@ export class Road extends THREE.Mesh {
   public readonly width: number;
   public readonly length: number;
   public readonly edgeOffset: number;
+  private texture?: THREE.Texture;
 
   constructor(config: RoadConfig) {
     const finalConfig = { ...DEFAULT_ROAD_CONFIG, ...config };
@@ -46,7 +47,7 @@ export class Road extends THREE.Mesh {
       // repeat по X = width, по Y = length.
       // Если текстура должна повторяться чаще (например, каждый метр),
       // можно использовать width / tileSize, где tileSize – желаемый размер плитки.
-      const tileSize = 0.7; // размер плитки в мировых единицах
+      const tileSize = 0.647; // размер плитки в мировых единицах
       texture.repeat.set(width / tileSize, finalConfig.length / tileSize);
 
       material = new THREE.MeshStandardMaterial({
@@ -56,6 +57,7 @@ export class Road extends THREE.Mesh {
         emissiveIntensity: 2.0,
         side: THREE.DoubleSide,
       });
+      // this.texture = texture;
     } else {
       // Запасной вариант, если текстура не передана
       material = new THREE.MeshStandardMaterial({
@@ -67,6 +69,13 @@ export class Road extends THREE.Mesh {
     // console.log(material);
 
     super(geometry, material);
+
+    if (
+      finalConfig.textureUrl &&
+      material instanceof THREE.MeshStandardMaterial
+    ) {
+      this.texture = material.map as THREE.Texture; // сохраняем ссылку на текстуру
+    }
 
     this.lanes = [...finalConfig.lanes];
     this.width = width;
@@ -109,5 +118,13 @@ export class Road extends THREE.Mesh {
       left: minLane - this.edgeOffset,
       right: maxLane + this.edgeOffset,
     };
+  }
+
+  public update(deltaTime: number, speed: number) {
+    if (this.texture) {
+      // смещаем текстуру по вертикали
+      // speed > 0 → движение дороги назад
+      this.texture.offset.y -= speed; // 0.001 для нормализации
+    }
   }
 }

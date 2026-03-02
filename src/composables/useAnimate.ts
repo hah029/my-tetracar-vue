@@ -21,7 +21,7 @@ export function GameLoop(
   document.body.appendChild(stats.dom);
 
   // FPS limiter
-  const FPS = 30;
+  const FPS = 60;
   const FRAME_TIME = 1000 / FPS;
   let lastTime = 0;
   let started = false;
