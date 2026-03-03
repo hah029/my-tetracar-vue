@@ -4,10 +4,7 @@ import { RoadLine } from "./RoadLine";
 import { SpeedLine } from "./SpeedLine";
 import { RoadEdge, NeonEdge } from "./edges";
 import { type RoadConfig, type SpeedLineConfig, type RoadStats } from "./types";
-import {
-  DEFAULT_ROAD_CONFIG,
-  NEON_ROAD_CONFIG,
-} from "./config";
+import { DEFAULT_ROAD_CONFIG, NEON_ROAD_CONFIG } from "./config";
 import { SideObject, type SideObjectConfig } from "./SideObject";
 
 export class RoadManager {
@@ -165,7 +162,10 @@ export class RoadManager {
   private addRoadLines(color?: number, emissive?: number): void {
     if (!this.road) return;
 
-    const { gap, length } = this.config;
+    const { length } = this.config;
+    if (!length) {
+      throw new Error();
+    }
     const lanes = this.road.getLanePositions();
 
     for (let i = 0; i < lanes.length - 1; i++) {
@@ -178,7 +178,6 @@ export class RoadManager {
         x,
         z: -length / 2,
         length,
-        gap,
         color: color ?? 0xffffff,
         emissive: emissive ?? 0xaaaaaa,
       });

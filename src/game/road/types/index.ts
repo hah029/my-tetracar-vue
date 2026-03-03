@@ -2,7 +2,6 @@
 export interface RoadLineConfig {
   x: number;
   z: number;
-  gap: number;
   color?: number;
   emissive?: number;
   opacity?: number;

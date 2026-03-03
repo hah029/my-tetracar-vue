@@ -1,13 +1,19 @@
 import * as THREE from "three";
 import { type RoadConfig } from "./types";
-import { DEFAULT_ROAD_CONFIG, calculateRoadWidth } from "./config";
+import {
+  DEFAULT_ROAD_CONFIG,
+  calculateRoadWidth,
+  getEdgePositions,
+} from "./config";
 import { loadTexture } from "@/helpers/loaders";
+// import { XZ_SCALING } from "../cube/config";
+// import { isLeftHandSideExpression } from "typescript";
 
 export class Road extends THREE.Mesh {
   public readonly lanes: number[];
   public readonly width: number;
   public readonly length: number;
-  public readonly edgeOffset: number;
+  // public readonly edgeOffset: number;
 
   constructor(config?: RoadConfig) {
     const tmpConfig = { ...DEFAULT_ROAD_CONFIG, ...config };
@@ -16,22 +22,36 @@ export class Road extends THREE.Mesh {
     }
 
     // Вычисляем ширину на основе lanes, если не указана явно
-    const width =
-      tmpConfig.width ||
-      calculateRoadWidth(tmpConfig.lanes, tmpConfig.edgeOffset);
+    const lanesCount = tmpConfig.lanes.length;
+    // const CUBE_SIZE = 0.6; // размер кубика (bounding size)
+    // const width = 3 * CUBE_SIZE * lanesCount + 2; // формула от пользователя
+    // tmpConfig.width ||
+    const width = calculateRoadWidth(tmpConfig.lanes);
 
-    const geometry = new THREE.PlaneGeometry(width, tmpConfig.length);
+    // Логирование для отладки ширины дороги
+    console.log(
+      "[Road] lanes:",
+      tmpConfig.lanes,
+      "count:",
+      lanesCount,
+      "width:",
+      width,
+      "edgeOffset:",
+      tmpConfig.edgeOffset,
+    );
+
+    const geometry = new THREE.PlaneGeometry(width, tmpConfig.length!);
     let material: THREE.Material;
 
     if (tmpConfig.textureUrl) {
-      const texture = loadTexture(tmpConfig.textureUrl);
+      const texture = loadTexture(tmpConfig.textureUrl!);
 
       // Настраиваем повторение
       texture.wrapS = THREE.RepeatWrapping;
       texture.wrapT = THREE.RepeatWrapping;
 
-      const tileSize = 0.647; // размер плитки в мировых единицах
-      texture.repeat.set(width / tileSize, tmpConfig.length / tileSize);
+      const tileSize = 0.6; // размер плитки в мировых единицах
+      texture.repeat.set(width / tileSize, tmpConfig.length! / tileSize);
 
       material = new THREE.MeshStandardMaterial({
         map: texture,
@@ -50,12 +70,12 @@ export class Road extends THREE.Mesh {
 
     this.lanes = [...tmpConfig.lanes];
     this.width = width;
-    this.length = tmpConfig.length;
-    this.edgeOffset = tmpConfig.edgeOffset + 1;
+    this.length = tmpConfig.length!;
+    // this.edgeOffset = tmpConfig.edgeOffset! + 1;
 
     this.rotation.x = -Math.PI / 2;
     this.position.z = 0;
-    this.position.y = tmpConfig.yPosition;
+    this.position.y = tmpConfig.yPosition!;
     this.receiveShadow = false;
   }
 
@@ -83,11 +103,6 @@ export class Road extends THREE.Mesh {
 
   // Получить позиции границ дороги
   public getEdgePositions(): { left: number; right: number } {
-    const minLane = Math.min(...this.lanes);
-    const maxLane = Math.max(...this.lanes);
-    return {
-      left: minLane - this.edgeOffset,
-      right: maxLane + this.edgeOffset,
-    };
+    return getEdgePositions(this.lanes);
   }
 }

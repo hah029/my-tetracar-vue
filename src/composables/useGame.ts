@@ -10,6 +10,7 @@ import { InteractiveItemsManager } from "@/game/interactive/InteractiveItemsMana
 import { CoinManager } from "@/game/coin/CoinManager";
 // enums
 import { UpdateMode } from "@/game/core/UpdateMode";
+import { DEFAULT_LANES } from "@/game/road/config/RoadConfig";
 
 // Интерфейс для реактивной ссылки car
 interface CarRef {
@@ -96,7 +97,7 @@ export function useGame() {
 
     // === Инициализация менеджеров ===
     roadManager = RoadManager.initialize(
-      { lanes: [-4, -2, 0, 2, 4], edgeOffset: 0, length: 250 },
+      { lanes: DEFAULT_LANES, length: 250 },
       scene,
     );
 
