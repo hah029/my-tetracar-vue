@@ -8,8 +8,6 @@ import { ObstacleManager } from "@/game/obstacle/ObstacleManager";
 import { CollisionSystem } from "@/game/collision/CollisionSystem";
 import { InteractiveItemsManager } from "@/game/interactive/InteractiveItemsManager";
 import { CoinManager } from "@/game/coin/CoinManager";
-// assets
-import cubeGLB from "@/assets/models/cube.glb";
 // enums
 import { UpdateMode } from "@/game/core/UpdateMode";
 
@@ -103,7 +101,7 @@ export function useGame() {
     );
 
     obstacleManager = ObstacleManager.getInstance();
-    obstacleManager.initialize(scene, true, cubeGLB);
+    obstacleManager.initialize(scene, true);
     coinManager = CoinManager.getInstance();
     coinManager.initialize(scene);
 
@@ -130,7 +128,7 @@ export function useGame() {
     car.value.isDestroyed = false;
     car.value.cubes = [];
 
-    carManager.buildCar(true, cubeGLB);
+    carManager.buildCar(true);
   }
 
   // === Обновление позиции и состояния машины (вызывать каждый кадр) ===
@@ -170,7 +168,7 @@ export function useGame() {
   function resetPlayer() {
     if (!carManager) return;
 
-    carManager.resetCar(cubeGLB);
+    carManager.resetCar();
     updatePlayer();
   }
 
@@ -276,7 +274,7 @@ export function useGame() {
   function reset() {
     if (!carManager || !obstacleManager || !roadManager || !sceneRef) return;
 
-    carManager.resetCar(cubeGLB);
+    carManager.resetCar();
     interactiveManager.reset();
     CollisionSystem.reset();
     roadManager.clear();

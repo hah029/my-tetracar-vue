@@ -10,16 +10,16 @@ export interface RoadLineConfig {
 }
 
 export interface RoadConfig {
-  lanes: number[];
-  width: number;
-  length: number;
+  lanes?: number[];
+  width?: number;
+  length?: number;
   color?: number;
   emissive?: number;
   opacity?: number;
-  yPosition: number;
+  yPosition?: number;
   segmentLength?: number;
-  gap: number;
-  edgeOffset: number;
+  gap?: number;
+  edgeOffset?: number;
   textureUrl?: string;
 }
 

@@ -1,14 +1,14 @@
 // src/game/car/CarCubesBuilder.ts
 import * as THREE from "three";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
-import { type CubeConfig, type CubeUserData } from "./types";
+import { type GeometryConfig, type CubeUserData } from "./types";
 import { CAR_CUBES_CONFIG } from "./config";
 
 export class CarCubesBuilder {
   private cubeModelCache: THREE.Group | null = null;
   // private texture?: THREE.Texture;
 
-  constructor() { }
+  constructor() {}
 
   /**
    * Основной метод для построения кубиков машины
@@ -51,7 +51,7 @@ export class CarCubesBuilder {
    */
   private createCubeFromGLB(
     model: THREE.Group,
-    config: CubeConfig,
+    config: GeometryConfig,
     index: number,
   ): THREE.Object3D {
     const cube = model.clone();
@@ -112,7 +112,10 @@ export class CarCubesBuilder {
   /**
    * Создание одного примитивного кубика
    */
-  private createPrimitiveCube(config: CubeConfig, index: number): THREE.Mesh {
+  private createPrimitiveCube(
+    config: GeometryConfig,
+    index: number,
+  ): THREE.Mesh {
     const geometry = new THREE.BoxGeometry(1, 0.5, 1);
     const material = new THREE.MeshStandardMaterial({
       color: config.color,
@@ -134,7 +137,10 @@ export class CarCubesBuilder {
   /**
    * Создание userData для кубика
    */
-  private createCubeUserData(config: CubeConfig, index: number): CubeUserData {
+  private createCubeUserData(
+    config: GeometryConfig,
+    index: number,
+  ): CubeUserData {
     return {
       originalPos: [...config.pos],
       originalScale: [...config.scale],

@@ -10,7 +10,6 @@ export class ObstacleManager {
   private dynamicCubes: THREE.Object3D[] = []; // отдельный массив для кубиков разрушенных препятствий
   private scene!: THREE.Scene;
   private useGLB: boolean = false;
-  private cubeModelUrl: string = "";
 
   public static getInstance(): ObstacleManager {
     if (!ObstacleManager.instance) {
@@ -19,14 +18,9 @@ export class ObstacleManager {
     return ObstacleManager.instance;
   }
 
-  public initialize(
-    scene: THREE.Scene,
-    useGLB: boolean = false,
-    cubeModelUrl: string = "",
-  ) {
+  public initialize(scene: THREE.Scene, useGLB: boolean = false) {
     this.scene = scene;
     this.useGLB = useGLB;
-    this.cubeModelUrl = cubeModelUrl;
   }
 
   public registerDynamicCubes(cubes: THREE.Object3D[]) {
@@ -47,14 +41,7 @@ export class ObstacleManager {
       console.warn(`Form with index ${index} not found`);
       return null;
     }
-    const obstacle = new Obstacle(
-      lane,
-      z,
-      form,
-      this.scene,
-      this.useGLB,
-      this.cubeModelUrl,
-    );
+    const obstacle = new Obstacle(lane, z, form, this.scene, this.useGLB);
     this.obstacles.push(obstacle);
     this.scene.add(obstacle);
     return obstacle;
@@ -108,9 +95,7 @@ export class ObstacleManager {
   }
 
   public reset() {
-    [...this.obstacles, ...this.jumps].forEach(
-      (o) => this.scene.remove(o),
-    );
+    [...this.obstacles, ...this.jumps].forEach((o) => this.scene.remove(o));
     this.obstacles = [];
     this.jumps = [];
 

@@ -1,7 +1,6 @@
 import * as THREE from "three";
-import { type CarConfig, type CubeConfig } from "../types";
+import { type CarConfig, type GeometryConfig } from "../types";
 import base_texture from "@/assets/textures/cube_base.svg";
-
 
 // Конфигурация кубиков машины
 const COLS: [number, number, number] = [-0.6, 0, 0.6];
@@ -10,7 +9,7 @@ const HEIGHT = 0.17;
 // const GLB_SCALES: [number, number, number] = [0.5, 0.5, 0.5];
 const GLB_SCALES: [number, number, number] = [0.3, 0.3, 0.3];
 
-export const CAR_CUBES_CONFIG: CubeConfig[] = [
+export const CAR_CUBES_CONFIG: GeometryConfig[] = [
   {
     pos: [COLS[1], HEIGHT, ROWS[3]],
     scale: GLB_SCALES,

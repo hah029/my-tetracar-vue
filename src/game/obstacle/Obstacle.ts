@@ -1,7 +1,7 @@
 import * as THREE from "three";
 import { RoadEdge } from "@/game/road/edges/RoadEdge";
 import { RoadManager } from "@/game/road/RoadManager";
-import { type CubeConfig } from "@/game/cube/types";
+import { type GeometryConfig } from "@/game/cube/types";
 import type { PhysicsConfig } from "../physics/types";
 import { CubePhysics } from "@/game/physics/CubePhysics";
 import { ObstacleManager } from "./ObstacleManager";
@@ -17,10 +17,9 @@ export class Obstacle extends THREE.Group {
   constructor(
     laneIndex: number,
     zPos: number,
-    formConfig: CubeConfig[],
+    formConfig: GeometryConfig[],
     scene: THREE.Scene,
     useGLB = false,
-    cubeModelUrl = "",
     customConfig?: Partial<PhysicsConfig>,
   ) {
     super();
@@ -41,24 +40,19 @@ export class Obstacle extends THREE.Group {
     const x = roadManager.getLanePosition(laneIndex);
     this.position.set(x, 0, zPos);
 
-    this.build(formConfig, useGLB, cubeModelUrl);
+    this.build(formConfig, useGLB);
   }
 
-  async build(
-    formConfig: CubeConfig[],
-    useGLB: boolean,
-    cubeModelUrl: string,
-  ): Promise<void> {
+  async build(formConfig: GeometryConfig[], useGLB: boolean): Promise<void> {
     const cubes: THREE.Object3D[] = [];
 
     for (let i = 0; i < formConfig.length; i++) {
       const config = formConfig[i];
       if (config != undefined) {
         const cube = await CubeBuilder.build({
-          useGLB,
-          modelUrl: cubeModelUrl,
-          config,
           index: i,
+          geomConfig: config,
+          useGLB: useGLB,
         });
         this.add(cube);
         cubes.push(cube);

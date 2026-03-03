@@ -1,90 +1,95 @@
 // cube/CubeBuilder.ts
 import * as THREE from "three";
 import { loadCubeModel } from "./loadCube";
-import type { CubeConfig, CubeUserData } from "./types";
+import type { GeometryConfig, CubeUserData, MaterialConfig } from "./types";
+import { loadTexture } from "@/helpers/loaders";
 
 export class CubeBuilder {
   private static modelCache = new Map<string, THREE.Group>();
 
-  /**
-   * Асинхронно создаёт куб по конфигурации.
-   * @param params.useGLB - использовать GLB модель или примитив
-   * @param params.modelUrl - URL GLB модели (обязателен, если useGLB = true)
-   * @param params.config - конфигурация куба
-   * @param params.index - индекс куба в препятствии
-   */
   static async build(params: {
+    index?: number;
+    geomConfig: GeometryConfig;
     useGLB?: boolean;
-    modelUrl?: string;
-    config: CubeConfig;
-    index: number;
+    useTexture?: boolean;
+    materialConfig?: MaterialConfig;
   }): Promise<THREE.Object3D> {
-    const { useGLB = false, modelUrl, config, index } = params;
+    const { index, geomConfig, useGLB, materialConfig, useTexture } = params;
 
-    if (useGLB && modelUrl) {
-      // Загружаем модель (с кешированием)
-      const model = await CubeBuilder.loadModel(modelUrl);
-      return CubeBuilder.createCubeFromGLB(model, config, index);
+    let cube: THREE.Object3D;
+
+    if (useGLB && geomConfig.modelUrl) {
+      const model = await CubeBuilder.loadModel(geomConfig.modelUrl);
+      cube = CubeBuilder.createCubeFromGLB(model, geomConfig);
     } else {
-      return CubeBuilder.createPrimitiveCube(config, index);
+      let material: THREE.Material;
+      if (useTexture && materialConfig?.textureUrl) {
+        const texture = await loadTexture(materialConfig.textureUrl);
+        material = new THREE.MeshStandardMaterial({
+          map: texture,
+          color: materialConfig.color,
+          emissive: materialConfig.emissive,
+          emissiveIntensity: materialConfig.emissiveIntensity,
+        });
+      } else {
+        material = new THREE.MeshStandardMaterial({
+          color: materialConfig?.color ?? 0xffffff,
+          emissive: materialConfig?.emissive ?? 0x000000,
+          emissiveIntensity: materialConfig?.emissiveIntensity ?? 1,
+        });
+      }
+      cube = CubeBuilder.createPrimitiveCube(geomConfig, material);
     }
+
+    if (index !== undefined) {
+      cube.userData = CubeBuilder.createCubeUserData(geomConfig, index);
+    }
+
+    return cube;
   }
 
   private static async loadModel(url: string): Promise<THREE.Group> {
     if (CubeBuilder.modelCache.has(url)) {
       return CubeBuilder.modelCache.get(url)!.clone();
     }
-    const model = await loadCubeModel(url); // loadCubeModel сам возвращает клон
+    const model = await loadCubeModel(url);
     CubeBuilder.modelCache.set(url, model);
-    return model.clone(); // возвращаем ещё один клон для безопасности
+    return model.clone();
   }
 
   private static createCubeFromGLB(
     model: THREE.Group,
-    config: CubeConfig,
-    index: number,
+    config: GeometryConfig,
   ): THREE.Object3D {
-    const cube = model.clone(); // клонируем, чтобы не изменять оригинал в кеше
+    const cube = model.clone();
     cube.position.set(config.pos[0], config.pos[1], config.pos[2]);
     cube.scale.set(config.scale[0], config.scale[1], config.scale[2]);
-
+    // Можно пробежаться по мешам и включить тени
     cube.traverse((child) => {
       if ((child as THREE.Mesh).isMesh) {
         const mesh = child as THREE.Mesh;
         mesh.castShadow = true;
         mesh.receiveShadow = true;
-        // При необходимости можно менять материал, но цвет, вероятно, уже в модели
       }
     });
-
-    cube.userData = CubeBuilder.createCubeUserData(config, index);
     return cube;
   }
 
   private static createPrimitiveCube(
-    config: CubeConfig,
-    index: number,
+    config: GeometryConfig,
+    material: THREE.Material,
   ): THREE.Mesh {
-    const geometry = new THREE.BoxGeometry(1, 0.5, 1);
-    const material = new THREE.MeshStandardMaterial({
-      color: config.color,
-      roughness: 0.5,
-      metalness: 0.1,
-    });
+    const geometry = new THREE.BoxGeometry(1, 1, 1);
     const cube = new THREE.Mesh(geometry, material);
-
     cube.position.set(config.pos[0], config.pos[1], config.pos[2]);
     cube.scale.set(config.scale[0], config.scale[1], config.scale[2]);
-
     cube.castShadow = true;
     cube.receiveShadow = true;
-
-    cube.userData = CubeBuilder.createCubeUserData(config, index);
     return cube;
   }
 
   private static createCubeUserData(
-    config: CubeConfig,
+    config: GeometryConfig,
     index: number,
   ): CubeUserData {
     return {
