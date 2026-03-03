@@ -2,22 +2,21 @@ import * as THREE from "three";
 import type { CarConfig } from "../types";
 import type { GeometryConfig, MaterialConfig } from "@/game/cube/types";
 import base_texture from "@/assets/textures/cube_base.svg";
+import cubeGLB from "@/assets/models/cube.glb";
+import { XZ_SCALING } from "@/game/cube/config";
 
-// Конфигурация кубиков машины
-const AXIS_SIZE = 0.6;
-
-const COLS: [number, number, number] = [-AXIS_SIZE, 0, AXIS_SIZE];
+const COLS: [number, number, number] = [-XZ_SCALING * 2, 0, XZ_SCALING * 2];
 const ROWS: [number, number, number, number] = [
-  (AXIS_SIZE * 3) / 2,
-  (AXIS_SIZE * 1) / 2,
-  (-AXIS_SIZE * 1) / 2,
-  (-AXIS_SIZE * 3) / 2,
+  XZ_SCALING * 3,
+  XZ_SCALING,
+  -XZ_SCALING,
+  -XZ_SCALING * 3,
 ];
 const HEIGHT = 0.17;
 const GLB_SCALES: [number, number, number] = [
-  AXIS_SIZE,
-  (AXIS_SIZE * 2) / 3,
-  AXIS_SIZE,
+  XZ_SCALING,
+  XZ_SCALING,
+  XZ_SCALING,
 ];
 
 export const CAR_CUBES_CONFIG: GeometryConfig[] = [
@@ -25,36 +24,43 @@ export const CAR_CUBES_CONFIG: GeometryConfig[] = [
     pos: [COLS[1], HEIGHT, ROWS[3]],
     scale: GLB_SCALES,
     name: "задний-центр",
+    modelUrl: cubeGLB,
   },
   {
     pos: [COLS[0], HEIGHT, ROWS[2]],
     scale: GLB_SCALES,
     name: "левый-2",
+    modelUrl: cubeGLB,
   },
   {
     pos: [COLS[1], HEIGHT, ROWS[2]],
     scale: GLB_SCALES,
     name: "центр-2",
+    modelUrl: cubeGLB,
   },
   {
     pos: [COLS[2], HEIGHT, ROWS[2]],
     scale: GLB_SCALES,
     name: "правый-2",
+    modelUrl: cubeGLB,
   },
   {
     pos: [COLS[1], HEIGHT, ROWS[1]],
     scale: GLB_SCALES,
     name: "центр-3",
+    modelUrl: cubeGLB,
   },
   {
     pos: [COLS[0], HEIGHT, ROWS[0]],
     scale: GLB_SCALES,
     name: "левый-передний",
+    modelUrl: cubeGLB,
   },
   {
     pos: [COLS[2], HEIGHT, ROWS[0]],
     scale: GLB_SCALES,
     name: "правый-передний",
+    modelUrl: cubeGLB,
   },
 ];
 

@@ -60,6 +60,17 @@ export class Obstacle extends THREE.Group {
     }
 
     this.cubes = cubes;
+    // Логирование размеров кубиков
+    this.cubes.forEach((cube, idx) => {
+      const bbox = new THREE.Box3().setFromObject(cube);
+      const size = bbox.getSize(new THREE.Vector3());
+      console.log(
+        `[Obstacle] Cube ${idx} world size:`,
+        size,
+        "scale:",
+        cube.scale,
+      );
+    });
   }
 
   public update(speed: number): boolean {

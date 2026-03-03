@@ -15,7 +15,7 @@ export class CarCubesBuilder {
    */
   public async buildFromCubes(
     useGLB: boolean,
-    cubeModelUrl: string,
+    // cubeModelUrl: string,
     onCubeCreated?: (cube: THREE.Object3D) => void,
   ): Promise<THREE.Object3D[]> {
     const cubes: THREE.Object3D[] = [];
@@ -31,7 +31,7 @@ export class CarCubesBuilder {
         scale: config.scale,
         name: config.name,
         // Если используется GLB, добавляем modelUrl
-        modelUrl: useGLB ? cubeModelUrl : undefined,
+        modelUrl: useGLB ? config.modelUrl : undefined,
       };
 
       const materialConfig: MaterialConfig = {

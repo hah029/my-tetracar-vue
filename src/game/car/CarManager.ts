@@ -76,18 +76,15 @@ export class CarManager {
     }
   }
 
-  public async buildCar(
-    useGLB: boolean = true,
-    cubeModelUrl: string = "",
-  ): Promise<void> {
+  public async buildCar(useGLB: boolean = true): Promise<void> {
     if (this.car) {
-      await this.car.build(useGLB, cubeModelUrl);
+      await this.car.build(useGLB);
     }
   }
 
-  public resetCar(cubeGLB: string): void {
+  public resetCar(): void {
     if (this.car) {
-      this.car.reset(cubeGLB);
+      this.car.reset(true);
     }
   }
 

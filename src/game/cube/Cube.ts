@@ -16,6 +16,10 @@ export class CubeBuilder {
   }): Promise<THREE.Object3D> {
     const { index, geomConfig, useGLB, materialConfig, useTexture } = params;
 
+    console.log(
+      `[CubeBuilder] Building cube, useGLB: ${useGLB}, modelUrl: ${geomConfig.modelUrl}`,
+    );
+
     let cube: THREE.Object3D;
 
     if (useGLB && geomConfig.modelUrl) {
@@ -72,6 +76,13 @@ export class CubeBuilder {
         mesh.receiveShadow = true;
       }
     });
+    // Логирование для диагностики масштаба
+    const bbox = new THREE.Box3().setFromObject(cube);
+    const size = bbox.getSize(new THREE.Vector3());
+    console.log(
+      `[CubeBuilder] GLB cube scale: ${config.scale}, bounding size:`,
+      size,
+    );
     return cube;
   }
 
@@ -85,6 +96,13 @@ export class CubeBuilder {
     cube.scale.set(config.scale[0], config.scale[1], config.scale[2]);
     cube.castShadow = true;
     cube.receiveShadow = true;
+    // Логирование для диагностики масштаба
+    const bbox = new THREE.Box3().setFromObject(cube);
+    const size = bbox.getSize(new THREE.Vector3());
+    console.log(
+      `[CubeBuilder] Primitive cube scale: ${config.scale}, bounding size:`,
+      size,
+    );
     return cube;
   }
 

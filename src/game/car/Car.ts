@@ -140,7 +140,7 @@ export class Car extends THREE.Group {
   // Построение машины
   public async build(
     useGLB: boolean = true,
-    cubeModelUrl: string = "",
+    // cubeModelUrl: string = "",
   ): Promise<void> {
     // console.log('🚗 Building car');
 
@@ -150,7 +150,7 @@ export class Car extends THREE.Group {
     // Строим новые кубики
     this.cubes = await this.builder.buildFromCubes(
       useGLB,
-      cubeModelUrl,
+      // cubeModelUrl,
       (cube) => {
         this.add(cube);
       },
@@ -165,6 +165,12 @@ export class Car extends THREE.Group {
     this.collider.updateFromObject(this);
 
     // console.log('✅ Car built, total cubes:', this.cubes.length);
+    // Логирование размеров кубиков
+    this.cubes.forEach((cube, idx) => {
+      const bbox = new THREE.Box3().setFromObject(cube);
+      const size = bbox.getSize(new THREE.Vector3());
+      console.log(`[Car] Cube ${idx} world size:`, size, "scale:", cube.scale);
+    });
   }
 
   // Разрушение
@@ -187,7 +193,7 @@ export class Car extends THREE.Group {
   }
 
   // Сброс
-  public reset(cubeGLB: string): void {
+  public reset(useGLB: boolean): void {
     // console.log('Resetting car');
 
     // Очищаем все кубики
@@ -219,14 +225,8 @@ export class Car extends THREE.Group {
 
     this.physics.reset();
 
-    // Перестраиваем машину из примитивов
-    if (cubeGLB === "") {
-      this.build(false);
-    } else {
-      this.build(true, cubeGLB);
-    }
-
-    // console.log('Car reset finished');
+    // Перестраиваем машину
+    this.build(useGLB);
   }
 
   private clearCubes(): void {
