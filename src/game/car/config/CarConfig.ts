@@ -1,65 +1,66 @@
 import * as THREE from "three";
-import { type CarConfig, type GeometryConfig } from "../types";
+import type { CarConfig } from "../types";
+import type { GeometryConfig, MaterialConfig } from "@/game/cube/types";
 import base_texture from "@/assets/textures/cube_base.svg";
 
 // Конфигурация кубиков машины
-const COLS: [number, number, number] = [-0.6, 0, 0.6];
-const ROWS: [number, number, number, number] = [0.84, 0.3, -0.3, -0.84];
+const AXIS_SIZE = 0.6;
+
+const COLS: [number, number, number] = [-AXIS_SIZE, 0, AXIS_SIZE];
+const ROWS: [number, number, number, number] = [
+  (AXIS_SIZE * 3) / 2,
+  (AXIS_SIZE * 1) / 2,
+  (-AXIS_SIZE * 1) / 2,
+  (-AXIS_SIZE * 3) / 2,
+];
 const HEIGHT = 0.17;
-// const GLB_SCALES: [number, number, number] = [0.5, 0.5, 0.5];
-const GLB_SCALES: [number, number, number] = [0.3, 0.3, 0.3];
+const GLB_SCALES: [number, number, number] = [
+  AXIS_SIZE,
+  (AXIS_SIZE * 2) / 3,
+  AXIS_SIZE,
+];
 
 export const CAR_CUBES_CONFIG: GeometryConfig[] = [
   {
     pos: [COLS[1], HEIGHT, ROWS[3]],
     scale: GLB_SCALES,
-    color: 0xff4444,
     name: "задний-центр",
-    textureUrl: base_texture,
   },
   {
     pos: [COLS[0], HEIGHT, ROWS[2]],
     scale: GLB_SCALES,
-    color: 0xff6666,
     name: "левый-2",
-    textureUrl: base_texture,
   },
   {
     pos: [COLS[1], HEIGHT, ROWS[2]],
     scale: GLB_SCALES,
-    color: 0xff6666,
     name: "центр-2",
-    textureUrl: base_texture,
   },
   {
     pos: [COLS[2], HEIGHT, ROWS[2]],
     scale: GLB_SCALES,
-    color: 0xff6666,
     name: "правый-2",
-    textureUrl: base_texture,
   },
   {
     pos: [COLS[1], HEIGHT, ROWS[1]],
     scale: GLB_SCALES,
-    color: 0xff8888,
     name: "центр-3",
-    textureUrl: base_texture,
   },
   {
     pos: [COLS[0], HEIGHT, ROWS[0]],
     scale: GLB_SCALES,
-    color: 0x44aaff,
     name: "левый-передний",
-    textureUrl: base_texture,
   },
   {
     pos: [COLS[2], HEIGHT, ROWS[0]],
     scale: GLB_SCALES,
-    color: 0x44aaff,
     name: "правый-передний",
-    textureUrl: base_texture,
   },
 ];
+
+export const CAR_MATERIAL_CONFIG: MaterialConfig = {
+  textureUrl: base_texture,
+};
 
 // Конфигурация машины по умолчанию
 export const DEFAULT_CAR_CONFIG: Required<CarConfig> = {
