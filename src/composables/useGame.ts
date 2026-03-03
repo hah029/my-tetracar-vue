@@ -255,7 +255,6 @@ export function useGame() {
     if (!carManager || !obstacleManager) return { collision: false };
     return CollisionSystem.checkCollision(
       carManager.getCar(),
-      obstacleManager.getObstacles(),
       obstacleManager.getJumps(),
       obstacleManager.getObstacles(),
       now,
@@ -270,7 +269,6 @@ export function useGame() {
   function getDangerLevel() {
     if (!carManager || !obstacleManager) return 0;
     return CollisionSystem.getDangerLevel(carManager.getCar(), [
-      ...obstacleManager.getObstacles(),
       ...obstacleManager.getObstacles(),
     ]);
   }

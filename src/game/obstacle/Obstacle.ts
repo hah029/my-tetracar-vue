@@ -68,7 +68,6 @@ export class Obstacle extends THREE.Group {
     this.cubes = cubes;
   }
 
-
   public update(speed: number): boolean {
     if (!this.isDestroyed) {
       this.position.z += speed;
@@ -102,16 +101,12 @@ export class Obstacle extends THREE.Group {
       this.scene.add(cube);
       cube.position.copy(worldPos);
       cube.quaternion.copy(worldRot);
-      // console.log("Cube added to scene:", this.scene.children.includes(cube));
       const ud = cube.userData as any;
       ud.velocity = new THREE.Vector3(
         (Math.random() - 0.5) * this.physicsConfig.explosionForce,
         Math.random() * this.physicsConfig.explosionUpward + 0.1,
         (Math.random() - 0.5) * this.physicsConfig.explosionForce,
       );
-      // console.log(
-      //   `Cube velocity: ${ud.velocity.x}, ${ud.velocity.y}, ${ud.velocity.z}`,
-      // );
       if (impactPoint) {
         const dir = cube.position.clone().sub(impactPoint).normalize();
         ud.velocity.copy(dir.multiplyScalar(this.physicsConfig.explosionForce));
@@ -141,5 +136,4 @@ export class Obstacle extends THREE.Group {
   public isFullyDestroyed() {
     return this.isDestroyed && this.cubes.length === 0;
   }
-
 }
