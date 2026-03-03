@@ -1,13 +1,11 @@
 import { Jump } from "./Jump";
 import { Obstacle } from "./Obstacle";
-import { ObstacleFromCubes } from "./ObstacleFromCubes";
 import { OBSTACLE_FORMS } from "./config/ObstacleCubesConfig";
 import * as THREE from "three";
 
 export class ObstacleManager {
   private static instance: ObstacleManager | null = null;
   private obstacles: Obstacle[] = [];
-  private obstaclesFromCubes: ObstacleFromCubes[] = [];
   private jumps: Jump[] = [];
   private dynamicCubes: THREE.Object3D[] = []; // отдельный массив для кубиков разрушенных препятствий
   private scene!: THREE.Scene;
@@ -35,17 +33,11 @@ export class ObstacleManager {
     this.dynamicCubes.push(...cubes);
   }
 
-  public spawnObstacle(lane: number, z = -60): Obstacle | null {
-    const obstacle = new Obstacle(lane, this.scene, z);
-    this.obstacles.push(obstacle);
-    return obstacle;
-  }
-
-  public spawnObstacleFromCubes(
+  public spawnObstacle(
     lane: number,
     z = -60,
     formIndex?: number,
-  ): ObstacleFromCubes | null {
+  ): Obstacle | null {
     const index =
       formIndex !== undefined
         ? formIndex
@@ -55,7 +47,7 @@ export class ObstacleManager {
       console.warn(`Form with index ${index} not found`);
       return null;
     }
-    const obstacle = new ObstacleFromCubes(
+    const obstacle = new Obstacle(
       lane,
       z,
       form,
@@ -63,7 +55,7 @@ export class ObstacleManager {
       this.useGLB,
       this.cubeModelUrl,
     );
-    this.obstaclesFromCubes.push(obstacle);
+    this.obstacles.push(obstacle);
     this.scene.add(obstacle);
     return obstacle;
   }
@@ -75,20 +67,20 @@ export class ObstacleManager {
   }
 
   public update(speed: number) {
-    this.updateList(this.obstacles, speed);
-    this.updateObstaclesFromCubes(speed);
+    // this.updateList(this.obstacles, speed);
+    this.updateObstacles(speed);
     this.updateList(this.jumps, speed);
   }
 
-  private updateObstaclesFromCubes(speed: number) {
-    for (let i = this.obstaclesFromCubes.length - 1; i >= 0; i--) {
-      const obstacle = this.obstaclesFromCubes[i];
+  private updateObstacles(speed: number) {
+    for (let i = this.obstacles.length - 1; i >= 0; i--) {
+      const obstacle = this.obstacles[i];
       if (obstacle === undefined) continue;
       const shouldRemove = obstacle.update(speed);
 
       if (shouldRemove && obstacle.isFullyDestroyed()) {
         this.scene.remove(obstacle);
-        this.obstaclesFromCubes.splice(i, 1);
+        this.obstacles.splice(i, 1);
       }
     }
   }
@@ -111,21 +103,15 @@ export class ObstacleManager {
     return this.obstacles;
   }
 
-  public getObstaclesFromCubes() {
-    return this.obstaclesFromCubes;
-  }
-
   public getJumps() {
     return this.jumps;
   }
 
   public reset() {
-    // Удаляем все обычные объекты
-    [...this.obstacles, ...this.obstaclesFromCubes, ...this.jumps].forEach(
+    [...this.obstacles, ...this.jumps].forEach(
       (o) => this.scene.remove(o),
     );
     this.obstacles = [];
-    this.obstaclesFromCubes = [];
     this.jumps = [];
 
     // Удаляем все динамические кубики

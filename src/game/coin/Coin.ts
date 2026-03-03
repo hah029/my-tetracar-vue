@@ -1,8 +1,12 @@
 // src/game/coin/Coin.ts
 import * as THREE from "three";
+import { type CoinConfig } from "./types";
 import { RoadManager } from "@/game/road/RoadManager";
+import { DEFAULT_COIN_CONFIG } from "./config"
+import { loadTexture } from "@/helpers/loaders";
 
 export class Coin extends THREE.Mesh {
+  private cubeModelCache: THREE.Group | null = null;
   public collider: THREE.Sphere;
   public value: number;
 
@@ -11,14 +15,29 @@ export class Coin extends THREE.Mesh {
     zPos: number,
     yPos: number = 0.2,
     value: number = 10,
+    config?: CoinConfig,
   ) {
-    // const geometry = new THREE.SphereGeometry(0.4, 16, 16);
-    const geometry = new THREE.BoxGeometry(0.4, 0.4, 0.4);
-    const material = new THREE.MeshStandardMaterial({
-      color: 0xffd700,
-      emissive: 0xaa8800,
-      emissiveIntensity: 1.2,
-    });
+
+    let tmpConfig = { ...DEFAULT_COIN_CONFIG, ...config }
+    const geometry = new THREE.BoxGeometry(tmpConfig.x, tmpConfig.y, tmpConfig.z);
+    let material: THREE.Material;
+
+    if (tmpConfig.textureUrl) {
+      const texture = loadTexture(tmpConfig.textureUrl);
+      material = new THREE.MeshStandardMaterial({
+        map: texture,
+        color: 0xffd700,
+        emissive: 0xaa8800,
+        emissiveIntensity: 1.2,
+      });
+    } else {
+      material = new THREE.MeshStandardMaterial({
+        color: 0xffd700,
+        emissive: 0xaa8800,
+        emissiveIntensity: 1.2,
+      });
+    }
+
 
     super(geometry, material);
 

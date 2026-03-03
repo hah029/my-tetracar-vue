@@ -7,7 +7,6 @@ import { type RoadConfig, type SpeedLineConfig, type RoadStats } from "./types";
 import {
   DEFAULT_ROAD_CONFIG,
   NEON_ROAD_CONFIG,
-  // getEdgePositions,
 } from "./config";
 import { SideObject, type SideObjectConfig } from "./SideObject";
 
@@ -84,7 +83,6 @@ export class RoadManager {
   }
 
   private createStandardRoad(): void {
-    // console.log('Creating standard road');
     this.road = new Road(this.config);
     this.scene.add(this.road);
     this.scene.add(this.road);
@@ -93,7 +91,6 @@ export class RoadManager {
   }
 
   private createNeonRoad(): void {
-    // console.log('Creating neon road');
     const neonConfig = { ...this.config, ...NEON_ROAD_CONFIG };
     this.road = new Road(neonConfig);
     this.scene.add(this.road);
@@ -170,10 +167,7 @@ export class RoadManager {
 
     const { gap, length } = this.config;
     const lanes = this.road.getLanePositions();
-    // const totalSegments = Math.ceil(length / (segmentLength + gap)) + 10;
-    // const totalSegments = 1;
 
-    // Создаем линии МЕЖДУ полосами
     for (let i = 0; i < lanes.length - 1; i++) {
       const prev_ = lanes[i];
       const next_ = lanes[i + 1];
@@ -185,25 +179,11 @@ export class RoadManager {
         z: -length / 2,
         length,
         gap,
-        color: color ?? 0x44ffff,
-        emissive: emissive ?? 0x226688,
+        color: color ?? 0xffffff,
+        emissive: emissive ?? 0xaaaaaa,
       });
       this.roadLines.push(line);
       this.scene.add(line);
-
-      // for (let j = 0; j < totalSegments; j++) {
-      //   const line = new RoadLine({
-      //     x,
-      //     z: -segmentLength / 2 - j * (segmentLength + gap),
-      //     segmentLength,
-      //     gap,
-      //     color: color ?? 0x44ffff,
-      //     emissive: emissive ?? 0x226688,
-      //   });
-
-      //   this.roadLines.push(line);
-      //   this.scene.add(line); // ← ИСПРАВЛЕНО: было scene.add(line)
-      // }
     }
   }
 
@@ -222,14 +202,11 @@ export class RoadManager {
       });
 
       this.speedLines.push(line);
-      this.scene.add(line); // ← ИСПРАВЛЕНО: было scene.add(line)
+      this.scene.add(line);
     }
   }
 
   public update(speed: number): void {
-    this.road?.update(speed);
-    this.roadLines.forEach((line) => line.update(speed));
-    // this.speedLines.forEach((line) => line.update(speed));
     this.sideObjects.forEach((obj) => obj.update(speed, this.config.length));
   }
 
@@ -238,13 +215,8 @@ export class RoadManager {
       this.scene.remove(this.road);
       this.road = null;
     }
-
     this.roadLines.forEach((line) => this.scene.remove(line));
     this.roadLines = [];
-
-    // this.speedLines.forEach((line) => this.scene.remove(line));
-    // this.speedLines = [];
-
     this.edges.forEach((edge) => this.scene.remove(edge));
     this.edges = [];
 
@@ -267,7 +239,7 @@ export class RoadManager {
     }
   }
 
-  public getConfig(): Readonly<Required<RoadConfig>> {
+  public getConfig(): Readonly<RoadConfig> {
     return { ...this.config };
   }
 
@@ -318,20 +290,8 @@ export class RoadManager {
     return this.edges;
   }
 
-  // Добавьте этот метод в класс RoadManager
   public reset(): void {
-    // console.log("🧹 Сброс RoadManager...");
-
-    // Полностью очищаем все
     this.clear();
-
-    // Сбрасываем внутренние счетчики/состояние если есть
-    // (добавьте здесь сброс любых внутренних переменных)
-
-    // Создаем дорогу заново с теми же настройками
     this.createRoad();
-    // this.addSpeedLines({ count: 30 });
-
-    // console.log("✅ RoadManager сброшен");
   }
 }

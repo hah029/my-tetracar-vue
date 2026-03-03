@@ -151,7 +151,7 @@ export function useGame() {
 
   function destroyObstacles(impactPoint?: THREE.Vector3) {
     if (!obstacleManager) return;
-    const obstacles = obstacleManager.getObstaclesFromCubes();
+    const obstacles = obstacleManager.getObstacles();
     obstacles.forEach((o) => {
       o.destroy(impactPoint);
     });
@@ -257,7 +257,7 @@ export function useGame() {
       carManager.getCar(),
       obstacleManager.getObstacles(),
       obstacleManager.getJumps(),
-      obstacleManager.getObstaclesFromCubes(),
+      obstacleManager.getObstacles(),
       now,
     );
   }
@@ -271,7 +271,7 @@ export function useGame() {
     if (!carManager || !obstacleManager) return 0;
     return CollisionSystem.getDangerLevel(carManager.getCar(), [
       ...obstacleManager.getObstacles(),
-      ...obstacleManager.getObstaclesFromCubes(),
+      ...obstacleManager.getObstacles(),
     ]);
   }
 

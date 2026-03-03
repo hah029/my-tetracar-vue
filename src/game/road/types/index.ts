@@ -2,24 +2,24 @@
 export interface RoadLineConfig {
   x: number;
   z: number;
-  segmentLength: number;
   gap: number;
   color?: number;
   emissive?: number;
   opacity?: number;
+  length?: number;
 }
 
 export interface RoadConfig {
   lanes: number[];
-  width?: number;
-  length?: number;
+  width: number;
+  length: number;
   color?: number;
   emissive?: number;
   opacity?: number;
-  yPosition?: number;
+  yPosition: number;
   segmentLength?: number;
-  gap?: number;
-  edgeOffset?: number;
+  gap: number;
+  edgeOffset: number;
   textureUrl?: string;
 }
 

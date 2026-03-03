@@ -6,8 +6,9 @@ import { CAR_CUBES_CONFIG } from "./config";
 
 export class CarCubesBuilder {
   private cubeModelCache: THREE.Group | null = null;
+  // private texture?: THREE.Texture;
 
-  constructor() {}
+  constructor() { }
 
   /**
    * Основной метод для построения кубиков машины
@@ -24,10 +25,7 @@ export class CarCubesBuilder {
 
     if (useGLB && cubeModelUrl) {
       try {
-        // console.log("📦 Loading GLB model from:", cubeModelUrl);
         const cubeModel = await this.loadCubeModel(cubeModelUrl);
-        // console.log("✅ GLB model loaded, building cubes...");
-
         CAR_CUBES_CONFIG.forEach((config, index) => {
           const cube = this.createCubeFromGLB(cubeModel, config, index);
           cubes.push(cube);
@@ -60,24 +58,40 @@ export class CarCubesBuilder {
     cube.position.set(config.pos[0], config.pos[1], config.pos[2]);
     cube.scale.set(config.scale[0], config.scale[1], config.scale[2]);
 
-    // Обходим все меши и заменяем материалы на MeshStandardMaterial
-    cube.traverse((child) => {
-      if ((child as THREE.Mesh).isMesh) {
-        const mesh = child as THREE.Mesh;
-        // mesh.material = new THREE.MeshStandardMaterial({
-        //   // color: config.color,
-        //   roughness: 0.5,
-        //   metalness: 0.1,
-        // });
-        mesh.castShadow = true;
-        mesh.receiveShadow = true;
-      }
-    });
+    if (config.textureUrl) {
+      const loader = new THREE.TextureLoader();
+      const texture = loader.load(
+        config.textureUrl,
+        () => {
+          console.log("✅ Текстура успешно загружена");
+          // можно принудительно обновить материал, если нужно
+        },
+        undefined,
+        (err) => {
+          console.error("❌ Ошибка загрузки текстуры:", err);
+        },
+      );
+      texture.center.set(0.5, 0.5);
+      texture.rotation = Math.PI / 2;
 
-    cube.userData = this.createCubeUserData(config, index);
-    return cube;
+      // Обходим все меши и заменяем материалы на MeshStandardMaterial
+      cube.traverse((child) => {
+        if ((child as THREE.Mesh).isMesh) {
+          const mesh = child as THREE.Mesh;
+          mesh.material = new THREE.MeshStandardMaterial({
+            map: texture,
+            roughness: 0.5,
+            metalness: 0.1,
+          });
+          mesh.castShadow = true;
+          mesh.receiveShadow = true;
+        }
+      });
+
+      cube.userData = this.createCubeUserData(config, index);
+      return cube;
+    }
   }
-
   /**
    * Построение кубиков из примитивов
    */

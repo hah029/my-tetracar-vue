@@ -1,90 +1,61 @@
 import * as THREE from "three";
 import { type RoadConfig } from "./types";
 import { DEFAULT_ROAD_CONFIG, calculateRoadWidth } from "./config";
+import { loadTexture } from "@/helpers/loaders";
 
 export class Road extends THREE.Mesh {
   public readonly lanes: number[];
   public readonly width: number;
   public readonly length: number;
   public readonly edgeOffset: number;
-  private texture?: THREE.Texture;
 
-  constructor(config: RoadConfig) {
-    const finalConfig = { ...DEFAULT_ROAD_CONFIG, ...config };
-    if (!finalConfig.lanes || finalConfig.lanes.length === 0) {
+  constructor(config?: RoadConfig) {
+    const tmpConfig = { ...DEFAULT_ROAD_CONFIG, ...config };
+    if (!tmpConfig.lanes || tmpConfig.lanes.length === 0) {
       throw new Error("Road must have at least one lane");
     }
 
     // Вычисляем ширину на основе lanes, если не указана явно
     const width =
-      finalConfig.width ||
-      calculateRoadWidth(finalConfig.lanes, finalConfig.edgeOffset);
+      tmpConfig.width ||
+      calculateRoadWidth(tmpConfig.lanes, tmpConfig.edgeOffset);
 
-    const geometry = new THREE.PlaneGeometry(width, finalConfig.length);
+    const geometry = new THREE.PlaneGeometry(width, tmpConfig.length);
     let material: THREE.Material;
 
-    if (finalConfig.textureUrl) {
-      const loader = new THREE.TextureLoader();
-      const texture = loader.load(
-        finalConfig.textureUrl,
-        () => {
-          console.log("✅ Текстура успешно загружена");
-          // можно принудительно обновить материал, если нужно
-        },
-        undefined,
-        (err) => {
-          console.error("❌ Ошибка загрузки текстуры:", err);
-        },
-      );
-      // console.log(texture);
+    if (tmpConfig.textureUrl) {
+      const texture = loadTexture(tmpConfig.textureUrl);
 
       // Настраиваем повторение
       texture.wrapS = THREE.RepeatWrapping;
       texture.wrapT = THREE.RepeatWrapping;
 
-      // Допустим, размер одного квадрата текстуры в реальном мире = 1 единица.
-      // Тогда, чтобы квадрат заполнил всю ширину и длину без искажений,
-      // repeat по X = width, по Y = length.
-      // Если текстура должна повторяться чаще (например, каждый метр),
-      // можно использовать width / tileSize, где tileSize – желаемый размер плитки.
       const tileSize = 0.647; // размер плитки в мировых единицах
-      texture.repeat.set(width / tileSize, finalConfig.length / tileSize);
+      texture.repeat.set(width / tileSize, tmpConfig.length / tileSize);
 
       material = new THREE.MeshStandardMaterial({
         map: texture,
-        // transparent: false,
         emissive: 0x224466,
         emissiveIntensity: 2.0,
         side: THREE.DoubleSide,
       });
-      // this.texture = texture;
     } else {
-      // Запасной вариант, если текстура не передана
       material = new THREE.MeshStandardMaterial({
         color: 0xff00ff,
         side: THREE.DoubleSide,
       });
     }
 
-    // console.log(material);
-
     super(geometry, material);
 
-    if (
-      finalConfig.textureUrl &&
-      material instanceof THREE.MeshStandardMaterial
-    ) {
-      this.texture = material.map as THREE.Texture; // сохраняем ссылку на текстуру
-    }
-
-    this.lanes = [...finalConfig.lanes];
+    this.lanes = [...tmpConfig.lanes];
     this.width = width;
-    this.length = finalConfig.length;
-    this.edgeOffset = finalConfig.edgeOffset + 1;
+    this.length = tmpConfig.length;
+    this.edgeOffset = tmpConfig.edgeOffset + 1;
 
     this.rotation.x = -Math.PI / 2;
     this.position.z = 0;
-    this.position.y = finalConfig.yPosition;
+    this.position.y = tmpConfig.yPosition;
     this.receiveShadow = false;
   }
 
@@ -118,13 +89,5 @@ export class Road extends THREE.Mesh {
       left: minLane - this.edgeOffset,
       right: maxLane + this.edgeOffset,
     };
-  }
-
-  public update(deltaTime: number, speed: number) {
-    if (this.texture) {
-      // смещаем текстуру по вертикали
-      // speed > 0 → движение дороги назад
-      this.texture.offset.y -= speed; // 0.001 для нормализации
-    }
   }
 }

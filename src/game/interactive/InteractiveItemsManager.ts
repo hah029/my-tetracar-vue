@@ -40,7 +40,7 @@ export class InteractiveItemsManager {
     }
 
     if (this.obstacleTimer >= obstacleInterval) {
-      this.spawnObstacleFromCubes(speed);
+      this.spawnObstacle(speed);
       this.obstacleTimer = 0;
     }
     // coins (независимо)
@@ -68,7 +68,7 @@ export class InteractiveItemsManager {
   //   }
   // }
 
-  private spawnObstacleFromCubes(speed: number) {
+  private spawnObstacle(speed: number) {
     const lanesCount = this.roadManager.getLanesCount();
     const emptyLane = Math.floor(Math.random() * lanesCount);
     let isJumpSpawned = false;
@@ -81,7 +81,7 @@ export class InteractiveItemsManager {
         this.spawnJumpWithCoins(lane, speed);
       }
 
-      this.obstacleManager.spawnObstacleFromCubes(lane, -60, 0);
+      this.obstacleManager.spawnObstacle(lane, -60, 0);
     }
     isJumpSpawned = false;
   }

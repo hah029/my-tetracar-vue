@@ -1,5 +1,7 @@
 import * as THREE from "three";
 import { type CarConfig, type CubeConfig } from "../types";
+import base_texture from "@/assets/textures/cube_base.svg";
+
 
 // Конфигурация кубиков машины
 const COLS: [number, number, number] = [-0.6, 0, 0.6];
@@ -14,42 +16,49 @@ export const CAR_CUBES_CONFIG: CubeConfig[] = [
     scale: GLB_SCALES,
     color: 0xff4444,
     name: "задний-центр",
+    textureUrl: base_texture,
   },
   {
     pos: [COLS[0], HEIGHT, ROWS[2]],
     scale: GLB_SCALES,
     color: 0xff6666,
     name: "левый-2",
+    textureUrl: base_texture,
   },
   {
     pos: [COLS[1], HEIGHT, ROWS[2]],
     scale: GLB_SCALES,
     color: 0xff6666,
     name: "центр-2",
+    textureUrl: base_texture,
   },
   {
     pos: [COLS[2], HEIGHT, ROWS[2]],
     scale: GLB_SCALES,
     color: 0xff6666,
     name: "правый-2",
+    textureUrl: base_texture,
   },
   {
     pos: [COLS[1], HEIGHT, ROWS[1]],
     scale: GLB_SCALES,
     color: 0xff8888,
     name: "центр-3",
+    textureUrl: base_texture,
   },
   {
     pos: [COLS[0], HEIGHT, ROWS[0]],
     scale: GLB_SCALES,
     color: 0x44aaff,
     name: "левый-передний",
+    textureUrl: base_texture,
   },
   {
     pos: [COLS[2], HEIGHT, ROWS[0]],
     scale: GLB_SCALES,
     color: 0x44aaff,
     name: "правый-передний",
+    textureUrl: base_texture,
   },
 ];
 
