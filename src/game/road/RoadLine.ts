@@ -3,13 +3,11 @@ import type { RoadLineConfig } from "./types";
 
 export class RoadLine extends THREE.Mesh {
   constructor(config: RoadLineConfig) {
-    const { x, z, color = 0x000000, opacity = 0.9 } = config;
+    const { x, z, color = 0xffffff } = config;
 
-    const geometry = new THREE.BoxGeometry(0.5, 0.2, length);
+    const geometry = new THREE.BoxGeometry(1, 1, length);
     const material = new THREE.MeshStandardMaterial({
       color,
-      transparent: true,
-      opacity,
       emissive: new THREE.Color(color),
       emissiveIntensity: 0.6,
     });

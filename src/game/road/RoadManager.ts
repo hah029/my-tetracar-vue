@@ -167,6 +167,7 @@ export class RoadManager {
       throw new Error();
     }
     const lanes = this.road.getLanePositions();
+    console.log(lanes);
 
     for (let i = 0; i < lanes.length - 1; i++) {
       const prev_ = lanes[i];
@@ -181,6 +182,7 @@ export class RoadManager {
         color: color ?? 0xffffff,
         emissive: emissive ?? 0xaaaaaa,
       });
+      console.log(line);
       this.roadLines.push(line);
       this.scene.add(line);
     }
