@@ -1,58 +1,52 @@
 import * as THREE from "three";
+import { CubeBuilder } from "../cube/Cube";
+import { SIDE_OBJECT_GEOMETRY_CONFIG } from "./config/SideObjectConfig";
 
-export interface SideObjectConfig {
-  color?: number;
-  height?: number;
-  radius?: number;
-  radialSegments?: number;
-  offset?: number; // Отступ от края дороги
-  spacing?: number; // Расстояние между объектами
-}
+export class SideObject extends THREE.Group {
+  private cube: THREE.Object3D = new THREE.Object3D();
+  private isBuilt: boolean = false;
 
-export class SideObject extends THREE.Mesh {
-  private static readonly DEFAULT_CONFIG: Required<SideObjectConfig> = {
-    color: 0xffff00,
-    height: 0.5,
-    radius: 0.1,
-    radialSegments: 8,
-    offset: 1,
-    spacing: 7,
-  };
-
-  private config: Required<SideObjectConfig>;
-  private baseZ: number;
-
-  constructor(zPos: number, config: SideObjectConfig = {}) {
-    const finalConfig = { ...SideObject.DEFAULT_CONFIG, ...config };
-
-    const geometry = new THREE.CylinderGeometry(
-      finalConfig.radius,
-      finalConfig.radius,
-      finalConfig.height,
-      finalConfig.radialSegments,
-    );
-    const material = new THREE.MeshStandardMaterial({
-      color: finalConfig.color,
+  constructor(xPos: number, yPos: number, zPos: number) {
+    super();
+    this.build(xPos, yPos, zPos).catch((err) => {
+      console.error("[SideObject] build failed:", err);
     });
-
-    super(geometry, material);
-
-    this.config = finalConfig;
-    this.baseZ = zPos;
-
-    this.castShadow = true;
-    this.receiveShadow = true;
   }
 
-  public update(speed: number, roadLength: number): void {
-    this.position.z += speed;
-    if (this.position.z > 10) {
-      this.position.z = this.baseZ - roadLength; // вместо жёсткого смещения
+  async build(xPos: number, yPos: number, zPos: number): Promise<void> {
+    try {
+      this.cube = await CubeBuilder.build({
+        useGLB: true,
+        geomConfig: SIDE_OBJECT_GEOMETRY_CONFIG,
+      });
+      this.cube.position.set(xPos, yPos, zPos);
+      this.add(this.cube);
+      this.isBuilt = true;
+    } catch (error) {
+      console.error("[SideObject] build error:", error);
+      throw error;
     }
-    // this.position.x = this.side; // вместо жёсткого смещения
+  }
+
+  public update(speed: number, spacing: number, objects: SideObject[]): void {
+    if (!this.isBuilt) return;
+
+    this.cube.position.z += speed;
+
+    if (this.cube.position.z > 10) {
+      let minZ = Infinity;
+      for (const obj of objects) {
+        if (obj.cube.position.z < minZ) {
+          minZ = obj.cube.position.z;
+        }
+      }
+      this.cube.position.z = minZ - spacing;
+    }
   }
 
   public setPosition(x: number, z: number): void {
-    this.position.set(x, this.config.height / 2, z);
+    if (!this.isBuilt) return;
+    this.cube.position.x = x;
+    this.cube.position.z = z;
   }
 }

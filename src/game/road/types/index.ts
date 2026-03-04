@@ -9,9 +9,9 @@ export interface RoadLineConfig {
 }
 
 export interface RoadConfig {
-  lanes?: number[];
+  lanes: number[];
   width?: number;
-  length?: number;
+  length: number;
   color?: number;
   emissive?: number;
   opacity?: number;

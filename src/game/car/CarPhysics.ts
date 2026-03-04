@@ -19,8 +19,8 @@ export class CarPhysics {
     friction: 0.85,
     collisionFactor: 0.2,
     removalHeight: -10,
-    explosionForce: 0.5,
-    explosionUpward: 0.3,
+    explosionForce: 0.2,
+    explosionUpward: 0.8,
     cubeRotationSpeed: 0.05,
   };
 

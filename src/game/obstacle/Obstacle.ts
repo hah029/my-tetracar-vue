@@ -30,9 +30,9 @@ export class Obstacle extends THREE.Group {
       friction: 0.85,
       collisionFactor: 0.2,
       removalHeight: -10,
-      explosionForce: 0.5,
-      explosionUpward: 0.3,
-      cubeRotationSpeed: 0.05,
+      explosionForce: 0.2,
+      explosionUpward: 0.8,
+      cubeRotationSpeed: 0.01,
       ...customConfig,
     };
 
@@ -60,17 +60,6 @@ export class Obstacle extends THREE.Group {
     }
 
     this.cubes = cubes;
-    // Логирование размеров кубиков
-    this.cubes.forEach((cube, idx) => {
-      const bbox = new THREE.Box3().setFromObject(cube);
-      const size = bbox.getSize(new THREE.Vector3());
-      console.log(
-        `[Obstacle] Cube ${idx} world size:`,
-        size,
-        "scale:",
-        cube.scale,
-      );
-    });
   }
 
   public update(speed: number): boolean {
@@ -95,7 +84,6 @@ export class Obstacle extends THREE.Group {
 
   public destroy(impactPoint?: THREE.Vector3) {
     if (this.isDestroyed) return;
-    console.log("Obstacle.destroy called");
     this.isDestroyed = true;
 
     // Отсоединяем кубики от группы и добавляем в сцену

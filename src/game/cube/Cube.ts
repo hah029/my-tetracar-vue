@@ -9,26 +9,36 @@ export class CubeBuilder {
 
   static async build(params: {
     index?: number;
-    geomConfig: GeometryConfig;
     useGLB?: boolean;
+    geomConfig: GeometryConfig;
     useTexture?: boolean;
     materialConfig?: MaterialConfig;
   }): Promise<THREE.Object3D> {
     const { index, geomConfig, useGLB, materialConfig, useTexture } = params;
-
-    console.log(
-      `[CubeBuilder] Building cube, useGLB: ${useGLB}, modelUrl: ${geomConfig.modelUrl}`,
-    );
-
     let cube: THREE.Object3D;
 
     if (useGLB && geomConfig.modelUrl) {
       const model = await CubeBuilder.loadModel(geomConfig.modelUrl);
       cube = CubeBuilder.createCubeFromGLB(model, geomConfig);
+      // Применить текстуру если нужно
+      if (useTexture && materialConfig?.textureUrl) {
+        const texture = loadTexture(materialConfig.textureUrl);
+        cube.traverse((child) => {
+          if ((child as THREE.Mesh).isMesh) {
+            const mesh = child as THREE.Mesh;
+            mesh.material = new THREE.MeshStandardMaterial({
+              map: texture,
+              color: materialConfig.color ?? 0xffffff,
+              emissive: materialConfig.emissive ?? 0x000000,
+              emissiveIntensity: materialConfig.emissiveIntensity ?? 1,
+            });
+          }
+        });
+      }
     } else {
       let material: THREE.Material;
       if (useTexture && materialConfig?.textureUrl) {
-        const texture = await loadTexture(materialConfig.textureUrl);
+        const texture = loadTexture(materialConfig.textureUrl);
         material = new THREE.MeshStandardMaterial({
           map: texture,
           color: materialConfig.color,
@@ -66,7 +76,8 @@ export class CubeBuilder {
     config: GeometryConfig,
   ): THREE.Object3D {
     const cube = model.clone();
-    cube.position.set(config.pos[0], config.pos[1], config.pos[2]);
+    const pos = config.pos ?? [0, 0, 0];
+    cube.position.set(pos[0], pos[1], pos[2]);
     cube.scale.set(config.scale[0], config.scale[1], config.scale[2]);
     // Можно пробежаться по мешам и включить тени
     cube.traverse((child) => {
@@ -77,12 +88,6 @@ export class CubeBuilder {
       }
     });
     // Логирование для диагностики масштаба
-    const bbox = new THREE.Box3().setFromObject(cube);
-    const size = bbox.getSize(new THREE.Vector3());
-    console.log(
-      `[CubeBuilder] GLB cube scale: ${config.scale}, bounding size:`,
-      size,
-    );
     return cube;
   }
 
@@ -92,17 +97,11 @@ export class CubeBuilder {
   ): THREE.Mesh {
     const geometry = new THREE.BoxGeometry(1, 1, 1);
     const cube = new THREE.Mesh(geometry, material);
-    cube.position.set(config.pos[0], config.pos[1], config.pos[2]);
+    const pos = config.pos ?? [0, 0, 0];
+    cube.position.set(pos[0], pos[1], pos[2]);
     cube.scale.set(config.scale[0], config.scale[1], config.scale[2]);
     cube.castShadow = true;
     cube.receiveShadow = true;
-    // Логирование для диагностики масштаба
-    const bbox = new THREE.Box3().setFromObject(cube);
-    const size = bbox.getSize(new THREE.Vector3());
-    console.log(
-      `[CubeBuilder] Primitive cube scale: ${config.scale}, bounding size:`,
-      size,
-    );
     return cube;
   }
 
@@ -110,8 +109,9 @@ export class CubeBuilder {
     config: GeometryConfig,
     index: number,
   ): CubeUserData {
+    const pos = config.pos ?? [0, 0, 0];
     return {
-      originalPos: [...config.pos],
+      originalPos: [...pos],
       originalScale: [...config.scale],
       configIndex: index,
       velocity: new THREE.Vector3(0, 0, 0),

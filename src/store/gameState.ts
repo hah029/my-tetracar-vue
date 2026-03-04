@@ -6,7 +6,7 @@ import { RoadManager } from "@/game/road";
 export const useGameState = defineStore("gameState", () => {
   // ---- Основные константы ----
   // const BASE_SPEED = 2.0;
-  const BASE_SPEED = 1.0;
+  const BASE_SPEED = 0.8;
   const NITRO_MULTIPLIER = 2.0;
   const MAX_SPEED = 4.0;
   const ACCELERATION = 0.001;

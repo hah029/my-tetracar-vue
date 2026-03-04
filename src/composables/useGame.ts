@@ -117,7 +117,6 @@ export function useGame() {
 
     // === Создание дороги и машины ===
     roadManager.createRoad();
-    // roadManager.addSpeedLines({ count: 30 });
 
     const newCar = carManager.createCar({
       startLane: 2,

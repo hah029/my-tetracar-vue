@@ -142,8 +142,6 @@ export class Car extends THREE.Group {
     useGLB: boolean = true,
     // cubeModelUrl: string = "",
   ): Promise<void> {
-    // console.log('🚗 Building car');
-
     // Очищаем текущую машину
     this.clearCubes();
 
@@ -163,14 +161,6 @@ export class Car extends THREE.Group {
 
     // Обновляем коллайдер
     this.collider.updateFromObject(this);
-
-    // console.log('✅ Car built, total cubes:', this.cubes.length);
-    // Логирование размеров кубиков
-    this.cubes.forEach((cube, idx) => {
-      const bbox = new THREE.Box3().setFromObject(cube);
-      const size = bbox.getSize(new THREE.Vector3());
-      console.log(`[Car] Cube ${idx} world size:`, size, "scale:", cube.scale);
-    });
   }
 
   // Разрушение
@@ -194,8 +184,6 @@ export class Car extends THREE.Group {
 
   // Сброс
   public reset(useGLB: boolean): void {
-    // console.log('Resetting car');
-
     // Очищаем все кубики
     this.cubes.forEach((cube) => this.scene.remove(cube));
     this.cubes = [];

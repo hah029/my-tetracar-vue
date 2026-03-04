@@ -13,32 +13,13 @@ export class Road extends THREE.Mesh {
   public readonly lanes: number[];
   public readonly width: number;
   public readonly length: number;
-  // public readonly edgeOffset: number;
 
   constructor(config?: RoadConfig) {
     const tmpConfig = { ...DEFAULT_ROAD_CONFIG, ...config };
     if (!tmpConfig.lanes || tmpConfig.lanes.length === 0) {
       throw new Error("Road must have at least one lane");
     }
-
-    // Вычисляем ширину на основе lanes, если не указана явно
-    const lanesCount = tmpConfig.lanes.length;
-    // const CUBE_SIZE = 0.6; // размер кубика (bounding size)
-    // const width = 3 * CUBE_SIZE * lanesCount + 2; // формула от пользователя
-    // tmpConfig.width ||
     const width = calculateRoadWidth(tmpConfig.lanes);
-
-    // Логирование для отладки ширины дороги
-    console.log(
-      "[Road] lanes:",
-      tmpConfig.lanes,
-      "count:",
-      lanesCount,
-      "width:",
-      width,
-      "edgeOffset:",
-      tmpConfig.edgeOffset,
-    );
 
     const geometry = new THREE.PlaneGeometry(width, tmpConfig.length!);
     let material: THREE.Material;
@@ -50,7 +31,7 @@ export class Road extends THREE.Mesh {
       texture.wrapS = THREE.RepeatWrapping;
       texture.wrapT = THREE.RepeatWrapping;
 
-      const tileSize = 0.6; // размер плитки в мировых единицах
+      const tileSize = 0.6;
       texture.repeat.set(width / tileSize, tmpConfig.length! / tileSize);
 
       material = new THREE.MeshStandardMaterial({
@@ -71,7 +52,6 @@ export class Road extends THREE.Mesh {
     this.lanes = [...tmpConfig.lanes];
     this.width = width;
     this.length = tmpConfig.length!;
-    // this.edgeOffset = tmpConfig.edgeOffset! + 1;
 
     this.rotation.x = -Math.PI / 2;
     this.position.z = 0;

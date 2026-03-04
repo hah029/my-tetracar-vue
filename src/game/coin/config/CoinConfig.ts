@@ -1,13 +1,14 @@
-import { type CoinConfig } from "../types";
 import base_texture from "@/assets/textures/cube_gold.svg";
+import modelUrl from "@/assets/models/cube.glb";
+import type { GeometryConfig, MaterialConfig } from "@/game/cube/types";
 
+const COIN_SIZE = 0.3;
 
-const COIN_SIZE = 0.8;
+export const COIN_GEOMETRY_CONFIG: GeometryConfig = {
+  scale: [COIN_SIZE, COIN_SIZE, COIN_SIZE],
+  modelUrl: modelUrl,
+};
 
-
-export const DEFAULT_COIN_CONFIG: CoinConfig = {
-    textureUrl: base_texture,
-    x: COIN_SIZE,
-    y: COIN_SIZE * 0.75,
-    z: COIN_SIZE,
-}
+export const COIN_MATERIAL_CONFIG: MaterialConfig = {
+  textureUrl: base_texture,
+};

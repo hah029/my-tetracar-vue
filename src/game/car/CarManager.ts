@@ -18,7 +18,6 @@ export class CarManager {
   }
 
   public initialize(scene: THREE.Scene): void {
-    // console.log('CarManager.initialize called with scene:', scene);
     this.scene = scene;
   }
 

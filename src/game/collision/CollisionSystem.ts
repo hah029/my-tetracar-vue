@@ -39,7 +39,6 @@ class CollisionSystemClass {
     // Проверка препятствий из кубиков
     for (const obstacle of obstacles) {
       if (car.checkObstacleCollision(obstacle)) {
-        console.log("Collision with obstacle, destroying");
         this.lastCollisionTime = currentTime;
         obstacle.destroy();
         return {

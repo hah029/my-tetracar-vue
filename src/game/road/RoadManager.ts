@@ -2,10 +2,10 @@ import * as THREE from "three";
 import { Road } from "./Road";
 import { RoadLine } from "./RoadLine";
 import { SpeedLine } from "./SpeedLine";
-import { RoadEdge, NeonEdge } from "./edges";
+import { RoadEdge } from "./edges";
 import { type RoadConfig, type SpeedLineConfig, type RoadStats } from "./types";
-import { DEFAULT_ROAD_CONFIG, NEON_ROAD_CONFIG } from "./config";
-import { SideObject, type SideObjectConfig } from "./SideObject";
+import { DEFAULT_ROAD_CONFIG } from "./config";
+import { SideObject } from "./SideObject";
 
 export class RoadManager {
   private static instance: RoadManager | null = null;
@@ -14,45 +14,34 @@ export class RoadManager {
   private roadLines: RoadLine[] = [];
   private speedLines: SpeedLine[] = [];
   private edges: THREE.Mesh[] = [];
-  private sideObjects: SideObject[] = [];
-  private sideObjectConfig: Required<SideObjectConfig>;
+  // private sideObjects: SideObject[] = [];
+  private leftSideObjects: SideObject[] = [];
+  private rightSideObjects: SideObject[] = [];
+  private sideObjectSpacing = 1.2;
 
   private config: RoadConfig;
   private scene: THREE.Scene;
 
-  private constructor(
-    config: RoadConfig,
-    scene: THREE.Scene,
-    sideObjectConfig: SideObjectConfig = {},
-  ) {
+  private constructor(config: RoadConfig, scene: THREE.Scene) {
     if (!config.lanes) {
       throw new Error(
         "RoadManager must be initialized with lanes configuration",
       );
     }
     this.config = { ...DEFAULT_ROAD_CONFIG, ...config };
-    this.sideObjectConfig = {
-      color: sideObjectConfig.color ?? 0xffff00,
-      height: sideObjectConfig.height ?? 0.5,
-      radius: sideObjectConfig.radius ?? 0.1,
-      radialSegments: sideObjectConfig.radialSegments ?? 8,
-      offset: sideObjectConfig.offset ?? 1.5,
-      spacing: sideObjectConfig.spacing ?? 7,
-    };
     this.scene = scene;
   }
 
   public static initialize(
     config: RoadConfig,
     scene: THREE.Scene,
-    sideObjectConfig: SideObjectConfig = {},
   ): RoadManager {
     if (!config.lanes) {
       throw new Error(
         "Cannot initialize RoadManager without lanes configuration",
       );
     }
-    RoadManager.instance = new RoadManager(config, scene, sideObjectConfig);
+    RoadManager.instance = new RoadManager(config, scene);
     return RoadManager.instance;
   }
 
@@ -69,14 +58,9 @@ export class RoadManager {
     return RoadManager.instance;
   }
 
-  public createRoad(useNeon: boolean = false): void {
+  public createRoad(): void {
     this.clear();
-
-    if (useNeon) {
-      this.createNeonRoad();
-    } else {
-      this.createStandardRoad();
-    }
+    this.createStandardRoad();
   }
 
   private createStandardRoad(): void {
@@ -85,81 +69,59 @@ export class RoadManager {
     this.scene.add(this.road);
     this.addEdges();
     this.addRoadLines();
+    this.addSideObjects();
   }
 
-  private createNeonRoad(): void {
-    const neonConfig = { ...this.config, ...NEON_ROAD_CONFIG };
-    this.road = new Road(neonConfig);
-    this.scene.add(this.road);
-    this.scene.add(this.road);
-    this.addNeonEdges();
-    this.addRoadLines(0x66ffff, 0x3366aa);
-  }
-
-  public createSideObjects(): void {
+  private addSideObjects(): void {
     this.clearSideObjects();
 
     if (!this.road) return;
 
     const { left, right } = this.road.getEdgePositions();
-    const leftX = left - this.sideObjectConfig.offset;
-    const rightX = right + this.sideObjectConfig.offset;
+    const offset = 0.2;
+    const leftX = left - offset;
+    const rightX = right + offset;
 
-    for (
-      let z = -this.config.length;
-      z <= 10;
-      z += this.sideObjectConfig.spacing
-    ) {
+    for (let z = -this.config.length; z <= 10; z += this.sideObjectSpacing) {
       // Левый столбик
-      const leftObj = new SideObject(z, this.sideObjectConfig);
-      leftObj.setPosition(leftX, z);
+      const leftObj = new SideObject(leftX, 0.1, z);
       this.scene.add(leftObj);
-      this.sideObjects.push(leftObj);
+      this.leftSideObjects.push(leftObj);
 
       // Правый столбик
-      const rightObj = new SideObject(z, this.sideObjectConfig);
-      rightObj.setPosition(rightX, z);
+      const rightObj = new SideObject(rightX, 0.1, z);
       this.scene.add(rightObj);
-      this.sideObjects.push(rightObj);
+      this.rightSideObjects.push(rightObj);
     }
   }
 
   private clearSideObjects(): void {
-    this.sideObjects.forEach((obj) => {
+    this.leftSideObjects.forEach((obj) => {
       this.scene.remove(obj);
     });
-    this.sideObjects = [];
+    this.rightSideObjects.forEach((obj) => {
+      this.scene.remove(obj);
+    });
+    this.leftSideObjects = [];
+    this.rightSideObjects = [];
   }
 
   private addEdges(): void {
     if (!this.road) return;
 
     const { left, right } = this.road.getEdgePositions();
+    const height = 10;
 
-    const leftEdge = new RoadEdge(left, 0.5, this.config.length);
+    const leftEdge = new RoadEdge(left, height, this.config.length);
     this.scene.add(leftEdge);
     this.edges.push(leftEdge);
 
-    const rightEdge = new RoadEdge(right, 0.5, this.config.length);
+    const rightEdge = new RoadEdge(right, height, this.config.length);
     this.scene.add(rightEdge);
     this.edges.push(rightEdge);
   }
 
-  private addNeonEdges(): void {
-    if (!this.road) return;
-
-    const { left, right } = this.road.getEdgePositions();
-
-    const leftEdge = new NeonEdge(left, 1, this.config.length);
-    this.scene.add(leftEdge);
-    this.edges.push(leftEdge);
-
-    const rightEdge = new NeonEdge(right, 1, this.config.length);
-    this.scene.add(rightEdge);
-    this.edges.push(rightEdge);
-  }
-
-  private addRoadLines(color?: number, emissive?: number): void {
+  private addRoadLines(): void {
     if (!this.road) return;
 
     const { length } = this.config;
@@ -167,7 +129,6 @@ export class RoadManager {
       throw new Error();
     }
     const lanes = this.road.getLanePositions();
-    console.log(lanes);
 
     for (let i = 0; i < lanes.length - 1; i++) {
       const prev_ = lanes[i];
@@ -179,10 +140,7 @@ export class RoadManager {
         x,
         z: -length / 2,
         length,
-        color: color ?? 0xffffff,
-        emissive: emissive ?? 0xaaaaaa,
       });
-      console.log(line);
       this.roadLines.push(line);
       this.scene.add(line);
     }
@@ -208,7 +166,12 @@ export class RoadManager {
   }
 
   public update(speed: number): void {
-    this.sideObjects.forEach((obj) => obj.update(speed, this.config.length));
+    for (const obj of this.leftSideObjects) {
+      obj.update(speed, this.sideObjectSpacing, this.leftSideObjects);
+    }
+    for (const obj of this.rightSideObjects) {
+      obj.update(speed, this.sideObjectSpacing, this.rightSideObjects);
+    }
   }
 
   public clear(): void {
@@ -262,12 +225,7 @@ export class RoadManager {
 
   public updateConfig(config: Partial<RoadConfig>): void {
     this.config = { ...this.config, ...config };
-    const useNeon = this.edges.some((edge) => edge instanceof NeonEdge);
-    this.createRoad(useNeon);
-  }
-
-  public setNeonMode(enabled: boolean): void {
-    this.createRoad(enabled);
+    this.createRoad();
   }
 
   public getRoad(): Road | null {
@@ -282,7 +240,8 @@ export class RoadManager {
       linesCount: this.roadLines.length,
       speedLinesCount: this.speedLines.length,
       edgesCount: this.edges.length,
-      sideObjectsCount: this.sideObjects.length,
+      sideObjectsCount:
+        this.leftSideObjects.length + this.rightSideObjects.length,
       lanePositions: lanes,
     };
   }

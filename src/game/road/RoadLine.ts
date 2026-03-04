@@ -3,22 +3,16 @@ import type { RoadLineConfig } from "./types";
 
 export class RoadLine extends THREE.Mesh {
   constructor(config: RoadLineConfig) {
-    const { x, z, color = 0xffffff } = config;
+    const { x, z, color = 0xbbbbbb, length = 250 } = config;
 
-    const geometry = new THREE.BoxGeometry(1, 1, length);
+    const geometry = new THREE.BoxGeometry(0.01, 0.01, length);
     const material = new THREE.MeshStandardMaterial({
       color,
-      emissive: new THREE.Color(color),
-      emissiveIntensity: 0.6,
+      side: THREE.DoubleSide,
     });
 
     super(geometry, material);
 
-    this.position.set(x, 1, z + 10);
-    this.castShadow = false;
-    this.receiveShadow = false;
-    this.frustumCulled = true;
-
-    console.log("line created");
+    this.position.set(x, 0.01, z + 10);
   }
 }

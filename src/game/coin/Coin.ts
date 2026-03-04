@@ -1,12 +1,13 @@
 // src/game/coin/Coin.ts
 import * as THREE from "three";
-import { type CoinConfig } from "./types";
 import { RoadManager } from "@/game/road/RoadManager";
-import { DEFAULT_COIN_CONFIG } from "./config";
-import { loadTexture } from "@/helpers/loaders";
+import { COIN_GEOMETRY_CONFIG, COIN_MATERIAL_CONFIG } from "./config";
 
-export class Coin extends THREE.Mesh {
-  public collider: THREE.Sphere;
+import { CubeBuilder } from "../cube/Cube";
+
+export class Coin extends THREE.Group {
+  public collider: THREE.Sphere = new THREE.Sphere();
+  private cube: THREE.Object3D = new THREE.Object3D();
   public value: number;
 
   constructor(
@@ -14,49 +15,38 @@ export class Coin extends THREE.Mesh {
     zPos: number,
     yPos: number = 0.2,
     value: number = 10,
-    config?: CoinConfig,
   ) {
-    let tmpConfig = { ...DEFAULT_COIN_CONFIG, ...config };
-    const geometry = new THREE.BoxGeometry(
-      tmpConfig.x,
-      tmpConfig.y,
-      tmpConfig.z,
-    );
-    let material: THREE.Material;
-
-    if (tmpConfig.textureUrl) {
-      const texture = loadTexture(tmpConfig.textureUrl);
-      material = new THREE.MeshStandardMaterial({
-        map: texture,
-        color: 0xffd700,
-        emissive: 0xaa8800,
-        emissiveIntensity: 1.2,
-      });
-    } else {
-      material = new THREE.MeshStandardMaterial({
-        color: 0xffd700,
-        emissive: 0xaa8800,
-        emissiveIntensity: 1.2,
-      });
-    }
-
-    super(geometry, material);
-
-    const road = RoadManager.getInstance();
-    const x = road.getLanePosition(laneIndex);
-
-    this.position.set(x, yPos, zPos);
+    super();
+    this.build(laneIndex, zPos, yPos).catch((err) => {
+      console.error("[Coin] build failed:", err);
+    });
     this.value = value;
+  }
 
-    this.collider = new THREE.Sphere(this.position, 0.45);
+  async build(laneIndex: number, zPos: number, yPos: number): Promise<void> {
+    try {
+      this.cube = await CubeBuilder.build({
+        useGLB: true,
+        geomConfig: COIN_GEOMETRY_CONFIG,
+        useTexture: true,
+        materialConfig: COIN_MATERIAL_CONFIG,
+      });
+      const x = RoadManager.getInstance().getLanePosition(laneIndex);
+      this.cube.position.set(x, yPos, zPos);
+      this.collider = new THREE.Sphere(this.cube.position, 0.45);
+      this.add(this.cube);
+    } catch (error) {
+      console.error("[Coin] build error:", error);
+      throw error;
+    }
   }
 
   update(speed: number): boolean {
-    this.position.z += speed;
-    this.rotation.y += 0.05;
+    this.cube.position.z += speed;
+    this.cube.rotation.y += 0.05;
 
-    this.collider.center.copy(this.position);
+    this.collider.center.copy(this.cube.position);
 
-    return this.position.z > 10;
+    return this.cube.position.z > 10;
   }
 }
