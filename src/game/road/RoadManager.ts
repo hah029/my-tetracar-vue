@@ -82,7 +82,11 @@ export class RoadManager {
     const leftX = left - offset;
     const rightX = right + offset;
 
-    for (let z = -this.config.length; z <= 10; z += this.sideObjectSpacing) {
+    for (
+      let z = -this.config.length / 2;
+      z <= 10;
+      z += this.sideObjectSpacing
+    ) {
       // Левый столбик
       const leftObj = new SideObject(leftX, 0.1, z);
       this.scene.add(leftObj);

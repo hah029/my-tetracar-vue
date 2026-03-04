@@ -8,6 +8,7 @@ import { ObstacleManager } from "@/game/obstacle/ObstacleManager";
 import { CollisionSystem } from "@/game/collision/CollisionSystem";
 import { InteractiveItemsManager } from "@/game/interactive/InteractiveItemsManager";
 import { CoinManager } from "@/game/coin/CoinManager";
+import { CityManager } from "@/game/city/CityManager";
 // enums
 import { UpdateMode } from "@/game/core/UpdateMode";
 import { DEFAULT_LANES } from "@/game/road/config/RoadConfig";
@@ -88,6 +89,7 @@ export function useGame() {
   let obstacleManager: ObstacleManager;
   let coinManager: CoinManager;
   let interactiveManager: InteractiveItemsManager;
+  let cityManager: CityManager;
 
   function init(scene: THREE.Scene) {
     sceneRef = scene;
@@ -100,9 +102,12 @@ export function useGame() {
       { lanes: DEFAULT_LANES, length: 250 },
       scene,
     );
+    cityManager = CityManager.getInstance();
+    cityManager.initialize(scene);
 
     obstacleManager = ObstacleManager.getInstance();
     obstacleManager.initialize(scene, true);
+
     coinManager = CoinManager.getInstance();
     coinManager.initialize(scene);
 
@@ -145,6 +150,12 @@ export function useGame() {
     if (realCar.isDestroyed()) {
       car.value.cubes = realCar.getCubes();
     }
+  }
+
+  function updateCity(speed: number) {
+    if (!cityManager) return;
+
+    cityManager.update(speed);
   }
 
   function destroyObstacles(impactPoint?: THREE.Vector3) {
@@ -314,6 +325,7 @@ export function useGame() {
     destroyObstacles,
     updateRoad,
     updateJumps,
+    updateCity,
     resetJumps,
     checkCollision,
     checkCoinCollision,

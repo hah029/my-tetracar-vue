@@ -38,6 +38,8 @@ export class Road extends THREE.Mesh {
         map: texture,
         emissive: 0x224466,
         emissiveIntensity: 2.0,
+        transparent: true,
+        opacity: 0.3,
         side: THREE.DoubleSide,
       });
     } else {

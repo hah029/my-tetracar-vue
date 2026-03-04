@@ -21,8 +21,16 @@ const SHAKE_MAX_FREQUENCY = 10;
 
 class CameraSystemClass {
   private camera: THREE.PerspectiveCamera | null = null;
+
+  // base shake
   private shakeTime = 0;
   private shakeOffset = new THREE.Vector3();
+
+  // impact shake
+  private impactTime = 0;
+  private impactDuration = 50000;
+  private impactAmplitude = 10000;
+  private impactOffset = new THREE.Vector3();
 
   initialize(camera: THREE.PerspectiveCamera) {
     this.camera = camera;
@@ -81,7 +89,7 @@ class CameraSystemClass {
     this.camera.lookAt(lookAtPos);
   }
 
-  updateDestroyed(cubes: THREE.Object3D[]) {
+  updateDestroyed(cubes: THREE.Object3D[], deltaTime: number) {
     if (!this.camera) return;
     if (cubes.length === 0) return;
 
@@ -91,8 +99,10 @@ class CameraSystemClass {
 
     const targetCamPos = center.clone().add(new THREE.Vector3(0, 3, 8));
     this.camera.position.lerp(targetCamPos, 0.05);
-    this.shakeOffset.multiplyScalar(0.9);
-    this.camera.position.add(this.shakeOffset);
+
+    this.applyImpactShake(deltaTime);
+    this.camera.position.add(this.impactOffset);
+
     this.camera.lookAt(center);
   }
 
@@ -136,6 +146,33 @@ class CameraSystemClass {
         Math.cos(this.shakeTime * frequency * 0.7),
       )
       .multiplyScalar(amplitude);
+  }
+
+  public triggerImpactShake(
+    strength: number, // 0..1
+    duration = 0.4,
+  ) {
+    this.impactTime = 0;
+    this.impactDuration = duration;
+
+    this.impactAmplitude = THREE.MathUtils.lerp(0.23, 0.42, strength);
+  }
+
+  private applyImpactShake(deltaTime: number) {
+    if (this.impactTime >= this.impactDuration) {
+      this.impactOffset.set(0, 0, 0);
+      return;
+    }
+
+    this.impactTime += deltaTime;
+    const t = this.impactTime / this.impactDuration;
+
+    // easing: резкий старт → плавное затухание
+    const decay = Math.exp(-6 * t);
+
+    this.impactOffset
+      .set(Math.random() * 2 - 1, Math.random() * 2 - 1, Math.random() * 2 - 1)
+      .multiplyScalar(this.impactAmplitude * decay);
   }
 }
 

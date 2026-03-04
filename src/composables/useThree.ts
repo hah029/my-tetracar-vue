@@ -19,7 +19,7 @@ export function useThree(container: Ref<HTMLElement | null>) {
 
     // ---- Scene ----
     scene = new THREE.Scene();
-    scene.fog = new THREE.Fog(0x000000, 10, 70);
+    scene.fog = new THREE.Fog(0x000000, 0, 100);
 
     // ---- Camera ----
     const aspect = container.value.clientWidth / container.value.clientHeight;

@@ -91,9 +91,9 @@ export const DEFAULT_CAR_CONFIG: Required<CarConfig> = {
   gravity: 0.015,
 
   // Разрушение
-  explosionForce: 0.3,
+  explosionForce: 0.2,
   explosionUpward: 0.2,
   cubeRotationSpeed: 0.05,
   cubeGravity: 0.005,
-  removalHeight: -5,
+  removalHeight: 0,
 };

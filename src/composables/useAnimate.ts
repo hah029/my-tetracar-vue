@@ -29,13 +29,14 @@ export function GameLoop(
 
   function updateDestruction(deltaTime: number) {
     // 🔥 ТОЛЬКО разрушения
-    CameraSystem.updateDestroyed(game.car.value.cubes);
+    CameraSystem.updateDestroyed(game.car.value.cubes, deltaTime);
     game.updateInteractiveItems(deltaTime, 0, UpdateMode.Destruction);
   }
 
   function updateGame(deltaTime: number, currentSpeed: number) {
     game.updateInteractiveItems(deltaTime, currentSpeed, UpdateMode.Gameplay);
     game.updateRoad(currentSpeed);
+    game.updateCity(currentSpeed);
 
     const collisionResult = game.checkCollision(performance.now());
     if (collisionResult.collision) {
@@ -44,6 +45,8 @@ export function GameLoop(
       } else {
         game.destroyCar(collisionResult.impactPoint);
         game.destroyObstacles(collisionResult.impactPoint);
+        const strength = Math.min(currentSpeed / gameState.maxSpeed, 1);
+        CameraSystem.triggerImpactShake(strength);
         gameState.endGame();
         return false; // ❗ сигнал «игра закончена»
       }
