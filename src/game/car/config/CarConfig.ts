@@ -81,14 +81,14 @@ export const DEFAULT_CAR_CONFIG: Required<CarConfig> = {
   colliderHeightFactor: 0.8,
 
   // Управление
-  laneChangeSpeed: 0.3,
-  maxTilt: 0.4,
+  laneChangeSpeed: 0.5,
+  maxTilt: 0.1,
   tiltSmoothing: 0.1,
 
   // Прыжки
   jumpHeight: 2.0,
   jumpDuration: 0.2,
-  gravity: 0.015,
+  gravity: 0.01,
 
   // Разрушение
   explosionForce: 0.2,

@@ -1,5 +1,5 @@
 import * as THREE from "three";
-import { cameraTarget } from "@/game/cameraTarget.js";
+import { cameraTarget } from "@/game/camera/cameraTarget.js";
 import { RoadManager } from "../road/RoadManager.js";
 import { type CarState, type CarConfig } from "./types";
 import { DEFAULT_CAR_CONFIG } from "./config";

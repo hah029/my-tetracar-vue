@@ -1,6 +1,9 @@
 // src/three/useThree.ts
 import * as THREE from "three";
 import { type Ref, onMounted, onUnmounted } from "vue";
+import { EffectComposer } from "three/examples/jsm/postprocessing/EffectComposer.js";
+import { AfterimagePass } from "three/examples/jsm/postprocessing/AfterimagePass.js";
+import { RenderPass } from "three/examples/jsm/postprocessing/RenderPass.js";
 
 // Типы
 export type ThreeRefs = {
@@ -12,6 +15,8 @@ export type ThreeRefs = {
 let scene: THREE.Scene;
 let camera: THREE.PerspectiveCamera;
 let renderer: THREE.WebGLRenderer;
+let composer: EffectComposer;
+let afterimagePass: AfterimagePass;
 
 export function useThree(container: Ref<HTMLElement | null>) {
   function init() {
@@ -37,6 +42,12 @@ export function useThree(container: Ref<HTMLElement | null>) {
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1));
     // renderer.shadowMap.enabled = true;
     // renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    composer = new EffectComposer(renderer);
+    composer.addPass(new RenderPass(scene, camera));
+
+    afterimagePass = new AfterimagePass(0.96);
+    // afterimagePass.uniforms["damp"].value = 0.96; // стартовое значение
+    composer.addPass(afterimagePass);
 
     container.value.appendChild(renderer.domElement);
 
@@ -49,6 +60,7 @@ export function useThree(container: Ref<HTMLElement | null>) {
     camera.aspect = container.value.clientWidth / container.value.clientHeight;
     camera.updateProjectionMatrix();
     renderer.setSize(container.value.clientWidth, container.value.clientHeight);
+    composer.setSize(container.value.clientWidth, container.value.clientHeight);
   }
 
   // ---- Cleanup ----
@@ -74,5 +86,19 @@ export function useThree(container: Ref<HTMLElement | null>) {
     return renderer;
   }
 
-  return { getScene, getCamera, getRenderer };
+  function getComposer() {
+    return composer;
+  }
+
+  function getMotionBlurPass() {
+    return afterimagePass;
+  }
+
+  return {
+    getScene,
+    getCamera,
+    getRenderer,
+    getComposer,
+    getMotionBlurPass,
+  };
 }

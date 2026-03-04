@@ -12,7 +12,7 @@ import { GameLoop } from "./composables/useAnimate";
 import { CameraSystem } from "@/game/camera/CameraSystem";
 
 const threeRoot = ref<HTMLDivElement | null>(null);
-const { getScene, getCamera, getRenderer } = useThree(threeRoot);
+const { getScene, getCamera, getRenderer, getComposer, getMotionBlurPass } = useThree(threeRoot);
 const game = useGame();
 const gameState = useGameState();
 
@@ -37,11 +37,13 @@ onMounted(() => {
   const scene = getScene();
   const camera = getCamera();
   const renderer = getRenderer();
+  const composer = getComposer();
+  const motionBlur = getMotionBlurPass();
 
   game.init(scene);
   CameraSystem.initialize(camera);
 
-  loop = GameLoop(game, scene, camera, renderer);
+  loop = GameLoop(game, scene, camera, renderer, composer, motionBlur);
   loop.start(); // ✅ ЗДЕСЬ старт
 });
 

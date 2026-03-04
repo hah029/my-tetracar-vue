@@ -1,4 +1,5 @@
 // src/composables/useAnimate.ts
+import * as THREE from "three";
 import { useGameState } from "../store/gameState";
 import { useHUD } from "./useHUD";
 import type { useGame } from "./useGame";
@@ -6,12 +7,16 @@ import type { PerspectiveCamera, Scene, WebGLRenderer } from "three";
 import { CameraSystem } from "@/game/camera/CameraSystem";
 import Stats from "three/examples/jsm/libs/stats.module.js";
 import { UpdateMode } from "@/game/core/UpdateMode";
+import { EffectComposer } from "three/examples/jsm/postprocessing/EffectComposer.js";
+import { AfterimagePass } from "three/examples/jsm/postprocessing/AfterimagePass.js";
 
 export function GameLoop(
   game: ReturnType<typeof useGame>,
   scene: Scene,
   camera: PerspectiveCamera,
   renderer: WebGLRenderer,
+  composer: EffectComposer,
+  motionBlur: AfterimagePass,
 ) {
   const gameState = useGameState();
   const hud = useHUD();
@@ -47,6 +52,8 @@ export function GameLoop(
         game.destroyObstacles(collisionResult.impactPoint);
         const strength = Math.min(currentSpeed / gameState.maxSpeed, 1);
         CameraSystem.triggerImpactShake(strength);
+        // motionBlur.uniforms["damp"].value = 0.82;
+        motionBlur.damp = 0.82;
         gameState.endGame();
         return false; // ❗ сигнал «игра закончена»
       }
@@ -102,7 +109,7 @@ export function GameLoop(
       gameState.currentState !== "playing" &&
       gameState.currentState !== "gameover"
     ) {
-      renderer.render(scene, camera);
+      composer.render();
       stats.end();
       return;
     }
@@ -116,7 +123,13 @@ export function GameLoop(
 
     const isGameOver = game.car.value.isDestroyed;
     let currentSpeed = gameState.getCurrentSpeed();
+    const speedFactor = Math.min(currentSpeed / gameState.maxSpeed, 1);
 
+    // меньше damp = сильнее blur
+    motionBlur.damp = THREE.MathUtils.lerp(0.2, 0.99, speedFactor);
+    // motionBlur.damp = speedFactor;
+
+    // motionBlur.uniforms["damp"] = speedFactor;
     if (!isGameOver) {
       if (gameState.baseSpeed < gameState.BASE_SPEED) {
         gameState.baseSpeed = gameState.BASE_SPEED;
@@ -147,7 +160,7 @@ export function GameLoop(
       }
     }
 
-    renderer.render(scene, camera);
+    composer.render();
     stats.end();
   }
 

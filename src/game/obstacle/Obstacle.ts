@@ -118,7 +118,11 @@ export class Obstacle extends THREE.Group {
   public getCollider(): THREE.Box3 | null {
     if (this.isDestroyed) return null;
     const box = new THREE.Box3();
-    this.cubes.forEach((cube) => box.expandByObject(cube));
+    this.cubes.forEach((cube) => {
+      let collider = box.expandByObject(cube);
+      collider.expandByScalar(2);
+      return collider;
+    });
     return box;
   }
 
