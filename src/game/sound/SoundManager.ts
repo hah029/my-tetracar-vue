@@ -148,24 +148,6 @@ export class SoundManager {
     this.setMaster(!this.masterEnabled);
   }
 
-  toggleMusic() {
-    this.setMusic(!this.musicEnabled);
-    console.log("toggleMusic", this.musicEnabled);
-  }
-
-  toggleSFX() {
-    this.setSFX(!this.sfxEnabled);
-    console.log("toggleSFX", this.sfxEnabled);
-  }
-
-  isMusicEnabled() {
-    return this.musicEnabled;
-  }
-
-  isSFXEnabled() {
-    return this.sfxEnabled;
-  }
-
   isPlaying(sound: string) {
     return this.sounds[sound]?.isPlaying;
   }

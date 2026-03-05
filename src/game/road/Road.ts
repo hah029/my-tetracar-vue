@@ -37,7 +37,7 @@ export class Road extends THREE.Mesh {
       material = new THREE.MeshStandardMaterial({
         map: texture,
         emissive: 0x224466,
-        emissiveIntensity: 10.0,
+        emissiveIntensity: 3.0,
         transparent: true,
         opacity: 0.3,
         side: THREE.DoubleSide,

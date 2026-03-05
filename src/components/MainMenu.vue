@@ -1,82 +1,118 @@
 <!-- src/components/MainMenu.vue -->
 <template>
   <div v-if="isVisible" class="main-menu-overlay">
-    <div class="menu-container" v-if="isSettingsEnabled">
+    <div class="menu-container">
+
       <h4 class="menu-title__mini">TETROCAR</h4>
-      <h1 class="menu-subtitle">НАСТРОЙКИ</h1>
-      <div class="menu-btns">
-        <!-- <button class="menu-btn start-btn" @click="startGame">СТАРТ</button> -->
-        <div class="settings-btn-block">
-          <button class="settings-btn" @click="toggleMusic">Music</button>
-          <input class="settings-input" type="checkbox" disabled v-model="isMusicEnabled" />
+
+      <template v-if="isSettingsEnabled">
+
+        <h1 class="menu-subtitle">НАСТРОЙКИ</h1>
+
+        <div class="settings">
+
+          <div class="settings-row">
+            <span>Music</span>
+            <button class="toggle-btn" @click="toggleMusic">
+              {{ audioStore.musicEnabled ? "ON" : "OFF" }}
+            </button>
+          </div>
+
+          <div class="settings-row">
+            <span>SFX</span>
+            <button class="toggle-btn" @click="toggleSound">
+              {{ audioStore.sfxEnabled ? "ON" : "OFF" }}
+            </button>
+          </div>
+
+          <div class="settings-row volume-row">
+            <span>Volume</span>
+
+            <input type="range" min="0" max="1" step="0.01" v-model="volume" @input="updateVolume" />
+
+            <span class="volume-value">
+              {{ Math.round(volume * 100) }}%
+            </span>
+          </div>
+
         </div>
-        <div class="settings-btn-block">
-          <button class="settings-btn" @click="toggleSound">SFX</button>
-          <input class="settings-input" type="checkbox" disabled v-model="isSFXEnabled" />
+
+        <button class="menu-btn" @click="goBackToMenu">
+          НАЗАД
+        </button>
+
+      </template>
+
+      <template v-else>
+
+        <h1 class="menu-subtitle">ГЛАВНОЕ МЕНЮ</h1>
+
+        <div class="menu-btns">
+          <button class="menu-btn" @click="startGame">СТАРТ</button>
+          <button class="menu-btn" @click="goToSettings">НАСТРОЙКИ</button>
         </div>
-      </div>
-      <button class="menu-btn" @click="goBackToMenu">НАЗАД</button>
-    </div>
-    <div class="menu-container" v-else>
-      <h4 class="menu-title__mini">TETROCAR</h4>
-      <h1 class="menu-subtitle">ГЛАВНОЕ МЕНЮ</h1>
-      <div class="menu-btns">
-        <button class="menu-btn" @click="startGame">СТАРТ</button>
-        <button class="menu-btn" @click="goToSettings">НАСТРОЙКИ</button>
-      </div>
+
+      </template>
+
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
 import { computed, ref } from "vue";
-import { useGameState } from "../store/gameState";
+import { useGameState } from "@/store/gameState";
+import { useAudioStore } from "@/store/audioStore";
 import { SoundManager } from "@/game/sound/SoundManager";
 
-// Подключаем store
 const gameStore = useGameState();
-const isSettingsEnabled = ref(false);
-
-// Видимость меню зависит от состояния игры
-const isVisible = computed(() => gameStore.currentState === "menu");
+const audioStore = useAudioStore();
 const soundManager = SoundManager.getInstance();
 
+const isSettingsEnabled = ref(false);
+
+const volume = ref(
+  Number(localStorage.getItem("masterVolume") ?? 0.6)
+);
+
+const isVisible = computed(() => gameStore.currentState === "menu");
+
 function goToSettings() {
-  if (isSettingsEnabled.value != true) isSettingsEnabled.value = true;
+  isSettingsEnabled.value = true;
 }
+
 function goBackToMenu() {
-  if (isSettingsEnabled.value != false) isSettingsEnabled.value = false;
+  isSettingsEnabled.value = false;
 }
 
 function startGame() {
   soundManager.resume();
 
-  // soundManager.play("sfx_intro");
-
   soundManager.play("sfx_3");
   soundManager.play("sfx_2");
-  soundManager.play("sfx_2");
   soundManager.play("sfx_start");
-
-  // setTimeout(() => soundManager.play("sfx_2"), 1000);
-  // setTimeout(() => soundManager.play("sfx_1"), 2000);
-  // setTimeout(() => soundManager.play("sfx_start"), 3000);
 
   gameStore.setState("playing");
   gameStore.resetGameData();
 }
 
 function toggleMusic() {
-  soundManager.toggleMusic();
-  if (soundManager.isMusicEnabled()) soundManager.play("music_background");
+  audioStore.toggleMusic();
+
+  if (audioStore.musicEnabled) {
+    soundManager.play("music_background");
+  }
 }
-const isMusicEnabled = computed(() => soundManager.isMusicEnabled());
 
 function toggleSound() {
-  soundManager.toggleSFX();
+  audioStore.toggleSFX();
 }
-const isSFXEnabled = computed(() => soundManager.isSFXEnabled());
 
+function updateVolume() {
+  soundManager.setMasterVolume(volume.value);
+  localStorage.setItem("masterVolume", volume.value.toString());
+
+  soundManager.play("sfx_click");
+}
 </script>
 
 <style scoped lang="scss">
@@ -156,5 +192,42 @@ const isSFXEnabled = computed(() => soundManager.isSFXEnabled());
       text-shadow: 0 0 20px rgba(0, 255, 255, 0.741);
     }
   }
+}
+
+.settings {
+  display: flex;
+  flex-direction: column;
+  gap: 25px;
+  margin: 40px 0;
+}
+
+.settings-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 20px;
+}
+
+.toggle-btn {
+  background: none;
+  border: 1px solid white;
+  color: white;
+  padding: 6px 14px;
+  cursor: pointer;
+  transition: 0.1s;
+
+  &:hover {
+    background: white;
+    color: black;
+  }
+}
+
+.volume-row input {
+  flex: 1;
+}
+
+.volume-value {
+  width: 50px;
+  text-align: right;
 }
 </style>

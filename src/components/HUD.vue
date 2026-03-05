@@ -1,47 +1,51 @@
 <template>
-  <div id="game-hud" ref="container">
-    <div class="score-panel">
+  <div id="game-hud">
+
+    <!-- SCORE -->
+    <div class="panel panel-left">
       <div class="label">SCORE</div>
-      <div class="value">{{ Math.floor(gameState.score) }}</div>
-      <div class="best">BEST <span>{{ Math.floor(gameState.highScore) }}</span></div>
+      <div class="value gold">{{ score }}</div>
+      <div class="sub">BEST <span>{{ bestScore }}</span></div>
     </div>
 
-    <div class="speed-panel">
-      <div class="label">SPEED</div>
-      <div class="value">{{ gameState.getCurrentSpeed().toFixed(2) }}</div>
-      <div class="unit">KM/H</div>
+    <!-- SPEED (TETRIS BLOCKS ANIMATION) -->
+    <div class="panel panel-right speed-panel-tetris">
+      <div class="speed-label">SPEED</div>
+
+      <div class="speed-blocks">
+        <div v-for="n in maxBlocks" :key="n" class="speed-block" :class="{ active: n <= activeBlocks }"
+          :style="{ animationDelay: `${(n - 1) * 50}ms` }">
+        </div>
+      </div>
+
+      <div class="speed-value">{{ speedKMH }} KM/H</div>
     </div>
 
-    <div class="nitro-container">
+    <!-- NITRO (TETRIS STYLE) -->
+    <div class="panel nitro" v-if="isNitroActive">
       <div class="nitro-header">
         <span>NITRO</span>
-        <span :class="{ active: gameState.isNitroEnabled }">{{ gameState.isNitroEnabled ? 'ACTIVE' : 'INACTIVE'
-        }}</span>
+        <span :class="{ active: isNitroActive }">{{ isNitroActive ? "ACTIVE" : "INACTIVE" }}</span>
       </div>
+
       <div class="nitro-bar-bg">
-        <div class="nitro-bar" :style="{ width: gameState.isNitroEnabled ? '100%' : '0%' }"></div>
+        <div class="nitro-bar">
+          <div class="nitro-block" v-for="n in nitroBlocks" :key="n" :style="{ animationDelay: `${(n - 1) * 30}ms` }">
+          </div>
+        </div>
       </div>
     </div>
 
-    <div class="lane-indicator">
-      <div v-for="i in laneCount" :key="i" :class="['lane-dot', { active: gameState.currentLane === i - 1 }]"></div>
+    <!-- LANES -->
+    <div class="panel lane-indicator">
+      <div v-for="i in laneCount" :key="i" class="lane-dot" :class="{ active: currentLane === i - 1 }" />
     </div>
 
-    <!-- <div class="debug-panel">
-      <div>
-        <span>carPosition: </span>
-        <span>{{ gameState.carPosition }}</span>
-      </div>
-      <div>
-        <span>cameraPosition: </span>
-        <span>{{ gameState.cameraPosition }}</span>
-      </div>
-
-    </div> -->
-
+    <!-- WARNING -->
     <div class="warning-message" :style="warningStyle">
-      ⚠️ DANGER ⚠️
+      ⚠ DANGER ⚠
     </div>
+
   </div>
 </template>
 
@@ -51,132 +55,149 @@ import { useGameState } from "../store/gameState";
 
 const gameState = useGameState();
 
-const laneCount = computed(() => {
-  try {
-    return gameState.getLanesCount?.() ?? 4;
-  } catch {
-    return 4;
-  }
+const score = computed(() => Math.floor(gameState.score));
+const bestScore = computed(() => Math.floor(gameState.highScore));
+
+const speedKMH = computed(() => Math.floor(gameState.getCurrentSpeed() * 100));
+
+const maxBlocks = 10;
+const activeBlocks = computed(() => {
+  const speed = gameState.getCurrentSpeed();
+  const maxSpeed = gameState.maxSpeed ?? 1;
+  const blocks = Math.floor(speed / maxSpeed * maxBlocks);
+  return Math.min(blocks, maxBlocks);
 });
 
+const currentLane = computed(() => gameState.currentLane);
+const laneCount = computed(() => gameState.getLanesCount?.() ?? 4);
+
+const isNitroActive = computed(() => gameState.isNitroEnabled);
+const nitroBlocks = computed(() => isNitroActive ? 10 : 0); // 10 блоков максимум
+// const nitroWidth = computed(() => (isNitroActive.value ? "100%" : "0%"));
+
 const warningStyle = computed(() => {
-  const dangerLevel = gameState.getDangerLevel?.() ?? 0;
-  if (dangerLevel > 0) {
-    const intensity = Math.floor(255 * dangerLevel);
-    return {
-      opacity: Math.min(dangerLevel, 1),
-      color: `rgb(255, ${255 - intensity}, ${255 - intensity})`,
-      textShadow: `0 0 ${20 * dangerLevel}px rgba(255,0,0,${dangerLevel})`,
-      transform:
-        dangerLevel > 0.7
-          ? `translate(-50%, -50%) scale(${1 + Math.sin(Date.now() * 0.01) * 0.1})`
-          : "translate(-50%, -50%) scale(1)",
-    };
-  }
-  return { opacity: 0 };
+  const danger = gameState.getDangerLevel?.() ?? 0;
+  if (!danger) return { opacity: 0 };
+
+  const intensity = Math.floor(255 * danger);
+  return {
+    opacity: Math.min(danger, 1),
+    color: `rgb(255, ${255 - intensity}, ${255 - intensity})`,
+    textShadow: `0 0 ${20 * danger}px rgba(255,0,0,${danger})`,
+  };
 });
 </script>
 
 <style scoped>
 #game-hud {
   position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
+  inset: 0;
   pointer-events: none;
-  font-family: 'Segoe UI', Arial, sans-serif;
+  font-family: monospace;
   z-index: 5;
 }
 
-/* Счёт */
-.score-panel {
+/* === COMMON PANEL STYLE === */
+.panel {
   position: absolute;
+  background: rgba(0, 0, 0, 0.8);
+  padding: 12px 16px;
+  border: 2px solid #00ffff;
+  border-radius: 4px;
+  box-shadow: 0 0 8px rgba(0, 255, 255, 0.3);
+  color: #00ffff;
+}
+
+/* === SCORE PANEL === */
+.panel-left {
   top: 20px;
   left: 20px;
-  background: rgba(0, 0, 0, 0.6);
-  backdrop-filter: blur(5px);
-  border-radius: 15px;
-  padding: 15px 25px;
-  color: white;
-  border-left: 4px solid #ffd700;
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
 }
 
-.score-panel .label {
-  font-size: 14px;
-  opacity: 0.7;
-  letter-spacing: 2px;
-}
-
-.score-panel .value {
-  font-size: 36px;
-  font-weight: bold;
-  color: #ffd700;
-  text-shadow: 0 0 10px rgba(255, 215, 0, 0.3);
-}
-
-.score-panel .best {
+.label {
   font-size: 12px;
-  opacity: 0.5;
-  margin-top: 5px;
+  opacity: 0.7;
+  letter-spacing: 1px;
 }
 
-/* Спидометр */
-.speed-panel {
-  position: absolute;
+.value {
+  font-size: 24px;
+  font-weight: bold;
+}
+
+.value.gold {
+  color: #ffd700;
+  text-shadow: 0 0 4px #ffd700;
+}
+
+.sub {
+  font-size: 10px;
+  opacity: 0.5;
+}
+
+/* === SPEED PANEL === */
+.panel-right {
   top: 20px;
   right: 20px;
-  background: rgba(0, 0, 0, 0.6);
-  backdrop-filter: blur(5px);
-  border-radius: 15px;
-  padding: 15px 25px;
-  color: white;
-  border-right: 4px solid #00ffff;
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
-  text-align: right;
 }
 
-.speed-panel .label {
-  font-size: 14px;
-  opacity: 0.7;
-  letter-spacing: 2px;
+.speed-panel-tetris {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
 
-.speed-panel .value {
-  font-size: 36px;
-  font-weight: bold;
-  color: #00ffff;
-  text-shadow: 0 0 10px rgba(0, 255, 255, 0.3);
-}
-
-.speed-panel .unit {
+.speed-label {
   font-size: 12px;
-  opacity: 0.5;
+  letter-spacing: 1px;
+  margin-bottom: 5px;
 }
 
-/* Нитро */
-.nitro-container {
-  position: absolute;
-  top: 30px;
+.speed-blocks {
+  display: flex;
+  gap: 2px;
+  margin-bottom: 4px;
+}
+
+.speed-block {
+  width: 16px;
+  height: 16px;
+  background: rgba(0, 255, 255, 0.2);
+  border: 2px solid rgba(0, 255, 255, 0.4);
+  transform: translateY(-20px);
+  opacity: 0;
+  animation: fall 0.3s forwards;
+}
+
+.speed-block.active {
+  background: #00ffff;
+  box-shadow: 0 0 3px #00ffff;
+}
+
+.speed-value {
+  font-size: 14px;
+  font-weight: bold;
+  letter-spacing: 1px;
+}
+
+/* === NITRO PANEL === */
+.nitro {
+  top: 60px;
   left: 50%;
   transform: translateX(-50%);
-  width: 300px;
-  background: rgba(0, 0, 0, 0.5);
-  backdrop-filter: blur(5px);
-  border-radius: 50px;
-  padding: 10px 15px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+  width: 280px;
+  border: 2px solid #ff4444;
+  border-radius: 4px;
+  padding: 8px;
+  background: rgba(0, 0, 0, 0.7);
 }
 
 .nitro-header {
   display: flex;
   justify-content: space-between;
-  margin-bottom: 5px;
-  color: white;
-  font-size: 12px;
-  opacity: 0.7;
+  font-size: 10px;
+  margin-bottom: 4px;
+  color: #fff;
 }
 
 .nitro-header .active {
@@ -186,74 +207,70 @@ const warningStyle = computed(() => {
 
 .nitro-bar-bg {
   width: 100%;
-  height: 20px;
+  height: 14px;
   background: rgba(255, 255, 255, 0.1);
-  border-radius: 10px;
+  border-radius: 2px;
+  position: relative;
   overflow: hidden;
 }
 
 .nitro-bar {
+  width: 100%;
+  height: 100%;
+  display: flex;
+}
+
+.nitro-block {
+  width: 20%;
   height: 100%;
   background: linear-gradient(90deg, #ff4444, #ff8844);
-  border-radius: 10px;
-  transition: width 0.2s ease;
+  transform: translateY(-20px);
+  opacity: 0;
+  animation: fall 0.25s forwards;
 }
 
-/* Полосы */
+/* === LANES === */
 .lane-indicator {
-  position: absolute;
   bottom: 30px;
-  left: 30px;
+  left: 20px;
   display: flex;
-  gap: 10px;
-  background: rgba(0, 0, 0, 0.5);
-  backdrop-filter: blur(5px);
-  padding: 10px;
-  border-radius: 50px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-}
-
-.debug-panel {
-  position: absolute;
-  top: 150px;
-  right: 20px;
-  background: rgba(0, 0, 0, 0.6);
-  backdrop-filter: blur(5px);
-  padding: 10px;
-  border-radius: 10px;
-  text-align: right;
-  color: white;
-  font-size: 14px;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
+  gap: 6px;
+  padding: 6px;
+  border: 2px solid #00ffff;
+  border-radius: 4px;
+  background: rgba(0, 0, 0, 0.7);
 }
 
 .lane-dot {
-  width: 15px;
-  height: 15px;
-  border-radius: 50%;
-  background: rgba(255, 255, 255, 0.3);
-  border: 2px solid rgba(255, 255, 255, 0.5);
-  transition: all 0.2s ease;
+  width: 16px;
+  height: 16px;
+  background: rgba(0, 255, 255, 0.2);
+  border: 2px solid rgba(0, 255, 255, 0.5);
+  transition: .2s;
 }
 
 .lane-dot.active {
   background: #00ffff;
-  box-shadow: 0 0 15px #00ffff;
+  box-shadow: 0 0 5px #00ffff;
   transform: scale(1.2);
 }
 
-/* Предупреждение */
+/* === WARNING === */
 .warning-message {
-  position: absolute;
   top: 50%;
   left: 50%;
-  font-size: 48px;
-  font-weight: bold;
-  text-shadow: 0 0 20px rgba(255, 0, 0, 0.5);
-  pointer-events: none;
-  z-index: 10;
   transform: translate(-50%, -50%);
+  font-size: 36px;
+  font-weight: bold;
+  text-shadow: 0 0 10px red;
+  pointer-events: none;
+}
+
+/* === ANIMATIONS === */
+@keyframes fall {
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
 }
 </style>

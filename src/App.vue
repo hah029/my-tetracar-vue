@@ -48,13 +48,15 @@ onMounted(() => {
   CameraSystem.initialize(camera);
   soundManager = SoundManager.getInstance();
   soundManager.initialize(camera);
+  const volume = Number(localStorage.getItem("masterVolume") ?? 0.6);
+  soundManager.setMasterVolume(volume);
 
   loop = GameLoop(game, composer, motionBlur);
-  loop.start(); // ✅ ЗДЕСЬ старт
+  loop.start();
 });
 
 onUnmounted(() => {
-  loop?.stop(); // ✅ корректная остановка
+  loop?.stop();
 });
 
 watch(
