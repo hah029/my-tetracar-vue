@@ -1,30 +1,42 @@
 // src/game/interactive/InteractiveItemsManager.ts
-// import type * as THREE from "three";
+// managers
 import { ObstacleManager } from "@/game/obstacle/ObstacleManager";
 import { RoadManager } from "@/game/road/RoadManager";
-import type { CoinManager } from "@/game/coin/CoinManager";
+import { CoinManager } from "@/game/coin/CoinManager";
+import { BoosterManager } from "../booster/BoosterManager";
+// other
 import { simulateJumpTrajectory } from "@/game/car/CarTrajectory";
 import { DEFAULT_CAR_CONFIG } from "@/game/car/config";
 import { UpdateMode } from "@/game/core/UpdateMode";
+import { useGameState } from "@/store/gameState";
+
 
 export class InteractiveItemsManager {
   private obstacleManager: ObstacleManager;
   private coinManager: CoinManager;
   private roadManager: RoadManager;
+  private boosterManager: BoosterManager;
 
   private obstacleTimer = 0;
   private coinTimer = 0;
+  private boosterTimer = 0;
+  private boosterEnabledTimer = 0;
   private obstacleInterval = 1600;
   private coinInterval = 1000;
+  private boosterInterval = 2000;
+  private boosterEnabledInterval = 5000;
+
 
   constructor(
     obstacleManager: ObstacleManager,
     coinManager: CoinManager,
     roadManager: RoadManager,
+    boosterManager: BoosterManager,
   ) {
     this.obstacleManager = obstacleManager;
     this.coinManager = coinManager;
     this.roadManager = roadManager;
+    this.boosterManager = boosterManager;
   }
 
   public update(deltaTime: number, speed: number, mode: UpdateMode) {
@@ -34,6 +46,7 @@ export class InteractiveItemsManager {
 
     this.obstacleManager.update(speed);
     this.coinManager.update(speed);
+    this.boosterManager.update(speed);
 
     if (mode === UpdateMode.Destruction) {
       return; // ⛔ стоп спавн, таймеры, геймплей
@@ -51,22 +64,21 @@ export class InteractiveItemsManager {
       this.spawnCoins();
       this.coinTimer = 0;
     }
+
+    // boosters (независимо)
+    this.boosterTimer += deltaTime;
+    this.boosterEnabledTimer += deltaTime;
+    const boosterInterval = Math.max(200, this.boosterInterval - speed * 2);
+
+    if (this.boosterTimer >= boosterInterval) {
+      this.spawnBoosters();
+      this.boosterTimer = 0;
+    }
+    if (this.boosterEnabledTimer >= this.boosterEnabledInterval) {
+      useGameState().disableNitro();
+      this.boosterEnabledTimer = 0;
+    }
   }
-
-  // private spawnObstacleLine(speed: number) {
-  //   const lanesCount = this.roadManager.getLanesCount();
-  //   const emptyLane = Math.floor(Math.random() * lanesCount);
-
-  //   for (let lane = 0; lane < lanesCount; lane++) {
-  //     if (lane === emptyLane) continue;
-
-  //     if (Math.random() < 0.1) {
-  //       this.spawnJumpWithCoins(lane, speed);
-  //     }
-
-  //     this.obstacleManager.spawnObstacle(lane, -60);
-  //   }
-  // }
 
   private spawnObstacle(speed: number) {
     const lanesCount = this.roadManager.getLanesCount();
@@ -99,6 +111,22 @@ export class InteractiveItemsManager {
         this.coinManager.spawnCoin(lane, -60 - i * 5);
       }
     }
+  }
+
+  private spawnBoosters() {
+    const lanesCount = this.roadManager.getLanesCount();
+    const lane = Math.floor(Math.random() * lanesCount);
+
+    if (Math.random() < 0.1) {
+      this.boosterManager.spawnNitro(lane, -60);
+    }
+
+    // // шанс на цепочку
+    // if (Math.random() < 0.1) {
+    //   for (let i = 1; i <= 3; i++) {
+    //     this.coinManager.spawnCoin(lane, -60 - i * 5);
+    //   }
+    // }
   }
 
   private spawnJumpWithCoins(lane: number, speed: number) {
@@ -136,10 +164,16 @@ export class InteractiveItemsManager {
     return this.obstacleManager.getJumps();
   }
 
+  public getBoosters() {
+    return this.boosterManager.getNitros();
+  }
+
   public reset() {
     this.obstacleTimer = 0;
     this.coinTimer = 0;
+    this.boosterTimer = 0;
     this.obstacleManager.reset();
     this.coinManager.reset();
+    this.boosterManager.reset();
   }
 }

@@ -32,29 +32,29 @@ export function useControls(game: ReturnType<typeof useGame>) {
       case "ArrowRight":
         game.movePlayerRight();
         break;
-      case " ":
-        gameStore.enableNitro();
-        break;
+      // case " ":
+      //   gameStore.enableNitro();
+      //   break;
       case "Escape":
         processEscape();
         break;
     }
   }
 
-  function handleKeyUp(e: KeyboardEvent) {
-    if (e.key === " ") {
-      e.preventDefault();
-      gameStore.disableNitro();
-    }
-  }
+  // function handleKeyUp(e: KeyboardEvent) {
+  //   if (e.key === " ") {
+  //     e.preventDefault();
+  //     gameStore.disableNitro();
+  //   }
+  // }
 
   onMounted(() => {
     window.addEventListener("keydown", handleKeyDown);
-    window.addEventListener("keyup", handleKeyUp);
+    // window.addEventListener("keyup", handleKeyUp);
   });
 
   onUnmounted(() => {
     window.removeEventListener("keydown", handleKeyDown);
-    window.removeEventListener("keyup", handleKeyUp);
+    // window.removeEventListener("keyup", handleKeyUp);
   });
 }

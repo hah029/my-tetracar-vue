@@ -12,6 +12,8 @@ import { CityManager } from "@/game/city/CityManager";
 // enums
 import { UpdateMode } from "@/game/core/UpdateMode";
 import { DEFAULT_LANES } from "@/game/road/config/RoadConfig";
+import { BoosterManager } from "@/game/booster/BoosterManager";
+import { useGameState } from "@/store/gameState";
 
 // Интерфейс для реактивной ссылки car
 interface CarRef {
@@ -62,6 +64,7 @@ function setupLights(scene: THREE.Scene) {
 }
 
 export function useGame() {
+  const gameState = useGameState();
   const car = ref<CarRef>({
     mesh: new THREE.Group(),
     targetX: 0,
@@ -90,6 +93,7 @@ export function useGame() {
   let coinManager: CoinManager;
   let interactiveManager: InteractiveItemsManager;
   let cityManager: CityManager;
+  let boosterManager: BoosterManager;
 
   function init(scene: THREE.Scene) {
     sceneRef = scene;
@@ -111,10 +115,14 @@ export function useGame() {
     coinManager = CoinManager.getInstance();
     coinManager.initialize(scene);
 
+    boosterManager = BoosterManager.getInstance();
+    boosterManager.initialize(scene);
+
     interactiveManager = new InteractiveItemsManager(
       obstacleManager,
       coinManager,
       roadManager,
+      boosterManager,
     );
 
     carManager = CarManager.getInstance();
@@ -220,6 +228,7 @@ export function useGame() {
       obstacles.value.push({ mesh: o, position: o.position });
     });
   }
+
   function resetObstacles() {
     if (!obstacleManager) return;
     obstacleManager.reset();
@@ -275,6 +284,11 @@ export function useGame() {
     return coinManager.checkCarCollision(carManager.getCar());
   }
 
+  function checkBoosterCollision() {
+    if (!carManager || !boosterManager) return { collision: false, subject: "" };
+    return boosterManager.checkCarCollision(carManager.getCar());
+  }
+
   function getDangerLevel() {
     if (!carManager || !obstacleManager) return 0;
     return CollisionSystem.getDangerLevel(carManager.getCar(), [
@@ -287,11 +301,10 @@ export function useGame() {
 
     carManager.resetCar();
     interactiveManager.reset();
-    CollisionSystem.reset();
     roadManager.clear();
+    CollisionSystem.reset();
 
     roadManager.createRoad();
-    // roadManager.addSpeedLines({ count: 30 });
 
     const newCar = carManager.getCar();
     car.value.mesh = newCar;
@@ -302,6 +315,8 @@ export function useGame() {
     resetJumps();
     obstacles.value = [];
     updateInteractiveItems(0, 0, UpdateMode.Destruction); // синхронизация
+
+    gameState.disableNitro();
   }
 
   return {
@@ -329,6 +344,7 @@ export function useGame() {
     resetJumps,
     checkCollision,
     checkCoinCollision,
+    checkBoosterCollision,
     getDangerLevel,
     reset,
   };

@@ -3,7 +3,6 @@ import * as THREE from "three";
 import { useGameState } from "../store/gameState";
 import { useHUD } from "./useHUD";
 import type { useGame } from "./useGame";
-import type { PerspectiveCamera, Scene, WebGLRenderer } from "three";
 import { CameraSystem } from "@/game/camera/CameraSystem";
 import Stats from "three/examples/jsm/libs/stats.module.js";
 import { UpdateMode } from "@/game/core/UpdateMode";
@@ -12,9 +11,6 @@ import { AfterimagePass } from "three/examples/jsm/postprocessing/AfterimagePass
 
 export function GameLoop(
   game: ReturnType<typeof useGame>,
-  scene: Scene,
-  camera: PerspectiveCamera,
-  renderer: WebGLRenderer,
   composer: EffectComposer,
   motionBlur: AfterimagePass,
 ) {
@@ -52,7 +48,6 @@ export function GameLoop(
         game.destroyObstacles(collisionResult.impactPoint);
         const strength = Math.min(currentSpeed / gameState.maxSpeed, 1);
         CameraSystem.triggerImpactShake(strength);
-        // motionBlur.uniforms["damp"].value = 0.82;
         motionBlur.damp = 0.82;
         gameState.endGame();
         return false; // ❗ сигнал «игра закончена»
@@ -61,6 +56,15 @@ export function GameLoop(
 
     const coins = game.checkCoinCollision();
     if (coins > 0) gameState.addScore(coins);
+
+    const boostCollisions = game.checkBoosterCollision();
+    if (boostCollisions.collision) {
+      if (boostCollisions.subject = "nitro") {
+        gameState.enableNitro()
+      } else {
+        console.error("Undefined booster collision subject:", boostCollisions.subject)
+      }
+    }
 
     const realCar = game.car.value.mesh;
     if (realCar) {
@@ -118,7 +122,7 @@ export function GameLoop(
     if (realCar) {
       try {
         gameState.currentLane = (realCar as any).getCurrentLane();
-      } catch {}
+      } catch { }
     }
 
     const isGameOver = game.car.value.isDestroyed;
