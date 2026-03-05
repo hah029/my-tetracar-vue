@@ -17,6 +17,7 @@ let camera: THREE.PerspectiveCamera;
 let renderer: THREE.WebGLRenderer;
 let composer: EffectComposer;
 let afterimagePass: AfterimagePass;
+// let listener: THREE.AudioListener;
 
 export function useThree(container: Ref<HTMLElement | null>) {
   function init() {
@@ -31,6 +32,10 @@ export function useThree(container: Ref<HTMLElement | null>) {
     camera = new THREE.PerspectiveCamera(75, aspect, 0.1, 1000);
     camera.position.set(0, 4, 5);
     camera.lookAt(0, 1, -10);
+
+    // // ---- Audio ----
+    // listener = new THREE.AudioListener();
+    // camera.add(listener);
 
     // ---- Renderer ----
     renderer = new THREE.WebGLRenderer({

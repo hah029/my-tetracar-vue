@@ -2,12 +2,13 @@
 import * as THREE from "three";
 import { useGameState } from "../store/gameState";
 import { useHUD } from "./useHUD";
-import type { useGame } from "./useGame";
+import { useGame } from "./useGame";
 import { CameraSystem } from "@/game/camera/CameraSystem";
 import Stats from "three/examples/jsm/libs/stats.module.js";
 import { UpdateMode } from "@/game/core/UpdateMode";
 import { EffectComposer } from "three/examples/jsm/postprocessing/EffectComposer.js";
 import { AfterimagePass } from "three/examples/jsm/postprocessing/AfterimagePass.js";
+import { SoundManager } from "@/game/sound/SoundManager";
 
 export function GameLoop(
   game: ReturnType<typeof useGame>,
@@ -16,6 +17,9 @@ export function GameLoop(
 ) {
   const gameState = useGameState();
   const hud = useHUD();
+
+  // вот это мой менеджер (он уже имеет все нужные звуки)
+  const soundManager = SoundManager.getInstance();
 
   let previousState = gameState.currentState;
   const stats = new Stats();
@@ -46,6 +50,7 @@ export function GameLoop(
       } else {
         game.destroyCar(collisionResult.impactPoint);
         game.destroyObstacles(collisionResult.impactPoint);
+        soundManager.play("sfx_destroy_bot");
         const strength = Math.min(currentSpeed / gameState.maxSpeed, 1);
         CameraSystem.triggerImpactShake(strength);
         motionBlur.damp = 0.82;
@@ -55,14 +60,20 @@ export function GameLoop(
     }
 
     const coins = game.checkCoinCollision();
-    if (coins > 0) gameState.addScore(coins);
+    if (coins > 0) {
+      soundManager.play("sfx_add_patron");
+      gameState.addScore(coins);
+    }
 
     const boostCollisions = game.checkBoosterCollision();
     if (boostCollisions.collision) {
-      if (boostCollisions.subject = "nitro") {
-        gameState.enableNitro()
+      if ((boostCollisions.subject = "nitro")) {
+        gameState.enableNitro();
       } else {
-        console.error("Undefined booster collision subject:", boostCollisions.subject)
+        console.error(
+          "Undefined booster collision subject:",
+          boostCollisions.subject,
+        );
       }
     }
 
@@ -122,7 +133,7 @@ export function GameLoop(
     if (realCar) {
       try {
         gameState.currentLane = (realCar as any).getCurrentLane();
-      } catch { }
+      } catch {}
     }
 
     const isGameOver = game.car.value.isDestroyed;

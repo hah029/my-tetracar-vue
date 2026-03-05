@@ -22,7 +22,6 @@ export class CityLayer {
       maxHeight,
       minWidth,
       maxWidth,
-      color,
     } = this.config;
 
     for (let z = zStart; z <= zEnd; z += spacing) {
@@ -30,7 +29,7 @@ export class CityLayer {
       const height = THREE.MathUtils.randFloat(minHeight, maxHeight);
       const width = THREE.MathUtils.randFloat(minWidth, maxWidth);
 
-      const building = new CityBuilding(width, height, width, color);
+      const building = new CityBuilding(width, height, width);
       building.position.set(x, -height, z);
 
       scene.add(building);

@@ -1,19 +1,20 @@
 import * as THREE from "three";
 
-
 const loader = new THREE.TextureLoader();
-
+const textureCache = new Map<string, THREE.Texture>();
 
 export function loadTexture(url: string) {
-    return loader.load(
-        url,
-        () => {
-            console.log("✅ Текстура успешно загружена");
-            // можно принудительно обновить материал, если нужно
-        },
-        undefined,
-        (err) => {
-            console.error("❌ Ошибка загрузки текстуры:", err);
-        },
-    );
+  if (textureCache.has(url)) {
+    return textureCache.get(url)!.clone();
+  }
+  const texture = loader.load(
+    url,
+    () => {},
+    undefined,
+    (err) => {
+      console.error("❌ Ошибка загрузки текстуры:", err);
+    },
+  );
+  textureCache.set(url, texture);
+  return texture;
 }

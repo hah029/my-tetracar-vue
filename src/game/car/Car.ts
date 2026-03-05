@@ -89,7 +89,7 @@ export class Car extends THREE.Group {
   // Обновление
   public update(): void {
     if (this.state.isDestroyed) {
-      this.physics.updateDestroyedCubes(this.cubes, this.scene, cameraTarget);
+      this.physics.updateDestroyedCubes(this.cubes, this.scene);
       return;
     }
 

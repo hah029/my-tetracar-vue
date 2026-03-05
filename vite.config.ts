@@ -5,7 +5,7 @@ import { resolve } from "path";
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [vue()],
-  assetsInclude: ["**/*.glb"],
+  assetsInclude: ["**/*.glb", "**/*.ogg"],
   resolve: {
     alias: {
       "@": resolve(__dirname, "src"), // @ указывает на папку src

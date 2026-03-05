@@ -1,3 +1,5 @@
+### Структура проекта
+```bash
 src/
 ├── main.ts                  # точка входа, монтирование Vue
 ├── App.vue                  # корневой компонент
@@ -19,3 +21,25 @@ src/
 │   └── loaders.ts           # загрузка моделей glb (car, cube, road) (будет)
 └── types/
     └── game.d.ts            # типы для Car, Obstacle, Jump (частично сделано в useGame.ts)
+```
+
+
+## Звуки
+### Музыка
+- music_intro - музыка, которую игрок слышит, когда включается игра (gameState=menu)
+- music_background - "продолжение" музыки (после music_intro), но она зацикливается в рамках gameState=playing || menu
+- music_gameover -  включается для gameState=gameover
+
+### SFX
+<!-- отсчет до старта гонки - порядок важен -->
+- sfx_3 - 3
+- sfx_2 - 2
+- sfx_1 - 1
+- sfx_start - старт!
+<!--  -->
+- sfx_add_patron - звук поднятия монетки
+- sfx_change_mode - ???
+- sfx_click - звук смены полосы
+- sfx_destroy_bot - уничтожение бота (другой машинки) или препятствия
+- sfx_inc_100_progress - ???
+- sfx_shot - звук выстрела

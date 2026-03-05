@@ -14,6 +14,7 @@ import { UpdateMode } from "@/game/core/UpdateMode";
 import { DEFAULT_LANES } from "@/game/road/config/RoadConfig";
 import { BoosterManager } from "@/game/booster/BoosterManager";
 import { useGameState } from "@/store/gameState";
+import { SoundManager } from "@/game/sound/SoundManager";
 
 // Интерфейс для реактивной ссылки car
 interface CarRef {
@@ -94,6 +95,7 @@ export function useGame() {
   let interactiveManager: InteractiveItemsManager;
   let cityManager: CityManager;
   let boosterManager: BoosterManager;
+  let soundManager: SoundManager;
 
   function init(scene: THREE.Scene) {
     sceneRef = scene;
@@ -130,6 +132,8 @@ export function useGame() {
 
     // === Создание дороги и машины ===
     roadManager.createRoad();
+
+    soundManager = SoundManager.getInstance();
 
     const newCar = carManager.createCar({
       startLane: 2,
@@ -193,11 +197,13 @@ export function useGame() {
 
   function movePlayerLeft() {
     carManager.getCar().moveLeft();
+    soundManager.play("sfx_click");
     updatePlayer();
   }
 
   function movePlayerRight() {
     carManager.getCar().moveRight();
+    soundManager.play("sfx_click");
     updatePlayer();
   }
 
@@ -285,7 +291,8 @@ export function useGame() {
   }
 
   function checkBoosterCollision() {
-    if (!carManager || !boosterManager) return { collision: false, subject: "" };
+    if (!carManager || !boosterManager)
+      return { collision: false, subject: "" };
     return boosterManager.checkCarCollision(carManager.getCar());
   }
 

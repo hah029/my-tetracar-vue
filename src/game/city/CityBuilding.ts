@@ -1,10 +1,10 @@
 import { loadTexture } from "@/helpers/loaders";
-import buildingTexture from "@/assets/textures/Building.jpg";
+import buildingTexture from "@/assets/textures/building.jpg";
 
 import * as THREE from "three";
 
 export class CityBuilding extends THREE.Mesh {
-  constructor(width: number, height: number, depth: number, color: number) {
+  constructor(width: number, height: number, depth: number) {
     const geometry = new THREE.BoxGeometry(width, height, depth);
 
     const texture = loadTexture(buildingTexture);

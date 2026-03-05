@@ -12,7 +12,9 @@ export const useGameState = defineStore("gameState", () => {
   const ACCELERATION = 0.001;
 
   // ---- Состояния ----
-  const currentState = ref<"menu" | "playing" | "gameover" | "paused">("menu");
+  const currentState = ref<
+    "preloader" | "menu" | "playing" | "gameover" | "paused"
+  >("preloader");
   const speed = ref(BASE_SPEED);
   const baseSpeed = ref(BASE_SPEED);
   const isNitroEnabled = ref(false);
@@ -25,7 +27,9 @@ export const useGameState = defineStore("gameState", () => {
   const cameraPosition = ref({ x: 0, y: 0, z: 0 });
 
   // ---- Actions ----
-  function setState(state: "menu" | "playing" | "gameover" | "paused") {
+  function setState(
+    state: "preloader" | "menu" | "playing" | "gameover" | "paused",
+  ) {
     currentState.value = state;
     // console.log("Current state: ", currentState.value)
   }

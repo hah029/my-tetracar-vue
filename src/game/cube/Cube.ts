@@ -23,6 +23,7 @@ export class CubeBuilder {
       // Применить текстуру если нужно
       if (useTexture && materialConfig?.textureUrl) {
         const texture = loadTexture(materialConfig.textureUrl);
+
         cube.traverse((child) => {
           if ((child as THREE.Mesh).isMesh) {
             const mesh = child as THREE.Mesh;
