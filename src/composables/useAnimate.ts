@@ -39,9 +39,11 @@ export function GameLoop(
   }
 
   function updateGame(deltaTime: number, currentSpeed: number) {
+    gameState.addDistance(deltaTime * currentSpeed);
+
     game.updateInteractiveItems(deltaTime, currentSpeed, UpdateMode.Gameplay);
-    game.updateRoad(currentSpeed);
-    game.updateCity(currentSpeed);
+    game.updateRoad(deltaTime, currentSpeed);
+    game.updateCity(deltaTime, currentSpeed);
 
     const collisionResult = game.checkCollision(performance.now());
     if (collisionResult.collision) {

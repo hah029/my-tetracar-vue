@@ -6,6 +6,9 @@
       <div class="label">SCORE</div>
       <div class="value gold">{{ score }}</div>
       <div class="sub">BEST <span>{{ bestScore }}</span></div>
+      <br>
+      <div class="sub">DISTANCE <span>{{ distance }}</span> CUBES</div>
+      <div class="sub">ACCELERATION <span>{{ (acceleration * 1e8).toFixed(1) }}</span> * 1e8 CUBES/(SEC*SEC)</div>
     </div>
 
     <!-- SPEED (TETRIS BLOCKS ANIMATION) -->
@@ -14,11 +17,11 @@
 
       <div class="speed-blocks">
         <div v-for="n in maxBlocks" :key="n" class="speed-block" :class="{ active: n <= activeBlocks }"
-          :style="{ animationDelay: `${(n - 1) * 50}ms` }">
+          :style="{ animationDelay: `${(n - 1) * 6}ms` }">
         </div>
       </div>
 
-      <div class="speed-value">{{ speedKMH }} KM/H</div>
+      <div class="speed-value">{{ speed }} куб/ч</div>
     </div>
 
     <!-- NITRO (TETRIS STYLE) -->
@@ -58,9 +61,12 @@ const gameState = useGameState();
 const score = computed(() => Math.floor(gameState.score));
 const bestScore = computed(() => Math.floor(gameState.highScore));
 
-const speedKMH = computed(() => Math.floor(gameState.getCurrentSpeed() * 100));
+const speed = computed(() => gameState.getCurrentSpeedInCubesPerHour());
 
-const maxBlocks = 10;
+const distance = computed(() => gameState.getDistanceInCubes());
+const acceleration = computed(() => gameState.getCurrentAcceleration());
+
+const maxBlocks = 100;
 const activeBlocks = computed(() => {
   const speed = gameState.getCurrentSpeed();
   const maxSpeed = gameState.maxSpeed ?? 1;
@@ -73,7 +79,6 @@ const laneCount = computed(() => gameState.getLanesCount?.() ?? 4);
 
 const isNitroActive = computed(() => gameState.isNitroEnabled);
 const nitroBlocks = computed(() => isNitroActive ? 10 : 0); // 10 блоков максимум
-// const nitroWidth = computed(() => (isNitroActive.value ? "100%" : "0%"));
 
 const warningStyle = computed(() => {
   const danger = gameState.getDangerLevel?.() ?? 0;
@@ -155,15 +160,15 @@ const warningStyle = computed(() => {
 
 .speed-blocks {
   display: flex;
-  gap: 2px;
+  gap: 1px;
   margin-bottom: 4px;
 }
 
 .speed-block {
-  width: 16px;
+  width: 1px;
   height: 16px;
   background: rgba(0, 255, 255, 0.2);
-  border: 2px solid rgba(0, 255, 255, 0.4);
+  /* border: 2px solid rgba(0, 255, 255, 0.4); */
   transform: translateY(-20px);
   opacity: 0;
   animation: fall 0.3s forwards;

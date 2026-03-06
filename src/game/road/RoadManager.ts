@@ -169,12 +169,12 @@ export class RoadManager {
     }
   }
 
-  public update(speed: number): void {
+  public update(deltaTime: number, speed: number): void {
     for (const obj of this.leftSideObjects) {
-      obj.update(speed, this.sideObjectSpacing, this.leftSideObjects);
+      obj.update(deltaTime, speed, this.sideObjectSpacing, this.leftSideObjects);
     }
     for (const obj of this.rightSideObjects) {
-      obj.update(speed, this.sideObjectSpacing, this.rightSideObjects);
+      obj.update(deltaTime, speed, this.sideObjectSpacing, this.rightSideObjects);
     }
   }
 

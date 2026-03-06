@@ -6,10 +6,10 @@ import { RoadManager } from "@/game/road";
 export const useGameState = defineStore("gameState", () => {
   // ---- Основные константы ----
   // const BASE_SPEED = 2.0;
-  const BASE_SPEED = 0.8;
-  const NITRO_MULTIPLIER = 2.0;
-  const MAX_SPEED = 4.0;
-  const ACCELERATION = 0.001;
+  const BASE_SPEED = 0.02; // м/с
+  const NITRO_MULTIPLIER = 1.5;
+  const MAX_SPEED = 1.0; // м/с
+  const ACCELERATION = 1e-5;
 
   // ---- Состояния ----
   const currentState = ref<
@@ -19,8 +19,10 @@ export const useGameState = defineStore("gameState", () => {
   const baseSpeed = ref(BASE_SPEED);
   const isNitroEnabled = ref(false);
   const currentLane = ref(1); // 0..3 для полос
+  const currentDistance = ref(0);
   const maxSpeed = ref(MAX_SPEED);
   const acceleration = ref(ACCELERATION);
+  const accelerationType = ref<"exponential" | "logarithmic">("exponential");
   const score = ref(0);
   const highScore = ref(0);
   const carPosition = ref({ x: 0, y: 0, z: 0 });
@@ -84,8 +86,26 @@ export const useGameState = defineStore("gameState", () => {
     return curSpeed;
   }
 
+  function getCurrentSpeedInCubesPerHour(precision = 2) {
+    return (getCurrentSpeed() * 3600).toFixed(precision);
+  }
+
   function getCurrentAcceleration() {
-    return acceleration.value * (1 - getCurrentSpeed() / maxSpeed.value);
+    const currentSpeed = getCurrentSpeed();
+    const ratio = currentSpeed / maxSpeed.value;
+    if (accelerationType.value === "exponential") {
+      return acceleration.value * (1 - ratio);
+    } else {
+      // Логарифмическая модель: ускорение обратно пропорционально скорости
+      // Формула: a = acceleration * (maxSpeed / (currentSpeed + 1)) * (1 - ratio)
+      // Это обеспечивает более медленный рост на высоких скоростях
+      const logFactor = maxSpeed.value / (currentSpeed + 1);
+      return acceleration.value * logFactor * (1 - ratio);
+    }
+  }
+
+  function setAccelerationType(type: "exponential" | "logarithmic") {
+    accelerationType.value = type;
   }
 
   function addScore(amount: number) {
@@ -99,6 +119,22 @@ export const useGameState = defineStore("gameState", () => {
 
   function getDangerLevel() {
     return 0;
+  }
+
+  function resetDistance() {
+    currentDistance.value = 0;
+  }
+
+  function addDistance(value: number) {
+    currentDistance.value += value;
+  }
+
+  function getDistance(): number {
+    return currentDistance.value;
+  }
+
+  function getDistanceInCubes(): number {
+    return Math.floor(currentDistance.value);
   }
 
   function getLanesCount() {
@@ -120,6 +156,7 @@ export const useGameState = defineStore("gameState", () => {
     currentLane,
     maxSpeed,
     acceleration,
+    accelerationType,
     score,
     highScore,
     carPosition,
@@ -131,7 +168,9 @@ export const useGameState = defineStore("gameState", () => {
     disableNitro,
     resetGameData,
     getCurrentSpeed,
+    getCurrentSpeedInCubesPerHour,
     getCurrentAcceleration,
+    setAccelerationType,
     addScore,
     resetScore,
     startGame,
@@ -141,5 +180,10 @@ export const useGameState = defineStore("gameState", () => {
     goToMenu,
     getDangerLevel,
     getLanesCount,
+
+    addDistance,
+    resetDistance,
+    getDistance,
+    getDistanceInCubes,
   };
 });

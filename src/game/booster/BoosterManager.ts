@@ -22,11 +22,7 @@ export class BoosterManager {
      SPAWN
      ======================= */
 
-  public spawnNitro(
-    laneIndex: number,
-    zPos: number,
-    yPos: number = 0.2,
-  ): void {
+  public spawnNitro(laneIndex: number, zPos: number, yPos: number = 0.2): void {
     const nitro = new Nitro(laneIndex, zPos, yPos);
     this.nitros.push(nitro);
     this.scene.add(nitro);
@@ -36,11 +32,11 @@ export class BoosterManager {
      UPDATE
      ======================= */
 
-  public update(speed: number): void {
+  public update(deltaTime: number, speed: number): void {
     for (let i = this.nitros.length - 1; i >= 0; i--) {
       const nitro = this.nitros[i];
       if (nitro === undefined) continue;
-      if (nitro.update(speed)) {
+      if (nitro.update(deltaTime, speed)) {
         this.removeNitro(i);
       }
     }
@@ -58,9 +54,9 @@ export class BoosterManager {
     const carCollider = car.getCollider();
 
     let collisions = {
-      "collision": false,
-      "subject": "",
-    }
+      collision: false,
+      subject: "",
+    };
 
     // Проверка коллизии с нитро-бустером
     for (let i = this.nitros.length - 1; i >= 0; i--) {

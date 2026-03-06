@@ -28,10 +28,15 @@ export class SideObject extends THREE.Group {
     }
   }
 
-  public update(speed: number, spacing: number, objects: SideObject[]): void {
+  public update(
+    deltaTime: number,
+    speed: number,
+    spacing: number,
+    objects: SideObject[],
+  ): void {
     if (!this.isBuilt) return;
 
-    this.cube.position.z += speed;
+    this.cube.position.z += deltaTime * speed;
 
     if (this.cube.position.z > 10) {
       let minZ = Infinity;

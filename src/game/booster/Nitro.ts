@@ -1,19 +1,19 @@
 // src/game/coin/Coin.ts
 import * as THREE from "three";
 import { RoadManager } from "@/game/road/RoadManager";
-import { NITRO_GEOMETRY_CONFIG, NITRO_MATERIAL_CONFIG } from "./config/NitroConfig";
+import {
+  NITRO_GEOMETRY_CONFIG,
+  NITRO_MATERIAL_CONFIG,
+} from "./config/NitroConfig";
 
 import { CubeBuilder } from "../cube/Cube";
 
 export class Nitro extends THREE.Group {
   public collider: THREE.Sphere = new THREE.Sphere();
   private cube: THREE.Object3D = new THREE.Object3D();
+  private rotationYDiff = 0.05;
 
-  constructor(
-    laneIndex: number,
-    zPos: number,
-    yPos: number = 0.2,
-  ) {
+  constructor(laneIndex: number, zPos: number, yPos: number = 0.2) {
     super();
     this.build(laneIndex, zPos, yPos).catch((err) => {
       console.error("[Nitro booster] build failed:", err);
@@ -38,9 +38,9 @@ export class Nitro extends THREE.Group {
     }
   }
 
-  update(speed: number): boolean {
-    this.cube.position.z += speed;
-    this.cube.rotation.y += 0.05;
+  update(deltaTime: number, speed: number): boolean {
+    this.cube.position.z += deltaTime * speed;
+    this.cube.rotation.y += this.rotationYDiff;
 
     this.collider.center.copy(this.cube.position);
 

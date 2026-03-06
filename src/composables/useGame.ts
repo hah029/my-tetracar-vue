@@ -164,10 +164,10 @@ export function useGame() {
     }
   }
 
-  function updateCity(speed: number) {
+  function updateCity(deltaTime: number, speed: number) {
     if (!cityManager) return;
 
-    cityManager.update(speed);
+    cityManager.update(deltaTime, speed);
   }
 
   function destroyObstacles(impactPoint?: THREE.Vector3) {
@@ -241,18 +241,18 @@ export function useGame() {
     obstacles.value = [];
   }
 
-  function updateRoad(speed: number) {
+  function updateRoad(deltaTime: number, speed: number) {
     if (!roadManager) return;
-    roadManager.update(speed);
+    roadManager.update(deltaTime, speed);
   }
 
-  function updateJumps(speed: number) {
+  function updateJumps(deltaTime: number, speed: number) {
     if (!obstacleManager) return;
 
     // Обновление трамплинов через ObstacleManager
     // Сам менеджер уже двигает трамплины и удаляет их из своего массива
     obstacleManager.getJumps().forEach((jump, index) => {
-      if (jump.update(speed)) {
+      if (jump.update(deltaTime, speed)) {
         // remove уже выполняется в менеджере, тут синхронизируем реактивный массив
         jumps.value.splice(index, 1);
       }
@@ -324,6 +324,7 @@ export function useGame() {
     updateInteractiveItems(0, 0, UpdateMode.Destruction); // синхронизация
 
     gameState.disableNitro();
+    gameState.resetDistance();
   }
 
   return {

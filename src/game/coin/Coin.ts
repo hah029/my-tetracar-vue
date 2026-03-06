@@ -9,6 +9,7 @@ export class Coin extends THREE.Group {
   public collider: THREE.Sphere = new THREE.Sphere();
   private cube: THREE.Object3D = new THREE.Object3D();
   public value: number;
+  private rotationYDiff = 0.05;
 
   constructor(
     laneIndex: number,
@@ -41,12 +42,10 @@ export class Coin extends THREE.Group {
     }
   }
 
-  update(speed: number): boolean {
-    this.cube.position.z += speed;
-    this.cube.rotation.y += 0.05;
-
+  update(deltaTime: number, speed: number): boolean {
+    this.cube.position.z += deltaTime * speed;
+    this.cube.rotation.y += this.rotationYDiff;
     this.collider.center.copy(this.cube.position);
-
     return this.cube.position.z > 10;
   }
 }

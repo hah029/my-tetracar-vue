@@ -8,13 +8,34 @@
       <div class="settings score-container">
         <div class="settings-row">
           <span>ОЧКИ</span>
-          <span class="score-value gold">{{ scoreRounded }}</span>
+          <span>
+            <span class="score-value gold">{{ scoreRounded }} / </span>
+            <span class="score-value gold newRecord">
+              {{ highScoreRounded }}
+            </span>
+          </span>
+        </div>
+        <div class="settings-row">
+          <span>СКОРОСТЬ</span>
+          <span>
+            <span class="score-value gold">
+              {{ currentSpeedRounded }}
+            </span>
+            <span class="score-value gold newRecord">
+              куб/ч
+            </span>
+          </span>
         </div>
 
         <div class="settings-row">
-          <span>ЛУЧШИЙ РЕЗУЛЬТАТ</span>
-          <span class="score-value gold" :class="{ newRecord: isNewRecord }">
-            {{ highScoreRounded }}
+          <span>ДИСТАНЦИЯ</span>
+          <span>
+            <span class="score-value gold">
+              {{ distance }}
+            </span>
+            <span class="score-value gold newRecord">
+              кубов
+            </span>
           </span>
         </div>
       </div>
@@ -40,7 +61,8 @@ const isVisible = computed(() => gameState.currentState === "gameover");
 
 const scoreRounded = computed(() => Math.floor(gameState.score));
 const highScoreRounded = computed(() => Math.floor(gameState.highScore));
-const isNewRecord = computed(() => gameState.score >= gameState.highScore);
+const currentSpeedRounded = computed(() => gameState.getCurrentSpeedInCubesPerHour(1));
+const distance = computed(() => gameState.getDistanceInCubes());
 
 function restartGame() {
   gameState.resetScore();
@@ -92,18 +114,30 @@ function goToMainMenu() {
   flex-direction: column;
   gap: 20px;
   margin-bottom: 30px;
+  padding: 20px 0;
+  border-top: 1px solid white;
+  border-bottom: 1px solid white;
 }
 
 .settings-row {
   display: flex;
   justify-content: space-between;
-  font-size: 20px;
+  font-size: 16px;
   font-weight: bold;
   text-shadow: 0 0 10px rgba(0, 255, 255, 0.3);
 }
 
-.score-value.gold {
-  color: #ffd700;
+.score-value {
+  font-size: 20px;
+
+  &.gold {
+    color: #ffd700;
+  }
+
+  &.newRecord {
+    color: #ffd900bc;
+    font-size: 16px;
+  }
 }
 
 .menu-btns {

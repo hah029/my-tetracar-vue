@@ -62,9 +62,9 @@ export class Obstacle extends THREE.Group {
     this.cubes = cubes;
   }
 
-  public update(speed: number): boolean {
+  public update(deltaTime: number, speed: number): boolean {
     if (!this.isDestroyed) {
-      this.position.z += speed;
+      this.position.z += deltaTime * speed;
       return this.position.z > 10;
     } else {
       this.updateDestroyedCubes();

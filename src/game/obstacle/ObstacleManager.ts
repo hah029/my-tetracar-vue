@@ -53,17 +53,17 @@ export class ObstacleManager {
     return jump;
   }
 
-  public update(speed: number) {
+  public update(deltaTime: number, speed: number) {
     // this.updateList(this.obstacles, speed);
-    this.updateObstacles(speed);
-    this.updateList(this.jumps, speed);
+    this.updateObstacles(deltaTime, speed);
+    this.updateList(this.jumps, deltaTime, speed);
   }
 
-  private updateObstacles(speed: number) {
+  private updateObstacles(deltaTime: number, speed: number) {
     for (let i = this.obstacles.length - 1; i >= 0; i--) {
       const obstacle = this.obstacles[i];
       if (obstacle === undefined) continue;
-      const shouldRemove = obstacle.update(speed);
+      const shouldRemove = obstacle.update(deltaTime, speed);
 
       if (shouldRemove && obstacle.isFullyDestroyed()) {
         this.scene.remove(obstacle);
@@ -72,14 +72,15 @@ export class ObstacleManager {
     }
   }
 
-  private updateList<T extends { update(s: number): boolean }>(
+  private updateList<T extends { update(dt: number, s: number): boolean }>(
     list: T[],
+    deltaTime: number,
     speed: number,
   ) {
     for (let i = list.length - 1; i >= 0; i--) {
       const obj = list[i];
       if (obj === undefined) continue;
-      if (obj.update(speed)) {
+      if (obj.update(deltaTime, speed)) {
         this.scene.remove(obj as any);
         list.splice(i, 1);
       }

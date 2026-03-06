@@ -37,11 +37,11 @@ export class CoinManager {
      UPDATE
      ======================= */
 
-  public update(speed: number): void {
+  public update(deltaTime: number, speed: number): void {
     for (let i = this.coins.length - 1; i >= 0; i--) {
       const coin = this.coins[i];
       if (coin === undefined) continue;
-      const shouldRemove = coin.update(speed);
+      const shouldRemove = coin.update(deltaTime, speed);
 
       if (shouldRemove) {
         this.removeCoin(i);

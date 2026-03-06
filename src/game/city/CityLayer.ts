@@ -37,11 +37,11 @@ export class CityLayer {
     }
   }
 
-  public update(baseSpeed: number): void {
-    const speed = baseSpeed * this.config.speedFactor;
+  public update(deltaTime: number, baseSpeed: number): void {
+    const diff = deltaTime * baseSpeed * this.config.speedFactor;
 
     for (const b of this.buildings) {
-      b.position.z += speed;
+      b.position.z += diff;
 
       if (b.position.z > 10) {
         b.position.z -= this.config.zEnd - this.config.zStart;

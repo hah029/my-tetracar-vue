@@ -46,9 +46,9 @@ export class CityManager {
     );
   }
 
-  public update(speed: number): void {
+  public update(deltaTime: number, speed: number): void {
     for (const layer of this.layers) {
-      layer.update(speed);
+      layer.update(deltaTime, speed);
     }
   }
 }

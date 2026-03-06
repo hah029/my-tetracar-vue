@@ -12,21 +12,21 @@
         <div class="settings">
 
           <div class="settings-row">
-            <span>Music</span>
+            <span>МУЗЫКА</span>
             <button class="toggle-btn" @click="toggleMusic">
-              {{ audioStore.musicEnabled ? "ON" : "OFF" }}
+              {{ audioStore.musicEnabled ? "ВКЛ" : "ВЫКЛ" }}
             </button>
           </div>
 
           <div class="settings-row">
             <span>SFX</span>
             <button class="toggle-btn" @click="toggleSound">
-              {{ audioStore.sfxEnabled ? "ON" : "OFF" }}
+              {{ audioStore.sfxEnabled ? "ВКЛ" : "ВЫКЛ" }}
             </button>
           </div>
 
           <div class="settings-row volume-row">
-            <span>Volume</span>
+            <span>ГРОМКОСТЬ</span>
 
             <input type="range" min="0" max="1" step="0.01" v-model="volume" @input="updateVolume" />
 
@@ -215,6 +215,7 @@ function updateVolume() {
   padding: 6px 14px;
   cursor: pointer;
   transition: 0.1s;
+  width: 70px;
 
   &:hover {
     background: white;

@@ -10,7 +10,6 @@ import { DEFAULT_CAR_CONFIG } from "@/game/car/config";
 import { UpdateMode } from "@/game/core/UpdateMode";
 import { useGameState } from "@/store/gameState";
 
-
 export class InteractiveItemsManager {
   private obstacleManager: ObstacleManager;
   private coinManager: CoinManager;
@@ -25,7 +24,6 @@ export class InteractiveItemsManager {
   private coinInterval = 1000;
   private boosterInterval = 2000;
   private boosterEnabledInterval = 5000;
-
 
   constructor(
     obstacleManager: ObstacleManager,
@@ -44,16 +42,16 @@ export class InteractiveItemsManager {
     this.obstacleTimer += deltaTime;
     const obstacleInterval = Math.max(300, this.obstacleInterval - speed * 5);
 
-    this.obstacleManager.update(speed);
-    this.coinManager.update(speed);
-    this.boosterManager.update(speed);
+    this.obstacleManager.update(deltaTime, speed);
+    this.coinManager.update(deltaTime, speed);
+    this.boosterManager.update(deltaTime, speed);
 
     if (mode === UpdateMode.Destruction) {
       return; // ⛔ стоп спавн, таймеры, геймплей
     }
 
     if (this.obstacleTimer >= obstacleInterval) {
-      this.spawnObstacle(speed);
+      this.spawnObstacle(deltaTime, speed);
       this.obstacleTimer = 0;
     }
     // coins (независимо)
@@ -80,7 +78,7 @@ export class InteractiveItemsManager {
     }
   }
 
-  private spawnObstacle(speed: number) {
+  private spawnObstacle(deltaTime: number, speed: number) {
     const lanesCount = this.roadManager.getLanesCount();
     const emptyLane = Math.floor(Math.random() * lanesCount);
     let isJumpSpawned = false;
@@ -90,7 +88,7 @@ export class InteractiveItemsManager {
 
       if (Math.random() < 0.05 && isJumpSpawned == false) {
         isJumpSpawned = true;
-        this.spawnJumpWithCoins(lane, speed);
+        this.spawnJumpWithCoins(lane, deltaTime, speed);
       }
 
       this.obstacleManager.spawnObstacle(lane, -60, 0);
@@ -129,14 +127,15 @@ export class InteractiveItemsManager {
     // }
   }
 
-  private spawnJumpWithCoins(lane: number, speed: number) {
-    const jumpZ = -60 + this.getJumpDistance(speed);
+  private spawnJumpWithCoins(lane: number, deltaTime: number, speed: number) {
+    const jumpZ = -60 + this.getJumpDistance(deltaTime, speed);
     this.obstacleManager.spawnJump(lane, jumpZ);
 
     const trajectory = simulateJumpTrajectory({
       startY: 0.5,
       jumpHeight: DEFAULT_CAR_CONFIG.jumpHeight,
       gravity: DEFAULT_CAR_CONFIG.gravity,
+      deltaTime: deltaTime,
       forwardSpeed: speed,
     });
 
@@ -148,10 +147,10 @@ export class InteractiveItemsManager {
     }
   }
 
-  private getJumpDistance(speed: number): number {
+  private getJumpDistance(deltaTime: number, speed: number): number {
     const min = 2;
     const max = 8;
-    const factor = Math.min(speed / 3, 1);
+    const factor = Math.min((deltaTime * speed) / 3, 1);
     return min + (max - min) * factor;
   }
 

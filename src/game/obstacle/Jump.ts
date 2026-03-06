@@ -89,8 +89,8 @@ export class Jump extends THREE.Mesh {
   }
 
   // Движение трамплина и анимация свечения
-  public update(speed: number): boolean {
-    this.position.z += speed;
+  public update(deltaTime: number, speed: number): boolean {
+    this.position.z += deltaTime * speed;
 
     // обновляем коллайдер
     this.collider.setFromObject(this);
