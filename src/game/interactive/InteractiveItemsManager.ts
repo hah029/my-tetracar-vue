@@ -76,28 +76,34 @@ export class InteractiveItemsManager {
   private spawnSegment(dt: number, speed: number, baseZ: number) {
     const segment = this.segmentQueue.getNext();
 
-    segment.pattern.forEach((value, lane) => {
-      switch (value) {
-        case LanePattern.Obstacle:
-          this.obstacleManager.spawnStaticObstacle(lane, baseZ);
-          break;
+    const rowSpacing = 4;
 
-        case LanePattern.Jump:
-          this.spawnJumpWithCoins(lane, dt, speed, baseZ);
-          break;
+    segment.pattern.forEach((row, rowIndex) => {
+      const z = baseZ - rowIndex * rowSpacing;
 
-        case LanePattern.Coin:
-          this.spawnSingleCoin(lane, baseZ);
-          break;
+      row.forEach((value, lane) => {
+        switch (value) {
+          case LanePattern.Obstacle:
+            this.obstacleManager.spawnStaticObstacle(lane, z);
+            break;
 
-        case LanePattern.CoinLine:
-          this.spawnCoinLine(lane, baseZ);
-          break;
+          case LanePattern.Jump:
+            this.spawnJumpWithCoins(lane, dt, speed, z);
+            break;
 
-        case LanePattern.BoosterNitro:
-          this.spawnBooster(lane, baseZ);
-          break;
-      }
+          case LanePattern.Coin:
+            this.spawnSingleCoin(lane, z);
+            break;
+
+          case LanePattern.CoinLine:
+            this.spawnCoinLine(lane, z);
+            break;
+
+          case LanePattern.BoosterNitro:
+            this.spawnBooster(lane, z);
+            break;
+        }
+      });
     });
   }
 
