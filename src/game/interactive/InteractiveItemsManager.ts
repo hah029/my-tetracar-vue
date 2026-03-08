@@ -1,7 +1,6 @@
 // src/game/interactive/InteractiveItemsManager.ts
 // managers
 import { ObstacleManager } from "@/game/obstacle/ObstacleManager";
-import { RoadManager } from "@/game/road/RoadManager";
 import { CoinManager } from "@/game/coin/CoinManager";
 import { BoosterManager } from "@/game/booster/BoosterManager";
 // other
@@ -15,7 +14,6 @@ import { SegmentQueue } from "./segments/SegmentQueue";
 export class InteractiveItemsManager {
   private obstacleManager: ObstacleManager;
   private coinManager: CoinManager;
-  private roadManager: RoadManager;
   private boosterManager: BoosterManager;
   private segmentQueue: SegmentQueue;
   private distanceSinceLastSegment = 0;
@@ -28,12 +26,10 @@ export class InteractiveItemsManager {
   constructor(
     obstacleManager: ObstacleManager,
     coinManager: CoinManager,
-    roadManager: RoadManager,
     boosterManager: BoosterManager,
   ) {
     this.obstacleManager = obstacleManager;
     this.coinManager = coinManager;
-    this.roadManager = roadManager;
     this.boosterManager = boosterManager;
     this.segmentQueue = new SegmentQueue(() => {
       const distance = useGameState().getDistance();
@@ -76,6 +72,8 @@ export class InteractiveItemsManager {
   private spawnSegment(dt: number, speed: number, baseZ: number) {
     const segment = this.segmentQueue.getNext();
 
+    console.log(segment.id);
+
     const rowSpacing = 4;
 
     segment.pattern.forEach((row, rowIndex) => {
@@ -101,6 +99,14 @@ export class InteractiveItemsManager {
 
           case LanePattern.BoosterNitro:
             this.spawnBooster(lane, z);
+            break;
+
+          case LanePattern.MovingObstacle:
+            this.obstacleManager.spawnMovingObstacle(lane, 1);
+            break;
+
+          case LanePattern.EnemyCar:
+            this.obstacleManager.spawnEnemyCar(lane, z);
             break;
         }
       });
@@ -145,6 +151,8 @@ export class InteractiveItemsManager {
       this.coinManager.spawnCoin(lane, jumpZ + 2 + point.zOffset, point.y, 5);
     }
   }
+
+  private spawnEnemyCar(lane: number, baseZ: number) {}
 
   private getJumpDistance(deltaTime: number, speed: number): number {
     const min = 2;

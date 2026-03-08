@@ -1,3 +1,3 @@
 export * from "./StaticObstacle";
-export * from "./DynamicObstacle";
+export * from "./MovingObstacle";
 export * from "./ObstacleManager";

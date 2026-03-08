@@ -4,9 +4,9 @@ import { RoadManager } from "../road/RoadManager";
 import { CubeObstacle } from "./CubeObstacle";
 import type { GeometryConfig } from "../cube/types";
 
-export class DynamicObstacle extends CubeObstacle {
+export class MovingObstacle extends CubeObstacle {
   private direction = 1;
-  private speedX = 2;
+  private speedX = 0.005;
   private minX: number;
   private maxX: number;
 
@@ -21,11 +21,14 @@ export class DynamicObstacle extends CubeObstacle {
   ) {
     super(startLane, zPos, formConfig, scene, useGLB);
 
-    this.minX = RoadManager.getInstance().getLanePosition(0);
-    this.maxX = RoadManager.getInstance().getLanePosition(lanes - width);
+    const road = RoadManager.getInstance();
+
+    this.minX = road.getLanePosition(0);
+    this.maxX = road.getLanePosition(lanes - width);
   }
 
   protected updateNormalCubes(dt: number, speed: number) {
+    console.log("update");
     this.position.z += dt * speed;
     // горизонтальное движение
     this.position.x += this.direction * this.speedX * dt;

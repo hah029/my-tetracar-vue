@@ -3,8 +3,10 @@ import { BaseObstacle } from "./BaseObstacle";
 import { OBSTACLE_FORMS } from "./config/ObstacleCubesConfig";
 import * as THREE from "three";
 import { RoadManager } from "../road/RoadManager";
-import { DynamicObstacle } from "./DynamicObstacle";
+import { MovingObstacle } from "./MovingObstacle";
 import { StaticObstacle } from "./StaticObstacle";
+import { EnemyCar } from "./EnemyCar";
+import { CAR_CUBES_CONFIG } from "../car";
 
 export class ObstacleManager {
   private static instance: ObstacleManager | null = null;
@@ -36,12 +38,9 @@ export class ObstacleManager {
     formIndex?: number,
   ): StaticObstacle | null {
     const index =
-      formIndex !== undefined
-        ? formIndex
-        : Math.floor(Math.random() * OBSTACLE_FORMS.length);
+      formIndex !== undefined ? formIndex : this.getRandomObstacleIndex();
     const form = OBSTACLE_FORMS[index];
     if (!form) {
-      console.warn(`Form with index ${index} not found`);
       return null;
     }
     const obstacle = new StaticObstacle(lane, z, form, this.scene, this.useGLB);
@@ -50,18 +49,40 @@ export class ObstacleManager {
     return obstacle;
   }
 
-  public spawnDynamicObstacle(startLane: number, width: number, z = -60) {
-    const lanes = RoadManager.getInstance().getLanesCount();
+  private getRandomObstacleIndex(): number {
+    return Math.floor(Math.random() * OBSTACLE_FORMS.length);
+  }
 
-    const obstacle = new DynamicObstacle(
+  public spawnMovingObstacle(
+    startLane: number,
+    width: number,
+    z = -60,
+    formIndex?: number,
+  ) {
+    const lanes = RoadManager.getInstance().getLanesCount();
+    const index =
+      formIndex !== undefined ? formIndex : this.getRandomObstacleIndex();
+    const form = OBSTACLE_FORMS[index];
+    if (!form) {
+      return;
+    }
+    const obstacle = new MovingObstacle(
       startLane,
       width,
       z,
       lanes,
       this.scene,
       this.useGLB,
-      OBSTACLE_FORMS[Math.floor(Math.random() * OBSTACLE_FORMS.length)],
+      form,
     );
+
+    this.scene.add(obstacle);
+    this.obstacles.push(obstacle);
+  }
+
+  public spawnEnemyCar(lane: number, z = -60) {
+    const form = CAR_CUBES_CONFIG;
+    const obstacle = new EnemyCar(lane, z, form, this.scene, this.useGLB);
 
     this.scene.add(obstacle);
     this.obstacles.push(obstacle);

@@ -123,7 +123,6 @@ export function useGame() {
     interactiveManager = new InteractiveItemsManager(
       obstacleManager,
       coinManager,
-      roadManager,
       boosterManager,
     );
 

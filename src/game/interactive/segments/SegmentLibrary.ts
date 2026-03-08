@@ -159,6 +159,49 @@ export const SEGMENTS: Segment[] = [
     ],
   },
 
+  {
+    id: "moving_wall_1",
+    difficulty: 2,
+    length: 16,
+    type: T.Obstacle,
+    weight: 1,
+
+    pattern: [
+      [L.Empty, L.Empty, L.MovingObstacle, L.Empty, L.Empty],
+      [L.Empty, L.Empty, L.Empty, L.Empty, L.Empty],
+      [L.Empty, L.Empty, L.Empty, L.Empty, L.Empty],
+      [L.Empty, L.Empty, L.Empty, L.Empty, L.Empty],
+    ],
+  },
+
+  {
+    id: "enemy_car_1",
+    difficulty: 1,
+    length: 16,
+    type: T.Obstacle,
+    weight: 100,
+
+    pattern: [[L.Empty, L.EnemyCar, L.EnemyCar, L.Empty, L.Empty]],
+  },
+  {
+    id: "enemy_car_2",
+    difficulty: 1,
+    length: 16,
+    type: T.Obstacle,
+    weight: 100,
+
+    pattern: [[L.EnemyCar, L.Empty, L.EnemyCar, L.Empty, L.EnemyCar]],
+  },
+  {
+    id: "enemy_car_2",
+    difficulty: 1,
+    length: 16,
+    type: T.Obstacle,
+    weight: 100,
+
+    pattern: [[L.EnemyCar, L.Empty, L.Empty, L.EnemyCar, L.EnemyCar]],
+  },
+
   /* ---------------- BOOST ---------------- */
 
   {
@@ -203,7 +246,7 @@ export const SEGMENTS: Segment[] = [
     pattern: [
       [L.Empty, L.Empty, L.Empty, L.Empty, L.Empty],
       [L.Empty, L.Empty, L.Jump, L.Empty, L.Empty],
-      [L.Empty, L.Empty, L.Empty, L.Empty, L.Empty],
+      [L.Empty, L.Empty, L.Obstacle, L.Empty, L.Empty],
       [L.Empty, L.Coin, L.Empty, L.Coin, L.Empty],
     ],
   },
@@ -218,8 +261,8 @@ export const SEGMENTS: Segment[] = [
     pattern: [
       [L.Empty, L.Empty, L.Empty, L.Empty, L.Empty],
       [L.Jump, L.Empty, L.Empty, L.Empty, L.Empty],
-      [L.Empty, L.Empty, L.Empty, L.Empty, L.Empty],
-      [L.Empty, L.Coin, L.Empty, L.Empty, L.Empty],
+      [L.Obstacle, L.Obstacle, L.Obstacle, L.Obstacle, L.Empty],
+      [L.Obstacle, L.Obstacle, L.Obstacle, L.Obstacle, L.Empty],
     ],
   },
 
@@ -233,8 +276,8 @@ export const SEGMENTS: Segment[] = [
     pattern: [
       [L.Empty, L.Empty, L.Empty, L.Empty, L.Empty],
       [L.Empty, L.Empty, L.Empty, L.Empty, L.Jump],
-      [L.Empty, L.Empty, L.Empty, L.Empty, L.Empty],
-      [L.Empty, L.Empty, L.Empty, L.Coin, L.Empty],
+      [L.Empty, L.Obstacle, L.Obstacle, L.Obstacle, L.Obstacle],
+      [L.Empty, L.Empty, L.Obstacle, L.Obstacle, L.Obstacle],
     ],
   },
 

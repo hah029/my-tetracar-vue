@@ -1,11 +1,13 @@
 export enum LanePattern {
-  Empty = 0,
+  Empty,
+  Coin,
+  CoinLine,
 
-  Obstacle = 1,
-  Jump = 2,
+  Obstacle,
 
-  Coin = 3,
-  CoinLine = 4,
+  MovingObstacle, // новое
+  EnemyCar, // новое
 
-  BoosterNitro = 5,
+  Jump,
+  BoosterNitro,
 }
