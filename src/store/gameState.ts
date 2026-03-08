@@ -10,6 +10,7 @@ export const useGameState = defineStore("gameState", () => {
   const NITRO_MULTIPLIER = 1.5;
   const MAX_SPEED = 1.0; // м/с
   const ACCELERATION = 1e-5;
+  const BASE_NITRO_TIMER = 5000;
 
   // ---- Состояния ----
   const currentState = ref<
@@ -18,6 +19,7 @@ export const useGameState = defineStore("gameState", () => {
   const speed = ref(BASE_SPEED);
   const baseSpeed = ref(BASE_SPEED);
   const isNitroEnabled = ref(false);
+  const nitroTimer = ref(BASE_NITRO_TIMER);
   const currentLane = ref(1); // 0..3 для полос
   const currentDistance = ref(0);
   const maxSpeed = ref(MAX_SPEED);
@@ -33,7 +35,6 @@ export const useGameState = defineStore("gameState", () => {
     state: "preloader" | "menu" | "playing" | "gameover" | "paused",
   ) {
     currentState.value = state;
-    // console.log("Current state: ", currentState.value)
   }
 
   function startGame() {
@@ -65,6 +66,7 @@ export const useGameState = defineStore("gameState", () => {
 
   function disableNitro() {
     isNitroEnabled.value = false;
+    nitroTimer.value = BASE_NITRO_TIMER;
   }
 
   function resetGameData() {
@@ -148,6 +150,7 @@ export const useGameState = defineStore("gameState", () => {
   return {
     // state
     NITRO_MULTIPLIER,
+    BASE_NITRO_TIMER,
     BASE_SPEED,
     currentState,
     speed,
@@ -161,6 +164,7 @@ export const useGameState = defineStore("gameState", () => {
     highScore,
     carPosition,
     cameraPosition,
+    nitroTimer,
 
     // actions
     setState,

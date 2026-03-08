@@ -1,13 +1,16 @@
 import { Jump } from "./Jump";
-import { Obstacle } from "./Obstacle";
+import { BaseObstacle } from "./BaseObstacle";
 import { OBSTACLE_FORMS } from "./config/ObstacleCubesConfig";
 import * as THREE from "three";
+import { RoadManager } from "../road/RoadManager";
+import { DynamicObstacle } from "./DynamicObstacle";
+import { StaticObstacle } from "./StaticObstacle";
 
 export class ObstacleManager {
   private static instance: ObstacleManager | null = null;
-  private obstacles: Obstacle[] = [];
+  private obstacles: BaseObstacle[] = [];
   private jumps: Jump[] = [];
-  private dynamicCubes: THREE.Object3D[] = []; // отдельный массив для кубиков разрушенных препятствий
+  private destroyedCubes: THREE.Object3D[] = [];
   private scene!: THREE.Scene;
   private useGLB: boolean = false;
 
@@ -23,15 +26,15 @@ export class ObstacleManager {
     this.useGLB = useGLB;
   }
 
-  public registerDynamicCubes(cubes: THREE.Object3D[]) {
-    this.dynamicCubes.push(...cubes);
+  public registerDestroyedCubes(cubes: THREE.Object3D[]) {
+    this.destroyedCubes.push(...cubes);
   }
 
-  public spawnObstacle(
+  public spawnStaticObstacle(
     lane: number,
     z = -60,
     formIndex?: number,
-  ): Obstacle | null {
+  ): StaticObstacle | null {
     const index =
       formIndex !== undefined
         ? formIndex
@@ -41,10 +44,27 @@ export class ObstacleManager {
       console.warn(`Form with index ${index} not found`);
       return null;
     }
-    const obstacle = new Obstacle(lane, z, form, this.scene, this.useGLB);
+    const obstacle = new StaticObstacle(lane, z, form, this.scene, this.useGLB);
     this.obstacles.push(obstacle);
     this.scene.add(obstacle);
     return obstacle;
+  }
+
+  public spawnDynamicObstacle(startLane: number, width: number, z = -60) {
+    const lanes = RoadManager.getInstance().getLanesCount();
+
+    const obstacle = new DynamicObstacle(
+      startLane,
+      width,
+      z,
+      lanes,
+      this.scene,
+      this.useGLB,
+      OBSTACLE_FORMS[Math.floor(Math.random() * OBSTACLE_FORMS.length)],
+    );
+
+    this.scene.add(obstacle);
+    this.obstacles.push(obstacle);
   }
 
   public spawnJump(lane: number, z = -60): Jump | null {
@@ -53,17 +73,16 @@ export class ObstacleManager {
     return jump;
   }
 
-  public update(deltaTime: number, speed: number) {
-    // this.updateList(this.obstacles, speed);
-    this.updateObstacles(deltaTime, speed);
-    this.updateList(this.jumps, deltaTime, speed);
+  public update(dt: number, speed: number) {
+    this.updateObstacles(dt, speed);
+    this.updateList(this.jumps, dt, speed);
   }
 
-  private updateObstacles(deltaTime: number, speed: number) {
+  private updateObstacles(dt: number, speed: number) {
     for (let i = this.obstacles.length - 1; i >= 0; i--) {
       const obstacle = this.obstacles[i];
       if (obstacle === undefined) continue;
-      const shouldRemove = obstacle.update(deltaTime, speed);
+      const shouldRemove = obstacle.update(dt, speed);
 
       if (shouldRemove && obstacle.isFullyDestroyed()) {
         this.scene.remove(obstacle);
@@ -101,7 +120,7 @@ export class ObstacleManager {
     this.jumps = [];
 
     // Удаляем все динамические кубики
-    this.dynamicCubes.forEach((cube) => this.scene.remove(cube));
-    this.dynamicCubes = [];
+    this.destroyedCubes.forEach((cube) => this.scene.remove(cube));
+    this.destroyedCubes = [];
   }
 }

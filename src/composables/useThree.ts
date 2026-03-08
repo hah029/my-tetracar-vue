@@ -50,8 +50,7 @@ export function useThree(container: Ref<HTMLElement | null>) {
     composer = new EffectComposer(renderer);
     composer.addPass(new RenderPass(scene, camera));
 
-    afterimagePass = new AfterimagePass(0.96);
-    // afterimagePass.uniforms["damp"].value = 0.96; // стартовое значение
+    afterimagePass = new AfterimagePass(0.96); // оригинальное значение damp
     composer.addPass(afterimagePass);
 
     container.value.appendChild(renderer.domElement);

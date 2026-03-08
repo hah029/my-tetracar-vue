@@ -1,16 +1,17 @@
 import * as THREE from "three";
-import { RoadEdge } from "@/game/road/edges/RoadEdge";
-import { RoadManager } from "@/game/road/RoadManager";
+
+import { BaseObstacle } from "./BaseObstacle";
 import { type GeometryConfig } from "@/game/cube/types";
-import type { PhysicsConfig } from "../physics/types";
+import { CubeBuilder } from "../cube/Cube";
 import { CubePhysics } from "@/game/physics/CubePhysics";
 import { ObstacleManager } from "./ObstacleManager";
+import type { PhysicsConfig } from "../physics/types";
+import { RoadEdge } from "@/game/road/edges/RoadEdge";
+import { RoadManager } from "@/game/road/RoadManager";
 
-import { CubeBuilder } from "../cube/Cube";
-
-export class Obstacle extends THREE.Group {
-  private cubes: THREE.Object3D[] = [];
-  private isDestroyed: boolean = false;
+export class CubeObstacle extends BaseObstacle {
+  protected cubes: THREE.Object3D[] = [];
+  protected isDestroyed: boolean = false;
   private physicsConfig: Required<PhysicsConfig>;
   private scene: THREE.Scene;
 
@@ -36,11 +37,20 @@ export class Obstacle extends THREE.Group {
       ...customConfig,
     };
 
-    const roadManager = RoadManager.getInstance();
-    const x = roadManager.getLanePosition(laneIndex);
+    const x = RoadManager.getInstance().getLanePosition(laneIndex);
     this.position.set(x, 0, zPos);
 
     this.build(formConfig, useGLB);
+  }
+
+  public update(dt: number, speed: number): boolean {
+    if (!this.isDestroyed) {
+      this.updateNormalCubes(dt, speed);
+      return this.position.z > 10;
+    } else {
+      this.updateDestroyedCubes();
+      return this.cubes.length === 0;
+    }
   }
 
   async build(formConfig: GeometryConfig[], useGLB: boolean): Promise<void> {
@@ -61,27 +71,6 @@ export class Obstacle extends THREE.Group {
 
     this.cubes = cubes;
   }
-
-  public update(deltaTime: number, speed: number): boolean {
-    if (!this.isDestroyed) {
-      this.position.z += deltaTime * speed;
-      return this.position.z > 10;
-    } else {
-      this.updateDestroyedCubes();
-      return this.cubes.length === 0;
-    }
-  }
-
-  private updateDestroyedCubes() {
-    const edges = RoadManager.getInstance()
-      .getEdges()
-      .filter((e) => e instanceof RoadEdge) as RoadEdge[];
-
-    CubePhysics.updateCubes(this.cubes, this.physicsConfig, edges, (cube) => {
-      this.scene.remove(cube);
-    });
-  }
-
   public destroy(impactPoint?: THREE.Vector3) {
     if (this.isDestroyed) return;
     this.isDestroyed = true;
@@ -112,25 +101,35 @@ export class Obstacle extends THREE.Group {
     });
 
     // Регистрируем кубики в менеджере для последующей очистки при reset
-    ObstacleManager.getInstance().registerDynamicCubes(this.cubes);
+    ObstacleManager.getInstance().registerDestroyedCubes(this.cubes);
+  }
+  protected updateDestroyedCubes() {
+    const edges = RoadManager.getInstance()
+      .getEdges()
+      .filter((e) => e instanceof RoadEdge) as RoadEdge[];
+
+    CubePhysics.updateCubes(this.cubes, this.physicsConfig, edges, (cube) => {
+      this.scene.remove(cube);
+    });
+  }
+
+  protected updateNormalCubes(dt: number, speed: number) {
+    this.position.z += dt * speed;
   }
 
   public getCollider(): THREE.Box3 | null {
     if (this.isDestroyed) return null;
     const box = new THREE.Box3();
-    this.cubes.forEach((cube) => {
-      let collider = box.expandByObject(cube);
-      collider.expandByScalar(2);
-      return collider;
-    });
+    for (const cube of this.cubes) {
+      box.expandByObject(cube);
+    }
+    box.expandByScalar(2);
     return box;
   }
-
   public getCubes(): THREE.Object3D[] {
     return this.cubes;
   }
-
-  public isFullyDestroyed() {
+  public isFullyDestroyed(): boolean {
     return this.isDestroyed && this.cubes.length === 0;
   }
 }

@@ -33,7 +33,8 @@
 
       <div class="nitro-bar-bg">
         <div class="nitro-bar">
-          <div class="nitro-block" v-for="n in nitroBlocks" :key="n" :style="{ animationDelay: `${(n - 1) * 30}ms` }">
+          <div class="nitro-block" :class="{ active: n <= activeNitroBlocks }" v-for="n in NITRO_BLOCKS_TOTAL" :key="n"
+            :style="{ animationDelay: `${(n - 1) * 30}ms` }">
           </div>
         </div>
       </div>
@@ -78,7 +79,19 @@ const currentLane = computed(() => gameState.currentLane);
 const laneCount = computed(() => gameState.getLanesCount?.() ?? 4);
 
 const isNitroActive = computed(() => gameState.isNitroEnabled);
-const nitroBlocks = computed(() => isNitroActive ? 10 : 0); // 10 блоков максимум
+// Общее количество блоков нитро (можно сделать константой)
+const NITRO_BLOCKS_TOTAL = 10;
+
+// Активные блоки на основе оставшегося времени
+const activeNitroBlocks = computed(() => {
+  if (!gameState.isNitroEnabled || gameState.nitroTimer <= 0) return 0;
+  const ratio = gameState.nitroTimer / gameState.BASE_NITRO_TIMER;
+  // Округляем вверх, чтобы при полном таймере были все 10 блоков
+  return Math.ceil(ratio * NITRO_BLOCKS_TOTAL);
+});
+
+// (опционально) можно оставить для ясности, но панель скрыта через v-if, поэтому не обязательно
+const nitroBlocks = NITRO_BLOCKS_TOTAL; // или просто использовать константу в шаблоне
 
 const warningStyle = computed(() => {
   const danger = gameState.getDangerLevel?.() ?? 0;
@@ -228,10 +241,13 @@ const warningStyle = computed(() => {
 .nitro-block {
   width: 20%;
   height: 100%;
-  background: linear-gradient(90deg, #ff4444, #ff8844);
   transform: translateY(-20px);
   opacity: 0;
   animation: fall 0.25s forwards;
+
+  &.active {
+    background: linear-gradient(90deg, #ff4444, #ff8844);
+  }
 }
 
 /* === LANES === */

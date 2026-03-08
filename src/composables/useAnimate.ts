@@ -69,7 +69,7 @@ export function GameLoop(
 
     const boostCollisions = game.checkBoosterCollision();
     if (boostCollisions.collision) {
-      if ((boostCollisions.subject = "nitro")) {
+      if (boostCollisions.subject === "nitro") {
         gameState.enableNitro();
       } else {
         console.error(
