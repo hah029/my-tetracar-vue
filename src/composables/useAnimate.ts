@@ -1,7 +1,8 @@
 // src/composables/useAnimate.ts
 import * as THREE from "three";
-import { useGameState } from "../store/gameState";
-import { usePlayerStore } from "../store/playerStore";
+import { useGameState } from "@/store/gameState";
+import { usePlayerStore } from "@/store/playerStore";
+import { useProgressStore } from "@/store/progressStore";
 import { useHUD } from "./useHUD";
 import { useGame } from "./useGame";
 import { CameraSystem } from "@/game/camera/CameraSystem";
@@ -20,6 +21,7 @@ export function GameLoop(
 ) {
   const gameState = useGameState();
   const playerStore = usePlayerStore();
+  const progressStore = useProgressStore();
   const hud = useHUD();
 
   // вот это мой менеджер (он уже имеет все нужные звуки)
@@ -43,7 +45,7 @@ export function GameLoop(
   }
 
   function updateGame(deltaTime: number, currentSpeed: number) {
-    gameState.addDistance(deltaTime * currentSpeed);
+    progressStore.addDistance(deltaTime * currentSpeed);
 
     game.updateInteractiveItems(deltaTime, currentSpeed, UpdateMode.Gameplay);
     game.updateRoad(deltaTime, currentSpeed);
@@ -68,7 +70,7 @@ export function GameLoop(
     const coins = game.checkCoinCollision();
     if (coins > 0) {
       soundManager.play("sfx_add_patron");
-      gameState.addScore(coins);
+      progressStore.addScore(coins);
     }
 
     const boostCollisions = game.checkBoosterCollision();

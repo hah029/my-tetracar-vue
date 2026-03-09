@@ -1,12 +1,12 @@
 // src/game/physics/CubePhysics.ts
 import * as THREE from "three";
-import { RoadEdge } from "../road/edges/RoadEdge";
+import { RoadEdge } from "@/game/road/edges";
 
 export interface CubePhysicsConfig {
-  gravity: number;
   bounceFactor: number;
-  friction: number;
   collisionFactor: number;
+  friction: number;
+  gravity: number;
   removalHeight: number;
 }
 

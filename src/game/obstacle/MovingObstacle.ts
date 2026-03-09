@@ -1,8 +1,9 @@
 import * as THREE from "three";
 
-import { RoadManager } from "../road/RoadManager";
+import type { GeometryConfig } from "@/game/cube/types";
+import { RoadManager } from "@/game/road/RoadManager";
+
 import { CubeObstacle } from "./CubeObstacle";
-import type { GeometryConfig } from "../cube/types";
 
 export class MovingObstacle extends CubeObstacle {
   private direction = 1;

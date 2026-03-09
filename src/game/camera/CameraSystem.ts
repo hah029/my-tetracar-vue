@@ -1,6 +1,6 @@
 import * as THREE from "three";
-import { useGameState } from "@/store/gameState";
 import { useCameraStore } from "@/store/cameraStore";
+import { usePlayerStore } from "@/store/playerStore";
 
 class CameraSystemClass {
   /**
@@ -34,7 +34,7 @@ class CameraSystemClass {
     if (!this.camera) return;
     if (car.isDestroyed()) return;
 
-    const MAX_SPEED = useGameState().maxSpeed;
+    const MAX_SPEED = usePlayerStore().maxSpeed;
 
     const carPos = car.position;
     const speedFactor = speed / MAX_SPEED;

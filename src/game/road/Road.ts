@@ -1,13 +1,11 @@
 import * as THREE from "three";
-import { type RoadConfig } from "./types";
+import type { RoadConfig } from "./types";
 import {
   DEFAULT_ROAD_CONFIG,
   calculateRoadWidth,
   getEdgePositions,
 } from "./config";
 import { loadTexture } from "@/helpers/loaders";
-// import { XZ_SCALING } from "../cube/config";
-// import { isLeftHandSideExpression } from "typescript";
 
 export class Road extends THREE.Mesh {
   public readonly lanes: number[];

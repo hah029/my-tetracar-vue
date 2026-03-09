@@ -1,10 +1,11 @@
 import { ref } from "vue";
-import { useGameState } from "@/store/gameState";
 import { usePlayerStore } from "@/store/playerStore";
+import { useProgressStore } from "@/store/progressStore";
+import { RoadManager } from "@/game/road";
 
 export function useHUD() {
-  const gameState = useGameState();
   const playerStore = usePlayerStore();
+  const progressStore = useProgressStore();
 
   // Реактивные элементы HUD
   const scoreValue = ref(0);
@@ -19,8 +20,8 @@ export function useHUD() {
   // --- Обновление HUD ---
   function updateHUD(speed: number, currentLane: number, dangerLevel: number) {
     // очки
-    scoreValue.value = Math.floor(gameState.score);
-    bestValue.value = Math.floor(gameState.highScore);
+    scoreValue.value = Math.floor(progressStore.score);
+    bestValue.value = Math.floor(progressStore.highScore);
 
     // скорость
     speedValue.value = +speed.toFixed(3);
@@ -35,7 +36,7 @@ export function useHUD() {
     }
 
     // полосы движения - динамически обновляем размер массива
-    const lanesCount = gameState.getLanesCount?.() ?? 4;
+    const lanesCount = RoadManager.getInstance().getLanesCount?.() ?? 4;
     laneDots.value = Array(lanesCount)
       .fill(false)
       .map((_, idx) => idx === currentLane);

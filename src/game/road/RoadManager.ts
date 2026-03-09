@@ -2,19 +2,17 @@ import * as THREE from "three";
 import { Road } from "./Road";
 import { RoadLine } from "./RoadLine";
 import { SpeedLine } from "./SpeedLine";
-import { RoadEdge } from "./edges";
-import { type RoadConfig, type SpeedLineConfig, type RoadStats } from "./types";
-import { DEFAULT_ROAD_CONFIG } from "./config";
 import { SideObject } from "./SideObject";
+import { RoadEdge } from "./edges";
+import { DEFAULT_ROAD_CONFIG } from "./config";
+import type { RoadConfig, SpeedLineConfig, RoadStats } from "./types";
 
 export class RoadManager {
   private static instance: RoadManager | null = null;
-
   private road: Road | null = null;
   private roadLines: RoadLine[] = [];
   private speedLines: SpeedLine[] = [];
   private edges: THREE.Mesh[] = [];
-  // private sideObjects: SideObject[] = [];
   private leftSideObjects: SideObject[] = [];
   private rightSideObjects: SideObject[] = [];
   private sideObjectSpacing = 1.2;
@@ -171,10 +169,20 @@ export class RoadManager {
 
   public update(deltaTime: number, speed: number): void {
     for (const obj of this.leftSideObjects) {
-      obj.update(deltaTime, speed, this.sideObjectSpacing, this.leftSideObjects);
+      obj.update(
+        deltaTime,
+        speed,
+        this.sideObjectSpacing,
+        this.leftSideObjects,
+      );
     }
     for (const obj of this.rightSideObjects) {
-      obj.update(deltaTime, speed, this.sideObjectSpacing, this.rightSideObjects);
+      obj.update(
+        deltaTime,
+        speed,
+        this.sideObjectSpacing,
+        this.rightSideObjects,
+      );
     }
   }
 

@@ -55,18 +55,19 @@
 
 <script setup lang="ts">
 import { computed } from "vue";
-import { useGameState } from "../store/gameState";
-import { usePlayerStore } from "../store/playerStore";
+import { usePlayerStore } from "@/store/playerStore";
+import { useProgressStore } from "@/store/progressStore";
+import { RoadManager } from "@/game/road";
 
-const gameState = useGameState();
 const playerStore = usePlayerStore();
+const progressStore = useProgressStore();
 
-const score = computed(() => Math.floor(gameState.score));
-const bestScore = computed(() => Math.floor(gameState.highScore));
+const score = computed(() => Math.floor(progressStore.score));
+const bestScore = computed(() => Math.floor(progressStore.highScore));
 
 const speed = computed(() => playerStore.getCurrentSpeedInCubesPerHour());
 
-const distance = computed(() => gameState.getDistanceInCubes());
+const distance = computed(() => progressStore.getDistanceInCubes());
 const acceleration = computed(() => playerStore.getCurrentAcceleration());
 
 const maxBlocks = 100;
@@ -78,7 +79,7 @@ const activeBlocks = computed(() => {
 });
 
 const currentLane = computed(() => playerStore.currentLane);
-const laneCount = computed(() => gameState.getLanesCount?.() ?? 4);
+const laneCount = computed(() => RoadManager.getInstance().getLanesCount?.() ?? 4);
 
 const isNitroActive = computed(() => playerStore.isNitroEnabled);
 // Общее количество блоков нитро (можно сделать константой)
@@ -96,7 +97,7 @@ const activeNitroBlocks = computed(() => {
 
 
 const warningStyle = computed(() => {
-  const danger = gameState.getDangerLevel?.() ?? 0;
+  const danger = progressStore.getDangerLevel?.() ?? 0;
   if (!danger) return { opacity: 0 };
 
   const intensity = Math.floor(255 * danger);

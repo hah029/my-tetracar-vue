@@ -10,8 +10,8 @@ import { UpdateMode } from "@/game/core/UpdateMode";
 import { LanePattern } from "@/game/interactive/types/LanePattern";
 import { SegmentQueue } from "./segments/SegmentQueue";
 // stores
-import { useGameState } from "@/store/gameState";
 import { usePlayerStore } from "@/store/playerStore";
+import { useProgressStore } from "@/store/progressStore";
 
 export class InteractiveItemsManager {
   private obstacleManager: ObstacleManager;
@@ -34,14 +34,14 @@ export class InteractiveItemsManager {
     this.coinManager = coinManager;
     this.boosterManager = boosterManager;
     this.segmentQueue = new SegmentQueue(() => {
-      const distance = useGameState().getDistance();
+      const distance = useProgressStore().getDistance();
       return Math.floor(distance / this.difficultyStep) + 1;
     });
   }
 
   public update(deltaTime: number, speed: number, mode: UpdateMode) {
     // obstacles / jumps
-    const distance = useGameState().getDistance();
+    const distance = useProgressStore().getDistance();
 
     if (distance - this.distanceSinceLastSegment >= this.segmentLength) {
       this.spawnSegment(deltaTime, speed, this.nextSegmentZ);

@@ -13,9 +13,9 @@ import { CityManager } from "@/game/city/CityManager";
 import { UpdateMode } from "@/game/core/UpdateMode";
 import { DEFAULT_LANES } from "@/game/road/config/RoadConfig";
 import { BoosterManager } from "@/game/booster/BoosterManager";
-import { useGameState } from "@/store/gameState";
 import { usePlayerStore } from "@/store/playerStore";
 import { SoundManager } from "@/game/sound/SoundManager";
+import { useProgressStore } from "@/store/progressStore";
 
 // Интерфейс для реактивной ссылки car
 interface CarRef {
@@ -66,7 +66,6 @@ function setupLights(scene: THREE.Scene) {
 }
 
 export function useGame() {
-  const gameState = useGameState();
   const playerStore = usePlayerStore();
   const car = ref<CarRef>({
     mesh: new THREE.Group(),
@@ -325,7 +324,7 @@ export function useGame() {
     updateInteractiveItems(0, 0, UpdateMode.Destruction); // синхронизация
 
     playerStore.disableNitro();
-    gameState.resetDistance();
+    useProgressStore().resetDistance();
   }
 
   return {

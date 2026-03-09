@@ -101,6 +101,9 @@ export class SegmentGenerator {
       if (r <= 0) return segment;
     }
 
-    return pool[0];
+    const pool_ = pool[0];
+    if (pool_ === undefined) throw new Error("No segment found");
+
+    return pool_;
   }
 }

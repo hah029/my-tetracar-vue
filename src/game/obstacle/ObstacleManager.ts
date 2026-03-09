@@ -1,12 +1,13 @@
-import { Jump } from "./Jump";
-import { BaseObstacle } from "./BaseObstacle";
-import { OBSTACLE_FORMS } from "./config/ObstacleCubesConfig";
 import * as THREE from "three";
-import { RoadManager } from "../road/RoadManager";
+import { CAR_CUBES_CONFIG } from "@/game/car";
+import { RoadManager } from "@/game/road/RoadManager";
+
+import { OBSTACLE_FORMS } from "./config/ObstacleCubesConfig";
+import { BaseObstacle } from "./BaseObstacle";
 import { MovingObstacle } from "./MovingObstacle";
 import { StaticObstacle } from "./StaticObstacle";
 import { EnemyCar } from "./EnemyCar";
-import { CAR_CUBES_CONFIG } from "../car";
+import { Jump } from "./Jump";
 
 export class ObstacleManager {
   private static instance: ObstacleManager | null = null;

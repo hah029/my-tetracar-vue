@@ -4,8 +4,11 @@ import { SegmentGenerator } from "./SegmentGenerator";
 export class SegmentQueue {
   private queue: Segment[] = [];
   private queueSize = 6;
+  private difficulty: () => number;
 
-  constructor(private difficulty: () => number) {}
+  constructor(difficulty: () => number) {
+    this.difficulty = difficulty;
+  }
 
   public getNext(): Segment {
     if (this.queue.length < this.queueSize) {

@@ -1,13 +1,13 @@
 import * as THREE from "three";
 
 import { BaseObstacle } from "./BaseObstacle";
-import { type GeometryConfig } from "@/game/cube/types";
-import { CubeBuilder } from "../cube/Cube";
+import type { GeometryConfig } from "@/game/cube/types";
+import type { PhysicsConfig } from "@/game/physics/types";
+import { CubeBuilder } from "@/game/cube/Cube";
 import { CubePhysics } from "@/game/physics/CubePhysics";
-import { ObstacleManager } from "./ObstacleManager";
-import type { PhysicsConfig } from "../physics/types";
 import { RoadEdge } from "@/game/road/edges/RoadEdge";
 import { RoadManager } from "@/game/road/RoadManager";
+import { ObstacleManager } from "@/game/obstacle/ObstacleManager";
 
 export class CubeObstacle extends BaseObstacle {
   protected cubes: THREE.Object3D[] = [];
@@ -71,6 +71,7 @@ export class CubeObstacle extends BaseObstacle {
 
     this.cubes = cubes;
   }
+
   public destroy(impactPoint?: THREE.Vector3) {
     if (this.isDestroyed) return;
     this.isDestroyed = true;
@@ -123,18 +124,13 @@ export class CubeObstacle extends BaseObstacle {
     for (const cube of this.cubes) {
       box.expandByObject(cube);
     }
-    // box.expandByScalar(2);
-    // console.log(
-    //   `[CubeObstacle] getCollider for ${this.constructor.name}:`,
-    //   box,
-    //   "cubes count:",
-    //   this.cubes.length,
-    // );
     return box;
   }
+
   public getCubes(): THREE.Object3D[] {
     return this.cubes;
   }
+
   public isFullyDestroyed(): boolean {
     return this.isDestroyed && this.cubes.length === 0;
   }
