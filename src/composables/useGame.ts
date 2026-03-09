@@ -4,18 +4,19 @@ import { ref } from "vue";
 // managers
 import { RoadManager } from "@/game/road/RoadManager";
 import { CarManager } from "@/game/car/CarManager";
-import { ObstacleManager } from "@/game/obstacle/ObstacleManager";
+import { ObstacleManager } from "@/game/interactive/obstacle/ObstacleManager";
 import { CollisionSystem } from "@/game/collision/CollisionSystem";
 import { InteractiveItemsManager } from "@/game/interactive/InteractiveItemsManager";
-import { CoinManager } from "@/game/coin/CoinManager";
-import { CityManager } from "@/game/city/CityManager";
-// enums
-import { UpdateMode } from "@/game/core/UpdateMode";
-import { DEFAULT_LANES } from "@/game/road/config/RoadConfig";
-import { BoosterManager } from "@/game/booster/BoosterManager";
-import { usePlayerStore } from "@/store/playerStore";
+import { BoosterManager } from "@/game/interactive/booster/BoosterManager";
+import { CoinManager } from "@/game/interactive/coin/CoinManager";
+import { CityManager } from "@/game/environment/city/CityManager";
 import { SoundManager } from "@/game/sound/SoundManager";
+// enums
+import { DEFAULT_LANES } from "@/game/road/config/RoadConfig";
+import { UpdateMode } from "@/game/core/UpdateMode";
+// stores
 import { useProgressStore } from "@/store/progressStore";
+import { usePlayerStore } from "@/store/playerStore";
 
 // Интерфейс для реактивной ссылки car
 interface CarRef {

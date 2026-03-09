@@ -1,6 +1,6 @@
 import * as THREE from "three";
-import type { Jump } from "@/game/obstacle/Jump";
-import type { BaseObstacle } from "@/game/obstacle/BaseObstacle";
+import type { Jump } from "@/game/interactive/obstacle/Jump";
+import type { BaseObstacle } from "@/game/interactive/obstacle/BaseObstacle";
 
 const DANGER_DISTANCE = 30;
 const COLLISION_COOLDOWN_MS = 1000;

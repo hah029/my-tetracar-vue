@@ -22,8 +22,6 @@ const { getScene, getCamera, getComposer, getMotionBlurPass } = useThree(threeRo
 const game = useGame();
 const gameState = useGameState();
 
-
-
 useControls(game);
 
 const getUIComponent = computed(() => {
@@ -151,5 +149,19 @@ body,
 .three-root {
   width: 100%;
   height: 100%;
+}
+
+.menu-overlay {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  background-color: rgba(0, 0, 0, 0.5);
+  z-index: 2000;
+  backdrop-filter: blur(2px);
+  text-align: center;
+  color: white;
 }
 </style>

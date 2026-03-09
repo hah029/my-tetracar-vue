@@ -1,7 +1,7 @@
 import * as THREE from "three";
 
-import type { CubeObstacle } from "@/game/obstacle/CubeObstacle";
-import { ObstacleManager } from "@/game/obstacle/ObstacleManager";
+import type { CubeObstacle } from "@/game/interactive/obstacle/CubeObstacle";
+import { ObstacleManager } from "@/game/interactive/obstacle/ObstacleManager";
 import { Box3Helper } from "three";
 
 export class DebugColliderVisualizer {

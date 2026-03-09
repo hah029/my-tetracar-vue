@@ -1,4 +1,4 @@
-// src/game/coin/Coin.ts
+// /shield/Shield.ts
 import * as THREE from "three";
 import { RoadManager } from "@/game/road/RoadManager";
 import {
@@ -6,7 +6,7 @@ import {
   NITRO_MATERIAL_CONFIG,
 } from "./config/NitroConfig";
 
-import { CubeBuilder } from "../cube/Cube";
+import { CubeBuilder } from "@/game/cube/Cube";
 
 export class Nitro extends THREE.Group {
   public collider: THREE.Sphere = new THREE.Sphere();
@@ -23,7 +23,7 @@ export class Nitro extends THREE.Group {
   async build(laneIndex: number, zPos: number, yPos: number): Promise<void> {
     try {
       this.cube = await CubeBuilder.build({
-        useGLB: false,
+        useGLB: true,
         geomConfig: NITRO_GEOMETRY_CONFIG,
         useTexture: true,
         materialConfig: NITRO_MATERIAL_CONFIG,

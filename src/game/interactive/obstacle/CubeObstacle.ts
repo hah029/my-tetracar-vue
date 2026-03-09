@@ -7,7 +7,7 @@ import { CubeBuilder } from "@/game/cube/Cube";
 import { CubePhysics } from "@/game/physics/CubePhysics";
 import { RoadEdge } from "@/game/road/edges/RoadEdge";
 import { RoadManager } from "@/game/road/RoadManager";
-import { ObstacleManager } from "@/game/obstacle/ObstacleManager";
+import { ObstacleManager } from "./ObstacleManager";
 
 export class CubeObstacle extends BaseObstacle {
   protected cubes: THREE.Object3D[] = [];

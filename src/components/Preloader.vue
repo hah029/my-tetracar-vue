@@ -1,22 +1,16 @@
 <!-- src/components/MainMenu.vue -->
 <template>
-  <div v-if="isVisible" class="main-menu-overlay">
-    <div class="menu-container">
-      <h1 class="menu-title">TETROCAR</h1>
-      <button class="menu-btn start-btn" @click="letsPlay">НАЖМИ НА КНОПКУ</button>
-    </div>
+  <div class="menu-overlay">
+    <h1 class="menu-title">TETROCAR</h1>
+    <button class="menu-btn" @click="letsPlay">НАЖМИ НА КНОПКУ</button>
   </div>
 </template>
 
 <script setup lang="ts">
-import { computed } from "vue";
-import { GAME_STATES as GS, useGameState } from "../store/gameState";
+import { GAME_STATES as GS, useGameState } from "@/store/gameState";
 
 // Подключаем store
 const gameStore = useGameState();
-
-// Видимость меню зависит от состояния игры
-const isVisible = computed(() => gameStore.currentState === GS.PRELOADER);
 
 function letsPlay() {
   gameStore.setState(GS.MENU);
@@ -24,23 +18,6 @@ function letsPlay() {
 </script>
 
 <style scoped>
-.main-menu-overlay {
-  position: fixed;
-  inset: 0;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  background-color: rgba(0, 0, 0, 0.804);
-  z-index: 2000;
-  backdrop-filter: blur(2px);
-  font-family: Helvetica, Arial, sans-serif;
-}
-
-.menu-container {
-  text-align: center;
-  color: white;
-}
-
 .menu-title {
   font-size: 72px;
   margin-bottom: 50px;

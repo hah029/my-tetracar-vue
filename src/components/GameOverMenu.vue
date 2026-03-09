@@ -1,50 +1,47 @@
 <template>
-  <div v-if="isVisible" class="gameover-overlay">
-    <div class="menu-container">
+  <div v-if="isVisible" class="menu-overlay">
 
-      <h4 class="menu-title__mini">TETROCAR</h4>
-      <h1 class="menu-subtitle">GAME OVER</h1>
+    <h4 class="menu-title__mini">TETROCAR</h4>
+    <h1 class="menu-subtitle">GAME OVER</h1>
 
-      <div class="settings score-container">
-        <div class="settings-row">
-          <span>ОЧКИ</span>
-          <span>
-            <span class="score-value gold">{{ scoreRounded }} / </span>
-            <span class="score-value gold newRecord">
-              {{ highScoreRounded }}
-            </span>
+    <div class="score-container">
+      <div class="settings-row">
+        <span>ОЧКИ</span>
+        <span>
+          <span class="score-value gold">{{ scoreRounded }} / </span>
+          <span class="score-value gold newRecord">
+            {{ highScoreRounded }}
           </span>
-        </div>
-        <div class="settings-row">
-          <span>СКОРОСТЬ</span>
-          <span>
-            <span class="score-value gold">
-              {{ currentSpeedRounded }}
-            </span>
-            <span class="score-value gold newRecord">
-              куб/ч
-            </span>
+        </span>
+      </div>
+      <div class="settings-row">
+        <span>СКОРОСТЬ</span>
+        <span>
+          <span class="score-value gold">
+            {{ currentSpeedRounded }}
           </span>
-        </div>
-
-        <div class="settings-row">
-          <span>ДИСТАНЦИЯ</span>
-          <span>
-            <span class="score-value gold">
-              {{ distance }}
-            </span>
-            <span class="score-value gold newRecord">
-              кубов
-            </span>
+          <span class="score-value gold newRecord">
+            куб/ч
           </span>
-        </div>
+        </span>
       </div>
 
-      <div class="menu-btns">
-        <button class="menu-btn restart-btn" @click="restartGame">ИГРАТЬ СНОВА</button>
-        <button class="menu-btn main-menu-btn" @click="goToMainMenu">ГЛАВНОЕ МЕНЮ</button>
+      <div class="settings-row">
+        <span>ДИСТАНЦИЯ</span>
+        <span>
+          <span class="score-value gold">
+            {{ distance }}
+          </span>
+          <span class="score-value gold newRecord">
+            кубов
+          </span>
+        </span>
       </div>
+    </div>
 
+    <div class="menu-btns">
+      <button class="menu-btn restart-btn" @click="restartGame">ИГРАТЬ СНОВА</button>
+      <button class="menu-btn main-menu-btn" @click="goToMainMenu">ГЛАВНОЕ МЕНЮ</button>
     </div>
   </div>
 </template>
@@ -82,23 +79,6 @@ function goToMainMenu() {
 </script>
 
 <style scoped lang="scss">
-.gameover-overlay {
-  position: fixed;
-  inset: 0;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  background-color: rgba(30, 0, 0, 0.4);
-  backdrop-filter: blur(2px);
-  z-index: 2000;
-  font-family: Helvetica, Arial, sans-serif;
-}
-
-.menu-container {
-  text-align: center;
-  color: white;
-}
-
 .menu-title__mini {
   font-size: 28px;
   margin: 0;
@@ -117,6 +97,7 @@ function goToMainMenu() {
   display: flex;
   flex-direction: column;
   gap: 20px;
+  width: 30%;
   margin-bottom: 30px;
   padding: 20px 0;
   border-top: 1px solid white;

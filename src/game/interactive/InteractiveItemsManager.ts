@@ -1,8 +1,8 @@
 // src/game/interactive/InteractiveItemsManager.ts
 // managers
-import { ObstacleManager } from "@/game/obstacle/ObstacleManager";
-import { CoinManager } from "@/game/coin/CoinManager";
-import { BoosterManager } from "@/game/booster/BoosterManager";
+import { ObstacleManager } from "./obstacle/ObstacleManager";
+import { CoinManager } from "./coin/CoinManager";
+import { BoosterManager } from "./booster/BoosterManager";
 // other
 import { simulateJumpTrajectory } from "@/game/car/CarTrajectory";
 import { DEFAULT_CAR_CONFIG } from "@/game/car/config";
