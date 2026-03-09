@@ -180,10 +180,16 @@ export class Car extends THREE.Group {
       this.scene,
       impactPoint,
     );
+
+    this.collider.disableDebug(this.scene);
   }
 
   // Сброс
   public reset(useGLB: boolean): void {
+    if (this.collider.debugMesh) {
+      this.collider.disableDebug(this.scene);
+    }
+
     // Очищаем все кубики
     this.cubes.forEach((cube) => this.scene.remove(cube));
     this.cubes = [];
@@ -214,7 +220,10 @@ export class Car extends THREE.Group {
     this.physics.reset();
 
     // Перестраиваем машину
-    this.build(useGLB);
+    this.build(useGLB).then(() => {
+      // Всегда включаем дебаг-коллайдер после перестроения
+      this.collider.enableDebug(this.scene);
+    });
   }
 
   private clearCubes(): void {
@@ -253,11 +262,12 @@ export class Car extends THREE.Group {
     };
   }
 
-  // Отладка
-  public createDebugCollider(): {
-    debugMesh: THREE.Mesh;
-    updateDebug: () => void;
-  } {
-    return this.collider.createDebugCollider(this.scene);
+  public enableDebugCollider(enable: boolean = true): void {
+    console.log(`[Car] enableDebugCollider called with enable=${enable}`);
+    if (enable) {
+      this.collider.enableDebug(this.scene);
+    } else {
+      this.collider.disableDebug(this.scene);
+    }
   }
 }

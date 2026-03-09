@@ -28,7 +28,6 @@ export class MovingObstacle extends CubeObstacle {
   }
 
   protected updateNormalCubes(dt: number, speed: number) {
-    console.log("update");
     this.position.z += dt * speed;
     // горизонтальное движение
     this.position.x += this.direction * this.speedX * dt;

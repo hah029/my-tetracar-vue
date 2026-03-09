@@ -7,9 +7,11 @@ import { BoosterManager } from "@/game/booster/BoosterManager";
 import { simulateJumpTrajectory } from "@/game/car/CarTrajectory";
 import { DEFAULT_CAR_CONFIG } from "@/game/car/config";
 import { UpdateMode } from "@/game/core/UpdateMode";
-import { useGameState } from "@/store/gameState";
 import { LanePattern } from "@/game/interactive/types/LanePattern";
 import { SegmentQueue } from "./segments/SegmentQueue";
+// stores
+import { useGameState } from "@/store/gameState";
+import { usePlayerStore } from "@/store/playerStore";
 
 export class InteractiveItemsManager {
   private obstacleManager: ObstacleManager;
@@ -56,15 +58,15 @@ export class InteractiveItemsManager {
     if (mode === UpdateMode.Destruction) {
       return; // ⛔ стоп спавн, таймеры, геймплей
     }
-    const gameState = useGameState();
+    const playerStore = usePlayerStore();
 
-    if (gameState.isNitroEnabled) {
+    if (playerStore.isNitroEnabled) {
       this.boosterEnabledTimer += deltaTime;
-      gameState.nitroTimer -= deltaTime;
+      playerStore.nitroTimer -= deltaTime;
     }
 
     if (this.boosterEnabledTimer >= this.boosterEnabledInterval) {
-      gameState.disableNitro();
+      playerStore.disableNitro();
       this.boosterEnabledTimer = 0;
     }
   }
@@ -72,7 +74,7 @@ export class InteractiveItemsManager {
   private spawnSegment(dt: number, speed: number, baseZ: number) {
     const segment = this.segmentQueue.getNext();
 
-    console.log(segment.id);
+    // console.log(segment.id);
 
     const rowSpacing = 4;
 
@@ -151,8 +153,6 @@ export class InteractiveItemsManager {
       this.coinManager.spawnCoin(lane, jumpZ + 2 + point.zOffset, point.y, 5);
     }
   }
-
-  private spawnEnemyCar(lane: number, baseZ: number) {}
 
   private getJumpDistance(deltaTime: number, speed: number): number {
     const min = 2;

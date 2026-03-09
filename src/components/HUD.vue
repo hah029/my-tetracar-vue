@@ -56,42 +56,44 @@
 <script setup lang="ts">
 import { computed } from "vue";
 import { useGameState } from "../store/gameState";
+import { usePlayerStore } from "../store/playerStore";
 
 const gameState = useGameState();
+const playerStore = usePlayerStore();
 
 const score = computed(() => Math.floor(gameState.score));
 const bestScore = computed(() => Math.floor(gameState.highScore));
 
-const speed = computed(() => gameState.getCurrentSpeedInCubesPerHour());
+const speed = computed(() => playerStore.getCurrentSpeedInCubesPerHour());
 
 const distance = computed(() => gameState.getDistanceInCubes());
-const acceleration = computed(() => gameState.getCurrentAcceleration());
+const acceleration = computed(() => playerStore.getCurrentAcceleration());
 
 const maxBlocks = 100;
 const activeBlocks = computed(() => {
-  const speed = gameState.getCurrentSpeed();
-  const maxSpeed = gameState.maxSpeed ?? 1;
+  const speed = playerStore.getCurrentSpeed();
+  const maxSpeed = playerStore.maxSpeed ?? 1;
   const blocks = Math.floor(speed / maxSpeed * maxBlocks);
   return Math.min(blocks, maxBlocks);
 });
 
-const currentLane = computed(() => gameState.currentLane);
+const currentLane = computed(() => playerStore.currentLane);
 const laneCount = computed(() => gameState.getLanesCount?.() ?? 4);
 
-const isNitroActive = computed(() => gameState.isNitroEnabled);
+const isNitroActive = computed(() => playerStore.isNitroEnabled);
 // Общее количество блоков нитро (можно сделать константой)
 const NITRO_BLOCKS_TOTAL = 10;
 
 // Активные блоки на основе оставшегося времени
 const activeNitroBlocks = computed(() => {
-  if (!gameState.isNitroEnabled || gameState.nitroTimer <= 0) return 0;
-  const ratio = gameState.nitroTimer / gameState.BASE_NITRO_TIMER;
+  if (!playerStore.isNitroEnabled || playerStore.nitroTimer <= 0) return 0;
+  const ratio = playerStore.nitroTimer / playerStore.BASE_NITRO_TIMER;
   // Округляем вверх, чтобы при полном таймере были все 10 блоков
   return Math.ceil(ratio * NITRO_BLOCKS_TOTAL);
 });
 
 // (опционально) можно оставить для ясности, но панель скрыта через v-if, поэтому не обязательно
-const nitroBlocks = NITRO_BLOCKS_TOTAL; // или просто использовать константу в шаблоне
+
 
 const warningStyle = computed(() => {
   const danger = gameState.getDangerLevel?.() ?? 0;

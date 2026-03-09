@@ -1,8 +1,10 @@
 import { ref } from "vue";
-import { useGameState } from "../store/gameState";
+import { useGameState } from "@/store/gameState";
+import { usePlayerStore } from "@/store/playerStore";
 
 export function useHUD() {
   const gameState = useGameState();
+  const playerStore = usePlayerStore();
 
   // Реактивные элементы HUD
   const scoreValue = ref(0);
@@ -24,7 +26,7 @@ export function useHUD() {
     speedValue.value = +speed.toFixed(3);
 
     // нитро
-    if (gameState.isNitroEnabled) {
+    if (playerStore.isNitroEnabled) {
       nitroBar.value = 100;
       nitroStatus.value = "ACTIVE";
     } else {
@@ -46,7 +48,7 @@ export function useHUD() {
 
   // --- Пульсация нитро ---
   function pulseNitro() {
-    if (!gameState.isNitroEnabled) return;
+    if (!playerStore.isNitroEnabled) return;
     nitroBar.value = 110;
     setTimeout(() => {
       nitroBar.value = 100;

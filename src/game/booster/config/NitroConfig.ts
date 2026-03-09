@@ -2,14 +2,14 @@
 import modelUrl from "@/assets/models/cube.glb";
 import type { GeometryConfig, MaterialConfig } from "@/game/cube/types";
 
-const COIN_SIZE = 0.3;
+const SIZE = 0.6;
 
 export const NITRO_GEOMETRY_CONFIG: GeometryConfig = {
-  scale: [COIN_SIZE, COIN_SIZE, COIN_SIZE],
+  scale: [SIZE, SIZE * 0.5, SIZE],
   modelUrl: modelUrl,
 };
 
 export const NITRO_MATERIAL_CONFIG: MaterialConfig = {
   // textureUrl: base_texture,
-  color: 0x00ff00
+  color: 0x00ff00,
 };

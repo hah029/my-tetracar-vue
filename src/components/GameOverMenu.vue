@@ -52,21 +52,23 @@
 <script setup lang="ts">
 import { computed } from "vue";
 import { useGameState } from "../store/gameState";
+import { usePlayerStore } from "../store/playerStore";
 import { useGame } from "../composables/useGame";
 
 const gameState = useGameState();
+const playerStore = usePlayerStore();
 const game = useGame();
 
 const isVisible = computed(() => gameState.currentState === "gameover");
 
 const scoreRounded = computed(() => Math.floor(gameState.score));
 const highScoreRounded = computed(() => Math.floor(gameState.highScore));
-const currentSpeedRounded = computed(() => gameState.getCurrentSpeedInCubesPerHour(1));
+const currentSpeedRounded = computed(() => playerStore.getCurrentSpeedInCubesPerHour(1));
 const distance = computed(() => gameState.getDistanceInCubes());
 
 function restartGame() {
   gameState.resetScore();
-  gameState.resetGameData();
+  playerStore.resetGameData();
   game.reset();
   gameState.setState("playing");
 }

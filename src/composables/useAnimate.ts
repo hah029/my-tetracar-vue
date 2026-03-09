@@ -1,6 +1,7 @@
 // src/composables/useAnimate.ts
 import * as THREE from "three";
 import { useGameState } from "../store/gameState";
+import { usePlayerStore } from "../store/playerStore";
 import { useHUD } from "./useHUD";
 import { useGame } from "./useGame";
 import { CameraSystem } from "@/game/camera/CameraSystem";
@@ -9,13 +10,16 @@ import { UpdateMode } from "@/game/core/UpdateMode";
 import { EffectComposer } from "three/examples/jsm/postprocessing/EffectComposer.js";
 import { AfterimagePass } from "three/examples/jsm/postprocessing/AfterimagePass.js";
 import { SoundManager } from "@/game/sound/SoundManager";
+import type { DebugColliderVisualizer } from "@/helpers/debug/DebugColliderVisualizer";
 
 export function GameLoop(
   game: ReturnType<typeof useGame>,
   composer: EffectComposer,
   motionBlur: AfterimagePass,
+  debugCollider?: DebugColliderVisualizer,
 ) {
   const gameState = useGameState();
+  const playerStore = usePlayerStore();
   const hud = useHUD();
 
   // вот это мой менеджер (он уже имеет все нужные звуки)
@@ -53,7 +57,7 @@ export function GameLoop(
         game.destroyCar(collisionResult.impactPoint);
         game.destroyObstacles(collisionResult.impactPoint);
         soundManager.play("sfx_destroy_bot");
-        const strength = Math.min(currentSpeed / gameState.maxSpeed, 1);
+        const strength = Math.min(currentSpeed / playerStore.maxSpeed, 1);
         CameraSystem.triggerImpactShake(strength);
         motionBlur.damp = 0.82;
         gameState.endGame();
@@ -70,7 +74,7 @@ export function GameLoop(
     const boostCollisions = game.checkBoosterCollision();
     if (boostCollisions.collision) {
       if (boostCollisions.subject === "nitro") {
-        gameState.enableNitro();
+        playerStore.enableNitro();
       } else {
         console.error(
           "Undefined booster collision subject:",
@@ -90,7 +94,6 @@ export function GameLoop(
         currentSpeed,
       );
     }
-
     return true;
   }
 
@@ -134,13 +137,13 @@ export function GameLoop(
     const realCar = game.car.value.mesh;
     if (realCar) {
       try {
-        gameState.currentLane = (realCar as any).getCurrentLane();
+        playerStore.currentLane = (realCar as any).getCurrentLane();
       } catch {}
     }
 
     const isGameOver = game.car.value.isDestroyed;
-    let currentSpeed = gameState.getCurrentSpeed();
-    const speedFactor = Math.min(currentSpeed / gameState.maxSpeed, 1);
+    let currentSpeed = playerStore.getCurrentSpeed();
+    const speedFactor = Math.min(currentSpeed / playerStore.maxSpeed, 1);
 
     // меньше damp = сильнее blur
     motionBlur.damp = THREE.MathUtils.lerp(0.2, 0.99, speedFactor);
@@ -148,18 +151,18 @@ export function GameLoop(
 
     // motionBlur.uniforms["damp"] = speedFactor;
     if (!isGameOver) {
-      if (gameState.baseSpeed < gameState.BASE_SPEED) {
-        gameState.baseSpeed = gameState.BASE_SPEED;
+      if (playerStore.baseSpeed < playerStore.BASE_SPEED) {
+        playerStore.baseSpeed = playerStore.BASE_SPEED;
       }
 
-      gameState.baseSpeed += gameState.getCurrentAcceleration();
-      if (gameState.baseSpeed > gameState.maxSpeed) {
-        gameState.baseSpeed = gameState.maxSpeed;
+      playerStore.baseSpeed += playerStore.getCurrentAcceleration();
+      if (playerStore.baseSpeed > playerStore.maxSpeed) {
+        playerStore.baseSpeed = playerStore.maxSpeed;
       }
     }
 
     const dangerLevel = game.getDangerLevel();
-    hud.updateHUD(currentSpeed, gameState.currentLane, dangerLevel);
+    hud.updateHUD(currentSpeed, playerStore.currentLane, dangerLevel);
 
     game.updatePlayer();
 
@@ -171,6 +174,7 @@ export function GameLoop(
       updateDestruction(deltaTime);
     } else {
       const stillPlaying = updateGame(deltaTime, currentSpeed);
+      debugCollider?.update();
       if (!stillPlaying) {
         stats.end();
         return;

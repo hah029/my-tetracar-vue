@@ -12,6 +12,7 @@ import GameOverMenu from "./components/GameOverMenu.vue";
 import { GameLoop } from "./composables/useAnimate";
 import { CameraSystem } from "@/game/camera/CameraSystem";
 import { SoundManager } from "./game/sound/SoundManager";
+import { DebugColliderVisualizer } from "./helpers/debug/DebugColliderVisualizer";
 
 const threeRoot = ref<HTMLDivElement | null>(null);
 const { getScene, getCamera, getComposer, getMotionBlurPass } = useThree(threeRoot);
@@ -44,14 +45,16 @@ onMounted(() => {
   const composer = getComposer();
   const motionBlur = getMotionBlurPass();
 
+  const debugCollider = new DebugColliderVisualizer(scene);
+
   game.init(scene);
   CameraSystem.initialize(camera);
   soundManager = SoundManager.getInstance();
   soundManager.initialize(camera);
-  const volume = Number(localStorage.getItem("masterVolume") ?? 0.6);
+  const volume = Number(localStorage.getItem("masterVolume") ?? 0.3);
   soundManager.setMasterVolume(volume);
 
-  loop = GameLoop(game, composer, motionBlur);
+  loop = GameLoop(game, composer, motionBlur, debugCollider);
   loop.start();
 });
 

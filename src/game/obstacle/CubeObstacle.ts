@@ -123,7 +123,13 @@ export class CubeObstacle extends BaseObstacle {
     for (const cube of this.cubes) {
       box.expandByObject(cube);
     }
-    box.expandByScalar(2);
+    // box.expandByScalar(2);
+    // console.log(
+    //   `[CubeObstacle] getCollider for ${this.constructor.name}:`,
+    //   box,
+    //   "cubes count:",
+    //   this.cubes.length,
+    // );
     return box;
   }
   public getCubes(): THREE.Object3D[] {

@@ -23,7 +23,7 @@ export class Nitro extends THREE.Group {
   async build(laneIndex: number, zPos: number, yPos: number): Promise<void> {
     try {
       this.cube = await CubeBuilder.build({
-        useGLB: false,
+        useGLB: true,
         geomConfig: NITRO_GEOMETRY_CONFIG,
         useTexture: true,
         materialConfig: NITRO_MATERIAL_CONFIG,

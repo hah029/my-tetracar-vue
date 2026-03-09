@@ -62,10 +62,12 @@
 import { computed, ref } from "vue";
 import { useGameState } from "@/store/gameState";
 import { useAudioStore } from "@/store/audioStore";
+import { usePlayerStore } from "@/store/playerStore";
 import { SoundManager } from "@/game/sound/SoundManager";
 
 const gameStore = useGameState();
 const audioStore = useAudioStore();
+const playerStore = usePlayerStore();
 const soundManager = SoundManager.getInstance();
 
 const isSettingsEnabled = ref(false);
@@ -92,7 +94,7 @@ function startGame() {
   soundManager.play("sfx_start");
 
   gameStore.setState("playing");
-  gameStore.resetGameData();
+  playerStore.resetGameData();
 }
 
 function toggleMusic() {

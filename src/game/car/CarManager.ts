@@ -76,8 +76,15 @@ export class CarManager {
   }
 
   public async buildCar(useGLB: boolean = true): Promise<void> {
+    console.log(`[CarManager] buildCar called, car exists=${!!this.car}`);
     if (this.car) {
       await this.car.build(useGLB);
+      console.log(`[CarManager] car built, enabling debug collider`);
+      if (true) {
+        this.car.enableDebugCollider(true);
+      }
+    } else {
+      console.warn(`[CarManager] no car to build`);
     }
   }
 

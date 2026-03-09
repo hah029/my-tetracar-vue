@@ -75,8 +75,8 @@ export const DEFAULT_CAR_CONFIG: Required<CarConfig> = {
   startLane: 1,
 
   // Размеры и коллайдер
-  colliderShrinkX: 0.5,
-  colliderShrinkZ: 0.5,
+  colliderShrinkX: 1.0,
+  colliderShrinkZ: 1.0,
   colliderYOffset: 0.0,
   colliderHeightFactor: 0.8,
 

@@ -1,6 +1,6 @@
 import * as THREE from "three";
 import type { Jump } from "@/game/obstacle/Jump";
-import type { Obstacle } from "@/game/obstacle/StaticObstacle";
+import type { BaseObstacle } from "@/game/obstacle/BaseObstacle";
 
 const DANGER_DISTANCE = 30;
 const COLLISION_COOLDOWN_MS = 1000;
@@ -26,7 +26,7 @@ class CollisionSystemClass {
       checkJumpCollision(jump: THREE.Object3D): boolean;
     },
     jumps: Jump[] = [],
-    obstacles: Obstacle[] = [],
+    obstacles: BaseObstacle[] = [],
     now?: number, // текущее время в миллисекундах (опционально)
   ): CollisionResult {
     if (car.isDestroyed()) return { collision: false };
@@ -38,7 +38,8 @@ class CollisionSystemClass {
 
     // Проверка препятствий из кубиков
     for (const obstacle of obstacles) {
-      if (car.checkObstacleCollision(obstacle)) {
+      const collides = car.checkObstacleCollision(obstacle);
+      if (collides) {
         this.lastCollisionTime = currentTime;
         obstacle.destroy();
         return {
