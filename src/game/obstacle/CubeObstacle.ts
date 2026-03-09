@@ -124,6 +124,7 @@ export class CubeObstacle extends BaseObstacle {
     for (const cube of this.cubes) {
       box.expandByObject(cube);
     }
+
     return box;
   }
 

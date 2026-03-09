@@ -10,16 +10,16 @@
 
 <script setup lang="ts">
 import { computed } from "vue";
-import { useGameState } from "../store/gameState";
+import { GAME_STATES as GS, useGameState } from "../store/gameState";
 
 // Подключаем store
 const gameStore = useGameState();
 
 // Видимость меню зависит от состояния игры
-const isVisible = computed(() => gameStore.currentState === "preloader");
+const isVisible = computed(() => gameStore.currentState === GS.PRELOADER);
 
 function letsPlay() {
-  gameStore.setState("menu");
+  gameStore.setState(GS.MENU);
 }
 </script>
 

@@ -51,7 +51,7 @@
 
 <script setup lang="ts">
 import { computed } from "vue";
-import { useGameState } from "../store/gameState";
+import { GAME_STATES as GS, useGameState } from "../store/gameState";
 import { usePlayerStore } from "../store/playerStore";
 import { useGame } from "../composables/useGame";
 import { useProgressStore } from "@/store/progressStore";
@@ -61,7 +61,7 @@ const playerStore = usePlayerStore();
 const progressStore = useProgressStore();
 const game = useGame();
 
-const isVisible = computed(() => gameState.currentState === "gameover");
+const isVisible = computed(() => gameState.currentState === GS.GAMEOVER);
 
 const scoreRounded = computed(() => Math.floor(progressStore.score));
 const highScoreRounded = computed(() => Math.floor(progressStore.highScore));
@@ -72,12 +72,12 @@ function restartGame() {
   progressStore.resetScore();
   playerStore.resetGameData();
   game.reset();
-  gameState.setState("playing");
+  gameState.setState(GS.PLAY);
 }
 
 function goToMainMenu() {
   progressStore.resetScore();
-  gameState.setState("menu");
+  gameState.setState(GS.MENU);
 }
 </script>
 

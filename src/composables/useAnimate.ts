@@ -1,17 +1,19 @@
 // src/composables/useAnimate.ts
 import * as THREE from "three";
-import { useGameState } from "@/store/gameState";
+import Stats from "three/examples/jsm/libs/stats.module.js";
+import { EffectComposer } from "three/examples/jsm/postprocessing/EffectComposer.js";
+import { AfterimagePass } from "three/examples/jsm/postprocessing/AfterimagePass.js";
+// composables
+import { GAME_STATES as GS, useGameState } from "@/store/gameState";
 import { usePlayerStore } from "@/store/playerStore";
 import { useProgressStore } from "@/store/progressStore";
 import { useHUD } from "./useHUD";
 import { useGame } from "./useGame";
+// managers
 import { CameraSystem } from "@/game/camera/CameraSystem";
-import Stats from "three/examples/jsm/libs/stats.module.js";
-import { UpdateMode } from "@/game/core/UpdateMode";
-import { EffectComposer } from "three/examples/jsm/postprocessing/EffectComposer.js";
-import { AfterimagePass } from "three/examples/jsm/postprocessing/AfterimagePass.js";
 import { SoundManager } from "@/game/sound/SoundManager";
-import type { DebugColliderVisualizer } from "@/helpers/debug/DebugColliderVisualizer";
+import { DebugColliderVisualizer } from "@/helpers/debug/DebugColliderVisualizer";
+import { UpdateMode } from "@/game/core/UpdateMode";
 
 export function GameLoop(
   game: ReturnType<typeof useGame>,
@@ -118,7 +120,7 @@ export function GameLoop(
     // STATE TRANSITIONS
     // =========================
 
-    if (previousState === "gameover" && gameState.currentState === "playing") {
+    if (previousState === GS.GAMEOVER && gameState.currentState === GS.PLAY) {
       game.reset();
       const carMesh = game.car.value.mesh;
       if (carMesh) {
@@ -128,8 +130,8 @@ export function GameLoop(
     previousState = gameState.currentState;
 
     if (
-      gameState.currentState !== "playing" &&
-      gameState.currentState !== "gameover"
+      gameState.currentState !== GS.PLAY &&
+      gameState.currentState !== GS.GAMEOVER
     ) {
       composer.render();
       stats.end();

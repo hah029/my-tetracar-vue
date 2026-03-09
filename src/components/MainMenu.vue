@@ -60,7 +60,7 @@
 
 <script setup lang="ts">
 import { computed, ref } from "vue";
-import { useGameState } from "@/store/gameState";
+import { GAME_STATES as GS, useGameState } from "@/store/gameState";
 import { useAudioStore } from "@/store/audioStore";
 import { usePlayerStore } from "@/store/playerStore";
 import { SoundManager } from "@/game/sound/SoundManager";
@@ -76,7 +76,7 @@ const volume = ref(
   Number(localStorage.getItem("masterVolume") ?? 0.6)
 );
 
-const isVisible = computed(() => gameStore.currentState === "menu");
+const isVisible = computed(() => gameStore.currentState === GS.MENU);
 
 function goToSettings() {
   isSettingsEnabled.value = true;
@@ -92,9 +92,9 @@ function startGame() {
   soundManager.play("sfx_3");
   soundManager.play("sfx_2");
   soundManager.play("sfx_start");
-
-  gameStore.setState("playing");
   playerStore.resetGameData();
+
+  gameStore.setState(GS.PLAY);
 }
 
 function toggleMusic() {

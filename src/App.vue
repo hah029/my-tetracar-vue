@@ -1,19 +1,21 @@
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted, computed, watch, nextTick, Transition } from "vue";
+// composable
 import { useThree } from "./composables/useThree";
 import { useGame } from "./composables/useGame";
-import { useGameState } from "./store/gameState";
+import { GAME_STATES as GS, useGameState } from "./store/gameState";
 import { useControls } from "./composables/useControls";
+import { GameLoop } from "./composables/useAnimate";
+// components
 import MainMenu from "./components/MainMenu.vue";
 import Preloader from "./components/Preloader.vue";
 import PauseMenu from "./components/PauseMenu.vue";
 import HUD from "./components/HUD.vue";
 import GameOverMenu from "./components/GameOverMenu.vue";
-import { GameLoop } from "./composables/useAnimate";
+// managers
 import { CameraSystem } from "@/game/camera/CameraSystem";
 import { SoundManager } from "./game/sound/SoundManager";
 import { DebugColliderVisualizer } from "./helpers/debug/DebugColliderVisualizer";
-import { useAudioStore } from "./store/audioStore";
 
 const threeRoot = ref<HTMLDivElement | null>(null);
 const { getScene, getCamera, getComposer, getMotionBlurPass } = useThree(threeRoot);
@@ -21,20 +23,20 @@ const game = useGame();
 const gameState = useGameState();
 
 
+
 useControls(game);
-gameState.setState("preloader");
 
 const getUIComponent = computed(() => {
   switch (gameState.currentState) {
-    case 'preloader':
+    case GS.PRELOADER:
       return Preloader;
-    case 'menu':
+    case GS.MENU:
       return MainMenu;
-    case 'paused':
+    case GS.PAUSE:
       return PauseMenu;
-    case 'gameover':
+    case GS.GAMEOVER:
       return GameOverMenu;
-    case 'playing':
+    case GS.PLAY:
       return HUD;
   }
 });
@@ -71,7 +73,7 @@ onUnmounted(() => {
 watch(
   () => gameState.currentState,
   async (newState, oldState) => {
-    if ((oldState === "gameover" || oldState === "menu") && newState === "playing") {
+    if ((oldState === GS.GAMEOVER || oldState === GS.MENU) && newState === GS.PLAY) {
       console.log("🔄 Game restart detected, resetting game...");
 
       // 1️⃣ Ждём обновления DOM/реактивных данных
@@ -94,14 +96,14 @@ watch(
   () => gameState.currentState,
   (state) => {
 
-    if (state === "menu") {
+    if (state === GS.MENU) {
       soundManager.fadeOut("music_background", 0.1);
       setTimeout(() => {
         soundManager.playMusicSequence("music_intro", "music_background");
       }, 100);
     }
 
-    if (state === "playing") {
+    if (state === GS.PLAY) {
       // soundManager.fadeOut("music_background", 0.1);
       soundManager.stopAllMusic();
       setTimeout(() => {
@@ -109,14 +111,14 @@ watch(
       }, 100);
     }
 
-    if (state === "gameover") {
+    if (state === GS.GAMEOVER) {
       soundManager.fadeOut("music_background", 0.1);
       setTimeout(() => {
         soundManager.play("music_gameover");
       }, 100);
     }
 
-    if (state === "preloader") {
+    if (state === GS.PRELOADER) {
       soundManager.stopAllMusic();
     }
 

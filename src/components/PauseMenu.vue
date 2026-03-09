@@ -56,7 +56,7 @@
 
 <script setup lang="ts">
 import { ref, computed } from "vue";
-import { useGameState } from "@/store/gameState";
+import { GAME_STATES as GS, useGameState } from "@/store/gameState";
 import { useAudioStore } from "@/store/audioStore";
 import { SoundManager } from "@/game/sound/SoundManager";
 
@@ -67,14 +67,14 @@ const soundManager = SoundManager.getInstance();
 const isSettingsEnabled = ref(false);
 const volume = ref(Number(localStorage.getItem("masterVolume") ?? 0.6));
 
-const isVisible = computed(() => gameStore.currentState === "paused");
+const isVisible = computed(() => gameStore.currentState === GS.PAUSE);
 
 function resumeGame() {
-  gameStore.setState("playing");
+  gameStore.setState(GS.PLAY);
 }
 
 function goToMainMenu() {
-  gameStore.setState("menu");
+  gameStore.setState(GS.MENU);
 }
 
 function goToSettings() {

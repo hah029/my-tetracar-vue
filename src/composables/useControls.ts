@@ -1,6 +1,6 @@
 // src/composables/useControls.ts
 import { onMounted, onUnmounted } from "vue";
-import { useGameState } from "@/store/gameState";
+import { GAME_STATES, useGameState } from "@/store/gameState";
 import type { useGame } from "./useGame";
 
 export function useControls(game: ReturnType<typeof useGame>) {
@@ -8,15 +8,15 @@ export function useControls(game: ReturnType<typeof useGame>) {
 
   function processEscape() {
     switch (gameStore.currentState) {
-      case "playing":
+      case GAME_STATES.PLAY:
         gameStore.pauseGame();
         break;
-      case "paused":
+      case GAME_STATES.PAUSE:
         gameStore.resumeGame();
         break;
-      case "menu":
+      case GAME_STATES.MENU:
         break;
-      case "gameover":
+      case GAME_STATES.GAMEOVER:
         gameStore.goToMenu();
         break;
     }

@@ -152,6 +152,7 @@ export class SoundManager {
   }
 
   setMasterVolume(volume: number) {
+    localStorage.setItem("masterVolume", volume.toString());
     Object.values(this.sounds).forEach((sound) => {
       sound.setVolume(volume);
     });
