@@ -88,7 +88,7 @@ function goToMainMenu() {
   display: flex;
   justify-content: center;
   align-items: center;
-  background-color: rgba(0, 0, 0, 0.804);
+  background-color: rgba(30, 0, 0, 0.4);
   backdrop-filter: blur(2px);
   z-index: 2000;
   font-family: Helvetica, Arial, sans-serif;
@@ -103,14 +103,14 @@ function goToMainMenu() {
   font-size: 28px;
   margin: 0;
   margin-bottom: 10px;
-  text-shadow: 0 0 20px rgba(0, 255, 255, 0.741);
+  text-shadow: 0 0 20px rgba(85, 0, 0, 0.741);
   border-bottom: 1px solid white;
 }
 
 .menu-subtitle {
   font-size: 54px;
   margin: 0 0 30px 0;
-  text-shadow: 0 0 20px rgba(0, 255, 255, 0.741);
+  text-shadow: 0 0 20px rgba(161, 0, 0, 0.741);
 }
 
 .score-container {
@@ -162,8 +162,8 @@ function goToMainMenu() {
   transition: all 0.2s ease;
 
   &:hover {
-    opacity: 0.75;
-    text-shadow: 0 0 20px rgba(0, 255, 255, 0.741);
+    opacity: 0.9;
+    text-shadow: 0 0 20px rgba(255, 0, 0, 1)
   }
 }
 </style>

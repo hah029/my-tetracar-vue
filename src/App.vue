@@ -13,11 +13,13 @@ import { GameLoop } from "./composables/useAnimate";
 import { CameraSystem } from "@/game/camera/CameraSystem";
 import { SoundManager } from "./game/sound/SoundManager";
 import { DebugColliderVisualizer } from "./helpers/debug/DebugColliderVisualizer";
+import { useAudioStore } from "./store/audioStore";
 
 const threeRoot = ref<HTMLDivElement | null>(null);
 const { getScene, getCamera, getComposer, getMotionBlurPass } = useThree(threeRoot);
 const game = useGame();
 const gameState = useGameState();
+
 
 useControls(game);
 gameState.setState("preloader");
@@ -47,13 +49,17 @@ onMounted(() => {
 
   const debugCollider = new DebugColliderVisualizer(scene);
 
+  // game init
   game.init(scene);
+
+  // camera system init
   CameraSystem.initialize(camera);
+
+  // audio settings
   soundManager = SoundManager.getInstance();
   soundManager.initialize(camera);
-  const volume = Number(localStorage.getItem("masterVolume") ?? 0.3);
-  soundManager.setMasterVolume(volume);
 
+  // main loop initialize
   loop = GameLoop(game, composer, motionBlur, debugCollider);
   loop.start();
 });

@@ -4,8 +4,14 @@ import { ref } from "vue";
 import { SoundManager } from "@/game/sound/SoundManager";
 
 export const useAudioStore = defineStore("audio", () => {
+  const masterEnabled = ref(localStorage.getItem("masterEnabled") !== "0");
   const musicEnabled = ref(localStorage.getItem("musicEnabled") !== "0");
   const sfxEnabled = ref(localStorage.getItem("sfxEnabled") !== "0");
+
+  const DEFAULT_VOLUME = 0.3;
+  const masterVolume = ref(
+    localStorage.getItem("masterVolume") || DEFAULT_VOLUME,
+  );
 
   const soundManager = SoundManager.getInstance();
 
@@ -24,6 +30,8 @@ export const useAudioStore = defineStore("audio", () => {
   }
 
   return {
+    masterVolume,
+    masterEnabled,
     musicEnabled,
     sfxEnabled,
     toggleMusic,

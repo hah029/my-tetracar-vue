@@ -1,16 +1,13 @@
 import * as THREE from "three";
 import type { AudioMap } from "./types";
 import { SOUNDS_CONFIG } from "./config";
+import { useAudioStore } from "@/store/audioStore";
 
 export class SoundManager {
   private static instance: SoundManager | null = null;
   private listener!: THREE.AudioListener;
   private loader: THREE.AudioLoader = new THREE.AudioLoader();
   private sounds: AudioMap = {};
-
-  private masterEnabled = true;
-  private musicEnabled = true;
-  private sfxEnabled = true;
 
   private currentMusic: THREE.Audio | null = null;
   private musicTimeout: number | null = null;
@@ -55,22 +52,24 @@ export class SoundManager {
   }
 
   play(name: string) {
-    if (!this.masterEnabled) return;
+    const audioStore = useAudioStore();
+    if (!audioStore.masterEnabled) return;
 
     const sound = this.sounds[name];
     if (!sound || !sound.buffer) return;
 
     const isMusic = this.musicSet.has(name);
 
-    if (isMusic && !this.musicEnabled) return;
-    if (!isMusic && !this.sfxEnabled) return;
+    if (isMusic && !audioStore.musicEnabled) return;
+    if (!isMusic && !audioStore.sfxEnabled) return;
 
     if (sound.isPlaying) sound.stop();
     sound.play();
   }
 
   playMusicSequence(intro: string, loop: string) {
-    if (!this.masterEnabled || !this.musicEnabled) return;
+    const audioStore = useAudioStore();
+    if (!audioStore.masterEnabled || !audioStore.musicEnabled) return;
 
     const introSound = this.sounds[intro];
     const loopSound = this.sounds[loop];
@@ -87,7 +86,7 @@ export class SoundManager {
     const duration = introSound.buffer.duration * 1000;
 
     this.musicTimeout = window.setTimeout(() => {
-      if (!this.musicEnabled) return;
+      if (!audioStore.musicEnabled) return;
 
       loopSound.setLoop(true);
       loopSound.play();
@@ -123,7 +122,7 @@ export class SoundManager {
   }
 
   setMaster(enabled: boolean) {
-    this.masterEnabled = enabled;
+    useAudioStore().masterEnabled = enabled;
 
     if (!enabled) {
       Object.values(this.sounds).forEach((s) => {
@@ -133,7 +132,7 @@ export class SoundManager {
   }
 
   setMusic(enabled: boolean) {
-    this.musicEnabled = enabled;
+    useAudioStore().musicEnabled = enabled;
 
     if (!enabled) {
       this.musicSet.forEach((name) => this.stop(name));
@@ -141,11 +140,11 @@ export class SoundManager {
   }
 
   setSFX(enabled: boolean) {
-    this.sfxEnabled = enabled;
+    useAudioStore().sfxEnabled = enabled;
   }
 
   toggleMaster() {
-    this.setMaster(!this.masterEnabled);
+    this.setMaster(!useAudioStore().masterEnabled);
   }
 
   isPlaying(sound: string) {
