@@ -6,6 +6,7 @@ import { DEFAULT_CAR_CONFIG } from "./config";
 import { CarCollider } from "./CarCollider";
 import { CarCubesBuilder } from "./CarCubesBuilder";
 import { CarPhysics } from "./CarPhysics";
+import { useGameState } from "@/store/gameState.js";
 
 export class Car extends THREE.Group {
   private scene: THREE.Scene;
@@ -120,6 +121,12 @@ export class Car extends THREE.Group {
 
     // Обновляем коллайдер
     this.collider.updateFromObject(this);
+
+    if (useGameState().isDebug && !this.collider.debugMesh) {
+      this.collider.enableDebug(this.scene);
+    } else if (!useGameState().isDebug && this.collider.debugMesh) {
+      this.collider.disableDebug(this.scene);
+    }
   }
 
   // Коллизии
@@ -221,8 +228,7 @@ export class Car extends THREE.Group {
 
     // Перестраиваем машину
     this.build(useGLB).then(() => {
-      // Всегда включаем дебаг-коллайдер после перестроения
-      this.collider.enableDebug(this.scene);
+      if (useGameState().isDebug) this.collider.enableDebug(this.scene);
     });
   }
 
@@ -262,8 +268,7 @@ export class Car extends THREE.Group {
     };
   }
 
-  public enableDebugCollider(enable: boolean = true): void {
-    console.log(`[Car] enableDebugCollider called with enable=${enable}`);
+  public toggleDebugCollider(enable: boolean = true): void {
     if (enable) {
       this.collider.enableDebug(this.scene);
     } else {

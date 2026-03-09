@@ -157,12 +157,7 @@ export class CarCollider {
 
   // Включение визуализации коллайдера
   public enableDebug(scene: THREE.Scene): void {
-    console.log(
-      `[CarCollider] enableDebug called, scene=${scene?.uuid}, collider empty?`,
-      this.collider.isEmpty(),
-    );
     if (this.debugMesh) {
-      console.log(`[CarCollider] removing existing debug mesh`);
       scene.remove(this.debugMesh);
     }
     const geometry = new THREE.BoxGeometry(1, 1, 1);

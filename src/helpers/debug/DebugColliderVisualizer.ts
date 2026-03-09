@@ -3,6 +3,7 @@ import * as THREE from "three";
 import type { CubeObstacle } from "@/game/interactive/obstacle/CubeObstacle";
 import { ObstacleManager } from "@/game/interactive/obstacle/ObstacleManager";
 import { Box3Helper } from "three";
+import { useGameState } from "@/store/gameState";
 
 export class DebugColliderVisualizer {
   private helpers: Map<CubeObstacle, Box3Helper> = new Map();
@@ -35,14 +36,16 @@ export class DebugColliderVisualizer {
         continue;
       }
 
-      let helper = this.helpers.get(obs);
-      if (!helper) {
-        helper = new Box3Helper(collider, 0xff0000);
-        this.scene.add(helper);
-        this.helpers.set(obs, helper);
-      } else {
-        // Обновляем существующий helper
-        helper.box.copy(collider);
+      if (useGameState().isDebug) {
+        let helper = this.helpers.get(obs);
+        if (!helper) {
+          helper = new Box3Helper(collider, 0xff0000);
+          this.scene.add(helper);
+          this.helpers.set(obs, helper);
+        } else {
+          // Обновляем существующий helper
+          helper.box.copy(collider);
+        }
       }
     }
   }

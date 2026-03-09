@@ -16,8 +16,13 @@ export enum GAME_STATES {
 export const useGameState = defineStore("gameState", () => {
   // ---- Состояния ----
   const currentState = ref<GAME_STATES>(GAME_STATES.PRELOADER);
+  const isDebug = ref(false);
 
   // ---- Actions ----
+  function toggleDebug() {
+    isDebug.value = !isDebug.value;
+  }
+
   function setState(state: GAME_STATES) {
     console.log(
       "[gameState] setState:",
@@ -54,6 +59,7 @@ export const useGameState = defineStore("gameState", () => {
 
   return {
     currentState,
+    isDebug,
 
     setState,
     startGame,
@@ -61,5 +67,6 @@ export const useGameState = defineStore("gameState", () => {
     resumeGame,
     endGame,
     goToMenu,
+    toggleDebug,
   };
 });

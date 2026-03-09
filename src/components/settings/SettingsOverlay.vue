@@ -9,14 +9,15 @@
         }}</li>
     </ul>
     <div class="settings-inner-overlay">
-      <Transition>
-        <component :is="getSettingsComponent" />
-      </Transition>
+      <component :is="getSettingsComponent" />
+      <!-- <Transition>
+      </Transition> -->
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
+import DebugSettings from "./DebugSettings.vue";
 import SoundSettings from "./SoundSettings.vue";
 import { computed, ref } from "vue";
 
@@ -26,7 +27,7 @@ const menuList = {
   controls: { name: "Управление", comp: null },
   sound: { name: "Звук", comp: SoundSettings },
   graphic: { name: "Графика", comp: null },
-  debug: { name: "Дебаг", comp: null },
+  debug: { name: "Дебаг", comp: DebugSettings },
 }
 
 const getSettingsComponent = computed(() => menuList[settingsType.value].comp || null)
@@ -84,10 +85,10 @@ const getSettingsComponent = computed(() => menuList[settingsType.value].comp ||
 
 
 /* we will explain what these classes do next! */
-.v-enter-active,
-.v-leave-active {
+.v-enter-active {
   transition: opacity 0.5s ease;
 }
+
 
 .v-enter-from,
 .v-leave-to {

@@ -47,8 +47,6 @@ onMounted(() => {
   const composer = getComposer();
   const motionBlur = getMotionBlurPass();
 
-  const debugCollider = new DebugColliderVisualizer(scene);
-
   // game init
   game.init(scene);
 
@@ -60,6 +58,7 @@ onMounted(() => {
   soundManager.initialize(camera);
 
   // main loop initialize
+  const debugCollider = new DebugColliderVisualizer(scene);
   loop = GameLoop(game, composer, motionBlur, debugCollider);
   loop.start();
 });

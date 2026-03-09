@@ -1,4 +1,5 @@
 // src/game/car/CarManager.ts
+import { useGameState } from "@/store/gameState";
 import { Car } from "./Car";
 import { type CarConfig, type CarStats } from "./types";
 import * as THREE from "three";
@@ -54,6 +55,7 @@ export class CarManager {
   public update(): void {
     if (this.car) {
       this.car.update();
+      this.car.toggleDebugCollider(useGameState().isDebug);
     }
   }
 
@@ -79,10 +81,7 @@ export class CarManager {
     console.log(`[CarManager] buildCar called, car exists=${!!this.car}`);
     if (this.car) {
       await this.car.build(useGLB);
-      console.log(`[CarManager] car built, enabling debug collider`);
-      if (true) {
-        this.car.enableDebugCollider(true);
-      }
+      this.car.toggleDebugCollider(useGameState().isDebug);
     } else {
       console.warn(`[CarManager] no car to build`);
     }
