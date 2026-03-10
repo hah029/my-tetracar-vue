@@ -31,11 +31,11 @@ export interface SpeedLineConfig {
 }
 
 export interface RoadStats {
-  hasRoad: boolean;
-  linesCount: number;
-  speedLinesCount: number;
-  edgesCount: number;
-  lanesCount: number;
-  sideObjectsCount: number;
-  lanePositions: number[];
+  hasRoad?: boolean;
+  linesCount?: number;
+  speedLinesCount?: number;
+  edgesCount?: number;
+  lanesCount?: number;
+  sideObjectsCount?: number;
+  lanePositions?: number[];
 }

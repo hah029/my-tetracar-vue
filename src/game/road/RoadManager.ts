@@ -2,10 +2,10 @@ import * as THREE from "three";
 import { Road } from "./Road";
 import { RoadLine } from "./RoadLine";
 import { SpeedLine } from "./SpeedLine";
-import { SideObject } from "./SideObject";
 import { RoadEdge } from "./edges";
 import { DEFAULT_ROAD_CONFIG } from "./config";
-import type { RoadConfig, SpeedLineConfig, RoadStats } from "./types";
+import { SideObjectsInstanced } from "./SideObjectsInstanced";
+import type { RoadConfig, RoadStats } from "./types";
 
 export class RoadManager {
   private static instance: RoadManager | null = null;
@@ -13,9 +13,9 @@ export class RoadManager {
   private roadLines: RoadLine[] = [];
   private speedLines: SpeedLine[] = [];
   private edges: THREE.Mesh[] = [];
-  private leftSideObjects: SideObject[] = [];
-  private rightSideObjects: SideObject[] = [];
   private sideObjectSpacing = 1.2;
+  private leftSideObjects: SideObjectsInstanced | null = null;
+  private rightSideObjects: SideObjectsInstanced | null = null;
 
   private config: RoadConfig;
   private scene: THREE.Scene;
@@ -71,41 +71,41 @@ export class RoadManager {
   }
 
   private addSideObjects(): void {
-    this.clearSideObjects();
-
     if (!this.road) return;
 
     const { left, right } = this.road.getEdgePositions();
+
     const offset = 0.2;
+
     const leftX = left - offset;
     const rightX = right + offset;
 
-    for (
-      let z = -this.config.length / 2;
-      z <= 10;
-      z += this.sideObjectSpacing
-    ) {
-      // Левый столбик
-      const leftObj = new SideObject(leftX, 0.1, z);
-      this.scene.add(leftObj);
-      this.leftSideObjects.push(leftObj);
+    const startZ = 10;
+    const endZ = this.config.length / 2;
 
-      // Правый столбик
-      const rightObj = new SideObject(rightX, 0.1, z);
-      this.scene.add(rightObj);
-      this.rightSideObjects.push(rightObj);
-    }
+    this.leftSideObjects = new SideObjectsInstanced(
+      this.scene,
+      leftX,
+      this.sideObjectSpacing,
+      startZ,
+      endZ,
+    );
+
+    this.rightSideObjects = new SideObjectsInstanced(
+      this.scene,
+      rightX,
+      this.sideObjectSpacing,
+      startZ,
+      endZ,
+    );
   }
 
   private clearSideObjects(): void {
-    this.leftSideObjects.forEach((obj) => {
-      this.scene.remove(obj);
-    });
-    this.rightSideObjects.forEach((obj) => {
-      this.scene.remove(obj);
-    });
-    this.leftSideObjects = [];
-    this.rightSideObjects = [];
+    this.leftSideObjects?.dispose();
+    this.rightSideObjects?.dispose();
+
+    this.leftSideObjects = null;
+    this.rightSideObjects = null;
   }
 
   private addEdges(): void {
@@ -148,42 +148,9 @@ export class RoadManager {
     }
   }
 
-  public addSpeedLines(config: SpeedLineConfig = {}): void {
-    if (!this.road) return;
-
-    const count = config.count ?? 20;
-    const lanes = this.road.getLanePositions();
-    const { left, right } = this.road.getEdgePositions();
-
-    for (let i = 0; i < count; i++) {
-      const line = new SpeedLine({
-        ...config,
-        lanes,
-        bounds: { left, right },
-      });
-
-      this.speedLines.push(line);
-      this.scene.add(line);
-    }
-  }
-
   public update(deltaTime: number, speed: number): void {
-    for (const obj of this.leftSideObjects) {
-      obj.update(
-        deltaTime,
-        speed,
-        this.sideObjectSpacing,
-        this.leftSideObjects,
-      );
-    }
-    for (const obj of this.rightSideObjects) {
-      obj.update(
-        deltaTime,
-        speed,
-        this.sideObjectSpacing,
-        this.rightSideObjects,
-      );
-    }
+    this.leftSideObjects?.update(deltaTime, speed);
+    this.rightSideObjects?.update(deltaTime, speed);
   }
 
   public clear(): void {
@@ -252,8 +219,8 @@ export class RoadManager {
       linesCount: this.roadLines.length,
       speedLinesCount: this.speedLines.length,
       edgesCount: this.edges.length,
-      sideObjectsCount:
-        this.leftSideObjects.length + this.rightSideObjects.length,
+      // sideObjectsCount:
+      //   this.leftSideObjects.length + this.rightSideObjects.length,
       lanePositions: lanes,
     };
   }
