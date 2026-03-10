@@ -3,7 +3,7 @@
 import { BaseItem } from "../BaseItem";
 import { COIN_MATERIAL_CONFIG } from "./config";
 
-export class Coin extends BaseItem {
+export class GoldCoin extends BaseItem {
   public value: number;
 
   constructor(
@@ -14,6 +14,6 @@ export class Coin extends BaseItem {
   ) {
     super(laneIndex, zPos, yPos, COIN_MATERIAL_CONFIG);
     this.value = value;
-    this.itemType = "coin";
+    this.itemType = "gold";
   }
 }

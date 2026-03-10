@@ -284,7 +284,7 @@ export function useGame() {
   }
 
   function checkCoinCollision() {
-    if (!carManager || !coinManager) return 0;
+    if (!carManager || !coinManager) return { gold: 0, diamond: 0, total: 0 };
     return coinManager.checkCarCollision(carManager.getCar());
   }
 

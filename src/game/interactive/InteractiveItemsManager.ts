@@ -114,12 +114,16 @@ export class InteractiveItemsManager {
   }
 
   private spawnSingleCoin(lane: number, baseZ: number) {
-    this.coinManager.spawnCoin(lane, baseZ);
+    if (Math.random() < 0.5) {
+      this.coinManager.spawnDiamond(lane, baseZ);
+    } else {
+      this.coinManager.spawnGold(lane, baseZ);
+    }
   }
 
   private spawnCoinLine(lane: number, baseZ: number) {
     for (let i = 0; i < 5; i++) {
-      this.coinManager.spawnCoin(lane, baseZ - i * 4);
+      this.coinManager.spawnGold(lane, baseZ - i * 4);
     }
   }
 
@@ -171,7 +175,7 @@ export class InteractiveItemsManager {
       // console.log(
       //   `  coin ${i}: y=${point.y}, zOffset=${point.zOffset}, coinZ=${coinZ}`,
       // );
-      this.coinManager.spawnCoin(lane, coinZ, point.y, 5);
+      this.coinManager.spawnGold(lane, coinZ, point.y, 5);
     }
   }
 

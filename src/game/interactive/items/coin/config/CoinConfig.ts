@@ -1,4 +1,5 @@
-import base_texture from "@/assets/textures/cube_gold.svg";
+import coin_texture from "@/assets/textures/cube_gold.svg";
+import diamond_texture from "@/assets/textures/cube_diamond.svg";
 import modelUrl from "@/assets/models/cube.glb";
 import type { GeometryConfig, MaterialConfig } from "@/game/cube/types";
 
@@ -10,5 +11,9 @@ export const COIN_GEOMETRY_CONFIG: GeometryConfig = {
 };
 
 export const COIN_MATERIAL_CONFIG: MaterialConfig = {
-  textureUrl: base_texture,
+  textureUrl: coin_texture,
+};
+
+export const DIAMOND_MATERIAL_CONFIG: MaterialConfig = {
+  textureUrl: diamond_texture,
 };

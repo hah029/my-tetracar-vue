@@ -1,10 +1,12 @@
 import * as THREE from "three";
-import { Coin } from "./Coin";
+import { GoldCoin } from "./Gold";
+import { DiamondCoin } from "./Diamond";
 import { Car } from "@/game/car/Car";
+import type { BaseItem } from "../BaseItem";
 
 export class CoinManager {
   private static instance: CoinManager | null = null;
-  private coins: Coin[] = [];
+  private coins: BaseItem[] = [];
   private scene!: THREE.Scene;
 
   public static getInstance(): CoinManager {
@@ -22,13 +24,24 @@ export class CoinManager {
      SPAWN
      ======================= */
 
-  public spawnCoin(
+  public spawnGold(
     laneIndex: number,
     zPos: number,
     yPos: number = 0.2,
     value: number = 10,
   ): void {
-    const coin = new Coin(laneIndex, zPos, yPos, value);
+    const coin = new GoldCoin(laneIndex, zPos, yPos, value);
+    this.coins.push(coin);
+    this.scene.add(coin);
+  }
+
+  public spawnDiamond(
+    laneIndex: number,
+    zPos: number,
+    yPos: number = 0.2,
+    value: number = 1,
+  ): void {
+    const coin = new DiamondCoin(laneIndex, zPos, yPos, value);
     this.coins.push(coin);
     this.scene.add(coin);
   }
@@ -57,19 +70,24 @@ export class CoinManager {
    * Проверка подбора монеток машиной
    * @returns сумма очков, собранных за этот кадр
    */
-  public checkCarCollision(car: Car): number {
-    let collectedValue = 0;
+  public checkCarCollision(car: Car) {
+    let collected = {
+      gold: 0,
+      diamond: 0,
+      total: 0,
+    };
     const carCollider = car.getCollider();
     for (let i = this.coins.length - 1; i >= 0; i--) {
       const coin = this.coins[i];
       if (coin === undefined) continue;
 
       if (carCollider.intersectsSphere(coin.collider)) {
-        collectedValue += coin.value;
+        collected[coin.itemType] += coin.value;
+        collected["total"] += coin.value;
         this.removeCoin(i);
       }
     }
-    return collectedValue;
+    return collected;
   }
 
   /* =======================
@@ -92,7 +110,7 @@ export class CoinManager {
     this.coins = [];
   }
 
-  public getCoins(): Coin[] {
+  public getCoins(): BaseItem[] {
     return this.coins;
   }
 }

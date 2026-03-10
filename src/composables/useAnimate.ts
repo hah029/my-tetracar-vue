@@ -76,9 +76,11 @@ export function GameLoop(
     }
 
     const coins = game.checkCoinCollision();
-    if (coins > 0) {
+    if (coins.total > 0) {
       soundManager.play("sfx_add_patron");
-      progressStore.addScore(coins);
+
+      if (coins.gold > 0) progressStore.addScore(coins.gold);
+      if (coins.diamond > 0) progressStore.addDiamondScore(coins.diamond);
     }
 
     const boostCollisions = game.checkBoosterCollision();
