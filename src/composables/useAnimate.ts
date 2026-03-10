@@ -58,7 +58,8 @@ export function GameLoop(
       if (collisionResult.jump) {
         game.jumpPlayer();
       } else if (playerStore.isShieldEnabled) {
-        game.destroyObstacles(collisionResult.impactPoint);
+        // Столкнувшееся препятствие уже разрушено в CollisionSystem
+        // Не разрушаем все препятствия
         playerStore.disableShield();
       } else {
         game.destroyCar(collisionResult.impactPoint);
