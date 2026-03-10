@@ -17,7 +17,7 @@ export class Jump extends THREE.Mesh {
   constructor(laneIndex: number, scene: THREE.Scene, zPos: number = -60) {
     // Геометрия трамплина
     const width = 2;
-    const height = 0.2;
+    const height = 0.15;
     const depth = 2;
     const geometry = new THREE.BoxGeometry(width, height, depth);
     geometry.rotateX(Math.PI / 12);

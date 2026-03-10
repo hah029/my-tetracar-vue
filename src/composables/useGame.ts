@@ -136,10 +136,7 @@ export function useGame() {
 
     soundManager = SoundManager.getInstance();
 
-    const newCar = carManager.createCar({
-      startLane: 2,
-      startPosition: new THREE.Vector3(0, 0.25, 3),
-    });
+    const newCar = carManager.createCar();
 
     car.value.mesh = newCar;
     car.value.targetX = 0;

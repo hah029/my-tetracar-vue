@@ -83,8 +83,7 @@ export class ObstacleManager {
 
   public spawnEnemyCar(lane: number, z = -60) {
     const form = CAR_CUBES_CONFIG;
-    const obstacle = new EnemyCar(lane, z, form, this.scene, this.useGLB);
-
+    const obstacle = new EnemyCar(lane, z, form, this.scene, true);
     this.scene.add(obstacle);
     this.obstacles.push(obstacle);
   }

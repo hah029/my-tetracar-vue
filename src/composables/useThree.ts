@@ -45,7 +45,7 @@ export function useThree(container: Ref<HTMLElement | null>) {
     });
     renderer.setSize(container.value.clientWidth, container.value.clientHeight);
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1));
-    // renderer.shadowMap.enabled = true;
+    // renderer.shadowMap.enabled = false;
     // renderer.shadowMap.type = THREE.PCFSoftShadowMap;
     composer = new EffectComposer(renderer);
     composer.addPass(new RenderPass(scene, camera));

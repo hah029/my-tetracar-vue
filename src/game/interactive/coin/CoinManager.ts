@@ -60,7 +60,6 @@ export class CoinManager {
   public checkCarCollision(car: Car): number {
     let collectedValue = 0;
     const carCollider = car.getCollider();
-
     for (let i = this.coins.length - 1; i >= 0; i--) {
       const coin = this.coins[i];
       if (coin === undefined) continue;
@@ -70,7 +69,6 @@ export class CoinManager {
         this.removeCoin(i);
       }
     }
-
     return collectedValue;
   }
 

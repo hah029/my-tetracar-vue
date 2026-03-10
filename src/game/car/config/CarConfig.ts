@@ -12,7 +12,7 @@ const ROWS: [number, number, number, number] = [
   -XZ_SCALING,
   -XZ_SCALING * 3,
 ];
-const HEIGHT = 0.17;
+const HEIGHT = 0.15;
 const GLB_SCALES: [number, number, number] = [
   XZ_SCALING,
   XZ_SCALING,
@@ -71,8 +71,8 @@ export const CAR_MATERIAL_CONFIG: MaterialConfig = {
 // Конфигурация машины по умолчанию
 export const DEFAULT_CAR_CONFIG: Required<CarConfig> = {
   // Позиционирование
-  startPosition: new THREE.Vector3(0, 0.25, 3),
-  startLane: 1,
+  startPosition: new THREE.Vector3(0, 0, 0),
+  startLane: 2,
 
   // Размеры и коллайдер
   colliderShrinkX: 1.0,

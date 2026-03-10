@@ -6,10 +6,11 @@ import { COIN_GEOMETRY_CONFIG, COIN_MATERIAL_CONFIG } from "./config";
 import { CubeBuilder } from "@/game/cube/Cube";
 
 export class Coin extends THREE.Group {
-  public collider: THREE.Sphere = new THREE.Sphere();
+  public collider: THREE.Sphere;
   private cube: THREE.Object3D = new THREE.Object3D();
   public value: number;
   private rotationYDiff = 0.05;
+  private initialPosition: THREE.Vector3;
 
   constructor(
     laneIndex: number,
@@ -18,13 +19,17 @@ export class Coin extends THREE.Group {
     value: number = 10,
   ) {
     super();
-    this.build(laneIndex, zPos, yPos).catch((err) => {
+    const x = RoadManager.getInstance().getLanePosition(laneIndex);
+    this.initialPosition = new THREE.Vector3(x, yPos, zPos);
+    this.cube.position.copy(this.initialPosition);
+    this.collider = new THREE.Sphere(this.initialPosition.clone(), 0.45);
+    this.value = value;
+    this.build().catch((err) => {
       console.error("[Coin] build failed:", err);
     });
-    this.value = value;
   }
 
-  async build(laneIndex: number, zPos: number, yPos: number): Promise<void> {
+  async build(): Promise<void> {
     try {
       this.cube = await CubeBuilder.build({
         useGLB: true,
@@ -32,9 +37,7 @@ export class Coin extends THREE.Group {
         useTexture: true,
         materialConfig: COIN_MATERIAL_CONFIG,
       });
-      const x = RoadManager.getInstance().getLanePosition(laneIndex);
-      this.cube.position.set(x, yPos, zPos);
-      this.collider = new THREE.Sphere(this.cube.position, 0.45);
+      this.cube.position.copy(this.initialPosition);
       this.add(this.cube);
     } catch (error) {
       console.error("[Coin] build error:", error);

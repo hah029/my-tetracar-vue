@@ -78,7 +78,6 @@ export class CarManager {
   }
 
   public async buildCar(useGLB: boolean = true): Promise<void> {
-    console.log(`[CarManager] buildCar called, car exists=${!!this.car}`);
     if (this.car) {
       await this.car.build(useGLB);
       this.car.toggleDebugCollider(useGameState().isDebug);

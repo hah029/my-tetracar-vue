@@ -24,13 +24,6 @@ export const useGameState = defineStore("gameState", () => {
   }
 
   function setState(state: GAME_STATES) {
-    console.log(
-      "[gameState] setState:",
-      GAME_STATES[state],
-      state,
-      "previous:",
-      GAME_STATES[currentState.value],
-    );
     currentState.value = state;
   }
 

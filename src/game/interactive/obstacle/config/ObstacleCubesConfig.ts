@@ -3,7 +3,7 @@ import type { GeometryConfig } from "@/game/cube/types";
 import cubeGLB from "@/assets/models/cube.glb";
 import { XZ_SCALING as XZSC } from "@/game/cube/config";
 
-const YPOS = 0.3;
+const YPOS = 0.15;
 const ZPOS = 0;
 const LXPS = -2 * XZSC;
 const RXPS = 2 * XZSC;

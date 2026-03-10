@@ -74,9 +74,7 @@ export class InteractiveItemsManager {
   private spawnSegment(dt: number, speed: number, baseZ: number) {
     const segment = this.segmentQueue.getNext();
 
-    // console.log(segment.id);
-
-    const rowSpacing = 4;
+    const rowSpacing = 3;
 
     segment.pattern.forEach((row, rowIndex) => {
       const z = baseZ - rowIndex * rowSpacing;
@@ -178,5 +176,9 @@ export class InteractiveItemsManager {
     this.obstacleManager.reset();
     this.coinManager.reset();
     this.boosterManager.reset();
+    this.segmentQueue.reset();
+    this.distanceSinceLastSegment = 0;
+    this.nextSegmentZ = -60;
+    this.boosterEnabledTimer = 0;
   }
 }

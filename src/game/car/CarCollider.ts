@@ -47,28 +47,12 @@ export class CarCollider {
     this.collider.min.copy(colliderCenter.clone().sub(halfSize));
     this.collider.max.copy(colliderCenter.clone().add(halfSize));
 
-    // Логирование для отладки
-    console.log(
-      `[CarCollider] updateFromObject: boundingBox size=${size.toArray()}, center=${center.toArray()}`,
-    );
-    console.log(
-      `[CarCollider] collider size=${colliderSize.toArray()}, center=${colliderCenter.toArray()}`,
-    );
-    console.log(
-      `[CarCollider] debugMesh exists? ${this.debugMesh ? "yes" : "no"}`,
-    );
-
     // Обновляем отладочный меш, если он есть
     if (this.debugMesh) {
       const currentSize = new THREE.Vector3();
       const currentCenter = new THREE.Vector3();
       this.collider.getSize(currentSize);
       this.collider.getCenter(currentCenter);
-
-      console.log(
-        `[CarCollider] updating debug mesh, size=${currentSize.toArray()}, center=${currentCenter.toArray()}`,
-      );
-
       this.debugMesh.scale.copy(currentSize);
       this.debugMesh.position.copy(currentCenter);
     }
@@ -81,12 +65,6 @@ export class CarCollider {
   public checkObstacleCollision(obstacle: THREE.Object3D): boolean {
     // Логируем только для EnemyCar
     const isEnemyCar = obstacle.constructor.name === "EnemyCar";
-    // if (isEnemyCar) {
-    //   // console.log(
-    //   //   `[CarCollider] Checking collision with EnemyCar at`,
-    //   //   obstacle.position,
-    //   // );
-    // }
 
     // Попробуем получить коллайдер через getCollider, если он есть
     let obstacleBox: THREE.Box3 | null = null;
@@ -95,21 +73,9 @@ export class CarCollider {
       typeof (obstacle as any).getCollider === "function"
     ) {
       obstacleBox = (obstacle as any).getCollider();
-      // if (isEnemyCar) {
-      //   console.log(
-      //     `[CarCollider] EnemyCar box from getCollider:`,
-      //     obstacleBox,
-      //   );
-      // }
     }
     if (!obstacleBox) {
       obstacleBox = new THREE.Box3().setFromObject(obstacle);
-      // if (isEnemyCar) {
-      //   console.log(
-      //     `[CarCollider] EnemyCar box from setFromObject:`,
-      //     obstacleBox,
-      //   );
-      // }
     }
 
     if (isEnemyCar) {
@@ -117,28 +83,13 @@ export class CarCollider {
       const carCenter = new THREE.Vector3();
       this.collider.getSize(carSize);
       this.collider.getCenter(carCenter);
-      // console.log(
-      //   `[CarCollider] Car collider center:`,
-      //   carCenter,
-      //   `size:`,
-      //   carSize,
-      // );
       const obsSize = new THREE.Vector3();
       const obsCenter = new THREE.Vector3();
       obstacleBox.getSize(obsSize);
       obstacleBox.getCenter(obsCenter);
-      // console.log(
-      //   `[CarCollider] EnemyCar box center:`,
-      //   obsCenter,
-      //   `size:`,
-      //   obsSize,
-      // );
     }
 
     const intersects = this.collider.intersectsBox(obstacleBox);
-    // if (isEnemyCar) {
-    //   console.log(`[CarCollider] Intersects? ${intersects}`);
-    // }
     return intersects;
   }
 
@@ -182,24 +133,10 @@ export class CarCollider {
     const center = new THREE.Vector3();
     this.collider.getSize(size);
     this.collider.getCenter(center);
-    console.log(
-      `[CarCollider] collider size=${size.toArray()}, center=${center.toArray()}`,
-    );
     this.debugMesh.scale.copy(size);
     this.debugMesh.position.copy(center);
 
     scene.add(this.debugMesh);
-    console.log(
-      `[CarCollider] debug mesh added to scene, mesh id=${this.debugMesh.id}, parent=${this.debugMesh.parent?.uuid}`,
-    );
-
-    // Для отладки выведем информацию
-    console.log(
-      "[CarCollider] Debug mesh enabled, size:",
-      size,
-      "center:",
-      center,
-    );
   }
 
   // Выключение визуализации

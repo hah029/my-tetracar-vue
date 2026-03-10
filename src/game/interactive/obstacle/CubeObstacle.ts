@@ -8,6 +8,7 @@ import { CubePhysics } from "@/game/physics/CubePhysics";
 import { RoadEdge } from "@/game/road/edges/RoadEdge";
 import { RoadManager } from "@/game/road/RoadManager";
 import { ObstacleManager } from "./ObstacleManager";
+import { CAR_MATERIAL_CONFIG } from "@/game/car";
 
 export class CubeObstacle extends BaseObstacle {
   protected cubes: THREE.Object3D[] = [];
@@ -63,6 +64,8 @@ export class CubeObstacle extends BaseObstacle {
           index: i,
           geomConfig: config,
           useGLB: useGLB,
+          useTexture: true,
+          materialConfig: CAR_MATERIAL_CONFIG,
         });
         this.add(cube);
         cubes.push(cube);
@@ -124,7 +127,6 @@ export class CubeObstacle extends BaseObstacle {
     for (const cube of this.cubes) {
       box.expandByObject(cube);
     }
-
     return box;
   }
 
