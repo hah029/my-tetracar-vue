@@ -12,6 +12,7 @@ import { SegmentQueue } from "./segments/SegmentQueue";
 // stores
 import { usePlayerStore } from "@/store/playerStore";
 import { useProgressStore } from "@/store/progressStore";
+import { CarManager } from "../car";
 
 export class InteractiveItemsManager {
   private obstacleManager: ObstacleManager;
@@ -64,6 +65,7 @@ export class InteractiveItemsManager {
     }
 
     if (this.boosterEnabledTimer >= this.boosterEnabledInterval) {
+      CarManager.getInstance().setVisualMode("default");
       playerStore.disableNitro();
       this.boosterEnabledTimer = 0;
     }

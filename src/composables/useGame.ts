@@ -321,6 +321,7 @@ export function useGame() {
     obstacles.value = [];
     updateInteractiveItems(0, 0, UpdateMode.Destruction); // синхронизация
 
+    carManager.setVisualMode("default");
     playerStore.disableNitro();
     useProgressStore().resetDistance();
   }

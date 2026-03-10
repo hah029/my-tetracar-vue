@@ -119,6 +119,7 @@ export class CubeBuilder {
       configIndex: index,
       velocity: new THREE.Vector3(0, 0, 0),
       rotationSpeed: new THREE.Vector3(0, 0, 0),
+      name: config.name ?? "no-color",
     };
   }
 }

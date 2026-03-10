@@ -14,6 +14,7 @@ import { CameraSystem } from "@/game/camera/CameraSystem";
 import { SoundManager } from "@/game/sound/SoundManager";
 import { DebugColliderVisualizer } from "@/helpers/debug/DebugColliderVisualizer";
 import { UpdateMode } from "@/game/core/UpdateMode";
+import { CarManager } from "@/game/car";
 
 export function GameLoop(
   game: ReturnType<typeof useGame>,
@@ -83,8 +84,10 @@ export function GameLoop(
     if (boostCollisions.collision) {
       if (boostCollisions.subject === "nitro") {
         playerStore.enableNitro();
+        CarManager.getInstance().setVisualMode("nitro");
       } else if (boostCollisions.subject === "shield") {
         playerStore.enableShield();
+        CarManager.getInstance().setVisualMode("shield");
       } else {
         console.error(
           "Undefined booster collision subject:",

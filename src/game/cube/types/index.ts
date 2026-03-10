@@ -19,4 +19,5 @@ export interface CubeUserData {
   configIndex: number | null;
   velocity: THREE.Vector3;
   rotationSpeed: THREE.Vector3;
+  name?: string;
 }
