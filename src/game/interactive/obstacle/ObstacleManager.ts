@@ -95,22 +95,36 @@ export class ObstacleManager {
   }
 
   public update(dt: number, speed: number) {
-    this.updateObstacles(dt, speed);
+    this.updateList(this.obstacles, dt, speed);
     this.updateList(this.jumps, dt, speed);
+    this.updateDestroyedCubes(dt, speed);
   }
 
-  private updateObstacles(dt: number, speed: number) {
-    for (let i = this.obstacles.length - 1; i >= 0; i--) {
-      const obstacle = this.obstacles[i];
-      if (obstacle === undefined) continue;
-      const shouldRemove = obstacle.update(dt, speed);
+  private updateDestroyedCubes(dt: number, speed: number) {
+    for (let i = this.destroyedCubes.length - 1; i >= 0; i--) {
+      const cube = this.destroyedCubes[i];
+      if (cube === undefined) continue;
+      cube.position.z += dt * speed;
+      // const shouldRemove = cube.update(dt, speed);
 
-      if (shouldRemove && obstacle.isFullyDestroyed()) {
-        this.scene.remove(obstacle);
-        this.obstacles.splice(i, 1);
+      if (cube.position.z > 10) {
+        this.scene.remove(cube);
+        this.destroyedCubes.splice(i, 1);
       }
     }
   }
+  // private updateObstacles(dt: number, speed: number) {
+  //   for (let i = this.obstacles.length - 1; i >= 0; i--) {
+  //     const obstacle = this.obstacles[i];
+  //     if (obstacle === undefined) continue;
+  //     const shouldRemove = obstacle.update(dt, speed);
+
+  //     if (shouldRemove && obstacle.isFullyDestroyed()) {
+  //       this.scene.remove(obstacle);
+  //       this.obstacles.splice(i, 1);
+  //     }
+  //   }
+  // }
 
   private updateList<T extends { update(dt: number, s: number): boolean }>(
     list: T[],
