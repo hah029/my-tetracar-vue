@@ -10,7 +10,7 @@ import { GameLoop } from "./composables/useAnimate";
 import MainMenu from "./components/MainMenu.vue";
 import Preloader from "./components/Preloader.vue";
 import PauseMenu from "./components/PauseMenu.vue";
-import HUD from "./components/HUD.vue";
+import HUD from "./components/hud/HUD.vue";
 import GameOverMenu from "./components/GameOverMenu.vue";
 // managers
 import { CameraSystem } from "@/game/camera/CameraSystem";

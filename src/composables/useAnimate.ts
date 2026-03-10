@@ -57,6 +57,9 @@ export function GameLoop(
     if (collisionResult.collision) {
       if (collisionResult.jump) {
         game.jumpPlayer();
+      } else if (playerStore.isShieldEnabled) {
+        game.destroyObstacles(collisionResult.impactPoint);
+        playerStore.disableShield();
       } else {
         game.destroyCar(collisionResult.impactPoint);
         game.destroyObstacles(collisionResult.impactPoint);
@@ -79,6 +82,8 @@ export function GameLoop(
     if (boostCollisions.collision) {
       if (boostCollisions.subject === "nitro") {
         playerStore.enableNitro();
+      } else if (boostCollisions.subject === "shield") {
+        playerStore.enableShield();
       } else {
         console.error(
           "Undefined booster collision subject:",

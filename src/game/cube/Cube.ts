@@ -24,6 +24,8 @@ export class CubeBuilder {
       if (useTexture && materialConfig?.textureUrl) {
         const texture = loadTexture(materialConfig.textureUrl);
 
+        texture.flipY = false;
+
         cube.traverse((child) => {
           if ((child as THREE.Mesh).isMesh) {
             const mesh = child as THREE.Mesh;

@@ -1,74 +1,26 @@
 <template>
-  <div id="game-hud">
+  <!-- SPEED (TETRIS BLOCKS ANIMATION) -->
+  <div class="panel panel-right speed-panel-tetris">
+    <div class="speed-label">SPEED</div>
 
-    <!-- SCORE -->
-    <div class="panel panel-left">
-      <div class="label">SCORE</div>
-      <div class="value gold">{{ score }}</div>
-      <div class="sub">BEST <span>{{ bestScore }}</span></div>
-      <br>
-      <div class="sub">DISTANCE <span>{{ distance }}</span> CUBES</div>
-      <div class="sub">ACCELERATION <span>{{ (acceleration * 1e8).toFixed(1) }}</span> * 1e8 CUBES/(SEC*SEC)</div>
-    </div>
-
-    <!-- SPEED (TETRIS BLOCKS ANIMATION) -->
-    <div class="panel panel-right speed-panel-tetris">
-      <div class="speed-label">SPEED</div>
-
-      <div class="speed-blocks">
-        <div v-for="n in maxBlocks" :key="n" class="speed-block" :class="{ active: n <= activeBlocks }"
-          :style="{ animationDelay: `${(n - 1) * 6}ms` }">
-        </div>
-      </div>
-
-      <div class="speed-value">{{ speed }} куб/ч</div>
-    </div>
-
-    <!-- NITRO (TETRIS STYLE) -->
-    <div class="panel nitro" v-if="isNitroActive">
-      <div class="nitro-header">
-        <span>NITRO</span>
-        <span :class="{ active: isNitroActive }">{{ isNitroActive ? "ACTIVE" : "INACTIVE" }}</span>
-      </div>
-
-      <div class="nitro-bar-bg">
-        <div class="nitro-bar">
-          <div class="nitro-block" :class="{ active: n <= activeNitroBlocks }" v-for="n in NITRO_BLOCKS_TOTAL" :key="n"
-            :style="{ animationDelay: `${(n - 1) * 30}ms` }">
-          </div>
-        </div>
+    <div class="speed-blocks">
+      <div v-for="n in maxBlocks" :key="n" class="speed-block" :class="{ active: n <= activeBlocks }"
+        :style="{ animationDelay: `${(n - 1) * 6}ms` }">
       </div>
     </div>
 
-    <!-- LANES -->
-    <div class="panel lane-indicator">
-      <div v-for="i in laneCount" :key="i" class="lane-dot" :class="{ active: currentLane === i - 1 }" />
-    </div>
-
-    <!-- WARNING -->
-    <div class="warning-message" :style="warningStyle">
-      ⚠ DANGER ⚠
-    </div>
-
+    <div class="speed-value">{{ speed }} куб/ч</div>
   </div>
+
 </template>
 
 <script setup lang="ts">
 import { computed } from "vue";
 import { usePlayerStore } from "@/store/playerStore";
-import { useProgressStore } from "@/store/progressStore";
-import { RoadManager } from "@/game/road";
 
 const playerStore = usePlayerStore();
-const progressStore = useProgressStore();
-
-const score = computed(() => Math.floor(progressStore.score));
-const bestScore = computed(() => Math.floor(progressStore.highScore));
 
 const speed = computed(() => playerStore.getCurrentSpeedInCubesPerHour());
-
-const distance = computed(() => progressStore.getDistanceInCubes());
-const acceleration = computed(() => playerStore.getCurrentAcceleration());
 
 const maxBlocks = 100;
 const activeBlocks = computed(() => {
@@ -78,35 +30,6 @@ const activeBlocks = computed(() => {
   return Math.min(blocks, maxBlocks);
 });
 
-const currentLane = computed(() => playerStore.currentLane);
-const laneCount = computed(() => RoadManager.getInstance().getLanesCount?.() ?? 4);
-
-const isNitroActive = computed(() => playerStore.isNitroEnabled);
-// Общее количество блоков нитро (можно сделать константой)
-const NITRO_BLOCKS_TOTAL = 10;
-
-// Активные блоки на основе оставшегося времени
-const activeNitroBlocks = computed(() => {
-  if (!playerStore.isNitroEnabled || playerStore.nitroTimer <= 0) return 0;
-  const ratio = playerStore.nitroTimer / playerStore.BASE_NITRO_TIMER;
-  // Округляем вверх, чтобы при полном таймере были все 10 блоков
-  return Math.ceil(ratio * NITRO_BLOCKS_TOTAL);
-});
-
-// (опционально) можно оставить для ясности, но панель скрыта через v-if, поэтому не обязательно
-
-
-const warningStyle = computed(() => {
-  const danger = progressStore.getDangerLevel?.() ?? 0;
-  if (!danger) return { opacity: 0 };
-
-  const intensity = Math.floor(255 * danger);
-  return {
-    opacity: Math.min(danger, 1),
-    color: `rgb(255, ${255 - intensity}, ${255 - intensity})`,
-    textShadow: `0 0 ${20 * danger}px rgba(255,0,0,${danger})`,
-  };
-});
 </script>
 
 <style scoped>

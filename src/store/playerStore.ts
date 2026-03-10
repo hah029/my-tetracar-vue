@@ -18,6 +18,8 @@ export const usePlayerStore = defineStore("playerStore", () => {
   // nitro
   const isNitroEnabled = ref(false);
   const nitroTimer = ref(BASE_NITRO_TIMER);
+  // nitro
+  const isShieldEnabled = ref(false);
   // position
   const currentLane = ref(1); // 0..3 для полос
   const carPosition = ref({ x: 0, y: 0, z: 0 });
@@ -30,6 +32,14 @@ export const usePlayerStore = defineStore("playerStore", () => {
   function disableNitro() {
     isNitroEnabled.value = false;
     nitroTimer.value = BASE_NITRO_TIMER;
+  }
+
+  function enableShield() {
+    isShieldEnabled.value = true;
+  }
+
+  function disableShield() {
+    isShieldEnabled.value = false;
   }
 
   function resetGameData() {
@@ -80,6 +90,7 @@ export const usePlayerStore = defineStore("playerStore", () => {
     speed,
     baseSpeed,
     isNitroEnabled,
+    isShieldEnabled,
     currentLane,
     maxSpeed,
     acceleration,
@@ -87,9 +98,14 @@ export const usePlayerStore = defineStore("playerStore", () => {
     carPosition,
     cameraPosition,
     nitroTimer,
+
     // methods
     enableNitro,
     disableNitro,
+
+    enableShield,
+    disableShield,
+
     resetGameData,
     getCurrentSpeed,
     getCurrentSpeedInCubesPerHour,

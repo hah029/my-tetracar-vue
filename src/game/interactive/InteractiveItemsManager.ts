@@ -1,8 +1,8 @@
 // src/game/interactive/InteractiveItemsManager.ts
 // managers
 import { ObstacleManager } from "./obstacle/ObstacleManager";
-import { CoinManager } from "./coin/CoinManager";
-import { BoosterManager } from "./booster/BoosterManager";
+import { CoinManager } from "./items/coin/CoinManager";
+import { BoosterManager } from "./items/booster/BoosterManager";
 // other
 import { simulateJumpTrajectory } from "@/game/car/CarTrajectory";
 import { DEFAULT_CAR_CONFIG } from "@/game/car/config";
@@ -45,9 +45,7 @@ export class InteractiveItemsManager {
 
     if (distance - this.distanceSinceLastSegment >= this.segmentLength) {
       this.spawnSegment(deltaTime, speed, this.nextSegmentZ);
-
       this.nextSegmentZ -= this.segmentLength;
-
       this.distanceSinceLastSegment = distance;
     }
 
@@ -97,7 +95,7 @@ export class InteractiveItemsManager {
             this.spawnCoinLine(lane, z);
             break;
 
-          case LanePattern.BoosterNitro:
+          case LanePattern.Booster:
             this.spawnBooster(lane, z);
             break;
 
@@ -124,7 +122,11 @@ export class InteractiveItemsManager {
   }
 
   private spawnBooster(lane: number, baseZ: number) {
-    this.boosterManager.spawnNitro(lane, baseZ);
+    if (Math.random() < 0.5) {
+      this.boosterManager.spawnNitro(lane, baseZ);
+    } else {
+      this.boosterManager.spawnShield(lane, baseZ);
+    }
   }
 
   private spawnJumpWithCoins(
@@ -169,7 +171,7 @@ export class InteractiveItemsManager {
   }
 
   public getBoosters() {
-    return this.boosterManager.getNitros();
+    return this.boosterManager.getBoosters();
   }
 
   public reset() {

@@ -7,8 +7,8 @@ import { CarManager } from "@/game/car/CarManager";
 import { ObstacleManager } from "@/game/interactive/obstacle/ObstacleManager";
 import { CollisionSystem } from "@/game/collision/CollisionSystem";
 import { InteractiveItemsManager } from "@/game/interactive/InteractiveItemsManager";
-import { BoosterManager } from "@/game/interactive/booster/BoosterManager";
-import { CoinManager } from "@/game/interactive/coin/CoinManager";
+import { BoosterManager } from "@/game/interactive/items/booster/BoosterManager";
+import { CoinManager } from "@/game/interactive/items/coin/CoinManager";
 import { CityManager } from "@/game/environment/city/CityManager";
 import { SoundManager } from "@/game/sound/SoundManager";
 // enums

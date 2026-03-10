@@ -1,10 +1,12 @@
 import * as THREE from "three";
 import { Nitro } from "./Nitro";
+import { Shield } from "./Shield";
 import { Car } from "@/game/car/Car";
+import type { BaseItem } from "../BaseItem";
 
 export class BoosterManager {
   private static instance: BoosterManager | null = null;
-  private nitros: Nitro[] = [];
+  private boosters: BaseItem[] = [];
   private scene!: THREE.Scene;
 
   public static getInstance(): BoosterManager {
@@ -23,9 +25,19 @@ export class BoosterManager {
      ======================= */
 
   public spawnNitro(laneIndex: number, zPos: number, yPos: number = 0.2): void {
-    const nitro = new Nitro(laneIndex, zPos, yPos);
-    this.nitros.push(nitro);
-    this.scene.add(nitro);
+    const booster = new Nitro(laneIndex, zPos, yPos);
+    this.boosters.push(booster);
+    this.scene.add(booster);
+  }
+
+  public spawnShield(
+    laneIndex: number,
+    zPos: number,
+    yPos: number = 0.2,
+  ): void {
+    const booster = new Shield(laneIndex, zPos, yPos);
+    this.boosters.push(booster);
+    this.scene.add(booster);
   }
 
   /* =======================
@@ -33,11 +45,11 @@ export class BoosterManager {
      ======================= */
 
   public update(deltaTime: number, speed: number): void {
-    for (let i = this.nitros.length - 1; i >= 0; i--) {
-      const nitro = this.nitros[i];
-      if (nitro === undefined) continue;
-      if (nitro.update(deltaTime, speed)) {
-        this.removeNitro(i);
+    for (let i = this.boosters.length - 1; i >= 0; i--) {
+      const booster = this.boosters[i];
+      if (booster === undefined) continue;
+      if (booster.update(deltaTime, speed)) {
+        this.removeBooster(i);
       }
     }
   }
@@ -58,15 +70,15 @@ export class BoosterManager {
       subject: "",
     };
 
-    // Проверка коллизии с нитро-бустером
-    for (let i = this.nitros.length - 1; i >= 0; i--) {
-      const nitro = this.nitros[i];
-      if (nitro === undefined) continue;
+    // Проверка коллизии с бустером
+    for (let i = this.boosters.length - 1; i >= 0; i--) {
+      const booster = this.boosters[i];
+      if (booster === undefined) continue;
 
-      if (carCollider.intersectsSphere(nitro.collider)) {
-        collisions["subject"] = "nitro";
+      if (carCollider.intersectsSphere(booster.collider)) {
+        collisions["subject"] = booster.itemType;
         collisions["collision"] = true;
-        this.removeNitro(i);
+        this.removeBooster(i);
       }
     }
 
@@ -77,11 +89,11 @@ export class BoosterManager {
      HELPERS
      ======================= */
 
-  private removeNitro(index: number): void {
-    const nitro = this.nitros[index];
-    if (nitro === undefined) return;
-    this.scene.remove(nitro);
-    this.nitros.splice(index, 1);
+  private removeBooster(index: number): void {
+    const booster = this.boosters[index];
+    if (booster === undefined) return;
+    this.scene.remove(booster);
+    this.boosters.splice(index, 1);
   }
 
   /* =======================
@@ -89,11 +101,11 @@ export class BoosterManager {
      ======================= */
 
   public reset(): void {
-    this.nitros.forEach((coin) => this.scene.remove(coin));
-    this.nitros = [];
+    this.boosters.forEach((coin) => this.scene.remove(coin));
+    this.boosters = [];
   }
 
-  public getNitros(): Nitro[] {
-    return this.nitros;
+  public getBoosters(): Nitro[] {
+    return this.boosters;
   }
 }

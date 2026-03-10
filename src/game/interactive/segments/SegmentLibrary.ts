@@ -2,13 +2,15 @@ import type { Segment } from "./Segment";
 import { LanePattern as L } from "../types/LanePattern";
 import { SegmentType as T } from "../types/SegmentType";
 
+const SEGMENT_LENGHT = 1;
+
 export const SEGMENTS: Segment[] = [
   /* ---------------- SAFE ---------------- */
 
   {
     id: "safe_run_1",
     difficulty: 1,
-    length: 16,
+    length: SEGMENT_LENGHT,
     type: T.Safe,
     weight: 8,
 
@@ -23,7 +25,7 @@ export const SEGMENTS: Segment[] = [
   {
     id: "safe_coins",
     difficulty: 1,
-    length: 16,
+    length: SEGMENT_LENGHT,
     type: T.Safe,
     weight: 7,
 
@@ -40,7 +42,7 @@ export const SEGMENTS: Segment[] = [
   {
     id: "coin_lane",
     difficulty: 1,
-    length: 16,
+    length: SEGMENT_LENGHT,
     type: T.Coins,
     weight: 7,
 
@@ -55,7 +57,7 @@ export const SEGMENTS: Segment[] = [
   {
     id: "coin_wave",
     difficulty: 1,
-    length: 16,
+    length: SEGMENT_LENGHT,
     type: T.Coins,
     weight: 6,
 
@@ -70,7 +72,7 @@ export const SEGMENTS: Segment[] = [
   {
     id: "coin_spread",
     difficulty: 1,
-    length: 16,
+    length: SEGMENT_LENGHT,
     type: T.Coins,
     weight: 6,
 
@@ -87,7 +89,7 @@ export const SEGMENTS: Segment[] = [
   {
     id: "zigzag_1",
     difficulty: 1,
-    length: 16,
+    length: SEGMENT_LENGHT,
     type: T.Obstacle,
     weight: 10,
 
@@ -102,7 +104,7 @@ export const SEGMENTS: Segment[] = [
   {
     id: "zigzag_2",
     difficulty: 1,
-    length: 16,
+    length: SEGMENT_LENGHT,
     type: T.Obstacle,
     weight: 10,
 
@@ -117,7 +119,7 @@ export const SEGMENTS: Segment[] = [
   {
     id: "center_block",
     difficulty: 1,
-    length: 16,
+    length: SEGMENT_LENGHT,
     type: T.Obstacle,
     weight: 9,
 
@@ -132,7 +134,7 @@ export const SEGMENTS: Segment[] = [
   {
     id: "lane_switch",
     difficulty: 1,
-    length: 16,
+    length: SEGMENT_LENGHT,
     type: T.Obstacle,
     weight: 9,
 
@@ -147,7 +149,7 @@ export const SEGMENTS: Segment[] = [
   {
     id: "wide_block",
     difficulty: 2,
-    length: 16,
+    length: SEGMENT_LENGHT,
     type: T.Obstacle,
     weight: 7,
 
@@ -162,7 +164,7 @@ export const SEGMENTS: Segment[] = [
   {
     id: "moving_wall_1",
     difficulty: 2,
-    length: 16,
+    length: SEGMENT_LENGHT,
     type: T.Obstacle,
     weight: 1,
 
@@ -177,7 +179,7 @@ export const SEGMENTS: Segment[] = [
   {
     id: "enemy_car_1",
     difficulty: 1,
-    length: 16,
+    length: SEGMENT_LENGHT,
     type: T.Obstacle,
     weight: 100,
 
@@ -186,7 +188,7 @@ export const SEGMENTS: Segment[] = [
   {
     id: "enemy_car_2",
     difficulty: 1,
-    length: 16,
+    length: SEGMENT_LENGHT,
     type: T.Obstacle,
     weight: 100,
 
@@ -195,7 +197,7 @@ export const SEGMENTS: Segment[] = [
   {
     id: "enemy_car_2",
     difficulty: 1,
-    length: 16,
+    length: SEGMENT_LENGHT,
     type: T.Obstacle,
     weight: 100,
 
@@ -207,14 +209,14 @@ export const SEGMENTS: Segment[] = [
   {
     id: "boost_reward",
     difficulty: 1,
-    length: 16,
+    length: SEGMENT_LENGHT,
     type: T.Boost,
     weight: 3,
 
     pattern: [
       [L.Empty, L.Empty, L.Empty, L.Empty, L.Empty],
       [L.Coin, L.Coin, L.Coin, L.Coin, L.Coin],
-      [L.Empty, L.Empty, L.BoosterNitro, L.Empty, L.Empty],
+      [L.Empty, L.Empty, L.Booster, L.Empty, L.Empty],
       [L.Empty, L.Empty, L.Empty, L.Empty, L.Empty],
     ],
   },
@@ -222,14 +224,14 @@ export const SEGMENTS: Segment[] = [
   {
     id: "boost_lane",
     difficulty: 2,
-    length: 16,
+    length: SEGMENT_LENGHT,
     type: T.Boost,
     weight: 3,
 
     pattern: [
       [L.Empty, L.Empty, L.Empty, L.Empty, L.Empty],
       [L.Empty, L.Coin, L.Coin, L.Coin, L.Empty],
-      [L.Empty, L.Empty, L.BoosterNitro, L.Empty, L.Empty],
+      [L.Empty, L.Empty, L.Booster, L.Empty, L.Empty],
       [L.Empty, L.Empty, L.Empty, L.Empty, L.Empty],
     ],
   },
@@ -239,7 +241,7 @@ export const SEGMENTS: Segment[] = [
   {
     id: "jump_single",
     difficulty: 2,
-    length: 16,
+    length: SEGMENT_LENGHT,
     type: T.Jump,
     weight: 2,
 
@@ -254,7 +256,7 @@ export const SEGMENTS: Segment[] = [
   {
     id: "jump_left",
     difficulty: 2,
-    length: 16,
+    length: SEGMENT_LENGHT,
     type: T.Jump,
     weight: 2,
 
@@ -269,7 +271,7 @@ export const SEGMENTS: Segment[] = [
   {
     id: "jump_right",
     difficulty: 2,
-    length: 16,
+    length: SEGMENT_LENGHT,
     type: T.Jump,
     weight: 2,
 
@@ -286,7 +288,7 @@ export const SEGMENTS: Segment[] = [
   {
     id: "challenge_zigzag",
     difficulty: 2,
-    length: 16,
+    length: SEGMENT_LENGHT,
     type: T.Challenge,
     weight: 3,
 
@@ -301,7 +303,7 @@ export const SEGMENTS: Segment[] = [
   {
     id: "challenge_center",
     difficulty: 2,
-    length: 16,
+    length: SEGMENT_LENGHT,
     type: T.Challenge,
     weight: 3,
 

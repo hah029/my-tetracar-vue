@@ -9,5 +9,5 @@ export enum LanePattern {
   EnemyCar, // новое
 
   Jump,
-  BoosterNitro,
+  Booster,
 }
