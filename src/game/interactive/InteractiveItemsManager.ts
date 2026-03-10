@@ -141,18 +141,37 @@ export class InteractiveItemsManager {
     this.obstacleManager.spawnJump(lane, jumpZ);
 
     const trajectory = simulateJumpTrajectory({
-      startY: 0.5,
+      startY: 0, // высота машины при прыжке
       jumpHeight: DEFAULT_CAR_CONFIG.jumpHeight,
       gravity: DEFAULT_CAR_CONFIG.gravity,
       deltaTime: deltaTime,
       forwardSpeed: speed,
     });
 
-    const step = Math.max(2, Math.floor(trajectory.length / 6));
+    // console.log("[spawnJumpWithCoins]", {
+    //   lane,
+    //   deltaTime,
+    //   speed,
+    //   baseZ,
+    //   jumpZ,
+    //   trajectoryLength: trajectory.length,
+    //   trajectory: trajectory.map((p) => ({ y: p.y, zOffset: p.zOffset })),
+    //   config: {
+    //     startY: 0,
+    //     jumpHeight: DEFAULT_CAR_CONFIG.jumpHeight,
+    //     gravity: DEFAULT_CAR_CONFIG.gravity,
+    //   },
+    // });
+
+    const step = Math.max(1, Math.floor(trajectory.length / 10)); // больше монет
     for (let i = 0; i < trajectory.length; i += step) {
       const point = trajectory[i];
       if (point === undefined) continue;
-      this.coinManager.spawnCoin(lane, jumpZ + 2 + point.zOffset, point.y, 5);
+      const coinZ = jumpZ + point.zOffset; // убрали +2
+      // console.log(
+      //   `  coin ${i}: y=${point.y}, zOffset=${point.zOffset}, coinZ=${coinZ}`,
+      // );
+      this.coinManager.spawnCoin(lane, coinZ, point.y, 5);
     }
   }
 

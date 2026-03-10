@@ -61,6 +61,7 @@ export function GameLoop(
       } else if (playerStore.isShieldEnabled) {
         // Столкнувшееся препятствие уже разрушено в CollisionSystem
         // Не разрушаем все препятствия
+        CarManager.getInstance().setVisualMode("default");
         playerStore.disableShield();
       } else {
         game.destroyCar(collisionResult.impactPoint);
