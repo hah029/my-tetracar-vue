@@ -135,32 +135,39 @@ watch(
 </template>
 
 <style>
-html,
-body,
-#app {
-  margin: 0;
-  width: 100%;
-  height: 100%;
-  overflow: hidden;
-  font-family: Helvetica, Arial, sans-serif;
-}
+    @font-face {
+        font-family: 'vla_shu';
+        src: url('./assets/fonts/VlaShu.ttf')
+    }
 
-.three-root {
-  width: 100%;
-  height: 100%;
-}
+    html,
+    body,
+    #app {
+        margin: 0;
+        width: 100%;
+        height: 100%;
+        overflow: hidden;
+        /* font-size: 16px; */
+        font-size: 0.8333vw;
+        /* font-family: Helvetica, Arial, sans-serif; */
+    }
 
-.menu-overlay {
-  position: fixed;
-  inset: 0;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  background-color: rgba(0, 0, 0, 0.5);
-  z-index: 2000;
-  backdrop-filter: blur(2px);
-  text-align: center;
-  color: white;
-}
+    .three-root {
+        width: 100%;
+        height: 100%;
+    }
+
+    .menu-overlay {
+        position: fixed;
+        inset: 0;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        background-color: rgba(0, 0, 0, 0.5);
+        z-index: 2000;
+        backdrop-filter: blur(2px);
+        /* text-align: center; */
+        /* color: white; */
+    }
 </style>
