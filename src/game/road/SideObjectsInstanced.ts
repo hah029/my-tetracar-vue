@@ -1,3 +1,5 @@
+// /game/road/SideObjectsInstanced.ts
+
 import * as THREE from "three";
 import { CubeBuilder } from "../cube/Cube";
 import {
