@@ -3,6 +3,7 @@ import * as THREE from "three";
 import { type Ref, onMounted, onUnmounted } from "vue";
 import { EffectComposer } from "three/examples/jsm/postprocessing/EffectComposer.js";
 import { AfterimagePass } from "three/examples/jsm/postprocessing/AfterimagePass.js";
+import { UnrealBloomPass } from "three/examples/jsm/postprocessing/UnrealBloomPass.js";
 import { RenderPass } from "three/examples/jsm/postprocessing/RenderPass.js";
 import { useGameState } from "@/store/gameState";
 import { useEnvironmentStore } from "@/store/environmentStore";
@@ -30,7 +31,6 @@ export function useThree(container: Ref<HTMLElement | null>) {
 
     // ---- Camera ----
     const aspect = container.value.clientWidth / container.value.clientHeight;
-    camera = new THREE.PerspectiveCamera();
     camera = new THREE.PerspectiveCamera(75, aspect, 0.1, 1000);
 
     // Axis
@@ -47,10 +47,23 @@ export function useThree(container: Ref<HTMLElement | null>) {
     });
     renderer.setSize(container.value.clientWidth, container.value.clientHeight);
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1));
+    renderer.toneMappingExposure = 1.5;
     // renderer.shadowMap.enabled = false;
     // renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    const bloomPass = new UnrealBloomPass(
+      new THREE.Vector2(
+        container.value.clientWidth,
+        container.value.clientHeight,
+      ),
+      0.6, // strength
+      0.4, // radius
+      0.85, // threshold
+    );
+
     composer = new EffectComposer(renderer);
     composer.addPass(new RenderPass(scene, camera));
+
+    composer.addPass(bloomPass);
 
     afterimagePass = new AfterimagePass(1); // оригинальное значение damp
     composer.addPass(afterimagePass);

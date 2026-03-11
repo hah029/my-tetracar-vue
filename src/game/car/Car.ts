@@ -2,7 +2,11 @@ import * as THREE from "three";
 import { cameraTarget } from "@/game/camera/cameraTarget.js";
 import { RoadManager } from "../road/RoadManager.js";
 import { type CarState, type CarConfig } from "./types";
-import { CAR_MATERIAL_CONFIG_EXTRA, DEFAULT_CAR_CONFIG } from "./config";
+import {
+  CAR_EMISSION_CONFIG_EXTRA,
+  CAR_MATERIAL_CONFIG_EXTRA,
+  DEFAULT_CAR_CONFIG,
+} from "./config";
 import { CarCollider } from "./CarCollider";
 import { CarCubesBuilder } from "./CarCubesBuilder";
 import { CarPhysics } from "./CarPhysics";
@@ -159,6 +163,11 @@ export class Car extends THREE.Group {
     this.visualState = new CarVisualState(this.cubes);
 
     this.visualState.preloadTextures(CAR_MATERIAL_CONFIG_EXTRA);
+    Object.entries(CAR_EMISSION_CONFIG_EXTRA).forEach(([k, v]) => {
+      if (k !== "default") {
+        this.visualState?.setEmissiveColor(k, v);
+      }
+    });
 
     // Добавляем камеру обратно
     this.add(cameraTarget);
