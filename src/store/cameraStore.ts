@@ -8,6 +8,13 @@ export const useCameraStore = defineStore("camera", () => {
   const CAMERA_LOOKAHEAD = 10;
   const CAMERA_FOLLOW_SPEED = 2.0;
 
+  const CAMERA_INIT_POSITION_X = 0;
+  const CAMERA_INIT_POSITION_Y = 4;
+  const CAMERA_INIT_POSITION_Z = 5;
+  const CAMERA_INIT_LOOKAT_X = 0;
+  const CAMERA_INIT_LOOKAT_Y = 1;
+  const CAMERA_INIT_LOOKAT_Z = -10;
+
   // FOV
   const FOV_MIN = 60;
   const FOV_MAX = 80;
@@ -71,5 +78,11 @@ export const useCameraStore = defineStore("camera", () => {
     DESTROYED_CAMERA_OFFSET_X,
     DESTROYED_CAMERA_OFFSET_Y,
     DESTROYED_CAMERA_OFFSET_Z,
+    CAMERA_INIT_POSITION_X,
+    CAMERA_INIT_POSITION_Y,
+    CAMERA_INIT_POSITION_Z,
+    CAMERA_INIT_LOOKAT_X,
+    CAMERA_INIT_LOOKAT_Y,
+    CAMERA_INIT_LOOKAT_Z,
   };
 });

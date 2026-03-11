@@ -4,6 +4,8 @@ import { type Ref, onMounted, onUnmounted } from "vue";
 import { EffectComposer } from "three/examples/jsm/postprocessing/EffectComposer.js";
 import { AfterimagePass } from "three/examples/jsm/postprocessing/AfterimagePass.js";
 import { RenderPass } from "three/examples/jsm/postprocessing/RenderPass.js";
+import { useGameState } from "@/store/gameState";
+import { useEnvironmentStore } from "@/store/environmentStore";
 
 // Типы
 export type ThreeRefs = {
@@ -17,7 +19,6 @@ let camera: THREE.PerspectiveCamera;
 let renderer: THREE.WebGLRenderer;
 let composer: EffectComposer;
 let afterimagePass: AfterimagePass;
-// let listener: THREE.AudioListener;
 
 export function useThree(container: Ref<HTMLElement | null>) {
   function init() {
@@ -29,13 +30,14 @@ export function useThree(container: Ref<HTMLElement | null>) {
 
     // ---- Camera ----
     const aspect = container.value.clientWidth / container.value.clientHeight;
+    camera = new THREE.PerspectiveCamera();
     camera = new THREE.PerspectiveCamera(75, aspect, 0.1, 1000);
-    camera.position.set(0, 4, 5);
-    camera.lookAt(0, 1, -10);
 
-    // // ---- Audio ----
-    // listener = new THREE.AudioListener();
-    // camera.add(listener);
+    // Axis
+    if (useGameState().isDebug) {
+      const axesHelper = new THREE.AxesHelper(useEnvironmentStore().AXES_SIZE);
+      scene.add(axesHelper);
+    }
 
     // ---- Renderer ----
     renderer = new THREE.WebGLRenderer({
@@ -50,7 +52,7 @@ export function useThree(container: Ref<HTMLElement | null>) {
     composer = new EffectComposer(renderer);
     composer.addPass(new RenderPass(scene, camera));
 
-    afterimagePass = new AfterimagePass(0.96); // оригинальное значение damp
+    afterimagePass = new AfterimagePass(1); // оригинальное значение damp
     composer.addPass(afterimagePass);
 
     container.value.appendChild(renderer.domElement);

@@ -20,7 +20,19 @@ class CameraSystemClass {
   private impactOffset = new THREE.Vector3();
 
   initialize(camera: THREE.PerspectiveCamera) {
+    const cameraStore = useCameraStore();
+
     this.camera = camera;
+    this.camera.position.set(
+      cameraStore.CAMERA_INIT_POSITION_X,
+      cameraStore.CAMERA_INIT_POSITION_Y,
+      cameraStore.CAMERA_INIT_POSITION_Z,
+    );
+    this.camera.lookAt(
+      cameraStore.CAMERA_INIT_LOOKAT_X,
+      cameraStore.CAMERA_INIT_LOOKAT_Y,
+      cameraStore.CAMERA_INIT_LOOKAT_Z,
+    );
   }
 
   update(
