@@ -109,22 +109,38 @@ export class CarManager {
     return this.car !== null;
   }
 
-  public setVisualMode(mode: "default" | "nitro" | "shield" | "damage") {
-    switch (mode) {
-      case "nitro":
-        this.car?.enableNitro();
-        break;
-      case "shield":
-        this.car?.enableShield();
-        break;
-      case "damage":
-        this.car?.showDamage();
-        break;
-      default:
-        const playerStore = usePlayerStore();
-        if (playerStore.isNitroEnabled) this.car?.disableNitro();
-        if (playerStore.isShieldEnabled) this.car?.disableShield();
-        break;
-    }
+  public enableNitro() {
+    this.car?.enableNitro();
   }
+
+  public disableNitro() {
+    this.car?.disableNitro();
+  }
+
+  public enableShield() {
+    this.car?.enableShield();
+  }
+
+  public disableShield() {
+    this.car?.disableShield();
+  }
+
+  // public setVisualMode(mode: "default" | "nitro" | "shield" | "damage") {
+  //   switch (mode) {
+  //     case "nitro":
+  //       this.car?.enableNitro();
+  //       break;
+  //     case "shield":
+  //       this.car?.enableShield();
+  //       break;
+  //     case "damage":
+  //       this.car?.showDamage();
+  //       break;
+  //     default:
+  //       const playerStore = usePlayerStore();
+  //       if (playerStore.isNitroEnabled) this.car?.disableNitro();
+  //       if (playerStore.isShieldEnabled) this.car?.disableShield();
+  //       break;
+  //   }
+  // }
 }

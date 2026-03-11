@@ -65,7 +65,7 @@ export class InteractiveItemsManager {
     }
 
     if (this.boosterEnabledTimer >= this.boosterEnabledInterval) {
-      CarManager.getInstance().setVisualMode("default");
+      CarManager.getInstance().disableNitro();
       playerStore.disableNitro();
       this.boosterEnabledTimer = 0;
     }

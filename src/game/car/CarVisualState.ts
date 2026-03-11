@@ -8,7 +8,7 @@ type TextureMap = Record<CarVisualEffect | "default", string>;
 export class CarVisualState {
   private meshes: THREE.Mesh[] = [];
 
-  private textures = new Map<string, THREE.Texture>();
+  private textures = new Map<CarVisualEffect | "default", THREE.Texture>();
 
   private activeEffects = new Set<CarVisualEffect>();
 
@@ -16,7 +16,10 @@ export class CarVisualState {
     cubes.forEach((cube) => {
       cube.traverse((child) => {
         if (child instanceof THREE.Mesh) {
-          child.userData = cube.userData;
+          child.userData = {
+            ...child.userData,
+            name: cube.userData.name,
+          };
           this.meshes.push(child);
         }
       });
@@ -28,7 +31,7 @@ export class CarVisualState {
       const texture = loadTexture(url);
       texture.flipY = false;
 
-      this.textures.set(mode, texture);
+      this.textures.set(mode as CarVisualEffect | "default", texture);
     });
   }
 
@@ -47,45 +50,32 @@ export class CarVisualState {
   }
 
   clear() {
+    if (this.activeEffects.size === 0) return;
+
     this.activeEffects.clear();
     this.updateVisual();
   }
 
   private updateVisual() {
-    let texture = this.textures.get("default");
-    if (!texture) {
-      console.warn("[CarVisualState] no texture found, skipping update");
-      return;
-    }
+    const defaultTexture = this.textures.get("default");
+    if (!defaultTexture) return;
 
-    let cubeMapping = {
-      damage: texture,
-      shield: texture,
-      nitro: texture,
-    };
+    for (const mesh of this.meshes) {
+      const tag = mesh.userData.name as CarVisualEffect | "default";
 
-    // приоритет эффектов
-    if (this.activeEffects.has("damage")) {
-      cubeMapping["damage"] = this.textures.get("damage") ?? texture;
-    }
-    if (this.activeEffects.has("shield")) {
-      cubeMapping["shield"] = this.textures.get("shield") ?? texture;
-    }
-    if (this.activeEffects.has("nitro")) {
-      cubeMapping["nitro"] = this.textures.get("nitro") ?? texture;
-    }
+      const material = mesh.material as THREE.MeshStandardMaterial;
+      if (!material) continue;
 
-    this.meshes
-      .filter((mesh) => mesh.userData.name != "no-color")
-      .forEach((mesh) => {
-        const material = mesh.material as THREE.MeshStandardMaterial;
+      let nextTexture = defaultTexture;
 
-        if (!material) {
-          console.warn("[CarVisualState] mesh has no material", mesh);
-          return;
-        }
-        material.map = cubeMapping[mesh.userData.name];
+      if (tag !== "default" && this.activeEffects.has(tag)) {
+        nextTexture = this.textures.get(tag) ?? defaultTexture;
+      }
+
+      if (material.map !== nextTexture) {
+        material.map = nextTexture;
         material.needsUpdate = true;
-      });
+      }
+    }
   }
 }

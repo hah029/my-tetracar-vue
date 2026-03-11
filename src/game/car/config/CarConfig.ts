@@ -35,14 +35,14 @@ export const CAR_CUBES_CONFIG: GeometryConfig[] = [
   {
     pos: [COLS[1], HEIGHT, ROWS[2]],
     scale: GLB_SCALES,
-    name: "no-color",
+    name: "default",
     modelUrl: cubeGLB,
   },
 
   {
     pos: [COLS[1], HEIGHT, ROWS[1]],
     scale: GLB_SCALES,
-    name: "no-color",
+    name: "default",
     modelUrl: cubeGLB,
   },
   // передние колеса

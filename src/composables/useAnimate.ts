@@ -61,7 +61,7 @@ export function GameLoop(
       } else if (playerStore.isShieldEnabled) {
         // Столкнувшееся препятствие уже разрушено в CollisionSystem
         // Не разрушаем все препятствия
-        CarManager.getInstance().setVisualMode("default");
+        CarManager.getInstance().disableShield();
         playerStore.disableShield();
       } else {
         game.destroyCar(collisionResult.impactPoint);
@@ -87,10 +87,10 @@ export function GameLoop(
     if (boostCollisions.collision) {
       if (boostCollisions.subject === "nitro") {
         playerStore.enableNitro();
-        CarManager.getInstance().setVisualMode("nitro");
+        CarManager.getInstance().enableNitro();
       } else if (boostCollisions.subject === "shield") {
         playerStore.enableShield();
-        CarManager.getInstance().setVisualMode("shield");
+        CarManager.getInstance().enableShield();
       } else {
         console.error(
           "Undefined booster collision subject:",
