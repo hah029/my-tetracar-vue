@@ -57,7 +57,7 @@ export function GameLoop(
     const collisionResult = game.checkCollision(performance.now());
     if (collisionResult.collision) {
       if (collisionResult.jump) {
-        game.jumpPlayer();
+        game.jumpPlayer(deltaTime);
       } else if (playerStore.isShieldEnabled) {
         // Столкнувшееся препятствие уже разрушено в CollisionSystem
         // Не разрушаем все препятствия
@@ -180,7 +180,7 @@ export function GameLoop(
     const dangerLevel = game.getDangerLevel();
     hud.updateHUD(currentSpeed, playerStore.currentLane, dangerLevel);
 
-    game.updatePlayer();
+    game.updatePlayer(deltaTime);
 
     // =========================
     // MAIN UPDATE

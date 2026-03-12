@@ -1,6 +1,7 @@
 import * as THREE from "three";
 import type { Jump } from "@/game/interactive/obstacle/Jump";
 import type { BaseObstacle } from "@/game/interactive/obstacle/BaseObstacle";
+import type { Car } from "../car";
 
 const DANGER_DISTANCE = 30;
 const COLLISION_COOLDOWN_MS = 1000;
@@ -19,12 +20,14 @@ class CollisionSystemClass {
   }
 
   checkCollision(
-    car: {
-      isDestroyed(): boolean;
-      getCollider(): THREE.Box3 | THREE.Sphere;
-      checkObstacleCollision(obstacle: THREE.Object3D): boolean;
-      checkJumpCollision(jump: THREE.Object3D): boolean;
-    },
+    // car: {
+    //   isDestroyed(): boolean;
+    //   getCollider(): THREE.Box3 | THREE.Sphere;
+    //   checkObstacleCollision(obstacle: THREE.Object3D): boolean;
+    //   checkJumpCollision(jump: THREE.Object3D): boolean;
+    //   startShieldCooldown(duration: number): void;
+    // },
+    car: Car,
     jumps: Jump[] = [],
     obstacles: BaseObstacle[] = [],
     now?: number, // текущее время в миллисекундах (опционально)
@@ -41,6 +44,7 @@ class CollisionSystemClass {
       const collides = car.checkObstacleCollision(obstacle);
       if (collides) {
         this.lastCollisionTime = currentTime;
+        car.startShieldCooldown(COLLISION_COOLDOWN_MS / 1000);
         obstacle.destroy();
         return {
           collision: true,

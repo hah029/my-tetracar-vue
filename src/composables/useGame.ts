@@ -147,11 +147,11 @@ export function useGame() {
   }
 
   // === Обновление позиции и состояния машины (вызывать каждый кадр) ===
-  function updatePlayer() {
+  function updatePlayer(dt: number) {
     if (!carManager || !roadManager) return;
 
     const realCar = carManager.getCar();
-    realCar.update();
+    realCar.update(dt);
 
     car.value.mesh = realCar;
     car.value.isDestroyed = realCar.isDestroyed();
@@ -186,29 +186,29 @@ export function useGame() {
     car.value.cubes = realCar.getCubes();
   }
 
-  function resetPlayer() {
+  function resetPlayer(dt: number) {
     if (!carManager) return;
 
     carManager.resetCar();
-    updatePlayer();
+    updatePlayer(dt);
   }
 
-  function movePlayerLeft() {
+  function movePlayerLeft(dt: number) {
     carManager.getCar().moveLeft();
     soundManager.play("sfx_click");
-    updatePlayer();
+    updatePlayer(dt);
   }
 
-  function movePlayerRight() {
+  function movePlayerRight(dt: number) {
     carManager.getCar().moveRight();
     soundManager.play("sfx_click");
-    updatePlayer();
+    updatePlayer(dt);
   }
 
-  function jumpPlayer() {
+  function jumpPlayer(dt: number) {
     carManager.getCar().jump();
     car.value.isJumping = true;
-    updatePlayer();
+    updatePlayer(dt);
   }
 
   let obstacleSyncTimer = 0;

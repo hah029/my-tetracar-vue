@@ -7,6 +7,7 @@ export type TextureMap = Record<CarVisualEffect | "default", string>;
 
 export class CarVisualState {
   private meshes: THREE.Mesh[] = [];
+  private DEFAULT_EMISSION_INTENSITY = 2.2;
 
   private textures = new Map<CarVisualEffect | "default", THREE.Texture>();
 
@@ -17,6 +18,10 @@ export class CarVisualState {
   >();
 
   private activeEffects = new Set<CarVisualEffect>();
+  private blinking = false;
+  private blinkTime = 0;
+  private blinkDuration = 1; // сколько длится cooldown
+  private blinkSpeed = 10; // частота мигания
 
   constructor(cubes: THREE.Object3D[]) {
     cubes.forEach((cube) => {
@@ -42,6 +47,34 @@ export class CarVisualState {
 
       this.textures.set(mode as CarVisualEffect | "default", texture);
     });
+  }
+
+  startBlink(duration: number) {
+    this.blinking = true;
+    this.blinkTime = 0;
+    this.blinkDuration = duration;
+  }
+
+  update(dt: number) {
+    if (!this.blinking) return;
+
+    this.blinkTime += dt / 1000;
+
+    const pulse = Math.sin(this.blinkTime * this.blinkSpeed) * 0.5 + 0.5;
+
+    for (const mesh of this.meshes) {
+      const material = mesh.material as THREE.MeshStandardMaterial;
+      material.opacity = pulse;
+    }
+
+    if (this.blinkTime >= this.blinkDuration) {
+      this.blinking = false;
+
+      for (const mesh of this.meshes) {
+        const material = mesh.material as THREE.MeshStandardMaterial;
+        material.opacity = 1;
+      }
+    }
   }
 
   setEmissiveColor(
@@ -108,7 +141,7 @@ export class CarVisualState {
       }
 
       material.emissive.copy(emissiveColor);
-      material.emissiveIntensity = 2.5;
+      material.emissiveIntensity = this.DEFAULT_EMISSION_INTENSITY;
     }
   }
 }

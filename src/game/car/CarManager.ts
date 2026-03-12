@@ -3,7 +3,6 @@ import { useGameState } from "@/store/gameState";
 import { Car } from "./Car";
 import { type CarConfig, type CarStats } from "./types";
 import * as THREE from "three";
-import { usePlayerStore } from "@/store/playerStore";
 
 export class CarManager {
   private static instance: CarManager | null = null;
@@ -53,9 +52,9 @@ export class CarManager {
       this.car = null;
     }
   }
-  public update(): void {
+  public update(dt: number): void {
     if (this.car) {
-      this.car.update();
+      this.car.update(dt);
       this.car.toggleDebugCollider(useGameState().isDebug);
     }
   }

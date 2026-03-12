@@ -92,12 +92,18 @@ export class Car extends THREE.Group {
     }
   }
 
+  public startShieldCooldown(duration: number) {
+    this.visualState?.startBlink(duration);
+  }
+
   // Обновление
-  public update(): void {
+  public update(dt: number): void {
     if (this.state.isDestroyed) {
       this.physics.updateDestroyedCubes(this.cubes, this.scene);
       return;
     }
+
+    this.visualState?.update(dt);
 
     const roadManager = RoadManager.getInstance();
     const lanes = roadManager.getLanes();
