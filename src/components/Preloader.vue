@@ -59,44 +59,15 @@
             isButtonShown.value = true;
         }, 4500);
     });
+
+    // onUnmounted(() => {
+
+    // });
 </script>
 
 
 <style lang="scss" scoped>
-    // #region - общее...
-    .container {
-        position: relative;
-        display: flex;
-        flex-direction: column;
-        justify-content: flex-start;
-        align-items: center;
-        width: 100vw;
-        height: 100vh;
-    }
-
-    .fading_background {
-        position: absolute;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 200%;
-        background: linear-gradient(
-            to bottom,
-            #000000 0%,      /* Черный цвет вверху */
-            #000000 50%,     /* Черный цвет до середины */
-            rgba(0, 0, 0, 0) 100%  /* Прозрачность внизу */
-        );
-        animation: fading_keys 2s forwards;
-        animation-delay: 4.4s;
-    }
-
-    .gradient {
-        position: absolute;
-        bottom: 0%;
-        width: 100%;
-        height: 35%;
-        background: linear-gradient(rgba(0, 0, 0, 0), rgba(0, 0, 0, 0.8));
-    }
+    @use "@/styles/menu.scss";
 
     .menu_btn {
         position: absolute;
@@ -123,35 +94,6 @@
             animation: enhancedBreathing 2s ease-in-out infinite;
         }
     }
-    // #endregion
-
-    // #region - буквенный логотип
-    .logo_group {
-        position: absolute;
-        top: 18.47%;
-        width: 81.25%;
-        height: 49.13%;
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-    }
-    .logo_left {
-        width: 50%;
-    }
-    .logo_right {
-        width: 50%;
-    }
-    .logo_img {
-        width: 100%;
-        shape-rendering: geometricPrecision;
-    }
-    .neon_blue {
-        filter: drop-shadow(0 0 20px rgba(121, 190, 255, 1));
-    }
-    .neon_pink {
-        filter: drop-shadow(0 0 20px rgba(237, 37, 255, 1));
-    }
-    // #endregion
 
     // #region - блок анимаций:
         // имитация появления дороги (сдвиг вверх черного градиентного фона)
@@ -160,7 +102,7 @@
                 top: 0%;
             }
             to { 
-                top: -100%;
+                top: -200%;
             }
         }
 
