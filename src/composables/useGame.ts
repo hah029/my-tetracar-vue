@@ -17,6 +17,7 @@ import { UpdateMode } from "@/game/core/UpdateMode";
 // stores
 import { useProgressStore } from "@/store/progressStore";
 import { usePlayerStore } from "@/store/playerStore";
+import { BulletSystem } from "@/game/combat/BulletSystem";
 
 // Интерфейс для реактивной ссылки car
 interface CarRef {
@@ -130,6 +131,8 @@ export function useGame() {
 
     carManager = CarManager.getInstance();
     carManager.initialize(scene);
+
+    BulletSystem.getInstance().initialize(scene);
 
     // === Создание дороги и машины ===
     roadManager.createRoad();
@@ -308,6 +311,7 @@ export function useGame() {
     interactiveManager.reset();
     roadManager.clear();
     CollisionSystem.reset();
+    BulletSystem.getInstance().reset();
 
     roadManager.createRoad();
 
@@ -325,6 +329,21 @@ export function useGame() {
     useProgressStore().resetDistance();
   }
 
+  function shoot() {
+    const playerStore = usePlayerStore();
+
+    if (!playerStore.canShoot()) {
+      console.warn("[useGame] cannot shoot, returning");
+      return;
+    }
+
+    BulletSystem.getInstance().spawnBullet(CarManager.getInstance().getCar());
+
+    playerStore.consumeAmmo();
+
+    soundManager.play("sfx_shot");
+  }
+
   return {
     car,
     obstacles,
@@ -337,6 +356,7 @@ export function useGame() {
     movePlayerLeft,
     movePlayerRight,
     jumpPlayer,
+    shoot,
 
     addObstacle: (obstacle: THREE.Mesh) => {
       if (sceneRef) sceneRef.add(obstacle);

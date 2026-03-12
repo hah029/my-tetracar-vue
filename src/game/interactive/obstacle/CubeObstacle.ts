@@ -15,6 +15,7 @@ export class CubeObstacle extends BaseObstacle {
   protected isDestroyed: boolean = false;
   private physicsConfig: Required<PhysicsConfig>;
   private scene: THREE.Scene;
+  private lane: number;
 
   constructor(
     laneIndex: number,
@@ -39,6 +40,7 @@ export class CubeObstacle extends BaseObstacle {
     };
 
     const x = RoadManager.getInstance().getLanePosition(laneIndex);
+    this.lane = laneIndex;
     this.position.set(x, 0, zPos);
 
     this.build(formConfig, useGLB);
@@ -132,6 +134,10 @@ export class CubeObstacle extends BaseObstacle {
 
   public getCubes(): THREE.Object3D[] {
     return this.cubes;
+  }
+
+  public getLane(): number {
+    return this.lane;
   }
 
   public isFullyDestroyed(): boolean {

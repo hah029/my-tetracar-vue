@@ -2,6 +2,8 @@
 import { onMounted, onUnmounted } from "vue";
 import { GAME_STATES, useGameState } from "@/store/gameState";
 import type { useGame } from "./useGame";
+import { usePlayerStore } from "@/store/playerStore";
+import { CarManager } from "@/game/car";
 
 export function useControls(game: ReturnType<typeof useGame>) {
   const gameStore = useGameState();
@@ -27,34 +29,39 @@ export function useControls(game: ReturnType<typeof useGame>) {
 
     switch (e.key) {
       case "ArrowLeft":
-        game.movePlayerLeft();
+        game.movePlayerLeft(60 / 1000);
         break;
       case "ArrowRight":
-        game.movePlayerRight();
+        game.movePlayerRight(60 / 1000);
         break;
-      // case " ":
-      //   gameStore.enableNitro();
-      //   break;
+      case " ":
+        game.shoot();
+        break;
+      case "n":
+        usePlayerStore().enableNitro();
+        CarManager.getInstance().enableNitro();
+        break;
       case "Escape":
         processEscape();
         break;
     }
   }
 
-  // function handleKeyUp(e: KeyboardEvent) {
-  //   if (e.key === " ") {
-  //     e.preventDefault();
-  //     gameStore.disableNitro();
-  //   }
-  // }
+  function handleKeyUp(e: KeyboardEvent) {
+    if (e.key === "n") {
+      e.preventDefault();
+      usePlayerStore().disableNitro();
+      CarManager.getInstance().disableNitro();
+    }
+  }
 
   onMounted(() => {
     window.addEventListener("keydown", handleKeyDown);
-    // window.addEventListener("keyup", handleKeyUp);
+    window.addEventListener("keyup", handleKeyUp);
   });
 
   onUnmounted(() => {
     window.removeEventListener("keydown", handleKeyDown);
-    // window.removeEventListener("keyup", handleKeyUp);
+    window.removeEventListener("keyup", handleKeyUp);
   });
 }

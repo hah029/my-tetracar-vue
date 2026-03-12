@@ -144,4 +144,8 @@ export class CarVisualState {
       material.emissiveIntensity = this.DEFAULT_EMISSION_INTENSITY;
     }
   }
+
+  public has(effect: CarVisualEffect): boolean {
+    return this.activeEffects.has(effect);
+  }
 }

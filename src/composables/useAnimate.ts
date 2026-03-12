@@ -15,6 +15,7 @@ import { SoundManager } from "@/game/sound/SoundManager";
 import { DebugColliderVisualizer } from "@/helpers/debug/DebugColliderVisualizer";
 import { UpdateMode } from "@/game/core/UpdateMode";
 import { CarManager } from "@/game/car";
+import { BulletSystem } from "@/game/combat/BulletSystem";
 
 export function GameLoop(
   game: ReturnType<typeof useGame>,
@@ -53,6 +54,7 @@ export function GameLoop(
     game.updateInteractiveItems(deltaTime, currentSpeed, UpdateMode.Gameplay);
     game.updateRoad(deltaTime, currentSpeed);
     game.updateCity(deltaTime, currentSpeed);
+    BulletSystem.getInstance().update(deltaTime);
 
     const collisionResult = game.checkCollision(performance.now());
     if (collisionResult.collision) {
