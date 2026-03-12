@@ -1,32 +1,64 @@
-<!-- src/components/MainMenu.vue -->
 <template>
     <div class="menu-overlay">
         <div class="gradient"></div>
-        <div class="container">
-            <div class="logo_group">
-                <!-- <div class="logo_left">
-                    <img class='logo_img' src="@/assets/images/logo_tetro_back.svg">
+
+        <Transition name="letters_showing">
+            <div v-if="isLettersShown" class="container">
+                <div class="logo_group">
+                    <div class="logo_left">
+                        <img class='logo_img' src="@/assets/images/logo_tetro_back.svg">
+                    </div>
+                    <div class="logo_right">
+                        <img class='logo_img' src="@/assets/images/logo_car_back.svg">
+                    </div>
                 </div>
-                <div class="logo_right">
-                    <img class='logo_img' src="@/assets/images/logo_car_back.svg">
-                </div> -->
-                <img class='logo_img' src="@/assets/images/logo_full_test_2.svg">
+                <div class="logo_group">
+                    <div v-if="isLinesShown" class="logo_left neon_glow neon_left">
+                        <img class='logo_img neon_blue' src="@/assets/images/logo_tetro_lines.svg">
+                    </div>
+                    <div v-if="isLinesShown" class="logo_right neon_glow neon_right">
+                        <img class='logo_img neon_pink' src="@/assets/images/logo_car_lines.svg">
+                    </div>
+                </div>
+                <Transition name="letters_showing">
+                    <button v-if="isButtonShown" class="menu_btn" @click="letsPlay">- Нажми на кнопку -</button>
+                </Transition>
             </div>
-            <button class="menu_btn" @click="letsPlay">- Нажми на кнопку -</button>
-        </div>
+        </Transition>
+
     </div>
 </template>
 
 
 <script setup lang="ts">
     import { GAME_STATES as GS, useGameState } from "@/store/gameState";
+    import { onMounted, ref, Transition } from "vue";
 
     // Подключаем store
     const gameStore = useGameState();
 
+    let isLettersShown = ref(false);
+    let isLinesShown = ref(false);
+    let isButtonShown = ref(false);
+
     function letsPlay() {
         gameStore.setState(GS.MENU);
-    }
+    };
+
+    onMounted(() => {
+        // плавно показываем саму массу букв
+        isLettersShown.value = true;
+
+        // вводим мерцанием левую часть неоновых линий
+        setTimeout(() => {
+            isLinesShown.value = true;
+        }, 2000);
+
+        // выводим кнопку
+        setTimeout(() => {
+            isButtonShown.value = true;
+        }, 3800);
+    });
 </script>
 
 
@@ -42,22 +74,29 @@
     }
 
     .logo_group {
-        width: 81.25%;
         position: absolute;
+        top: 18.47%;
+        width: 81.25%;
+        height: 49.13%;
         display: flex;
         align-items: center;
         justify-content: space-between;
-        top: 18.47%;
     }
     .logo_left {
-        width: 52.24%;
+        width: 50%;
     }
     .logo_right {
-        width: 48.08%;
+        width: 50%;
     }
     .logo_img {
         width: 100%;
         shape-rendering: geometricPrecision;
+    }
+    .neon_blue {
+        filter: drop-shadow(0 0 20px rgba(121, 190, 255, 1));
+    }
+    .neon_pink {
+        filter: drop-shadow(0 0 20px rgba(237, 37, 255, 1));
     }
 
     .gradient {
@@ -94,6 +133,7 @@
         }
     }
 
+    // постоянное свечение кнопки входа в игру
     @keyframes enhancedBreathing {
         0%, 100% {
             filter: drop-shadow(0 0 15px rgba(255, 246, 25, 0.4));
@@ -113,20 +153,47 @@
         }
     }
 
-    /* @keyframes pulse {
+    // анимация появления текста логотипа из темноты при старте игры
+    .letters_showing-enter-active {
+        transition: all ease-in-out 3s;
+        transition-delay: 1s;
+    }
+    .letters_showing-enter-from {
+        opacity: 0;
+    }
+
+    // анимации возникновения неоновых подсветкок логотипа
+    .neon_glow {
+        opacity: 0;
+        animation: neonFlicker 3s ease-out forwards;
+    }
+    .neon_left {
+        animation-delay: 0.4s;
+    }
+    .neon_right {
+        animation-delay: 1.2s;
+    }
+    @keyframes neonFlicker {
         0% {
-        transform: scale(1);
-        opacity: 0.3;
+            opacity: 0;
         }
-
-        50% {
-        transform: scale(1.05);
-        opacity: 0.5;
+        2.22% {
+            opacity: 0.8; /* вспышка */
         }
-
+        4.44% {
+            opacity: 0; /* затухание */
+        }
+        6.67% {
+            opacity: 0.8; /* вспышка */
+        }
+        8.89% {
+            opacity: 0; /* затухание */
+        }
+        35% {
+            opacity: 0; /* пауза */
+        }
         100% {
-        transform: scale(1);
-        opacity: 0.3;
+            opacity: 1; /* финальная постоянная яркость */
         }
-    } */
+    }
 </style>
