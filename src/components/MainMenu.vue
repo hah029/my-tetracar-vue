@@ -58,6 +58,7 @@
     </div>
 </template>
 
+
 <script setup lang="ts">
     import { ref } from "vue";
     import { GAME_STATES as GS, useGameState } from "@/store/gameState";
@@ -92,8 +93,13 @@
     }
 </script>
 
+
 <style lang="scss" scoped>
     @use "@/styles/menu.scss";
+
+    .logo_group {
+        top: 13.04%;
+    }
 
     .buttons_group {
         position: absolute;

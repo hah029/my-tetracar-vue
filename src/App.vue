@@ -1,138 +1,143 @@
+<template>
+    <!-- canvas -->
+    <div ref="threeRoot" class="three-root"></div>
+
+    <!-- UI -->
+    
+    <transition>
+        <component :is="getUIComponent" />
+    </transition>
+
+    <!-- <GameOverMenu /> -->
+</template>
+
+
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted, computed, watch, nextTick, Transition } from "vue";
-// composable
-import { useThree } from "./composables/useThree";
-import { useGame } from "./composables/useGame";
-import { GAME_STATES as GS, useGameState } from "./store/gameState";
-import { useControls } from "./composables/useControls";
-import { GameLoop } from "./composables/useAnimate";
-// components
-import MainMenu from "./components/MainMenu.vue";
-import Preloader from "./components/Preloader.vue";
-import PauseMenu from "./components/PauseMenu.vue";
-import HUD from "./components/hud/HUD.vue";
-import GameOverMenu from "./components/GameOverMenu.vue";
-// managers
-import { CameraSystem } from "@/game/camera/CameraSystem";
-import { SoundManager } from "./game/sound/SoundManager";
-import { DebugColliderVisualizer } from "./helpers/debug/DebugColliderVisualizer";
+    import { ref, onMounted, onUnmounted, computed, watch, nextTick, Transition } from "vue";
+    // composable
+    import { useThree } from "./composables/useThree";
+    import { useGame } from "./composables/useGame";
+    import { GAME_STATES as GS, useGameState } from "./store/gameState";
+    import { useControls } from "./composables/useControls";
+    import { GameLoop } from "./composables/useAnimate";
+    // components
+    import MainMenu from "./components/MainMenu.vue";
+    import Preloader from "./components/Preloader.vue";
+    import PauseMenu from "./components/PauseMenu.vue";
+    import HUD from "./components/hud/HUD.vue";
+    import GameOverMenu from "./components/GameOverMenu.vue";
+    // managers
+    import { CameraSystem } from "@/game/camera/CameraSystem";
+    import { SoundManager } from "./game/sound/SoundManager";
+    import { DebugColliderVisualizer } from "./helpers/debug/DebugColliderVisualizer";
 
-const threeRoot = ref<HTMLDivElement | null>(null);
-const { getScene, getCamera, getComposer, getMotionBlurPass } = useThree(threeRoot);
-const game = useGame();
-const gameState = useGameState();
 
-useControls(game);
+    const threeRoot = ref<HTMLDivElement | null>(null);
+    const { getScene, getCamera, getComposer, getMotionBlurPass } = useThree(threeRoot);
+    const game = useGame();
+    const gameState = useGameState();
 
-const getUIComponent = computed(() => {
-  switch (gameState.currentState) {
-    case GS.PRELOADER:
-      return Preloader;
-    case GS.MENU:
-      return MainMenu;
-    case GS.PAUSE:
-      return PauseMenu;
-    case GS.GAMEOVER:
-      return GameOverMenu;
-    case GS.PLAY:
-      return HUD;
-  }
-});
-let loop: ReturnType<typeof GameLoop>;
-let soundManager: SoundManager;
+    useControls(game);
 
-onMounted(() => {
-  const scene = getScene();
-  const camera = getCamera();
-  const composer = getComposer();
-  const motionBlur = getMotionBlurPass();
+    const getUIComponent = computed(() => {
+        switch (gameState.currentState) {
+            case GS.PRELOADER:
+            return Preloader;
+            case GS.MENU:
+            return MainMenu;
+            case GS.PAUSE:
+            return PauseMenu;
+            case GS.GAMEOVER:
+            return GameOverMenu;
+            case GS.PLAY:
+            return HUD;
+        };
+    });
 
-  // game init
-  game.init(scene);
+    let loop: ReturnType<typeof GameLoop>;
+    let soundManager: SoundManager;
 
-  // camera system init
-  CameraSystem.initialize(camera);
+    onMounted(() => {
+        const scene = getScene();
+        const camera = getCamera();
+        const composer = getComposer();
+        const motionBlur = getMotionBlurPass();
 
-  // audio settings
-  soundManager = SoundManager.getInstance();
-  soundManager.initialize(camera);
+        // game init
+        game.init(scene);
 
-  // main loop initialize
-  const debugCollider = new DebugColliderVisualizer(scene);
-  loop = GameLoop(game, composer, motionBlur, debugCollider);
-  loop.start();
-});
+        // camera system init
+        CameraSystem.initialize(camera);
 
-onUnmounted(() => {
-  loop?.stop();
-});
+        // audio settings
+        soundManager = SoundManager.getInstance();
+        soundManager.initialize(camera);
 
-watch(
-  () => gameState.currentState,
-  async (newState, oldState) => {
-    if ((oldState === GS.GAMEOVER || oldState === GS.MENU) && newState === GS.PLAY) {
-      console.log("🔄 Game restart detected, resetting game...");
+        // main loop initialize
+        const debugCollider = new DebugColliderVisualizer(scene);
+        loop = GameLoop(game, composer, motionBlur, debugCollider);
+        loop.start();
+    });
 
-      // 1️⃣ Ждём обновления DOM/реактивных данных
-      await nextTick();
+    onUnmounted(() => {
+        loop?.stop();
+    });
 
-      // 2️⃣ Сбрасываем игру
-      game.reset();
+    watch(
+        () => gameState.currentState,
+        async (newState, oldState) => {
+            if ((oldState === GS.GAMEOVER || oldState === GS.MENU) && newState === GS.PLAY) {
+            console.log("🔄 Game restart detected, resetting game...");
 
-      const carMesh = game.car.value.mesh;
-      if (carMesh) {
-        CameraSystem.reset(carMesh.position.clone());
-      }
+            // 1️⃣ Ждём обновления DOM/реактивных данных
+            await nextTick();
 
-      console.log("✅ Game reset complete");
-    }
-  }
-);
+            // 2️⃣ Сбрасываем игру
+            game.reset();
 
-watch(
-  () => gameState.currentState,
-  (state) => {
+            const carMesh = game.car.value.mesh;
+            if (carMesh) {
+                CameraSystem.reset(carMesh.position.clone());
+            }
 
-    if (state === GS.MENU) {
-      soundManager.fadeOut("music_background", 0.1);
-      setTimeout(() => {
-        soundManager.playMusicSequence("music_intro", "music_background");
-      }, 100);
-    }
+            console.log("✅ Game reset complete");
+            };
+        }
+    );
 
-    if (state === GS.PLAY) {
-      // soundManager.fadeOut("music_background", 0.1);
-      soundManager.stopAllMusic();
-      setTimeout(() => {
-        soundManager.play("music_background");
-      }, 100);
-    }
+    watch(
+        () => gameState.currentState,
+        (state) => {
 
-    if (state === GS.GAMEOVER) {
-      soundManager.fadeOut("music_background", 0.1);
-      setTimeout(() => {
-        soundManager.play("music_gameover");
-      }, 100);
-    }
+            if (state === GS.MENU) {
+                soundManager.fadeOut("music_background", 0.1);
+                setTimeout(() => {
+                    soundManager.playMusicSequence("music_intro", "music_background");
+                }, 100);
+            };
 
-    if (state === GS.PRELOADER) {
-      soundManager.stopAllMusic();
-    }
+            if (state === GS.PLAY) {
+            // soundManager.fadeOut("music_background", 0.1);
+            soundManager.stopAllMusic();
+                setTimeout(() => {
+                    soundManager.play("music_background");
+                }, 100);
+            };
 
-  }
-)
+            if (state === GS.GAMEOVER) {
+                soundManager.fadeOut("music_background", 0.1);
+                setTimeout(() => {
+                    soundManager.play("music_gameover");
+                }, 100);
+            };
 
+            if (state === GS.PRELOADER) {
+                soundManager.stopAllMusic();
+            };
+        }
+    );
 </script>
 
-<template>
-  <!-- canvas -->
-  <div ref="threeRoot" class="three-root"></div>
-  <!-- UI -->
-  <transition>
-    <component :is="getUIComponent" />
-  </transition>
-  <!-- <GameOverMenu /> -->
-</template>
 
 <style>
     @font-face {

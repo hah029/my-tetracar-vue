@@ -3,9 +3,9 @@
         <div class="fading_background"></div>
         <div class="gradient"></div>
 
-        <Transition name="letters_showing">
-            <div v-if="isLettersShown" class="container">
-                <div class="logo_group">
+        <div class="container">
+            <Transition name="game_logo_showing">
+                <div v-if="isLettersShown" class="logo_group" :class="changeLogoPos()">
                     <div class="logo_left">
                         <img class='logo_img' src="@/assets/images/logo_tetro_back.svg">
                     </div>
@@ -13,7 +13,9 @@
                         <img class='logo_img' src="@/assets/images/logo_car_back.svg">
                     </div>
                 </div>
-                <div class="logo_group">
+            </Transition>
+            <Transition name="game_logo_showing">
+                <div v-if="isLettersShown" class="logo_group" :class="changeLogoPos()">
                     <div v-if="isLinesShown" class="logo_left neon_glow neon_left">
                         <img class='logo_img neon_blue' src="@/assets/images/logo_tetro_lines.svg">
                     </div>
@@ -21,11 +23,11 @@
                         <img class='logo_img neon_pink' src="@/assets/images/logo_car_lines.svg">
                     </div>
                 </div>
-                <Transition name="letters_showing">
-                    <button v-if="isButtonShown" class="menu_btn" @click="letsPlay">- Нажми на кнопку -</button>
-                </Transition>
-            </div>
-        </Transition>
+            </Transition>
+            <Transition name="button_showing">
+                <button v-if="isButtonShown" class="menu_btn" @click="letsPlay">- Нажми на кнопку -</button>
+            </Transition>
+        </div>
     </div>
 </template>
 
@@ -38,11 +40,29 @@
     const gameStore = useGameState();
 
     let isLettersShown = ref(false);
+    let isLettersStatic = ref(false);
     let isLinesShown = ref(false);
     let isButtonShown = ref(false);
 
     function letsPlay() {
-        gameStore.setState(GS.MENU);
+        // скрываем кнопку
+        isButtonShown.value = false;
+        
+        // смещаем лого наверх
+        isLettersStatic.value = true;
+        // isLettersShown.value = false;
+
+        // переходим в главное меню
+        setTimeout(() => {
+            gameStore.setState(GS.MENU);
+        }, 2000);
+    };
+
+    // смещаем логотип при переходе в главное меню
+    function changeLogoPos() {
+        if (isLettersStatic.value == true) {
+            return 'logo_mooving';
+        };
     };
 
     onMounted(() => {
@@ -59,10 +79,6 @@
             isButtonShown.value = true;
         }, 4500);
     });
-
-    // onUnmounted(() => {
-
-    // });
 </script>
 
 
@@ -89,7 +105,7 @@
         &:hover {
             transform: scale(1.02);
             color: #ffffff;
-            filter: drop-shadow(0 0 20px rgba(255, 246, 25, 0.6));
+            filter: drop-shadow(0 0 20px rgba(255, 255, 255, 0.6));
             transition: all 0.2s ease-in-out;
             animation: enhancedBreathing 2s ease-in-out infinite;
         }
@@ -126,12 +142,49 @@
             }
         }
 
-        // анимация появления текста логотипа из темноты при старте игры
-        .letters_showing-enter-active {
+        // анимация появления текста логотипа игры из темноты при старте игры
+        .game_logo_showing-enter-active {
             transition: all ease-in-out 3s;
             transition-delay: 1s;
         }
-        .letters_showing-enter-from {
+        .game_logo_showing-enter-from {
+            opacity: 0;
+        }
+
+        // анимация поднятия текста лого вверх при переходе в главное меню
+        .logo_mooving {
+            animation: logoMovingAnim 1s cubic-bezier(0, 0.6, 0.5, 1) forwards;
+            animation-delay: 0.5s;
+        }
+        @keyframes logoMovingAnim {
+            0% {
+                top: 18.47%;
+            }
+            100% {
+                top: 13.04%;
+            }
+        }
+
+        // .game_logo_showing-leave-active {
+        //     transition: all 1s cubic-bezier(0, 0.6, 0.5, 1);
+        //     transition-delay: 0.5s;
+        // }
+        // .game_logo_showing-leave-to {
+        //     transform: translateY(-10%);
+        // }
+
+        // анимации возникновения / исчезновения кнопки перехода в главное меню
+        .button_showing-enter-active {
+            transition: all ease-in-out 1.5s;
+            transition-delay: 1s;
+        }
+        .button_showing-enter-from {
+            opacity: 0;
+        }
+        .button_showing-leave-active {
+            transition: all ease-in-out 2.5s;
+        }
+        .button_showing-leave-to {
             opacity: 0;
         }
 
