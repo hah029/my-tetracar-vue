@@ -10,4 +10,5 @@ export enum LanePattern {
 
   Jump,
   Booster,
+  BulletItem,
 }

@@ -18,6 +18,7 @@ import { UpdateMode } from "@/game/core/UpdateMode";
 import { useProgressStore } from "@/store/progressStore";
 import { usePlayerStore } from "@/store/playerStore";
 import { BulletSystem } from "@/game/combat/BulletSystem";
+import { BulletItemManager } from "@/game/interactive/items/bullet/BulletItemManager";
 
 // Интерфейс для реактивной ссылки car
 interface CarRef {
@@ -98,6 +99,7 @@ export function useGame() {
   let interactiveManager: InteractiveItemsManager;
   let cityManager: CityManager;
   let boosterManager: BoosterManager;
+  let bulletItemManager: BulletItemManager;
   let soundManager: SoundManager;
 
   function init(scene: THREE.Scene) {
@@ -123,10 +125,14 @@ export function useGame() {
     boosterManager = BoosterManager.getInstance();
     boosterManager.initialize(scene);
 
+    bulletItemManager = BulletItemManager.getInstance();
+    bulletItemManager.initialize(scene);
+
     interactiveManager = new InteractiveItemsManager(
       obstacleManager,
       coinManager,
       boosterManager,
+      bulletItemManager,
     );
 
     carManager = CarManager.getInstance();
@@ -250,8 +256,6 @@ export function useGame() {
   function updateJumps(deltaTime: number, speed: number) {
     if (!obstacleManager) return;
 
-    // Обновление трамплинов через ObstacleManager
-    // Сам менеджер уже двигает трамплины и удаляет их из своего массива
     obstacleManager.getJumps().forEach((jump, index) => {
       if (jump.update(deltaTime, speed)) {
         // remove уже выполняется в менеджере, тут синхронизируем реактивный массив
@@ -297,6 +301,11 @@ export function useGame() {
     return boosterManager.checkCarCollision(carManager.getCar());
   }
 
+  function checkBulletItemCollision() {
+    if (!carManager || !bulletItemManager) return 0;
+    return bulletItemManager.checkCarCollision(carManager.getCar());
+  }
+
   function getDangerLevel() {
     if (!carManager || !obstacleManager) return 0;
     return CollisionSystem.getDangerLevel(carManager.getCar(), [
@@ -338,9 +347,7 @@ export function useGame() {
     }
 
     BulletSystem.getInstance().spawnBullet(CarManager.getInstance().getCar());
-
     playerStore.consumeAmmo();
-
     soundManager.play("sfx_shot");
   }
 
@@ -371,6 +378,7 @@ export function useGame() {
     checkCollision,
     checkCoinCollision,
     checkBoosterCollision,
+    checkBulletItemCollision,
     getDangerLevel,
     reset,
   };

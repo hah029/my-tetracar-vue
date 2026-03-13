@@ -85,6 +85,12 @@ export function GameLoop(
       if (coins.diamond > 0) progressStore.addDiamondScore(coins.diamond);
     }
 
+    const bulletItems = game.checkBulletItemCollision();
+    if (bulletItems > 0) {
+      soundManager.play("sfx_add_patron");
+      playerStore.addAmmo();
+    }
+
     const boostCollisions = game.checkBoosterCollision();
     if (boostCollisions.collision) {
       if (boostCollisions.subject === "nitro") {

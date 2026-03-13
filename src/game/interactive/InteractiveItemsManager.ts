@@ -3,6 +3,7 @@
 import { ObstacleManager } from "./obstacle/ObstacleManager";
 import { CoinManager } from "./items/coin/CoinManager";
 import { BoosterManager } from "./items/booster/BoosterManager";
+import { BulletItemManager } from "./items/bullet/BulletItemManager";
 // other
 import { simulateJumpTrajectory } from "@/game/car/CarTrajectory";
 import { DEFAULT_CAR_CONFIG } from "@/game/car/config";
@@ -18,6 +19,7 @@ export class InteractiveItemsManager {
   private obstacleManager: ObstacleManager;
   private coinManager: CoinManager;
   private boosterManager: BoosterManager;
+  private bulletItemManager: BulletItemManager;
   private segmentQueue: SegmentQueue;
   private distanceSinceLastSegment = 0;
   private segmentLength = 18;
@@ -30,10 +32,12 @@ export class InteractiveItemsManager {
     obstacleManager: ObstacleManager,
     coinManager: CoinManager,
     boosterManager: BoosterManager,
+    bulletItemManager: BulletItemManager,
   ) {
     this.obstacleManager = obstacleManager;
     this.coinManager = coinManager;
     this.boosterManager = boosterManager;
+    this.bulletItemManager = bulletItemManager;
     this.segmentQueue = new SegmentQueue(() => {
       const distance = useProgressStore().getDistance();
       return Math.floor(distance / this.difficultyStep) + 1;
@@ -53,6 +57,7 @@ export class InteractiveItemsManager {
     this.obstacleManager.update(deltaTime, speed);
     this.coinManager.update(deltaTime, speed);
     this.boosterManager.update(deltaTime, speed);
+    this.bulletItemManager.update(deltaTime, speed);
 
     if (mode === UpdateMode.Destruction) {
       return; // ⛔ стоп спавн, таймеры, геймплей
@@ -101,6 +106,10 @@ export class InteractiveItemsManager {
             this.spawnBooster(lane, z);
             break;
 
+          case LanePattern.BulletItem:
+            this.spawnBulletItem(lane, z);
+            break;
+
           case LanePattern.MovingObstacle:
             this.obstacleManager.spawnMovingObstacle(lane, 1);
             break;
@@ -135,6 +144,10 @@ export class InteractiveItemsManager {
     }
   }
 
+  private spawnBulletItem(lane: number, baseZ: number) {
+    this.bulletItemManager.spawnBullet(lane, baseZ);
+  }
+
   private spawnJumpWithCoins(
     lane: number,
     deltaTime: number,
@@ -152,29 +165,11 @@ export class InteractiveItemsManager {
       forwardSpeed: speed,
     });
 
-    // console.log("[spawnJumpWithCoins]", {
-    //   lane,
-    //   deltaTime,
-    //   speed,
-    //   baseZ,
-    //   jumpZ,
-    //   trajectoryLength: trajectory.length,
-    //   trajectory: trajectory.map((p) => ({ y: p.y, zOffset: p.zOffset })),
-    //   config: {
-    //     startY: 0,
-    //     jumpHeight: DEFAULT_CAR_CONFIG.jumpHeight,
-    //     gravity: DEFAULT_CAR_CONFIG.gravity,
-    //   },
-    // });
-
     const step = Math.max(1, Math.floor(trajectory.length / 10)); // больше монет
     for (let i = 0; i < trajectory.length; i += step) {
       const point = trajectory[i];
       if (point === undefined) continue;
-      const coinZ = jumpZ + point.zOffset; // убрали +2
-      // console.log(
-      //   `  coin ${i}: y=${point.y}, zOffset=${point.zOffset}, coinZ=${coinZ}`,
-      // );
+      const coinZ = jumpZ + point.zOffset;
       this.coinManager.spawnGold(lane, coinZ, point.y, 5);
     }
   }
@@ -199,10 +194,15 @@ export class InteractiveItemsManager {
     return this.boosterManager.getBoosters();
   }
 
+  public getBulletItems() {
+    return this.bulletItemManager.getBullets();
+  }
+
   public reset() {
     this.obstacleManager.reset();
     this.coinManager.reset();
     this.boosterManager.reset();
+    this.bulletItemManager.reset();
     this.segmentQueue.reset();
     this.distanceSinceLastSegment = 0;
     this.nextSegmentZ = -60;
