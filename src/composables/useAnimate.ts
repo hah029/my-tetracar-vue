@@ -7,7 +7,6 @@ import { AfterimagePass } from "three/examples/jsm/postprocessing/AfterimagePass
 import { GAME_STATES as GS, useGameState } from "@/store/gameState";
 import { usePlayerStore } from "@/store/playerStore";
 import { useProgressStore } from "@/store/progressStore";
-import { useHUD } from "./useHUD";
 import { useGame } from "./useGame";
 // managers
 import { CameraSystem } from "@/game/camera/CameraSystem";
@@ -26,7 +25,6 @@ export function GameLoop(
   const gameState = useGameState();
   const playerStore = usePlayerStore();
   const progressStore = useProgressStore();
-  const hud = useHUD();
 
   // вот это мой менеджер (он уже имеет все нужные звуки)
   const soundManager = SoundManager.getInstance();
@@ -184,9 +182,6 @@ export function GameLoop(
         playerStore.baseSpeed = playerStore.maxSpeed;
       }
     }
-
-    const dangerLevel = game.getDangerLevel();
-    hud.updateHUD(currentSpeed, playerStore.currentLane, dangerLevel);
 
     game.updatePlayer(deltaTime);
 
