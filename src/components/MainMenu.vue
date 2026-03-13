@@ -1,60 +1,20 @@
 <template>
-    <div class="menu-overlay">
-        <div class="gradient"></div>
-
-        <div class="container">
-            <div class="logo_group">
-                <div class="logo_left">
-                    <img class='logo_img' src="@/assets/images/logo_tetro_back.svg">
-                </div>
-                <div class="logo_right">
-                    <img class='logo_img' src="@/assets/images/logo_car_back.svg">
-                </div>
+    <div class="container test">
+        <template v-if="!isSettingsEnabled">
+            <div class="buttons_group">
+                <button class="menu_btn" @click="startGame">Старт</button>
+                <button class="menu_btn" @click="goToSettings">Гараж</button>
+                <button class="menu_btn" @click="goToSettings">Настройки</button>
+                <button class="menu_btn" @click="goToSettings">Рекорды</button>
             </div>
-            <div class="logo_group">
-                <div class="logo_left neon_glow neon_left">
-                    <img class='logo_img neon_blue' src="@/assets/images/logo_tetro_lines.svg">
-                </div>
-                <div class="logo_right neon_glow neon_right">
-                    <img class='logo_img neon_pink' src="@/assets/images/logo_car_lines.svg">
-                </div>
-            </div>
-
-            <template v-if="!isSettingsEnabled">
-                <div class="buttons_group">
-                    <button class="menu_btn" @click="startGame">Старт</button>
-                    <button class="menu_btn" @click="goToSettings">Гараж</button>
-                    <button class="menu_btn" @click="goToSettings">Настройки</button>
-                    <button class="menu_btn" @click="goToSettings">Рекорды</button>
-                </div>
-            </template>
-            
-            <template v-else>
-                <SettingsOverlay />
-                <button class="menu_btn" @click="goBackToMenu">
-                    НАЗАД
-                </button>
-            </template>
-
-        </div>
-
-        <!-- <h4 class="menu-title__mini">TETROCAR</h4> -->
-
-        <!-- <template v-if="isSettingsEnabled">
+        </template>
+        
+        <template v-else>
             <SettingsOverlay />
             <button class="menu_btn" @click="goBackToMenu">
                 НАЗАД
             </button>
         </template>
-
-        <template v-else>
-            <h1 class="menu-subtitle">ГЛАВНОЕ МЕНЮ</h1>
-            <div class="buttons_group">
-                <button class="menu_btn" @click="startGame">СТАРТ</button>
-                <button class="menu_btn" @click="goToSettings">НАСТРОЙКИ</button>
-            </div>
-        </template> -->
-
     </div>
 </template>
 
@@ -96,6 +56,10 @@
 
 <style lang="scss" scoped>
     @use "@/styles/menu.scss";
+
+    .test {
+        z-index: 2000;
+    }
 
     .logo_group {
         top: 13.04%;

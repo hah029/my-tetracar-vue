@@ -1,5 +1,5 @@
 <template>
-  <div v-if="isVisible" class="menu-overlay">
+  <div v-if="isVisible" class="menu_overlay">
     <h4 class="menu-title__mini">TETROCAR</h4>
 
     <template v-if="isSettingsEnabled">

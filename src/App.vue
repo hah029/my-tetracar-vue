@@ -3,12 +3,10 @@
     <div ref="threeRoot" class="three-root"></div>
 
     <!-- UI -->
-    
+    <GameLogo :handleParam="handleParam"/>
     <transition>
-        <component :is="getUIComponent" />
+        <component :is="getUIComponent" @event="handleEvent"/>
     </transition>
-
-    <!-- <GameOverMenu /> -->
 </template>
 
 
@@ -26,6 +24,7 @@
     import PauseMenu from "./components/PauseMenu.vue";
     import HUD from "./components/hud/HUD.vue";
     import GameOverMenu from "./components/GameOverMenu.vue";
+    import GameLogo from "./components/ui/GameLogo.vue";
     // managers
     import { CameraSystem } from "@/game/camera/CameraSystem";
     import { SoundManager } from "./game/sound/SoundManager";
@@ -36,6 +35,23 @@
     const { getScene, getCamera, getComposer, getMotionBlurPass } = useThree(threeRoot);
     const game = useGame();
     const gameState = useGameState();
+
+    let handleParam = ref(false);
+
+    // работа с главным игровым логотипом
+    // let isLettersStatic = ref(false);
+
+    // // смещаем логотип при переходе в главное меню
+    // function changeLogoPos() {
+    //     if (isLettersStatic.value == true) {
+    //         return 'logo_mooving';
+    //     };
+    // };
+
+    // // ловим и обрабатываем события из дочерней компоненты Preloader.vue
+    function handleEvent(val_: any) {
+        handleParam.value = val_;
+    }    
 
     useControls(game);
 
@@ -108,7 +124,6 @@
     watch(
         () => gameState.currentState,
         (state) => {
-
             if (state === GS.MENU) {
                 soundManager.fadeOut("music_background", 0.1);
                 setTimeout(() => {
@@ -162,7 +177,7 @@
         height: 100%;
     }
 
-    .menu-overlay {
+    .menu_overlay {
         position: fixed;
         inset: 0;
         display: flex;
