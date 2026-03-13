@@ -4,7 +4,7 @@ import Stats from "three/examples/jsm/libs/stats.module.js";
 import { EffectComposer } from "three/examples/jsm/postprocessing/EffectComposer.js";
 import { AfterimagePass } from "three/examples/jsm/postprocessing/AfterimagePass.js";
 // composables
-import { GAME_STATES as GS, useGameState } from "@/store/gameState";
+import { useGameState } from "@/store/gameState";
 import { usePlayerStore } from "@/store/playerStore";
 import { useProgressStore } from "@/store/progressStore";
 import { useGame } from "./useGame";
@@ -15,6 +15,7 @@ import { DebugColliderVisualizer } from "@/helpers/debug/DebugColliderVisualizer
 import { UpdateMode } from "@/game/core/UpdateMode";
 import { CarManager } from "@/game/car";
 import { BulletSystem } from "@/game/combat/BulletSystem";
+import { GameStates } from "@/game/core/GameState";
 
 export function GameLoop(
   game: ReturnType<typeof useGame>,
@@ -138,23 +139,25 @@ export function GameLoop(
     // STATE TRANSITIONS
     // =========================
 
-    if (previousState === GS.GAMEOVER && gameState.currentState === GS.PLAY) {
+    if (
+      previousState === GameStates.Gameover &&
+      gameState.currentState === GameStates.Play
+    ) {
       game.reset();
       const carMesh = game.car.value.mesh;
       if (carMesh) {
         CameraSystem.reset(carMesh.position.clone());
       }
-    }
-    previousState = gameState.currentState;
-
-    if (
-      gameState.currentState !== GS.PLAY &&
-      gameState.currentState !== GS.GAMEOVER
+    } else if (
+      gameState.currentState !== GameStates.Play &&
+      gameState.currentState !== GameStates.Gameover
     ) {
       composer.render();
       stats.end();
       return;
     }
+
+    previousState = gameState.currentState;
 
     const realCar = game.car.value.mesh;
     if (realCar) {
@@ -169,9 +172,7 @@ export function GameLoop(
 
     // меньше damp = сильнее blur
     motionBlur.damp = THREE.MathUtils.lerp(0.2, 0.99, speedFactor);
-    // motionBlur.damp = speedFactor;
 
-    // motionBlur.uniforms["damp"] = speedFactor;
     if (!isGameOver) {
       if (playerStore.baseSpeed < playerStore.BASE_SPEED) {
         playerStore.baseSpeed = playerStore.BASE_SPEED;

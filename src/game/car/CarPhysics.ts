@@ -62,16 +62,7 @@ export class CarPhysics {
     // Активная фаза прыжка – используем симуляцию
     const prevVelocity = this.jumpState.velocity;
     this.jumpState = this.jumpSimulator.step(this.jumpState);
-
-    // console.log("[CarPhysics.updateJump]", {
-    //   currentY,
-    //   newY: this.jumpState.y,
-    //   velocity: this.jumpState.velocity,
-    //   isJumping: this.jumpState.isJumping,
-    // });
-
     const pitch = prevVelocity > 0 ? 0.2 : -0.1;
-
     return {
       newY: this.jumpState.y,
       isJumping: this.jumpState.isJumping,

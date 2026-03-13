@@ -26,10 +26,11 @@
 
 <script setup lang="ts">
 import { ref } from "vue";
-import { GAME_STATES as GS, useGameState } from "@/store/gameState";
+import { useGameState } from "@/store/gameState";
 import { usePlayerStore } from "@/store/playerStore";
 import { SoundManager } from "@/game/sound/SoundManager";
 import SettingsOverlay from "./settings/SettingsOverlay.vue";
+import { GameStates } from "@/game/core/GameState";
 
 const gameStore = useGameState();
 const playerStore = usePlayerStore();
@@ -54,7 +55,7 @@ function startGame() {
   soundManager.play("sfx_start");
   playerStore.resetGameData();
 
-  gameStore.setState(GS.PLAY);
+  gameStore.setState(GameStates.Play);
 }
 </script>
 

@@ -1,21 +1,17 @@
 import * as THREE from "three";
 import { loadTexture } from "@/helpers/loaders";
 
-export type CarVisualEffect = "nitro" | "shield" | "damage";
+export type CarVisualEffect = "nitro" | "shield" | "damage" | "default";
 
-export type TextureMap = Record<CarVisualEffect | "default", string>;
+export type TextureMap = Record<CarVisualEffect, string>;
 
 export class CarVisualState {
   private meshes: THREE.Mesh[] = [];
   private DEFAULT_EMISSION_INTENSITY = 2.2;
 
-  private textures = new Map<CarVisualEffect | "default", THREE.Texture>();
+  private textures = new Map<CarVisualEffect, THREE.Texture>();
 
-  private emissiveColors = new Map<CarVisualEffect | "default", THREE.Color>();
-  private emissiveMaps = new Map<
-    CarVisualEffect | "default",
-    THREE.Texture | null
-  >();
+  private emissiveColors = new Map<CarVisualEffect, THREE.Color>();
 
   private activeEffects = new Set<CarVisualEffect>();
   private blinking = false;
@@ -37,7 +33,6 @@ export class CarVisualState {
     });
 
     this.emissiveColors.set("default", new THREE.Color(0x000000));
-    this.emissiveMaps.set("default", null);
   }
 
   preloadTextures(textureMap: TextureMap) {
@@ -78,17 +73,10 @@ export class CarVisualState {
   }
 
   setEmissiveColor(
-    effect: CarVisualEffect | "default",
+    effect: CarVisualEffect,
     color: THREE.Color | number | string,
   ) {
     this.emissiveColors.set(effect, new THREE.Color(color));
-  }
-
-  setEmissiveMap(
-    effect: CarVisualEffect | "default",
-    map: THREE.Texture | null,
-  ) {
-    this.emissiveMaps.set(effect, map);
   }
 
   enable(effect: CarVisualEffect) {
@@ -128,7 +116,7 @@ export class CarVisualState {
         nextTexture = this.textures.get(tag) ?? defaultTexture;
       }
       if (material.map !== nextTexture) {
-        material.map = nextTexture;
+        material.map = nextTexture || null;
       }
 
       // Выбор emissive цвета и карты

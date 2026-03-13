@@ -44,25 +44,10 @@ export class BulletSystem {
     for (let i = this.bullets.length - 1; i >= 0; i--) {
       const bullet = this.bullets[i];
       if (!bullet) continue;
-
-      // =================
-      // движение пули
-      // =================
-
       bullet.update(dt);
-
-      // =================
-      // обновляем collider пули
-      // =================
-
       this.bulletBox.setFromObject(bullet);
 
       let removed = false;
-
-      // =================
-      // COLLISION CHECK
-      // =================
-
       for (const obstacle of obstacles) {
         if (!obstacle) continue;
 
@@ -82,10 +67,6 @@ export class BulletSystem {
       }
 
       if (removed) continue;
-
-      // =================
-      // LIMIT DISTANCE
-      // =================
 
       if (bullet.position.z < -this.MAX_DISTANCE) {
         this.scene.remove(bullet);

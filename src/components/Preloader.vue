@@ -7,13 +7,14 @@
 </template>
 
 <script setup lang="ts">
-import { GAME_STATES as GS, useGameState } from "@/store/gameState";
+import { GameStates } from "@/game/core/GameState";
+import { useGameState } from "@/store/gameState";
 
 // Подключаем store
 const gameStore = useGameState();
 
 function letsPlay() {
-  gameStore.setState(GS.MENU);
+  gameStore.setState(GameStates.Menu);
 }
 </script>
 

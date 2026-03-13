@@ -1,11 +1,8 @@
 // src/game/coin/Coin.ts
-
-import { BaseItem } from "../BaseItem";
+import { CoinItem } from "./CoinItem";
 import { DIAMOND_MATERIAL_CONFIG } from "./config";
 
-export class DiamondCoin extends BaseItem {
-  public value: number;
-
+export class DiamondCoin extends CoinItem {
   constructor(
     laneIndex: number,
     zPos: number,

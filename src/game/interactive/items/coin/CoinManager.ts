@@ -3,10 +3,12 @@ import { GoldCoin } from "./Gold";
 import { DiamondCoin } from "./Diamond";
 import { Car } from "@/game/car/Car";
 import type { BaseItem } from "../BaseItem";
+import type { CoinType } from "./types";
+import type { CoinItem } from "./CoinItem";
 
 export class CoinManager {
   private static instance: CoinManager | null = null;
-  private coins: BaseItem[] = [];
+  private coins: CoinItem[] = [];
   private scene!: THREE.Scene;
 
   public static getInstance(): CoinManager {
@@ -82,8 +84,9 @@ export class CoinManager {
       if (coin === undefined) continue;
 
       if (carCollider.intersectsSphere(coin.collider)) {
-        collected[coin.itemType] += coin.value;
-        collected["total"] += coin.value;
+        const itemType = coin.itemType as CoinType;
+        collected[itemType] += coin.getValue();
+        collected["total"] += coin.getValue();
         this.removeCoin(i);
       }
     }

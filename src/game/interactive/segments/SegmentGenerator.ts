@@ -1,6 +1,6 @@
 import { SEGMENTS } from "./SegmentLibrary";
 import type { Segment } from "./Segment";
-import { SegmentType } from "../types/SegmentType";
+import { SegmentTypes } from "../types/SegmentType";
 import { LanePattern } from "../types/LanePattern";
 
 export class SegmentGenerator {
@@ -31,12 +31,12 @@ export class SegmentGenerator {
       }
 
       // 4️⃣ после challenge даём отдых
-      if (last.type === SegmentType.Challenge) {
+      if (last.type === SegmentTypes.Challenge) {
         const restPool = pool.filter(
           (s) =>
-            s.type === SegmentType.Safe ||
-            s.type === SegmentType.Coins ||
-            s.type === SegmentType.Boost,
+            s.type === SegmentTypes.Safe ||
+            s.type === SegmentTypes.Coins ||
+            s.type === SegmentTypes.Boost,
         );
 
         if (restPool.length > 0) {
@@ -45,8 +45,8 @@ export class SegmentGenerator {
       }
 
       // 5️⃣ после jump не даём jump
-      if (last.type === SegmentType.Jump) {
-        const noJump = pool.filter((s) => s.type !== SegmentType.Jump);
+      if (last.type === SegmentTypes.Jump) {
+        const noJump = pool.filter((s) => s.type !== SegmentTypes.Jump);
 
         if (noJump.length > 0) {
           pool = noJump;

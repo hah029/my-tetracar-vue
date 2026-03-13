@@ -1,6 +1,6 @@
 import type { Segment } from "./Segment";
 import { LanePattern as L } from "../types/LanePattern";
-import { SegmentType as T } from "../types/SegmentType";
+import { SegmentTypes as T } from "../types/SegmentType";
 
 const SEGMENT_LENGHT = 1;
 

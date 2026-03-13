@@ -105,7 +105,6 @@ export class ObstacleManager {
       const cube = this.destroyedCubes[i];
       if (cube === undefined) continue;
       cube.position.z += dt * speed;
-      // const shouldRemove = cube.update(dt, speed);
 
       if (cube.position.z > 10) {
         this.scene.remove(cube);
@@ -113,18 +112,6 @@ export class ObstacleManager {
       }
     }
   }
-  // private updateObstacles(dt: number, speed: number) {
-  //   for (let i = this.obstacles.length - 1; i >= 0; i--) {
-  //     const obstacle = this.obstacles[i];
-  //     if (obstacle === undefined) continue;
-  //     const shouldRemove = obstacle.update(dt, speed);
-
-  //     if (shouldRemove && obstacle.isFullyDestroyed()) {
-  //       this.scene.remove(obstacle);
-  //       this.obstacles.splice(i, 1);
-  //     }
-  //   }
-  // }
 
   private updateList<T extends { update(dt: number, s: number): boolean }>(
     list: T[],

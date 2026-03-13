@@ -1,24 +1,25 @@
 // src/composables/useControls.ts
 import { onMounted, onUnmounted } from "vue";
-import { GAME_STATES, useGameState } from "@/store/gameState";
+import { useGameState } from "@/store/gameState";
 import type { useGame } from "./useGame";
 import { usePlayerStore } from "@/store/playerStore";
 import { CarManager } from "@/game/car";
+import { GameStates } from "@/game/core/GameState";
 
 export function useControls(game: ReturnType<typeof useGame>) {
   const gameStore = useGameState();
 
   function processEscape() {
     switch (gameStore.currentState) {
-      case GAME_STATES.PLAY:
+      case GameStates.Play:
         gameStore.pauseGame();
         break;
-      case GAME_STATES.PAUSE:
+      case GameStates.Pause:
         gameStore.resumeGame();
         break;
-      case GAME_STATES.MENU:
+      case GameStates.Menu:
         break;
-      case GAME_STATES.GAMEOVER:
+      case GameStates.Gameover:
         gameStore.goToMenu();
         break;
     }

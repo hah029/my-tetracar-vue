@@ -1,11 +1,9 @@
 // src/game/coin/Coin.ts
 
-import { BaseItem } from "../BaseItem";
+import { CoinItem } from "./CoinItem";
 import { COIN_MATERIAL_CONFIG } from "./config";
 
-export class GoldCoin extends BaseItem {
-  public value: number;
-
+export class GoldCoin extends CoinItem {
   constructor(
     laneIndex: number,
     zPos: number,

@@ -34,15 +34,6 @@ export function simulateJumpTrajectory(params: {
   let z = 0;
   const points: JumpPoint[] = [];
 
-  // console.log("[simulateJumpTrajectory]", {
-  //   startY,
-  //   jumpHeight,
-  //   gravity,
-  //   deltaTime,
-  //   forwardSpeed,
-  //   maxSteps,
-  // });
-
   for (let i = 0; i < maxSteps; i++) {
     state = simulator.step(state);
     z -= deltaTime * forwardSpeed;
@@ -53,11 +44,7 @@ export function simulateJumpTrajectory(params: {
       y: state.y,
       zOffset: z,
     });
-    // console.log(
-    //   `  step ${i}: y=${state.y}, zOffset=${z}, isJumping=${state.isJumping}`,
-    // );
   }
 
-  // console.log("[simulateJumpTrajectory] total points:", points.length);
   return points;
 }

@@ -11,7 +11,7 @@ import { CarCollider } from "./CarCollider";
 import { CarCubesBuilder } from "./CarCubesBuilder";
 import { CarPhysics } from "./CarPhysics";
 import { useGameState } from "@/store/gameState.js";
-import { CarVisualState } from "./CarVisualState";
+import { CarVisualState, type CarVisualEffect } from "./CarVisualState";
 
 export class Car extends THREE.Group {
   private scene: THREE.Scene;
@@ -171,7 +171,7 @@ export class Car extends THREE.Group {
     this.visualState.preloadTextures(CAR_MATERIAL_CONFIG_EXTRA);
     Object.entries(CAR_EMISSION_CONFIG_EXTRA).forEach(([k, v]) => {
       if (k !== "default") {
-        this.visualState?.setEmissiveColor(k, v);
+        this.visualState?.setEmissiveColor(k as any, v);
       }
     });
 
@@ -289,26 +289,26 @@ export class Car extends THREE.Group {
   }
 
   public enableNitro() {
-    this.visualState?.enable("nitro");
+    this.visualState?.enable("nitro" as CarVisualEffect);
   }
 
   public disableNitro() {
-    this.visualState?.disable("nitro");
+    this.visualState?.disable("nitro" as CarVisualEffect);
   }
 
   public enableShield() {
-    this.visualState?.enable("shield");
+    this.visualState?.enable("shield" as CarVisualEffect);
   }
 
   public disableShield() {
-    this.visualState?.disable("shield");
+    this.visualState?.disable("shield" as CarVisualEffect);
   }
 
   public showDamage() {
-    this.visualState?.enable("damage");
+    this.visualState?.enable("damage" as CarVisualEffect);
 
     setTimeout(() => {
-      this.visualState?.disable("damage");
+      this.visualState?.disable("damage" as CarVisualEffect);
     }, 400);
   }
 }

@@ -20,13 +20,6 @@ class CollisionSystemClass {
   }
 
   checkCollision(
-    // car: {
-    //   isDestroyed(): boolean;
-    //   getCollider(): THREE.Box3 | THREE.Sphere;
-    //   checkObstacleCollision(obstacle: THREE.Object3D): boolean;
-    //   checkJumpCollision(jump: THREE.Object3D): boolean;
-    //   startShieldCooldown(duration: number): void;
-    // },
     car: Car,
     jumps: Jump[] = [],
     obstacles: BaseObstacle[] = [],

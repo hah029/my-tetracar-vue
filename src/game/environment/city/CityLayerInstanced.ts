@@ -31,7 +31,6 @@ export class CityLayerInstanced {
       xMin,
       xMax,
       zStart,
-      zEnd,
       spacing,
       minHeight,
       maxHeight,
@@ -69,8 +68,8 @@ export class CityLayerInstanced {
 
     // Устанавливаем матрицы для всех инстансов
     for (let i = 0; i < this.count; i++) {
-      this.dummy.position.copy(this.positions[i]);
-      this.dummy.scale.copy(this.scales[i]);
+      this.dummy.position.copy(this.positions[i]!);
+      this.dummy.scale.copy(this.scales[i]!);
       this.dummy.updateMatrix();
       this.mesh.setMatrixAt(i, this.dummy.matrix);
     }
@@ -87,16 +86,16 @@ export class CityLayerInstanced {
 
     for (let i = 0; i < this.count; i++) {
       const pos = this.positions[i];
-      pos.z += move;
+      pos!.z += move;
 
       // Зацикливание: если ушли за переднюю границу, перекидываем назад
-      if (pos.z > this.LOOP_THRESHOLD) {
-        pos.z -= cycleLength;
+      if (pos!.z > this.LOOP_THRESHOLD) {
+        pos!.z -= cycleLength;
       }
 
       // Обновляем матрицу
-      this.dummy.position.copy(pos);
-      this.dummy.scale.copy(this.scales[i]);
+      this.dummy.position.copy(pos!);
+      this.dummy.scale.copy(this.scales[i]!);
       this.dummy.updateMatrix();
       this.mesh.setMatrixAt(i, this.dummy.matrix);
     }
