@@ -45,7 +45,7 @@ export class SideObjectsInstanced {
     });
 
     // ищем Mesh внутри
-    let sourceMesh: THREE.Mesh | null = null;
+    let sourceMesh: THREE.Mesh | undefined;
 
     cube.traverse((child) => {
       if ((child as THREE.Mesh).isMesh) {

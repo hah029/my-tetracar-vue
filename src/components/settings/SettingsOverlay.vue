@@ -21,7 +21,7 @@ import DebugSettings from "./DebugSettings.vue";
 import SoundSettings from "./SoundSettings.vue";
 import { computed, ref } from "vue";
 
-const settingsType = ref("sound")
+const settingsType = ref<'controls' | 'sound' | 'graphic' | 'debug'>("sound")
 
 const menuList = {
   controls: { name: "Управление", comp: null },
