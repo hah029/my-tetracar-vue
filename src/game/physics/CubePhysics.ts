@@ -84,8 +84,6 @@ export class CubePhysics {
 
       if (cube.position.y < config.removalHeight) {
         if (onRemove) onRemove(cube);
-        cubes.splice(i, 1);
-        i--;
       }
     }
   }

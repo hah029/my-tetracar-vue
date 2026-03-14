@@ -13,7 +13,6 @@ export class ObstacleManager {
   private static instance: ObstacleManager | null = null;
   private obstacles: BaseObstacle[] = [];
   private jumps: Jump[] = [];
-  // private destroyedCubes: THREE.Object3D[] = [];
   private scene!: THREE.Scene;
   private useGLB: boolean = false;
 
@@ -28,10 +27,6 @@ export class ObstacleManager {
     this.scene = scene;
     this.useGLB = useGLB;
   }
-
-  // public registerDestroyedCubes(cubes: THREE.Object3D[]) {
-  //   this.destroyedCubes.push(...cubes);
-  // }
 
   public spawnStaticObstacle(
     lane: number,
@@ -99,19 +94,6 @@ export class ObstacleManager {
     this.updateList(this.jumps, dt, speed);
     // this.updateDestroyedCubes(dt, speed);
   }
-
-  // private updateDestroyedCubes(dt: number, speed: number) {
-  //   for (let i = this.destroyedCubes.length - 1; i >= 0; i--) {
-  //     const cube = this.destroyedCubes[i];
-  //     if (cube === undefined) continue;
-  //     cube.position.z += dt * speed;
-
-  //     if (cube.position.z > 10) {
-  //       this.scene.remove(cube);
-  //       this.destroyedCubes.splice(i, 1);
-  //     }
-  //   }
-  // }
 
   private updateList<T extends { update(dt: number, s: number): boolean }>(
     list: T[],

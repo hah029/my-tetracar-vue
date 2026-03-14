@@ -21,10 +21,6 @@ export class BulletSystem {
     return BulletSystem.instance;
   }
 
-  // private constructor(scene: THREE.Scene) {
-  //   this.scene = scene;
-  // }
-
   public initialize(scene: THREE.Scene) {
     this.scene = scene;
   }
@@ -50,6 +46,10 @@ export class BulletSystem {
       if (!bullet) continue;
       bullet.update(dt);
       this.bulletBox.setFromObject(bullet);
+
+      // дополнительно увеличиваем бокс коллайдера в два раза
+      // (чтобы уменьшить шанс пролета пули сквозь препятствие)
+      this.bulletBox.expandByScalar(2);
 
       let removed = false;
       for (const obstacle of obstacles) {

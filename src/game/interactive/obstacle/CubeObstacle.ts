@@ -4,10 +4,7 @@ import { BaseObstacle } from "./BaseObstacle";
 import type { GeometryConfig } from "@/game/cube/types";
 import type { PhysicsConfig } from "@/game/physics/types";
 import { CubeBuilder } from "@/game/cube/Cube";
-// import { CubePhysics } from "@/game/physics/CubePhysics";
-// import { RoadEdge } from "@/game/road/edges/RoadEdge";
 import { RoadManager } from "@/game/road/RoadManager";
-// import { ObstacleManager } from "./ObstacleManager";
 import { CAR_MATERIAL_CONFIG } from "@/game/car";
 import { DestructionManager } from "../DestructionManager";
 
@@ -34,7 +31,7 @@ export class CubeObstacle extends BaseObstacle {
       friction: 0.85,
       collisionFactor: 0.2,
       removalHeight: -10,
-      explosionForce: 0.1,
+      explosionForce: 0.3,
       explosionUpward: 0.1,
       cubeRotationSpeed: 1,
       ...customConfig,

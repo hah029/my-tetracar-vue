@@ -48,17 +48,27 @@ export class DestructionManager {
       .getEdges()
       .filter((e) => e instanceof RoadEdge) as RoadEdge[];
 
-    CubePhysics.updateCubes(this.cubes, this.physicsConfig, edges, (cube) => {
-      this.scene.remove(cube);
+    const removed: THREE.Object3D[] = [];
+
+    const flyingCubes = this.cubes.filter((c) => c.userData.state === "flying");
+
+    CubePhysics.updateCubes(flyingCubes, this.physicsConfig, edges, (cube) => {
+      removed.push(cube);
     });
 
-    // движение дороги
-    const dtSec = dt / 1000;
+    // удаляем только после физики
+    for (const cube of removed) {
+      const index = this.cubes.indexOf(cube);
+      if (index !== -1) {
+        this.scene.remove(cube);
+        this.cubes.splice(index, 1);
+      }
+    }
 
     for (let i = this.cubes.length - 1; i >= 0; i--) {
       const cube = this.cubes[i]!;
 
-      cube.position.z += speed * dtSec;
+      cube.position.z += speed * dt;
 
       if (cube.position.z > 10) {
         this.scene.remove(cube);
@@ -66,17 +76,20 @@ export class DestructionManager {
         continue;
       }
 
-      this.tryLandCube(cube, i);
+      this.tryLandCube(cube);
     }
   }
 
-  private tryLandCube(cube: THREE.Object3D, index: number) {
+  private tryLandCube(cube: THREE.Object3D) {
     const ud = cube.userData;
     const v: THREE.Vector3 = ud.velocity;
 
-    if (ud.state !== "flying") return;
-
-    if (!v) return;
+    if (ud.state !== "flying") {
+      return;
+    }
+    if (!v) {
+      return;
+    }
 
     const slowEnough = v.lengthSq() < 0.5;
     const nearGround = cube.position.y <= 0.2;
@@ -91,18 +104,41 @@ export class DestructionManager {
     cube.position.x = road.getLanePosition(lane);
     cube.position.y = 0;
 
-    this.spawnDrop(ud.dropType, lane, cube.position.z);
+    // останавливаем физику
+    ud.velocity.set(0, 0, 0);
+    ud.rotationSpeed?.set(0, 0, 0);
 
-    this.scene.remove(cube);
-    this.cubes.splice(index, 1);
+    const spawned = this.spawnDrop(ud.dropType, lane, cube.position.z);
+
+    // если дропа нет — делаем кубик прозрачным
+    if (!spawned) {
+      cube.traverse((obj) => {
+        const mesh = obj as THREE.Mesh;
+        if (mesh.material) {
+          const mat = mesh.material as THREE.Material & {
+            opacity?: number;
+            transparent?: boolean;
+            emissiveIntensity?: number;
+          };
+
+          mat.opacity = 0.1;
+          mat.emissiveIntensity = 0;
+        }
+      });
+    } else {
+      // если был дроп — удаляем куб
+      this.scene.remove(cube);
+      const index = this.cubes.indexOf(cube);
+      if (index !== -1) this.cubes.splice(index, 1);
+    }
   }
 
   private spawnDrop(
     drop: "coin" | "booster" | "bullet" | null,
     lane: number,
     z: number,
-  ) {
-    if (!drop) return;
+  ): boolean {
+    if (!drop) return false;
 
     switch (drop) {
       case "coin":
@@ -117,15 +153,20 @@ export class DestructionManager {
         this.interactiveItemsManager.spawnBulletItem(lane, z);
         break;
     }
+
+    return true;
   }
 
-  private rollDrop(): "coin" | "booster" | "bullet" | null {
-    const r = Math.random();
+  private rollDrop() {
+    const choices = ["coin", "booster", "bullet", null];
+    const weights: number[] = [1, 1, 1, 1];
 
-    if (r < 0.95) return null;
-    if (r < 0.98) return "coin";
-    if (r < 0.99) return "bullet";
-    return "booster";
+    let i;
+    for (i = 1; i < weights.length; i++) weights[i]! += weights[i - 1]!;
+    var random = Math.random() * weights[weights.length - 1]!;
+    for (i = 0; i < weights.length; i++) if (weights[i]! > random) break;
+
+    return choices[i];
   }
 
   public reset() {
