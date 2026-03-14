@@ -13,7 +13,7 @@ export class ObstacleManager {
   private static instance: ObstacleManager | null = null;
   private obstacles: BaseObstacle[] = [];
   private jumps: Jump[] = [];
-  private destroyedCubes: THREE.Object3D[] = [];
+  // private destroyedCubes: THREE.Object3D[] = [];
   private scene!: THREE.Scene;
   private useGLB: boolean = false;
 
@@ -29,9 +29,9 @@ export class ObstacleManager {
     this.useGLB = useGLB;
   }
 
-  public registerDestroyedCubes(cubes: THREE.Object3D[]) {
-    this.destroyedCubes.push(...cubes);
-  }
+  // public registerDestroyedCubes(cubes: THREE.Object3D[]) {
+  //   this.destroyedCubes.push(...cubes);
+  // }
 
   public spawnStaticObstacle(
     lane: number,
@@ -97,21 +97,21 @@ export class ObstacleManager {
   public update(dt: number, speed: number) {
     this.updateList(this.obstacles, dt, speed);
     this.updateList(this.jumps, dt, speed);
-    this.updateDestroyedCubes(dt, speed);
+    // this.updateDestroyedCubes(dt, speed);
   }
 
-  private updateDestroyedCubes(dt: number, speed: number) {
-    for (let i = this.destroyedCubes.length - 1; i >= 0; i--) {
-      const cube = this.destroyedCubes[i];
-      if (cube === undefined) continue;
-      cube.position.z += dt * speed;
+  // private updateDestroyedCubes(dt: number, speed: number) {
+  //   for (let i = this.destroyedCubes.length - 1; i >= 0; i--) {
+  //     const cube = this.destroyedCubes[i];
+  //     if (cube === undefined) continue;
+  //     cube.position.z += dt * speed;
 
-      if (cube.position.z > 10) {
-        this.scene.remove(cube);
-        this.destroyedCubes.splice(i, 1);
-      }
-    }
-  }
+  //     if (cube.position.z > 10) {
+  //       this.scene.remove(cube);
+  //       this.destroyedCubes.splice(i, 1);
+  //     }
+  //   }
+  // }
 
   private updateList<T extends { update(dt: number, s: number): boolean }>(
     list: T[],
@@ -141,8 +141,8 @@ export class ObstacleManager {
     this.obstacles = [];
     this.jumps = [];
 
-    // Удаляем все динамические кубики
-    this.destroyedCubes.forEach((cube) => this.scene.remove(cube));
-    this.destroyedCubes = [];
+    // // Удаляем все динамические кубики
+    // this.destroyedCubes.forEach((cube) => this.scene.remove(cube));
+    // this.destroyedCubes = [];
   }
 }

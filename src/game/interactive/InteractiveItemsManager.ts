@@ -16,11 +16,12 @@ import { useProgressStore } from "@/store/progressStore";
 import { CarManager } from "../car";
 
 export class InteractiveItemsManager {
-  private obstacleManager: ObstacleManager;
-  private coinManager: CoinManager;
-  private boosterManager: BoosterManager;
-  private bulletItemManager: BulletItemManager;
-  private segmentQueue: SegmentQueue;
+  private static instance: InteractiveItemsManager | null = null;
+  private obstacleManager!: ObstacleManager;
+  private coinManager!: CoinManager;
+  private boosterManager!: BoosterManager;
+  private bulletItemManager!: BulletItemManager;
+  private segmentQueue!: SegmentQueue;
   private distanceSinceLastSegment = 0;
   private segmentLength = 18;
   private difficultyStep = 150;
@@ -28,7 +29,30 @@ export class InteractiveItemsManager {
   private boosterEnabledTimer = 0;
   private boosterEnabledInterval = 5000;
 
-  constructor(
+  public static getInstance(): InteractiveItemsManager {
+    if (!InteractiveItemsManager.instance) {
+      InteractiveItemsManager.instance = new InteractiveItemsManager();
+    }
+    return InteractiveItemsManager.instance;
+  }
+
+  // private constructor(
+  //   obstacleManager: ObstacleManager,
+  //   coinManager: CoinManager,
+  //   boosterManager: BoosterManager,
+  //   bulletItemManager: BulletItemManager,
+  // ) {
+  //   this.obstacleManager = obstacleManager;
+  //   this.coinManager = coinManager;
+  //   this.boosterManager = boosterManager;
+  //   this.bulletItemManager = bulletItemManager;
+  //   this.segmentQueue = new SegmentQueue(() => {
+  //     const distance = useProgressStore().getDistance();
+  //     return Math.floor(distance / this.difficultyStep) + 1;
+  //   });
+  // }
+
+  public initialize(
     obstacleManager: ObstacleManager,
     coinManager: CoinManager,
     boosterManager: BoosterManager,
@@ -76,7 +100,7 @@ export class InteractiveItemsManager {
     }
   }
 
-  private spawnSegment(dt: number, speed: number, baseZ: number) {
+  public spawnSegment(dt: number, speed: number, baseZ: number) {
     const segment = this.segmentQueue.getNext();
 
     const rowSpacing = 3;
@@ -122,7 +146,7 @@ export class InteractiveItemsManager {
     });
   }
 
-  private spawnSingleCoin(lane: number, baseZ: number) {
+  public spawnSingleCoin(lane: number, baseZ: number) {
     if (Math.random() < 0.5) {
       this.coinManager.spawnDiamond(lane, baseZ);
     } else {
@@ -130,13 +154,13 @@ export class InteractiveItemsManager {
     }
   }
 
-  private spawnCoinLine(lane: number, baseZ: number) {
+  public spawnCoinLine(lane: number, baseZ: number) {
     for (let i = 0; i < 5; i++) {
       this.coinManager.spawnGold(lane, baseZ - i * 4);
     }
   }
 
-  private spawnBooster(lane: number, baseZ: number) {
+  public spawnBooster(lane: number, baseZ: number) {
     if (Math.random() < 0.5) {
       this.boosterManager.spawnNitro(lane, baseZ);
     } else {
@@ -144,11 +168,11 @@ export class InteractiveItemsManager {
     }
   }
 
-  private spawnBulletItem(lane: number, baseZ: number) {
+  public spawnBulletItem(lane: number, baseZ: number) {
     this.bulletItemManager.spawnBullet(lane, baseZ);
   }
 
-  private spawnJumpWithCoins(
+  public spawnJumpWithCoins(
     lane: number,
     deltaTime: number,
     speed: number,

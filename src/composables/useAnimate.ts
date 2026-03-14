@@ -53,6 +53,7 @@ export function GameLoop(
     game.updateInteractiveItems(deltaTime, currentSpeed, UpdateMode.Gameplay);
     game.updateRoad(deltaTime, currentSpeed);
     game.updateCity(deltaTime, currentSpeed);
+    game.updateDestructionItems(deltaTime, currentSpeed);
     BulletSystem.getInstance().update(deltaTime);
 
     const collisionResult = game.checkCollision(performance.now());

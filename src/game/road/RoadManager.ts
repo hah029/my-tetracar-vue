@@ -19,30 +19,22 @@ export class RoadManager {
   private leftSideObjects: SideObjectsInstanced | null = null;
   private rightSideObjects: SideObjectsInstanced | null = null;
 
-  private config: RoadConfig;
-  private scene: THREE.Scene;
+  private config!: RoadConfig;
+  private scene!: THREE.Scene;
 
-  private constructor(config: RoadConfig, scene: THREE.Scene) {
-    if (!config.lanes) {
-      throw new Error(
-        "RoadManager must be initialized with lanes configuration",
-      );
-    }
+  // private constructor(config: RoadConfig, scene: THREE.Scene) {
+  //   if (!config.lanes) {
+  //     throw new Error(
+  //       "RoadManager must be initialized with lanes configuration",
+  //     );
+  //   }
+  //   this.config = { ...DEFAULT_ROAD_CONFIG, ...config };
+  //   this.scene = scene;
+  // }
+
+  public initialize(config: RoadConfig, scene: THREE.Scene) {
     this.config = { ...DEFAULT_ROAD_CONFIG, ...config };
     this.scene = scene;
-  }
-
-  public static initialize(
-    config: RoadConfig,
-    scene: THREE.Scene,
-  ): RoadManager {
-    if (!config.lanes) {
-      throw new Error(
-        "Cannot initialize RoadManager without lanes configuration",
-      );
-    }
-    RoadManager.instance = new RoadManager(config, scene);
-    return RoadManager.instance;
   }
 
   public static isInitialized(): boolean {
@@ -51,9 +43,7 @@ export class RoadManager {
 
   public static getInstance(): RoadManager {
     if (!RoadManager.instance) {
-      throw new Error(
-        "RoadManager not initialized. Call RoadManager.initialize() first.",
-      );
+      RoadManager.instance = new RoadManager();
     }
     return RoadManager.instance;
   }
@@ -234,5 +224,23 @@ export class RoadManager {
   public reset(): void {
     this.clear();
     this.createRoad();
+  }
+
+  public getClosestLaneIndex(xPos: number): number {
+    const lanes = this.road!.lanes;
+
+    let closest = 0;
+    let minDist = Infinity;
+
+    for (let i = 0; i < lanes.length; i++) {
+      const dist = Math.abs(xPos - lanes[i]!);
+
+      if (dist < minDist) {
+        minDist = dist;
+        closest = i;
+      }
+    }
+
+    return closest;
   }
 }

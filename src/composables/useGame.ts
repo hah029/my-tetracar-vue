@@ -11,14 +11,15 @@ import { BoosterManager } from "@/game/interactive/items/booster/BoosterManager"
 import { CoinManager } from "@/game/interactive/items/coin/CoinManager";
 import { CityManager } from "@/game/environment/city/CityManager";
 import { SoundManager } from "@/game/sound/SoundManager";
+import { BulletSystem } from "@/game/combat/BulletSystem";
+import { BulletItemManager } from "@/game/interactive/items/bullet/BulletItemManager";
+import { DestructionManager } from "@/game/interactive/DestructionManager";
 // enums
 import { DEFAULT_LANES } from "@/game/road/config/RoadConfig";
 import { UpdateMode } from "@/game/core/UpdateMode";
 // stores
 import { useProgressStore } from "@/store/progressStore";
 import { usePlayerStore } from "@/store/playerStore";
-import { BulletSystem } from "@/game/combat/BulletSystem";
-import { BulletItemManager } from "@/game/interactive/items/bullet/BulletItemManager";
 
 // Интерфейс для реактивной ссылки car
 interface CarRef {
@@ -97,6 +98,7 @@ export function useGame() {
   let obstacleManager: ObstacleManager;
   let coinManager: CoinManager;
   let interactiveManager: InteractiveItemsManager;
+  let destructionManager: DestructionManager;
   let cityManager: CityManager;
   let boosterManager: BoosterManager;
   let bulletItemManager: BulletItemManager;
@@ -109,10 +111,9 @@ export function useGame() {
     setupLights(scene);
 
     // === Инициализация менеджеров ===
-    roadManager = RoadManager.initialize(
-      { lanes: DEFAULT_LANES, length: 250 },
-      scene,
-    );
+    roadManager = RoadManager.getInstance();
+    roadManager.initialize({ lanes: DEFAULT_LANES, length: 250 }, scene);
+
     cityManager = CityManager.getInstance();
     cityManager.initialize(scene);
 
@@ -128,30 +129,32 @@ export function useGame() {
     bulletItemManager = BulletItemManager.getInstance();
     bulletItemManager.initialize(scene);
 
-    interactiveManager = new InteractiveItemsManager(
+    interactiveManager = InteractiveItemsManager.getInstance();
+    interactiveManager.initialize(
       obstacleManager,
       coinManager,
       boosterManager,
       bulletItemManager,
     );
 
+    destructionManager = DestructionManager.getInstance();
+    destructionManager.initialize(scene, interactiveManager);
+
     carManager = CarManager.getInstance();
     carManager.initialize(scene);
 
     BulletSystem.getInstance().initialize(scene);
 
-    // === Создание дороги и машины ===
-    roadManager.createRoad();
-
+    // инициализация происходит на уровне App.vue
     soundManager = SoundManager.getInstance();
 
+    // === Создание дороги и машины ===
+    roadManager.createRoad();
     const newCar = carManager.createCar();
-
     car.value.mesh = newCar;
     car.value.targetX = 0;
     car.value.isDestroyed = false;
     car.value.cubes = [];
-
     carManager.buildCar(true);
   }
 
@@ -241,6 +244,9 @@ export function useGame() {
       obstacles.value.push({ mesh: o, position: o.position });
     });
   }
+  function updateDestructionItems(deltaTime: number, speed: number) {
+    destructionManager.update(deltaTime, speed);
+  }
 
   function resetObstacles() {
     if (!obstacleManager) return;
@@ -318,6 +324,7 @@ export function useGame() {
 
     carManager.resetCar();
     interactiveManager.reset();
+    destructionManager.reset();
     roadManager.clear();
     CollisionSystem.reset();
     BulletSystem.getInstance().reset();
@@ -369,11 +376,12 @@ export function useGame() {
       if (sceneRef) sceneRef.add(obstacle);
     },
     updateInteractiveItems,
-    resetObstacles,
-    destroyObstacles,
+    updateDestructionItems,
     updateRoad,
     updateJumps,
     updateCity,
+    resetObstacles,
+    destroyObstacles,
     resetJumps,
     checkCollision,
     checkCoinCollision,

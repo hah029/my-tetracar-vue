@@ -4,11 +4,12 @@ import { BaseObstacle } from "./BaseObstacle";
 import type { GeometryConfig } from "@/game/cube/types";
 import type { PhysicsConfig } from "@/game/physics/types";
 import { CubeBuilder } from "@/game/cube/Cube";
-import { CubePhysics } from "@/game/physics/CubePhysics";
-import { RoadEdge } from "@/game/road/edges/RoadEdge";
+// import { CubePhysics } from "@/game/physics/CubePhysics";
+// import { RoadEdge } from "@/game/road/edges/RoadEdge";
 import { RoadManager } from "@/game/road/RoadManager";
-import { ObstacleManager } from "./ObstacleManager";
+// import { ObstacleManager } from "./ObstacleManager";
 import { CAR_MATERIAL_CONFIG } from "@/game/car";
+import { DestructionManager } from "../DestructionManager";
 
 export class CubeObstacle extends BaseObstacle {
   protected cubes: THREE.Object3D[] = [];
@@ -33,9 +34,9 @@ export class CubeObstacle extends BaseObstacle {
       friction: 0.85,
       collisionFactor: 0.2,
       removalHeight: -10,
-      explosionForce: 0.2,
-      explosionUpward: 0.8,
-      cubeRotationSpeed: 0.01,
+      explosionForce: 0.1,
+      explosionUpward: 0.1,
+      cubeRotationSpeed: 1,
       ...customConfig,
     };
 
@@ -50,10 +51,8 @@ export class CubeObstacle extends BaseObstacle {
     if (!this.isDestroyed) {
       this.updateNormalCubes(dt, speed);
       return this.position.z > 10;
-    } else {
-      this.updateDestroyedCubes();
-      return this.cubes.length === 0;
     }
+    return false;
   }
 
   async build(formConfig: GeometryConfig[], useGLB: boolean): Promise<void> {
@@ -77,46 +76,86 @@ export class CubeObstacle extends BaseObstacle {
     this.cubes = cubes;
   }
 
+  // public destroy(impactPoint?: THREE.Vector3) {
+  //   if (this.isDestroyed) return;
+  //   this.isDestroyed = true;
+
+  //   // Отсоединяем кубики от группы и добавляем в сцену
+  //   this.cubes.forEach((cube) => {
+  //     const worldPos = cube.getWorldPosition(new THREE.Vector3());
+  //     const worldRot = cube.getWorldQuaternion(new THREE.Quaternion());
+  //     this.remove(cube);
+  //     this.scene.add(cube);
+  //     cube.position.copy(worldPos);
+  //     cube.quaternion.copy(worldRot);
+  //     const ud = cube.userData as any;
+  //     ud.velocity = new THREE.Vector3(
+  //       (Math.random() - 0.5) * this.physicsConfig.explosionForce,
+  //       Math.random() * this.physicsConfig.explosionUpward + 0.1,
+  //       (Math.random() - 0.5) * this.physicsConfig.explosionForce,
+  //     );
+  //     if (impactPoint) {
+  //       const dir = cube.position.clone().sub(impactPoint).normalize();
+  //       ud.velocity.copy(dir.multiplyScalar(this.physicsConfig.explosionForce));
+  //     }
+  //     ud.rotationSpeed = new THREE.Vector3(
+  //       (Math.random() - 0.5) * this.physicsConfig.cubeRotationSpeed,
+  //       (Math.random() - 0.5) * this.physicsConfig.cubeRotationSpeed,
+  //       (Math.random() - 0.5) * this.physicsConfig.cubeRotationSpeed,
+  //     );
+  //   });
+
+  //   // Регистрируем кубики в менеджере для последующей очистки при reset
+  //   DestructionManager.getInstance().registerCubes(this.cubes);
+  // }
   public destroy(impactPoint?: THREE.Vector3) {
     if (this.isDestroyed) return;
     this.isDestroyed = true;
 
-    // Отсоединяем кубики от группы и добавляем в сцену
+    const dm = DestructionManager.getInstance();
+
     this.cubes.forEach((cube) => {
+      // Получаем мировые координаты
       const worldPos = cube.getWorldPosition(new THREE.Vector3());
       const worldRot = cube.getWorldQuaternion(new THREE.Quaternion());
+
+      // Отсоединяем от группы и добавляем в сцену
       this.remove(cube);
       this.scene.add(cube);
       cube.position.copy(worldPos);
       cube.quaternion.copy(worldRot);
+
       const ud = cube.userData as any;
-      ud.velocity = new THREE.Vector3(
+
+      // --- Вектор скорости с комбинированным разбросом ---
+      const baseVel = new THREE.Vector3(
         (Math.random() - 0.5) * this.physicsConfig.explosionForce,
         Math.random() * this.physicsConfig.explosionUpward + 0.1,
         (Math.random() - 0.5) * this.physicsConfig.explosionForce,
       );
+
       if (impactPoint) {
         const dir = cube.position.clone().sub(impactPoint).normalize();
-        ud.velocity.copy(dir.multiplyScalar(this.physicsConfig.explosionForce));
+        dir.multiplyScalar(this.physicsConfig.explosionForce);
+        baseVel.add(dir); // суммируем случайный и направленный вектор
       }
+
+      ud.velocity = baseVel;
+
+      // --- Вращение ---
       ud.rotationSpeed = new THREE.Vector3(
         (Math.random() - 0.5) * this.physicsConfig.cubeRotationSpeed,
         (Math.random() - 0.5) * this.physicsConfig.cubeRotationSpeed,
         (Math.random() - 0.5) * this.physicsConfig.cubeRotationSpeed,
       );
+
+      // --- Дополнительные данные для DestructionManager ---
+      ud.gravity = this.physicsConfig.gravity; // можно использовать в update
+      ud.life = 0; // для задержки приземления, если нужно
     });
 
-    // Регистрируем кубики в менеджере для последующей очистки при reset
-    ObstacleManager.getInstance().registerDestroyedCubes(this.cubes);
-  }
-  protected updateDestroyedCubes() {
-    const edges = RoadManager.getInstance()
-      .getEdges()
-      .filter((e) => e instanceof RoadEdge) as RoadEdge[];
-
-    CubePhysics.updateCubes(this.cubes, this.physicsConfig, edges, (cube) => {
-      this.scene.remove(cube);
-    });
+    // Регистрируем кубики в DestructionManager
+    dm.registerCubes(this.cubes);
   }
 
   protected updateNormalCubes(dt: number, speed: number) {

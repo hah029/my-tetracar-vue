@@ -21,8 +21,8 @@ export const usePlayerStore = defineStore("playerStore", () => {
   // nitro
   const isShieldEnabled = ref(false);
   //ammo
-  const ammo = ref(0);
-  const maxAmmo = ref(3);
+  const ammo = ref(100);
+  const maxAmmo = ref(100);
   // position
   const currentLane = ref(1); // 0..3 для полос
   const carPosition = ref({ x: 0, y: 0, z: 0 });

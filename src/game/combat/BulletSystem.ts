@@ -4,7 +4,7 @@ import { Car } from "../car";
 import { ObstacleManager } from "../interactive/obstacle";
 
 export class BulletSystem {
-  private static instance: BulletSystem;
+  private static instance: BulletSystem | null = null;
 
   private bullets: Bullet[] = [];
   private scene!: THREE.Scene;
@@ -14,14 +14,18 @@ export class BulletSystem {
   private bulletBox = new THREE.Box3();
   private obstacleBox = new THREE.Box3();
 
-  static getInstance(): BulletSystem {
-    if (!this.instance) {
-      this.instance = new BulletSystem();
+  public static getInstance(): BulletSystem {
+    if (!BulletSystem.instance) {
+      BulletSystem.instance = new BulletSystem();
     }
-    return this.instance;
+    return BulletSystem.instance;
   }
 
-  initialize(scene: THREE.Scene) {
+  // private constructor(scene: THREE.Scene) {
+  //   this.scene = scene;
+  // }
+
+  public initialize(scene: THREE.Scene) {
     this.scene = scene;
   }
 
