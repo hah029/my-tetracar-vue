@@ -1,23 +1,23 @@
 <!-- src/components/MainMenu.vue -->
 <template>
   <div class="menu-overlay">
-    <h4 class="menu-title__mini">TETROCAR</h4>
+    <h4 class="menu-title__mini">{{ $t("gameTitle") }}</h4>
 
     <template v-if="isSettingsEnabled">
       <SettingsOverlay />
       <button class="menu-btn" @click="goBackToMenu">
-        НАЗАД
+        {{ $t("mainMenu.goBack") }}
       </button>
 
     </template>
 
     <template v-else>
 
-      <h1 class="menu-subtitle">ГЛАВНОЕ МЕНЮ</h1>
+      <!-- <h1 class="menu-subtitle">{{ $t("mainMenu.title") }}</h1> -->
 
       <div class="menu-btns">
-        <button class="menu-btn" @click="startGame">СТАРТ</button>
-        <button class="menu-btn" @click="goToSettings">НАСТРОЙКИ</button>
+        <button class="menu-btn" @click="startGame">{{ $t("mainMenu.startGame") }}</button>
+        <button class="menu-btn" @click="goToSettings">{{ $t("mainMenu.settings") }}</button>
       </div>
 
     </template>

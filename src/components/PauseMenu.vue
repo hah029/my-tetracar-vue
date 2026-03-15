@@ -1,6 +1,6 @@
 <template>
   <div v-if="isVisible" class="menu-overlay">
-    <h4 class="menu-title__mini">TETROCAR</h4>
+    <h4 class="menu-title__mini">{{ $t("gameTitle") }}</h4>
 
     <template v-if="isSettingsEnabled">
       <SettingsOverlay />

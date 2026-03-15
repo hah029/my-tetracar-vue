@@ -1,8 +1,8 @@
 <!-- src/components/MainMenu.vue -->
 <template>
   <div class="menu-overlay">
-    <h1 class="menu-title">TETROCAR</h1>
-    <button class="menu-btn" @click="letsPlay">НАЖМИ НА КНОПКУ</button>
+    <h1 class="menu-title">{{ $t("gameTitle") }}</h1>
+    <button class="menu-btn" @click="letsPlay">{{ $t("preloader.pressAnyButton") }}</button>
   </div>
 </template>
 

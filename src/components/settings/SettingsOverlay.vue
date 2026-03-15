@@ -1,5 +1,5 @@
 <template>
-  <h1 class="menu-subtitle">Настройки</h1>
+  <h1 class="menu-subtitle">{{ $t("settings.title") }}</h1>
   <div class="settings-overlay">
     <ul class="settings-menu-list">
       <li @click="settingsType = key" :class="settingsType == key ? 'selected' : ''"
@@ -19,18 +19,22 @@
 <script setup lang="ts">
 import DebugSettings from "./DebugSettings.vue";
 import SoundSettings from "./SoundSettings.vue";
+import LanguageSettings from "./LanguageSettings.vue";
 import { computed, ref } from "vue";
+import { useTranslation } from "i18next-vue";
+const { t } = useTranslation();
 
-const settingsType = ref<'controls' | 'sound' | 'graphic' | 'debug'>("sound")
+const settingsType = ref<'controls' | 'sound' | 'graphic' | 'debug' | 'lang'>("sound")
 
-const menuList = {
-  controls: { name: "Управление", comp: null },
-  sound: { name: "Звук", comp: SoundSettings },
-  graphic: { name: "Графика", comp: null },
-  debug: { name: "Дебаг", comp: DebugSettings },
-}
+const menuList = computed(() => ({
+  controls: { name: t("settings.settingsMenuList.controls"), comp: null },
+  sound: { name: t("settings.settingsMenuList.sound"), comp: SoundSettings },
+  graphic: { name: t("settings.settingsMenuList.graphic"), comp: null },
+  debug: { name: t("settings.settingsMenuList.debug"), comp: DebugSettings },
+  lang: { name: t("settings.settingsMenuList.lang"), comp: LanguageSettings },
+}));
 
-const getSettingsComponent = computed(() => menuList[settingsType.value].comp || null)
+const getSettingsComponent = computed(() => menuList.value[settingsType.value]?.comp || null);
 
 </script>
 

@@ -1,0 +1,41 @@
+{
+    "gameTitle": "tetrocar",
+    "mainMenu": {
+        "goBack": "go back",
+        "title": "start menu",
+        "startGame": "start game",
+        "settings": "settings"
+    },
+    "preloader": {
+        "pressAnyButton": "tap to start"
+    },
+    "pauseMenu": {},
+    "gameOverMenu": {},
+    "settings": {
+        "title": "settings",
+        "toggleOn": "on",
+        "toggleOff": "off",
+        "settingsMenuList": {
+            "controls": "controls",
+            "sound": "sound",
+            "graphic": "graphic",
+            "debug": "debug",
+            "lang": "language"
+        },
+        "music": {
+            "musicEnabled": "music",
+            "sfxEnabled": "sounds",
+            "volumeLevel": "volume"
+        },
+        "debug": {
+            "debugEnabled": "debug"
+        },
+        "language": {
+            "label": "language",
+            "availableList": {
+                "en": "english",
+                "ru": "russian"
+            }
+        }
+    }
+}

@@ -2,9 +2,9 @@
   <div class="settings">
 
     <div class="settings-row">
-      <span>Режим дебага</span>
+      <span>{{ $t("settings.debug.debugEnabled") }}</span>
       <button class="toggle-btn" @click="toggleDebug">
-        {{ gameState.isDebug ? "ON" : "OFF" }}
+        {{ gameState.isDebug ? $t("settings.toggleOn") : $t("settings.toggleOff") }}
       </button>
     </div>
   </div>

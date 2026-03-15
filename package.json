@@ -9,6 +9,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "i18next-vue": "^5.4.0",
     "pinia": "^3.0.4",
     "scss": "^0.2.4",
     "three": "^0.183.1",
