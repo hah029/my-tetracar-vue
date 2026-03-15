@@ -20,7 +20,7 @@ import { DebugColliderVisualizer } from "./helpers/debug/DebugColliderVisualizer
 import { GameStates } from "./game/core/GameState";
 
 const threeRoot = ref<HTMLDivElement | null>(null);
-const { getScene, getCamera, getComposer, getMotionBlurPass } = useThree(threeRoot);
+const { getScene, getCamera, getComposer } = useThree(threeRoot);
 const game = useGame();
 const gameState = useGameState();
 
@@ -49,7 +49,7 @@ onMounted(() => {
   const scene = getScene();
   const camera = getCamera();
   const composer = getComposer();
-  const motionBlur = getMotionBlurPass();
+  // const motionBlur = getMotionBlurPass();
 
   // game init
   game.init(scene);
@@ -63,7 +63,7 @@ onMounted(() => {
 
   // main loop initialize
   const debugCollider = new DebugColliderVisualizer(scene);
-  loop = GameLoop(game, composer, motionBlur, debugCollider);
+  loop = GameLoop(game, composer, debugCollider);
   loop.start();
 });
 

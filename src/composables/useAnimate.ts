@@ -1,8 +1,8 @@
 // src/composables/useAnimate.ts
-import * as THREE from "three";
+// import * as THREE from "three";
 import Stats from "three/examples/jsm/libs/stats.module.js";
 import { EffectComposer } from "three/examples/jsm/postprocessing/EffectComposer.js";
-import { AfterimagePass } from "three/examples/jsm/postprocessing/AfterimagePass.js";
+// import { AfterimagePass } from "three/examples/jsm/postprocessing/AfterimagePass.js";
 // composables
 import { useGameState } from "@/store/gameState";
 import { usePlayerStore } from "@/store/playerStore";
@@ -20,17 +20,15 @@ import { GameStates } from "@/game/core/GameState";
 export function GameLoop(
   game: ReturnType<typeof useGame>,
   composer: EffectComposer,
-  motionBlur: AfterimagePass,
+  // motionBlur: AfterimagePass,
   debugCollider?: DebugColliderVisualizer,
 ) {
   const gameState = useGameState();
   const playerStore = usePlayerStore();
   const progressStore = useProgressStore();
 
-  // вот это мой менеджер (он уже имеет все нужные звуки)
   const soundManager = SoundManager.getInstance();
 
-  let previousState = gameState.currentState;
   const stats = new Stats();
   document.body.appendChild(stats.dom);
 
@@ -38,11 +36,11 @@ export function GameLoop(
   const FPS = 60;
   const FRAME_TIME = 1000 / FPS;
   let lastTime = 0;
-  let started = true;
+  // let started = true;
   let rafId: number | null = null;
 
+  // --- Вспомогательные функции (без изменений) ---
   function updateDestruction(deltaTime: number) {
-    // 🔥 ТОЛЬКО разрушения
     CameraSystem.updateDestroyed(game.car.value.cubes, deltaTime);
     game.updateInteractiveItems(deltaTime, 0, UpdateMode.Destruction);
   }
@@ -61,8 +59,6 @@ export function GameLoop(
       if (collisionResult.jump) {
         game.jumpPlayer(deltaTime);
       } else if (playerStore.isShieldEnabled) {
-        // Столкнувшееся препятствие уже разрушено в CollisionSystem
-        // Не разрушаем все препятствия
         CarManager.getInstance().disableShield();
         playerStore.disableShield();
       } else {
@@ -71,9 +67,9 @@ export function GameLoop(
         soundManager.play("sfx_destroy_bot");
         const strength = Math.min(currentSpeed / playerStore.maxSpeed, 1);
         CameraSystem.triggerImpactShake(strength);
-        motionBlur.damp = 0.82;
+        // motionBlur.damp = 0.82;
         gameState.endGame();
-        return false; // ❗ сигнал «игра закончена»
+        return false;
       }
     }
 
@@ -125,76 +121,77 @@ export function GameLoop(
     return true;
   }
 
+  // --- Основной цикл анимации ---
   function animate(time: number) {
     rafId = requestAnimationFrame(animate);
 
-    if (!started) {
-      started = true;
-      return;
-    }
-
     const deltaTime = time - lastTime;
     if (deltaTime < FRAME_TIME) return;
-
     lastTime = time;
 
     stats.begin();
 
-    // =========================
-    // STATE TRANSITIONS
-    // =========================
-
-    if (
-      gameState.currentState !== GameStates.Play &&
-      gameState.currentState !== GameStates.Gameover
-    ) {
-      composer.render();
-      stats.end();
+    const currentState = gameState.currentState;
+    if (currentState === GameStates.Pause) {
       return;
     }
 
-    previousState = gameState.currentState;
-
-    const realCar = game.car.value.mesh;
-    if (realCar) {
-      try {
-        playerStore.currentLane = (realCar as any).getCurrentLane();
-      } catch {}
-    }
-
-    const isGameOver = game.car.value.isDestroyed;
-    let currentSpeed = playerStore.getCurrentSpeed();
-    const speedFactor = Math.min(currentSpeed / playerStore.maxSpeed, 1);
-
-    // меньше damp = сильнее blur
-    motionBlur.damp = THREE.MathUtils.lerp(0.2, 0.99, speedFactor);
-
-    if (!isGameOver) {
-      if (playerStore.baseSpeed < playerStore.BASE_SPEED) {
-        playerStore.baseSpeed = playerStore.BASE_SPEED;
-      }
-
-      playerStore.baseSpeed += playerStore.getCurrentAcceleration();
-      if (playerStore.baseSpeed > playerStore.maxSpeed) {
-        playerStore.baseSpeed = playerStore.maxSpeed;
-      }
-    }
-
-    game.updatePlayer(deltaTime);
-
     // =========================
-    // MAIN UPDATE
+    // 1. Активные состояния игры
     // =========================
-
-    if (isGameOver) {
-      updateDestruction(deltaTime);
-    } else {
-      const stillPlaying = updateGame(deltaTime, currentSpeed);
-      debugCollider?.update();
-      if (!stillPlaying) {
-        stats.end();
-        return;
+    if (
+      currentState === GameStates.Play ||
+      currentState === GameStates.Gameover
+    ) {
+      const realCar = game.car.value.mesh;
+      if (realCar) {
+        try {
+          playerStore.currentLane = (realCar as any).getCurrentLane();
+        } catch {}
       }
+
+      const isGameOver = game.car.value.isDestroyed;
+      let currentSpeed = playerStore.getCurrentSpeed();
+      // const speedFactor = Math.min(currentSpeed / playerStore.maxSpeed, 1);
+
+      // Настройка motion blur
+      // motionBlur.damp = THREE.MathUtils.lerp(0.2, 0.99, speedFactor);
+
+      if (!isGameOver) {
+        if (playerStore.baseSpeed < playerStore.BASE_SPEED) {
+          playerStore.baseSpeed = playerStore.BASE_SPEED;
+        }
+        playerStore.baseSpeed += playerStore.getCurrentAcceleration();
+        if (playerStore.baseSpeed > playerStore.maxSpeed) {
+          playerStore.baseSpeed = playerStore.maxSpeed;
+        }
+      }
+
+      game.updatePlayer(deltaTime);
+
+      if (isGameOver) {
+        updateDestruction(deltaTime);
+      } else {
+        const stillPlaying = updateGame(deltaTime, currentSpeed);
+        debugCollider?.update();
+        if (!stillPlaying) {
+          stats.end();
+          return;
+        }
+      }
+    }
+    // =========================
+    // 2. Фоновые состояния (меню, загрузка, отсчёт)
+    // =========================
+    else {
+      // Двигаем только дорогу и город с текущей скоростью (без спавна объектов)
+      const currentSpeed = playerStore.baseSpeed;
+
+      game.updateRoad(deltaTime, currentSpeed);
+      game.updateCity(deltaTime, currentSpeed);
+
+      // Камера не обновляется, остаётся на месте
+      // Интерактивные объекты, пули и игрок не обновляются
     }
 
     composer.render();
@@ -213,8 +210,5 @@ export function GameLoop(
     }
   }
 
-  return {
-    start,
-    stop,
-  };
+  return { start, stop };
 }

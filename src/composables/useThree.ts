@@ -2,7 +2,7 @@
 import * as THREE from "three";
 import { type Ref, onMounted, onUnmounted } from "vue";
 import { EffectComposer } from "three/examples/jsm/postprocessing/EffectComposer.js";
-import { AfterimagePass } from "three/examples/jsm/postprocessing/AfterimagePass.js";
+// import { AfterimagePass } from "three/examples/jsm/postprocessing/AfterimagePass.js";
 import { UnrealBloomPass } from "three/examples/jsm/postprocessing/UnrealBloomPass.js";
 import { RenderPass } from "three/examples/jsm/postprocessing/RenderPass.js";
 import { useGameState } from "@/store/gameState";
@@ -19,7 +19,7 @@ let scene: THREE.Scene;
 let camera: THREE.PerspectiveCamera;
 let renderer: THREE.WebGLRenderer;
 let composer: EffectComposer;
-let afterimagePass: AfterimagePass;
+// let afterimagePass: AfterimagePass;
 
 export function useThree(container: Ref<HTMLElement | null>) {
   function init() {
@@ -65,8 +65,8 @@ export function useThree(container: Ref<HTMLElement | null>) {
 
     composer.addPass(bloomPass);
 
-    afterimagePass = new AfterimagePass(1); // оригинальное значение damp
-    composer.addPass(afterimagePass);
+    // afterimagePass = new AfterimagePass(1); // оригинальное значение damp
+    // composer.addPass(afterimagePass);
 
     container.value.appendChild(renderer.domElement);
 
@@ -109,15 +109,15 @@ export function useThree(container: Ref<HTMLElement | null>) {
     return composer;
   }
 
-  function getMotionBlurPass() {
-    return afterimagePass;
-  }
+  // function getMotionBlurPass() {
+  //   return afterimagePass;
+  // }
 
   return {
     getScene,
     getCamera,
     getRenderer,
     getComposer,
-    getMotionBlurPass,
+    // getMotionBlurPass,
   };
 }

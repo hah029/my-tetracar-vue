@@ -33,12 +33,12 @@ interface CarRef {
 
 // Вынесенная функция для создания всех источников света
 function setupLights(scene: THREE.Scene) {
-  const ambientLight = new THREE.AmbientLight(0xffffff, 1.0);
+  const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
   scene.add(ambientLight);
 
   const dirLight = new THREE.DirectionalLight(0xffffff, 1.5);
   dirLight.position.set(5, 10, 5);
-  dirLight.castShadow = true;
+  dirLight.castShadow = false;
   scene.add(dirLight);
 
   const frontLight = new THREE.DirectionalLight(0xffffff, 1.0);

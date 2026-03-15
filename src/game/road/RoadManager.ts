@@ -22,16 +22,6 @@ export class RoadManager {
   private config!: RoadConfig;
   private scene!: THREE.Scene;
 
-  // private constructor(config: RoadConfig, scene: THREE.Scene) {
-  //   if (!config.lanes) {
-  //     throw new Error(
-  //       "RoadManager must be initialized with lanes configuration",
-  //     );
-  //   }
-  //   this.config = { ...DEFAULT_ROAD_CONFIG, ...config };
-  //   this.scene = scene;
-  // }
-
   public initialize(config: RoadConfig, scene: THREE.Scene) {
     this.config = { ...DEFAULT_ROAD_CONFIG, ...config };
     this.scene = scene;
