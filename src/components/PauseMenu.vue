@@ -29,6 +29,7 @@ import { GameStates } from "@/game/core/GameState";
 
 const gameStore = useGameState();
 
+
 const isSettingsEnabled = ref(false);
 
 const isVisible = computed(() => gameStore.currentState === GameStates.Pause);

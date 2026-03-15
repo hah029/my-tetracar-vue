@@ -50,14 +50,12 @@
 import { computed } from "vue";
 import { useGameState } from "../store/gameState";
 import { usePlayerStore } from "../store/playerStore";
-import { useGame } from "../composables/useGame";
 import { useProgressStore } from "@/store/progressStore";
 import { GameStates } from "@/game/core/GameState";
 
 const gameState = useGameState();
 const playerStore = usePlayerStore();
 const progressStore = useProgressStore();
-const game = useGame();
 
 const isVisible = computed(() => gameState.currentState === GameStates.Gameover);
 
@@ -67,16 +65,10 @@ const distance = computed(() => progressStore.getDistanceInCubes());
 const currentSpeedRounded = computed(() => playerStore.getCurrentSpeedInCubesPerHour(1));
 
 function restartGame() {
-  progressStore.resetScore();
-  playerStore.resetGameData();
-  game.reset();
-  gameState.setState(GameStates.Play);
+  gameState.setState(GameStates.Countdown);
 }
 
 function goToMainMenu() {
-  progressStore.resetScore();
-  playerStore.resetGameData();
-  game.reset();
   gameState.setState(GameStates.Menu);
 }
 </script>

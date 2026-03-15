@@ -27,18 +27,12 @@
 <script setup lang="ts">
 import { ref } from "vue";
 import { useGameState } from "@/store/gameState";
-import { usePlayerStore } from "@/store/playerStore";
-import { SoundManager } from "@/game/sound/SoundManager";
 import SettingsOverlay from "./settings/SettingsOverlay.vue";
 import { GameStates } from "@/game/core/GameState";
-import { useGame } from "@/composables/useGame";
 
 const gameStore = useGameState();
-const playerStore = usePlayerStore();
-const soundManager = SoundManager.getInstance();
 
 const isSettingsEnabled = ref(false);
-const game = useGame();
 
 
 function goToSettings() {
@@ -50,9 +44,6 @@ function goBackToMenu() {
 }
 
 function startGame() {
-  soundManager.resume();
-  playerStore.resetGameData();
-  game.reset();
   gameStore.setState(GameStates.Countdown);
 }
 </script>

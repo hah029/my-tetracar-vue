@@ -74,7 +74,7 @@ onUnmounted(() => {
 watch(
   () => gameState.currentState,
   async (newState, oldState) => {
-    if ((oldState === GameStates.Gameover || oldState === GameStates.Menu) && newState === GameStates.Play) {
+    if ((oldState === GameStates.Gameover || oldState === GameStates.Pause) && (newState === GameStates.Countdown || newState === GameStates.Menu)) {
       console.log("🔄 Game restart detected, resetting game...");
 
       // 1️⃣ Ждём обновления DOM/реактивных данных
@@ -95,36 +95,26 @@ watch(
 
 watch(
   () => gameState.currentState,
-  (state) => {
-
-    if (state === GameStates.Menu) {
-      soundManager.fadeOut("music_background", 0.1);
-      setTimeout(() => {
+  (newState) => {
+    console.log(`State changed to ${newState}`);
+    switch (newState) {
+      case GameStates.Preloader:
+        soundManager.stopAllMusic();
+        break;
+      case GameStates.Menu:
         soundManager.playMusicSequence("music_intro", "music_background");
-      }, 100);
+        break;
+      case GameStates.Play:
+        soundManager.playMusic("music_background", true);
+        break;
+      case GameStates.Gameover:
+        soundManager.playMusic("music_gameover");
+        break;
+      // Countdown и Pause игнорируем – музыкой управляет сам компонент Countdown,
+      // а в паузе музыка продолжает играть (можно добавить fadeOut, если нужно)
     }
-
-    if (state === GameStates.Play) {
-      // soundManager.fadeOut("music_background", 0.1);
-      soundManager.stopAllMusic();
-      setTimeout(() => {
-        soundManager.play("music_background");
-      }, 100);
-    }
-
-    if (state === GameStates.Gameover) {
-      soundManager.fadeOut("music_background", 0.1);
-      setTimeout(() => {
-        soundManager.play("music_gameover");
-      }, 100);
-    }
-
-    if (state === GameStates.Preloader) {
-      soundManager.stopAllMusic();
-    }
-
   }
-)
+);
 
 </script>
 

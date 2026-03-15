@@ -11,7 +11,7 @@ const soundManager = SoundManager.getInstance();
 const count = ref(3);
 
 onMounted(() => {
-    soundManager.stopAllMusic();
+    soundManager.fadeOut(undefined, 2.0);
     const interval = setInterval(() => {
         soundManager.play(`sfx_${count.value}`);
         count.value--;

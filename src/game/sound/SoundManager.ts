@@ -10,6 +10,7 @@ export class SoundManager {
   private sounds: AudioMap = {};
 
   private currentMusic: THREE.Audio | null = null;
+  private currentMusicName: string | null = null;
   private musicTimeout: number | null = null;
 
   private musicSet = new Set([
@@ -30,27 +31,36 @@ export class SoundManager {
     camera.add(this.listener);
     this.loader = new THREE.AudioLoader();
     Object.entries(SOUNDS_CONFIG).forEach(([k, v]) => {
-      // const isMusic = k.startsWith("music_background");
       this.load(k, v);
     });
   }
 
   private load(name: string, path: string) {
     const sound = new THREE.Audio(this.listener);
-
     this.loader.load(path, (buffer) => {
       sound.setBuffer(buffer);
-
       if (this.musicSet.has(name)) {
         sound.setVolume(0.4);
       } else {
         sound.setVolume(0.6);
       }
     });
-
     this.sounds[name] = sound;
   }
 
+  private stopCurrentMusic() {
+    if (this.musicTimeout) {
+      clearTimeout(this.musicTimeout);
+      this.musicTimeout = null;
+    }
+    if (this.currentMusic?.isPlaying) {
+      this.currentMusic.stop();
+    }
+    this.currentMusic = null;
+    this.currentMusicName = null;
+  }
+
+  // Для обычных звуков (sfx)
   play(name: string) {
     const audioStore = useAudioStore();
     if (!audioStore.masterEnabled) return;
@@ -65,8 +75,38 @@ export class SoundManager {
 
     if (sound.isPlaying) sound.stop();
     sound.play();
+
+    // Для музыки обновляем текущую
+    if (isMusic) {
+      this.stopCurrentMusic();
+      this.currentMusic = sound;
+      this.currentMusicName = name;
+    }
   }
 
+  // Новый метод для управления музыкой (с проверкой дублей)
+  playMusic(name: string, loop: boolean = false) {
+    const audioStore = useAudioStore();
+    if (!audioStore.masterEnabled || !audioStore.musicEnabled) return;
+
+    const sound = this.sounds[name];
+    if (!sound?.buffer) return;
+
+    // Если уже играет эта же музыка, ничего не делаем
+    if (this.currentMusicName === name && this.currentMusic?.isPlaying) {
+      return;
+    }
+
+    this.stopCurrentMusic();
+
+    sound.setLoop(loop);
+    sound.play();
+
+    this.currentMusic = sound;
+    this.currentMusicName = name;
+  }
+
+  // Последовательность (интро + зацикленная основа)
   playMusicSequence(intro: string, loop: string) {
     const audioStore = useAudioStore();
     if (!audioStore.masterEnabled || !audioStore.musicEnabled) return;
@@ -76,12 +116,13 @@ export class SoundManager {
 
     if (!introSound?.buffer || !loopSound?.buffer) return;
 
-    this.stopAllMusic();
+    this.stopCurrentMusic();
 
     introSound.setLoop(false);
     introSound.play();
 
     this.currentMusic = introSound;
+    this.currentMusicName = intro;
 
     const duration = introSound.buffer.duration * 1000;
 
@@ -92,30 +133,32 @@ export class SoundManager {
       loopSound.play();
 
       this.currentMusic = loopSound;
+      this.currentMusicName = loop;
     }, duration);
+  }
+
+  // Для обратной совместимости
+  playLoop(loop: string) {
+    this.playMusic(loop, true);
   }
 
   stop(name: string) {
     const sound = this.sounds[name];
     if (sound && sound.isPlaying) {
       sound.stop();
+      if (this.currentMusic === sound) {
+        this.currentMusic = null;
+        this.currentMusicName = null;
+      }
     }
   }
 
   stopAllMusic() {
-    if (this.musicTimeout) {
-      clearTimeout(this.musicTimeout);
-      this.musicTimeout = null;
-    }
-    if (this.currentMusic?.isPlaying) {
-      this.currentMusic.stop();
-    }
-    this.currentMusic = null;
+    this.stopCurrentMusic();
   }
 
   resume() {
     const context = this.listener.context;
-
     if (context.state === "suspended") {
       context.resume();
     }
@@ -123,7 +166,6 @@ export class SoundManager {
 
   setMaster(enabled: boolean) {
     useAudioStore().masterEnabled = enabled;
-
     if (!enabled) {
       Object.values(this.sounds).forEach((s) => {
         if (s.isPlaying) s.stop();
@@ -133,9 +175,8 @@ export class SoundManager {
 
   setMusic(enabled: boolean) {
     useAudioStore().musicEnabled = enabled;
-
     if (!enabled) {
-      this.musicSet.forEach((name) => this.stop(name));
+      this.stopAllMusic();
     }
   }
 
@@ -147,8 +188,8 @@ export class SoundManager {
     this.setMaster(!useAudioStore().masterEnabled);
   }
 
-  isPlaying(sound: string) {
-    return this.sounds[sound]?.isPlaying;
+  isPlaying(name: string) {
+    return this.sounds[name]?.isPlaying;
   }
 
   setMasterVolume(volume: number) {
@@ -158,8 +199,13 @@ export class SoundManager {
     });
   }
 
-  fadeOut(name: string, duration = 1) {
-    const sound = this.sounds[name];
+  fadeOut(name?: string, duration = 1) {
+    let sound;
+    if (name) {
+      sound = this.sounds[name];
+    } else {
+      sound = this.currentMusic;
+    }
     if (!sound || !sound.isPlaying) return;
 
     const startVolume = sound.getVolume();
@@ -172,6 +218,10 @@ export class SoundManager {
       if (progress >= 1) {
         sound.stop();
         sound.setVolume(startVolume);
+        if (sound === this.currentMusic) {
+          this.currentMusic = null;
+          this.currentMusicName = null;
+        }
         return;
       }
 

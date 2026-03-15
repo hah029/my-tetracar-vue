@@ -321,7 +321,15 @@ export function useGame() {
   }
 
   function reset() {
-    if (!carManager || !obstacleManager || !roadManager || !sceneRef) return;
+    if (!carManager || !obstacleManager || !roadManager || !sceneRef) {
+      console.warn("[useGame.reset] missing managers:", {
+        carManager: !!carManager,
+        obstacleManager: !!obstacleManager,
+        roadManager: !!roadManager,
+        sceneRef: !!sceneRef,
+      });
+      return;
+    }
 
     carManager.resetCar();
     interactiveManager.reset();
@@ -343,6 +351,8 @@ export function useGame() {
     updateInteractiveItems(0, 0, UpdateMode.Destruction); // синхронизация
 
     playerStore.disableNitro();
+    playerStore.resetGameData();
+    useProgressStore().resetScore();
     useProgressStore().resetDistance();
 
     CameraSystem.reset(car.value.mesh.position);

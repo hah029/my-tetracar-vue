@@ -38,7 +38,7 @@ export function GameLoop(
   const FPS = 60;
   const FRAME_TIME = 1000 / FPS;
   let lastTime = 0;
-  let started = false;
+  let started = true;
   let rafId: number | null = null;
 
   function updateDestruction(deltaTime: number) {
@@ -145,15 +145,6 @@ export function GameLoop(
     // =========================
 
     if (
-      previousState === GameStates.Gameover &&
-      gameState.currentState === GameStates.Play
-    ) {
-      game.reset();
-      const carMesh = game.car.value.mesh;
-      if (carMesh) {
-        CameraSystem.reset(carMesh.position.clone());
-      }
-    } else if (
       gameState.currentState !== GameStates.Play &&
       gameState.currentState !== GameStates.Gameover
     ) {

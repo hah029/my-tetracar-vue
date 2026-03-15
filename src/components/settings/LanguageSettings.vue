@@ -17,11 +17,7 @@ import { useTranslation } from "i18next-vue";
 
 const { t, i18next } = useTranslation();
 
-
-
 const currentLang = computed(() => i18next.language)
-
-console.log(i18next.languages)
 
 const supportedLanguages = ['ru', 'en'];
 // const availableLanguages = computed(() => i18next.languages.map((el) => {
