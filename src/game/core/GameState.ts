@@ -5,6 +5,7 @@ export const GameStates = {
   Play: "play",
   Gameover: "gameover",
   Pause: "pause",
+  Countdown: "countdown",
 };
 
 export type GameStates = (typeof GameStates)[keyof typeof GameStates];

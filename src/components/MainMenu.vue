@@ -31,12 +31,14 @@ import { usePlayerStore } from "@/store/playerStore";
 import { SoundManager } from "@/game/sound/SoundManager";
 import SettingsOverlay from "./settings/SettingsOverlay.vue";
 import { GameStates } from "@/game/core/GameState";
+import { useGame } from "@/composables/useGame";
 
 const gameStore = useGameState();
 const playerStore = usePlayerStore();
 const soundManager = SoundManager.getInstance();
 
 const isSettingsEnabled = ref(false);
+const game = useGame();
 
 
 function goToSettings() {
@@ -49,13 +51,9 @@ function goBackToMenu() {
 
 function startGame() {
   soundManager.resume();
-
-  soundManager.play("sfx_3");
-  soundManager.play("sfx_2");
-  soundManager.play("sfx_start");
   playerStore.resetGameData();
-
-  gameStore.setState(GameStates.Play);
+  game.reset();
+  gameStore.setState(GameStates.Countdown);
 }
 </script>
 

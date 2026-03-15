@@ -12,6 +12,7 @@ import Preloader from "./components/Preloader.vue";
 import PauseMenu from "./components/PauseMenu.vue";
 import HUD from "./components/hud/HUD.vue";
 import GameOverMenu from "./components/GameOverMenu.vue";
+import Countdown from "./components/Countdown.vue";
 // managers
 import { CameraSystem } from "@/game/camera/CameraSystem";
 import { SoundManager } from "./game/sound/SoundManager";
@@ -37,6 +38,8 @@ const getUIComponent = computed(() => {
       return GameOverMenu;
     case GameStates.Play:
       return HUD;
+    case GameStates.Countdown:   // ←
+      return Countdown;
   }
 });
 let loop: ReturnType<typeof GameLoop>;

@@ -26,6 +26,10 @@ export const useGameState = defineStore("gameState", () => {
     usePlayerStore().speed = 0;
   }
 
+  function startCountdown() {
+    currentState.value = GameStates.Countdown;
+  }
+
   function pauseGame() {
     if (currentState.value === GameStates.Play) setState(GameStates.Pause);
   }
@@ -49,6 +53,7 @@ export const useGameState = defineStore("gameState", () => {
 
     setState,
     startGame,
+    startCountdown,
     pauseGame,
     resumeGame,
     endGame,

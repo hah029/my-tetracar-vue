@@ -75,6 +75,8 @@ function restartGame() {
 
 function goToMainMenu() {
   progressStore.resetScore();
+  playerStore.resetGameData();
+  game.reset();
   gameState.setState(GameStates.Menu);
 }
 </script>

@@ -20,6 +20,7 @@ import { UpdateMode } from "@/game/core/UpdateMode";
 // stores
 import { useProgressStore } from "@/store/progressStore";
 import { usePlayerStore } from "@/store/playerStore";
+import { CameraSystem } from "@/game/camera/CameraSystem";
 
 // Интерфейс для реактивной ссылки car
 interface CarRef {
@@ -343,6 +344,8 @@ export function useGame() {
 
     playerStore.disableNitro();
     useProgressStore().resetDistance();
+
+    CameraSystem.reset(car.value.mesh.position);
   }
 
   function shoot() {

@@ -4,7 +4,7 @@ import i18next from "i18next";
 import I18NextVue from "i18next-vue";
 
 import App from "./App.vue";
-import { locales } from "./helpers/locales";
+import { locales } from "./locales";
 
 i18next.init({
   lng: "en",
