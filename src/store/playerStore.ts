@@ -18,6 +18,8 @@ export const usePlayerStore = defineStore("playerStore", () => {
   // nitro
   const isNitroEnabled = ref(false);
   const nitroTimer = ref(BASE_NITRO_TIMER);
+  const goldNitroMultiplier = ref(2);
+  const diamondNitroMultiplier = ref(2);
   // nitro
   const isShieldEnabled = ref(false);
   //ammo
@@ -113,6 +115,8 @@ export const usePlayerStore = defineStore("playerStore", () => {
     nitroTimer,
     ammo,
     maxAmmo,
+    goldNitroMultiplier,
+    diamondNitroMultiplier,
 
     // methods
     enableNitro,

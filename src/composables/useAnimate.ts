@@ -81,6 +81,10 @@ export function GameLoop(
     if (coins.total > 0) {
       soundManager.play("sfx_add_patron");
 
+      if (playerStore.isNitroEnabled) {
+        coins.gold *= playerStore.goldNitroMultiplier;
+        coins.diamond *= playerStore.diamondNitroMultiplier;
+      }
       if (coins.gold > 0) progressStore.addScore(coins.gold);
       if (coins.diamond > 0) progressStore.addDiamondScore(coins.diamond);
     }
