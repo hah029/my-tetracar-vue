@@ -27,7 +27,7 @@ export function useThree(container: Ref<HTMLElement | null>) {
 
     // ---- Scene ----
     scene = new THREE.Scene();
-    scene.fog = new THREE.Fog(0x000000, 0, 100);
+    // scene.fog = new THREE.Fog(0x000000, 0, 100);
 
     // ---- Camera ----
     const aspect = container.value.clientWidth / container.value.clientHeight;
@@ -48,15 +48,15 @@ export function useThree(container: Ref<HTMLElement | null>) {
     renderer.setSize(container.value.clientWidth, container.value.clientHeight);
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1));
     renderer.toneMappingExposure = 1.5;
-    // renderer.shadowMap.enabled = false;
-    // renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    renderer.shadowMap.enabled = true;
+    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
     const bloomPass = new UnrealBloomPass(
       new THREE.Vector2(
         container.value.clientWidth,
         container.value.clientHeight,
       ),
-      0.6, // strength
-      0.4, // radius
+      0.3, // strength
+      0.8, // radius
       0.85, // threshold
     );
 

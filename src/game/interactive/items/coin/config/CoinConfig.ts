@@ -12,8 +12,14 @@ export const COIN_GEOMETRY_CONFIG: GeometryConfig = {
 
 export const COIN_MATERIAL_CONFIG: MaterialConfig = {
   textureUrl: coin_texture,
+  emissive: 0xefbf04,
+  emissiveIntensity: 0.6,
+  metalness: 4.0,
 };
 
 export const DIAMOND_MATERIAL_CONFIG: MaterialConfig = {
   textureUrl: diamond_texture,
+  emissive: 0x82c8e5,
+  emissiveIntensity: 0.6,
+  metalness: 0,
 };

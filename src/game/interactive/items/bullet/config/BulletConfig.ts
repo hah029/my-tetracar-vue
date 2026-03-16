@@ -11,4 +11,6 @@ export const GEOMETRY_CONFIG: GeometryConfig = {
 
 export const MATERIAL_CONFIG: MaterialConfig = {
   textureUrl: texture,
+  emissive: 0xdd0000,
+  emissiveIntensity: 0.6,
 };

@@ -34,15 +34,15 @@ export class Road extends THREE.Mesh {
 
       material = new THREE.MeshStandardMaterial({
         map: texture,
-        emissive: 0x224466,
-        emissiveIntensity: 3.0,
+        emissive: 0xffffff,
+        emissiveIntensity: 0.8,
         transparent: true,
         opacity: 0.3,
         side: THREE.DoubleSide,
       });
     } else {
       material = new THREE.MeshStandardMaterial({
-        color: 0xff00ff,
+        color: 0xffffff,
         side: THREE.DoubleSide,
       });
     }

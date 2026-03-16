@@ -21,6 +21,8 @@ import { UpdateMode } from "@/game/core/UpdateMode";
 import { useProgressStore } from "@/store/progressStore";
 import { usePlayerStore } from "@/store/playerStore";
 import { CameraSystem } from "@/game/camera/CameraSystem";
+import { useGameState } from "@/store/gameState";
+import { GameStates } from "@/game/core/GameState";
 
 // Интерфейс для реактивной ссылки car
 interface CarRef {
@@ -33,41 +35,53 @@ interface CarRef {
 
 // Вынесенная функция для создания всех источников света
 function setupLights(scene: THREE.Scene) {
-  const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
+  // 1. Очень слабый фоновый свет (теперь холодный оттенок)
+  const ambientLight = new THREE.AmbientLight(0x404060, 0.25); // синеватый, низкая интенсивность
   scene.add(ambientLight);
 
-  const dirLight = new THREE.DirectionalLight(0xffffff, 1.5);
-  dirLight.position.set(5, 10, 5);
-  dirLight.castShadow = false;
+  // 2. Основной направленный свет (имитация солнца/луны) — тёплый, с тенями
+  const dirLight = new THREE.DirectionalLight(0xffeedd, 1.2);
+  dirLight.position.set(10, 20, 5);
+  dirLight.castShadow = true; // включаем тени для глубины
+  dirLight.shadow.mapSize.width = 1024;
+  dirLight.shadow.mapSize.height = 1024;
+  const d = 30;
+  dirLight.shadow.camera.left = -d;
+  dirLight.shadow.camera.right = d;
+  dirLight.shadow.camera.top = d;
+  dirLight.shadow.camera.bottom = -d;
+  dirLight.shadow.camera.near = 1;
+  dirLight.shadow.camera.far = 50;
   scene.add(dirLight);
 
-  const frontLight = new THREE.DirectionalLight(0xffffff, 1.0);
-  frontLight.position.set(0, 5, 10);
-  scene.add(frontLight);
+  // 3. Заполняющий свет спереди-сверху (холодный, чтобы создать контраст с тёплым основным)
+  const fillLight = new THREE.DirectionalLight(0xccddff, 0.5);
+  fillLight.position.set(-5, 10, 10);
+  fillLight.castShadow = false;
+  scene.add(fillLight);
 
-  const backLight = new THREE.PointLight(0xffffff, 2.0);
-  backLight.position.set(0, 5, -10);
-  scene.add(backLight);
+  // 4. Акцентный свет сзади (имитация света от города / задних фар) — тёплый, слабый
+  const backAccent = new THREE.PointLight(0xffaa66, 0.8);
+  backAccent.position.set(0, 3, -15);
+  scene.add(backAccent);
 
-  const colors = [0xff0000, 0x00ff00, 0x0000ff, 0xffff00];
-  const positions: number[][] = [
-    [5, 5, 5],
-    [-5, 5, 5],
-    [5, 5, -5],
-    [-5, 5, -5],
+  // 5. Цветные акценты по углам (теперь слабее и с меньшей насыщенностью)
+  const colors = [0x553333, 0x335533, 0x333355, 0x555533]; // приглушённые тона
+  const positions: [number, number, number][] = [
+    [8, 4, 8],
+    [-8, 4, 8],
+    [8, 4, -8],
+    [-8, 4, -8],
   ];
 
   positions.forEach((pos, i) => {
-    const light = new THREE.PointLight(colors[i], 0.5);
-    const x = pos[0];
-    const y = pos[1];
-    const z = pos[2];
-    if (x === undefined || y === undefined || z === undefined) {
-      throw new Error("Light position is undefined");
-    }
-    light.position.set(x, y, z);
+    const light = new THREE.PointLight(colors[i], 0.3);
+    light.position.set(pos[0], pos[1], pos[2]);
     scene.add(light);
   });
+
+  // 6. Лёгкая дымка для глубины (не обязательно, но добавит атмосферы)
+  scene.fog = new THREE.FogExp2(0x000000, 0.02);
 }
 
 export function useGame() {
@@ -207,18 +221,21 @@ export function useGame() {
   }
 
   function movePlayerLeft(dt: number) {
+    if (useGameState().currentState != GameStates.Play) return;
     carManager.getCar().moveLeft();
     soundManager.play("sfx_click");
     updatePlayer(dt);
   }
 
   function movePlayerRight(dt: number) {
+    if (useGameState().currentState != GameStates.Play) return;
     carManager.getCar().moveRight();
     soundManager.play("sfx_click");
     updatePlayer(dt);
   }
 
   function jumpPlayer(dt: number) {
+    if (useGameState().currentState != GameStates.Play) return;
     carManager.getCar().jump();
     car.value.isJumping = true;
     updatePlayer(dt);
@@ -359,6 +376,7 @@ export function useGame() {
   }
 
   function shoot() {
+    if (useGameState().currentState != GameStates.Play) return;
     const playerStore = usePlayerStore();
 
     if (!playerStore.canShoot()) {

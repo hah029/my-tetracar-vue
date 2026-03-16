@@ -122,9 +122,5 @@ export class ObstacleManager {
     [...this.obstacles, ...this.jumps].forEach((o) => this.scene.remove(o));
     this.obstacles = [];
     this.jumps = [];
-
-    // // Удаляем все динамические кубики
-    // this.destroyedCubes.forEach((cube) => this.scene.remove(cube));
-    // this.destroyedCubes = [];
   }
 }

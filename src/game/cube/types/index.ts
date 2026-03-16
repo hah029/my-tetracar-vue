@@ -11,6 +11,11 @@ export interface MaterialConfig {
   color?: number;
   emissive?: number;
   emissiveIntensity?: number;
+  ior?: number;
+  transmission?: number;
+  metalness?: number;
+  roughness?: number;
+  thickness?: number;
 }
 
 export interface CubeUserData {

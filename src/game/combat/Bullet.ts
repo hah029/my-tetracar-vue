@@ -10,9 +10,9 @@ export class Bullet extends THREE.Mesh {
     const geo = new THREE.BoxGeometry(0.2, 0.2, 0.6);
 
     const mat = new THREE.MeshStandardMaterial({
-      color: 0xffff00,
-      emissive: 0xffaa00,
-      emissiveIntensity: 2,
+      color: 0xff0000,
+      emissive: 0xff0000,
+      emissiveIntensity: 5,
     });
 
     super(geo, mat);

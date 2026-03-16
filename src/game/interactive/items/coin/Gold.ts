@@ -10,7 +10,7 @@ export class GoldCoin extends CoinItem {
     yPos: number = 0.2,
     value: number = 10,
   ) {
-    super(laneIndex, zPos, yPos, COIN_MATERIAL_CONFIG);
+    super(laneIndex, zPos, yPos, { ...COIN_MATERIAL_CONFIG });
     this.value = value;
     this.itemType = "gold";
   }
