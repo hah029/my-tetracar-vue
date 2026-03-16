@@ -75,99 +75,64 @@
 
 <style lang='scss' scoped>
     @use "@/styles/menu.scss";
+    @use "@/styles/animations.scss";
 
-    // #region - основное
-    .fading_background {
-        position: absolute;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 200%;
-        background: linear-gradient(
-            to bottom,
-            #000000 0%,      /* Черный цвет вверху */
-            #000000 50%,     /* Черный цвет до середины */
-            rgba(0, 0, 0, 0) 100%  /* Прозрачность внизу */
-        );
-        animation: fading_keys 3s forwards;
-        animation-delay: 4.4s;
-    }
+    // #region - фон
+        .fading_background {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 200%;
+            background: linear-gradient(
+                to bottom,
+                #000000 0%,      /* Черный цвет вверху */
+                #000000 50%,     /* Черный цвет до середины */
+                rgba(0, 0, 0, 0) 100%  /* Прозрачность внизу */
+            );
+            animation: fading_keys 3s forwards; // (лежит в animations.scss)
+            animation-delay: 4.4s;
+        }
 
-    .gradient {
-        position: absolute;
-        bottom: 0%;
-        width: 100%;
-        height: 35%;
-        background: linear-gradient(rgba(0, 0, 0, 0), rgba(0, 0, 0, 0.8));
-    }
+        .gradient {
+            position: absolute;
+            bottom: 0%;
+            width: 100%;
+            height: 35%;
+            background: linear-gradient(rgba(0, 0, 0, 0), rgba(0, 0, 0, 0.8));
+        }
     // #endregion
 
-    // #region - блок анимаций:
-        // имитация появления дороги (сдвиг вверх черного градиентного фона)
-        @keyframes fading_keys {
-            from { 
-                top: 0%;
-            }
-            to { 
-                top: -200%;
-            }
+    // #region - буквенный логотип
+        .logo_group {
+            position: absolute;
+            top: 18.47%;
+            width: 81.25%;
+            height: 49.13%;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
         }
 
-        // анимация появления текста логотипа игры из темноты при старте игры
-        .game_logo_showing-enter-active {
-            transition: all ease-in-out 3s;
-            transition-delay: 1s;
-        }
-        .game_logo_showing-enter-from {
-            opacity: 0;
+        .logo_left {
+            width: 50%;
         }
 
-        // анимация поднятия текста лого вверх при переходе в главное меню
-        .logo_mooving {
-            animation: logoMovingAnim 0.7s cubic-bezier(0.42, 0, 1, 1) forwards;
-        }
-        @keyframes logoMovingAnim {
-            0% {
-                top: 18.47%;
-            }
-            100% {
-                top: 13.04%;
-            }
+        .logo_right {
+            width: 50%;
         }
 
-        // анимации возникновения неоновых подсветкок логотипа
-        .neon_glow {
-            opacity: 0;
-            animation: neonFlicker 3s ease-out forwards;
+        .logo_img {
+            width: 100%;
+            shape-rendering: geometricPrecision;
         }
-        .neon_left {
-            animation-delay: 0.4s;
+
+        .neon_blue {
+            filter: drop-shadow(0 0 20px rgba(121, 190, 255, 1));
         }
-        .neon_right {
-            animation-delay: 1.2s;
-        }
-        @keyframes neonFlicker {
-            0% {
-                opacity: 0;
-            }
-            2.22% {
-                opacity: 0.8; /* вспышка */
-            }
-            4.44% {
-                opacity: 0; /* затухание */
-            }
-            6.67% {
-                opacity: 0.8; /* вспышка */
-            }
-            8.89% {
-                opacity: 0; /* затухание */
-            }
-            35% {
-                opacity: 0; /* пауза */
-            }
-            100% {
-                opacity: 1; /* финальная постоянная яркость */
-            }
+
+        .neon_pink {
+            filter: drop-shadow(0 0 20px rgba(237, 37, 255, 1));
         }
     // #endregion
 </style>

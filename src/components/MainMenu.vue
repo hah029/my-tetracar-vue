@@ -9,8 +9,8 @@
                 v-for="(btn, index) in menuButtons" 
                 v-if="isMainMenuEnabled" 
                 :key="btn.id" 
-                :data-index="index"
                 class="menu_btn" 
+                :style="{ animationDelay: `${index * 0.06}s` }"
                 @click="btn.action"
             >
                 {{ btn.text }}
@@ -75,14 +75,7 @@
 
 <style lang="scss" scoped>
     @use "@/styles/menu.scss";
-
-    // .test {
-    //     z-index: 2000;
-    // }
-
-    .logo_group {
-        top: 13.04%;
-    }
+    @use "@/styles/animations.scss";
 
     .buttons_group {
         position: absolute;
@@ -109,6 +102,7 @@
         filter: drop-shadow(0 0 15px rgba(255, 246, 25, 0.4));
         cursor: pointer;
         transition: all 0.1s ease-in-out;
+        
 
         &:hover {
             color: #72B3EE;
@@ -195,60 +189,5 @@
     .volume-value {
         width: 50px;
         text-align: right;
-    }
-
-
-
-
-    .buttons_group_showing-enter-active {
-        transition: all ease-in-out 0.7s;
-    }
-    .buttons_group_showing-enter-from {
-        opacity: 0;
-        transform: translateY(-25px);
-    }
-
-
-    // Индивидуальные задержки через data-атрибуты или n-го ребенка
-    .buttons_group .menu_btn:nth-child(1) {
-        transition-delay: 0s;
-    }
-
-    .buttons_group .menu_btn:nth-child(2) {
-        transition-delay: 0.1s;
-    }
-
-    .buttons_group .menu_btn:nth-child(3) {
-        transition-delay: 0.2s;
-    }
-
-    .buttons_group .menu_btn:nth-child(4) {
-        transition-delay: 0.3s;
-    }
-
-    // Для исчезновения (обратный порядок)
-    .buttons_group_showing-leave-active .menu_btn:nth-child(1) {
-        transition-delay: 0.6s;
-    }
-
-    .buttons_group_showing-leave-active .menu_btn:nth-child(2) {
-        transition-delay: 0.4s;
-    }
-
-    .buttons_group_showing-leave-active .menu_btn:nth-child(3) {
-        transition-delay: 0.2s;
-    }
-
-    .buttons_group_showing-leave-active .menu_btn:nth-child(4) {
-        transition-delay: 0s;
-    }
-
-    .buttons_group_showing-leave-active {
-        transition: all 0.5s ease;
-    }
-
-    .buttons_group_showing-leave-to {
-        opacity: 0;
-        transform: translateY(-20px);
     }
 </style>
