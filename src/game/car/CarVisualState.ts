@@ -7,7 +7,7 @@ export type TextureMap = Record<CarVisualEffect, string>;
 
 export class CarVisualState {
   private meshes: THREE.Mesh[] = [];
-  private DEFAULT_EMISSION_INTENSITY = 2.2;
+  private DEFAULT_EMISSION_INTENSITY = 1.2;
 
   private textures = new Map<CarVisualEffect, THREE.Texture>();
 

@@ -32,11 +32,7 @@ export function GameLoop(
   const stats = new Stats();
   document.body.appendChild(stats.dom);
 
-  // FPS limiter
-  const FPS = 60;
-  const FRAME_TIME = 1000 / FPS;
   let lastTime = 0;
-  // let started = true;
   let rafId: number | null = null;
 
   // --- Вспомогательные функции (без изменений) ---
@@ -125,8 +121,15 @@ export function GameLoop(
   function animate(time: number) {
     rafId = requestAnimationFrame(animate);
 
+    if (lastTime === 0) {
+      lastTime = time;
+      stats.begin();
+      composer.render();
+      stats.end();
+      return;
+    }
+
     const deltaTime = time - lastTime;
-    if (deltaTime < FRAME_TIME) return;
     lastTime = time;
 
     stats.begin();
