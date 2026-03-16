@@ -1,6 +1,6 @@
 <template>
     <div class="container">
-        <button v-if="isButtonShown" 
+        <button 
             class="menu_btn" 
             :class="{
                 'button-enter': isEntering,     // класс для анимации появления
@@ -24,65 +24,41 @@
     // подключаем emit
     const emit = defineEmits(['event']);
 
-    let isButtonShown = ref(false);
     const isEntering = ref(false);      // флаг для анимации появления
     const isLeaving = ref(false);       // флаг для анимации исчезновения
 
-
+    // переходим в главное меню
     function letsPlay() {
-        // скрываем кнопку
-        isButtonShown.value = false;
-        
+        // смещаем лого наверх
         isLeaving.value = true;
         isEntering.value = false;
-        
-        // // смещаем лого наверх
         emit('event', 'moving');
-        // isLettersStatic.value = true;
 
         // переходим в главное меню
         setTimeout(() => {
             gameStore.setState(GS.MENU);
-        }, 2000);
+        }, 500);
     };
 
     function onAnimationEnd(event: AnimationEvent) {
         // Проверяем, какая анимация закончилась
         if (event.animationName === 'buttonFadeOut') {
             // Анимация исчезновения завершена
-            isButtonShown.value = false;
             isLeaving.value = false;
             gameStore.setState(GS.MENU);
-        }
+        };
         
         if (event.animationName === 'buttonFadeIn') {
             // Анимация появления завершена
             isEntering.value = false;
-        }
-    }
-
-    // // смещаем логотип при переходе в главное меню
-    // function changeLogoPos() {
-    //     if (isLettersStatic.value == true) {
-    //         return 'logo_mooving';
-    //     };
-    // };
+        };
+    };
 
     onMounted(() => {
         emit('event', 'showing');
-        // // плавно показываем саму массу букв
-        // isLettersShown.value = true;
-
-        // // вводим мерцанием левую часть неоновых линий
-        // setTimeout(() => {
-        //     isLinesShown.value = true;
-        // }, 2000);
 
         // выводим кнопку
         setTimeout(() => {
-            isButtonShown.value = true;
-
-            // Запускаем анимацию появления в следующем тике
             setTimeout(() => {
                 isEntering.value = true;
             }, 50);
@@ -134,7 +110,8 @@
 
     // класс для анимации исчезновения
     .menu_btn.leaving {
-        animation: buttonFadeOut 2.5s ease-in-out forwards;
+        animation: buttonFadeOut 1s ease-in-out forwards;
+        // animation-delay: 1s;
     }
 
     /* анимация появления */

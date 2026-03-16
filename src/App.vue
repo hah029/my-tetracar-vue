@@ -38,16 +38,6 @@
 
     let handleParam = ref(false);
 
-    // работа с главным игровым логотипом
-    // let isLettersStatic = ref(false);
-
-    // // смещаем логотип при переходе в главное меню
-    // function changeLogoPos() {
-    //     if (isLettersStatic.value == true) {
-    //         return 'logo_mooving';
-    //     };
-    // };
-
     // // ловим и обрабатываем события из дочерней компоненты Preloader.vue
     function handleEvent(val_: any) {
         handleParam.value = val_;

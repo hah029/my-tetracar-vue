@@ -30,31 +30,34 @@
 
 
 <script setup lang="ts">
-    import { ref, onMounted, computed, watch, Transition } from "vue";
+    import { ref, watch, Transition } from "vue";
 
-    // #region - работа с главным игровым логотипом
     let isLettersShown = ref(false);
     let isLettersStatic = ref(false);
     let isLinesShown = ref(false);
 
+    // инициализируем пропсы
     interface Props {
-        handleParam: string;
+        handleParam: any;
     };
 
-    const props = defineProps<Props>()
+    const props = defineProps<Props>();
 
+    // ловим и обрабатываем события из дочерней компоненты Preloader.vue
     watch(
         () => props.handleParam,
         (val_) => {
+            // выводим логотип при загрузке игры
             if (val_ == 'showing') {
                 // плавно показываем саму массу букв
                 isLettersShown.value = true;
         
-                // вводим мерцанием левую часть неоновых линий
+                // вводим мерцанием левую (а потом правую) часть неоновых линий
                 setTimeout(() => {
                     isLinesShown.value = true;
                 }, 2000);
 
+            // смещаем логотип вверх (при входе в главное меню)
             } else if (val_ == 'moving') {
                 isLettersStatic.value = true;
             };
@@ -67,20 +70,6 @@
             return 'logo_mooving';
         };
     };
-
-    // ловим и обрабатываем события из дочерней компоненты Preloader.vue
-    function handleEvent(val_: any) {
-        if (val_ == 'showing') {
-            // плавно показываем саму массу букв
-            isLettersShown.value = true;
-    
-            // вводим мерцанием левую часть неоновых линий
-            setTimeout(() => {
-                isLinesShown.value = true;
-            }, 2000);
-        };
-    }
-    // #endregion
 </script>
 
 
@@ -135,8 +124,7 @@
 
         // анимация поднятия текста лого вверх при переходе в главное меню
         .logo_mooving {
-            animation: logoMovingAnim 1s cubic-bezier(0, 0.6, 0.5, 1) forwards;
-            animation-delay: 0.5s;
+            animation: logoMovingAnim 0.7s cubic-bezier(0.42, 0, 1, 1) forwards;
         }
         @keyframes logoMovingAnim {
             0% {

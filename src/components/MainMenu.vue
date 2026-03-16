@@ -1,26 +1,32 @@
 <template>
-    <div class="container test">
-        <template v-if="!isSettingsEnabled">
-            <div class="buttons_group">
-                <button class="menu_btn" @click="startGame">Старт</button>
-                <button class="menu_btn" @click="goToSettings">Гараж</button>
-                <button class="menu_btn" @click="goToSettings">Настройки</button>
-                <button class="menu_btn" @click="goToSettings">Рекорды</button>
-            </div>
-        </template>
-        
-        <template v-else>
-            <SettingsOverlay />
-            <button class="menu_btn" @click="goBackToMenu">
-                НАЗАД
+    <div class="container">
+        <TransitionGroup 
+            name="buttons_group_showing"
+            tag="div"
+            class="buttons_group" 
+        >
+            <button 
+                v-for="(btn, index) in menuButtons" 
+                v-if="isMainMenuEnabled" 
+                :key="btn.id" 
+                :data-index="index"
+                class="menu_btn" 
+                @click="btn.action"
+            >
+                {{ btn.text }}
             </button>
-        </template>
+        </TransitionGroup>
+        
+        <div v-if="isSettingsEnabled">
+            <SettingsOverlay />
+            <button class="menu_btn" @click="goBackToMenu">Назад</button>
+        </div>
     </div>
 </template>
 
 
 <script setup lang="ts">
-    import { ref } from "vue";
+    import { ref, onMounted } from "vue";
     import { GAME_STATES as GS, useGameState } from "@/store/gameState";
     import { usePlayerStore } from "@/store/playerStore";
     import { SoundManager } from "@/game/sound/SoundManager";
@@ -30,16 +36,15 @@
     const playerStore = usePlayerStore();
     const soundManager = SoundManager.getInstance();
 
+    const isMainMenuEnabled = ref(false);
     const isSettingsEnabled = ref(false);
 
-
-    function goToSettings() {
-        isSettingsEnabled.value = true;
-    }
-
-    function goBackToMenu() {
-        isSettingsEnabled.value = false;
-    }
+    const menuButtons = [
+        { id: 1, text: 'Старт', action: startGame },
+        { id: 2, text: 'Гараж', action: goToSettings },
+        { id: 3, text: 'Настройки', action: goToSettings },
+        { id: 4, text: 'Рекорды', action: goToSettings },
+    ];
 
     function startGame() {
         soundManager.resume();
@@ -50,16 +55,30 @@
         playerStore.resetGameData();
 
         gameStore.setState(GS.PLAY);
-    }
+    };
+
+    function goToSettings() {
+        isMainMenuEnabled.value = false;
+        isSettingsEnabled.value = true;
+    };
+
+    function goBackToMenu() {
+        isSettingsEnabled.value = false;
+        isMainMenuEnabled.value = true;
+    };
+
+    onMounted(() => {
+        isMainMenuEnabled.value = true;
+    });
 </script>
 
 
 <style lang="scss" scoped>
     @use "@/styles/menu.scss";
 
-    .test {
-        z-index: 2000;
-    }
+    // .test {
+    //     z-index: 2000;
+    // }
 
     .logo_group {
         top: 13.04%;
@@ -71,6 +90,8 @@
         height: fit-content;
         display: flex;
         flex-direction: column;
+        background: none;
+        border: none;
 
         // имитируем row-gap (между кнопками)
         & > * + * {
@@ -174,5 +195,60 @@
     .volume-value {
         width: 50px;
         text-align: right;
+    }
+
+
+
+
+    .buttons_group_showing-enter-active {
+        transition: all ease-in-out 0.7s;
+    }
+    .buttons_group_showing-enter-from {
+        opacity: 0;
+        transform: translateY(-25px);
+    }
+
+
+    // Индивидуальные задержки через data-атрибуты или n-го ребенка
+    .buttons_group .menu_btn:nth-child(1) {
+        transition-delay: 0s;
+    }
+
+    .buttons_group .menu_btn:nth-child(2) {
+        transition-delay: 0.1s;
+    }
+
+    .buttons_group .menu_btn:nth-child(3) {
+        transition-delay: 0.2s;
+    }
+
+    .buttons_group .menu_btn:nth-child(4) {
+        transition-delay: 0.3s;
+    }
+
+    // Для исчезновения (обратный порядок)
+    .buttons_group_showing-leave-active .menu_btn:nth-child(1) {
+        transition-delay: 0.6s;
+    }
+
+    .buttons_group_showing-leave-active .menu_btn:nth-child(2) {
+        transition-delay: 0.4s;
+    }
+
+    .buttons_group_showing-leave-active .menu_btn:nth-child(3) {
+        transition-delay: 0.2s;
+    }
+
+    .buttons_group_showing-leave-active .menu_btn:nth-child(4) {
+        transition-delay: 0s;
+    }
+
+    .buttons_group_showing-leave-active {
+        transition: all 0.5s ease;
+    }
+
+    .buttons_group_showing-leave-to {
+        opacity: 0;
+        transform: translateY(-20px);
     }
 </style>
