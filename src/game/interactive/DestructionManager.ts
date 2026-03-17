@@ -6,6 +6,13 @@ import {
   type CubePhysicsConfig,
 } from "@/game/physics/CubePhysics";
 import { RoadEdge } from "@/game/road/edges";
+import { loadTexture } from "@/helpers/loaders";
+
+import cube_gold from "@/assets/textures/cube_gold.svg";
+import cube_diamond from "@/assets/textures/cube_diamond.svg";
+import cube_nitro from "@/assets/textures/cube_nitro.svg";
+import cube_armor from "@/assets/textures/cube_armor.svg";
+import cube_bullet from "@/assets/textures/cube_bullet.svg";
 
 export class DestructionManager {
   private static instance: DestructionManager | null = null;
@@ -38,6 +45,21 @@ export class DestructionManager {
     bullet: (lane, z) => this.interactiveItemsManager.spawnBulletItem(lane, z),
   };
 
+  private textureMapping: {
+    [K in
+      | "gold_coin"
+      | "diamond_coin"
+      | "nitro_booster"
+      | "shield_booster"
+      | "bullet"]: string;
+  } = {
+    gold_coin: cube_gold,
+    diamond_coin: cube_diamond,
+    nitro_booster: cube_nitro,
+    shield_booster: cube_armor,
+    bullet: cube_bullet,
+  };
+
   public static getInstance(): DestructionManager {
     if (!DestructionManager.instance) {
       DestructionManager.instance = new DestructionManager();
@@ -53,6 +75,18 @@ export class DestructionManager {
   public registerCubes(cubes: THREE.Object3D[]) {
     cubes.forEach((cube) => {
       const drop = this.rollDrop();
+      if (drop) {
+        const texture = loadTexture(this.textureMapping[drop]);
+        texture.flipY = false;
+        cube.traverse((child) => {
+          if ((child as THREE.Mesh).isMesh) {
+            const mesh = child as THREE.Mesh;
+            mesh.material = new THREE.MeshStandardMaterial({
+              map: texture,
+            });
+          }
+        });
+      }
 
       cube.userData.dropType = drop;
       cube.userData.state = "flying";
