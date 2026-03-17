@@ -8,8 +8,8 @@
             }" 
             @click="letsPlay"
             @animationend="onAnimationEnd">
-                - Нажми на кнопку 
-        -</button>
+                - Нажми на кнопку -
+        </button>
     </div>
 </template>
 

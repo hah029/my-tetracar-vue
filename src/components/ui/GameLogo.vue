@@ -1,6 +1,6 @@
 <template>
-    <div class="menu_overlay">
-        <div class="fading_background"></div>
+    <div v-show="isWholeLogoShown" class="menu_overlay">
+        <div class="background" :class="switchBackgroundStyle()"></div>
         <div class="gradient"></div>
 
         <div class="container">
@@ -32,8 +32,9 @@
 <script setup lang="ts">
     import { ref, watch, Transition } from "vue";
 
+    let isWholeLogoShown = ref(true);
     let isLettersShown = ref(false);
-    let isLettersStatic = ref(false);
+    let isLettersMovedToTop = ref(false);
     let isLinesShown = ref(false);
 
     // инициализируем пропсы
@@ -43,30 +44,45 @@
 
     const props = defineProps<Props>();
 
-    // ловим и обрабатываем события из дочерней компоненты Preloader.vue
+    // сценарии работы с логотипом
+    //      (ловим и обрабатываем события из разных внешних компонентов)
     watch(
         () => props.handleParam,
         (val_) => {
-            // выводим логотип при загрузке игры
+            
             if (val_ == 'showing') {
-                // плавно показываем саму массу букв
-                isLettersShown.value = true;
+                // выводим логотип при загрузке игры
+                isLettersShown.value = true;    // плавно показываем саму массу букв
         
-                // вводим мерцанием левую (а потом правую) часть неоновых линий
                 setTimeout(() => {
-                    isLinesShown.value = true;
+                    isLinesShown.value = true;  // вводим мерцанием левую (а потом правую) часть неоновых линий
                 }, 2000);
 
-            // смещаем логотип вверх (при входе в главное меню)
             } else if (val_ == 'moving') {
-                isLettersStatic.value = true;
+                // смещаем логотип вверх (при входе в главное меню)
+                isLettersMovedToTop.value = true;
+
+            } else if (val_ == 'startGame') {
+                // стартуем гонку
+                isWholeLogoShown.value = false;
+
+            } else if (val_ == 'returnToMenu') {
+                // возвращаемся в Главное меню
+                isWholeLogoShown.value = true;
             };
         }
     );
 
     // смещаем логотип при переходе в главное меню
     function changeLogoPos() {
-        if (isLettersStatic.value == true) {
+        if (isLettersMovedToTop.value == true) {
+            return 'logo_mooving';
+        };
+    };
+
+    // динамические стили темного фона на заднем плане
+    function switchBackgroundStyle() {
+        if (isLettersMovedToTop.value == true) {
             return 'logo_mooving';
         };
     };
@@ -78,7 +94,7 @@
     @use "@/styles/animations.scss";
 
     // #region - фон
-        .fading_background {
+        .background {
             position: absolute;
             top: 0;
             left: 0;
@@ -89,10 +105,14 @@
                 #000000 0%,      /* Черный цвет вверху */
                 #000000 50%,     /* Черный цвет до середины */
                 rgba(0, 0, 0, 0) 100%  /* Прозрачность внизу */
-            );
+                );
             animation: fading_keys 3s forwards; // (лежит в animations.scss)
             animation-delay: 4.4s;
         }
+        // .fading_background {
+        //     animation: fading_keys 3s forwards; // (лежит в animations.scss)
+        //     animation-delay: 4.4s;
+        // }
 
         .gradient {
             position: absolute;

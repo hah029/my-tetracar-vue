@@ -12,8 +12,8 @@
 // #region - блок анимаций логотипа
     // анимация появления текста логотипа игры из темноты при старте игры
     .game_logo_showing-enter-active {
-        transition: all ease-in-out 3s;
-        transition-delay: 1s;
+        transition: all ease-in-out 2.5s;
+        // transition-delay: 1s;
     }
     .game_logo_showing-enter-from {
         opacity: 0;

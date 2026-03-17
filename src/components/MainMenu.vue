@@ -26,15 +26,19 @@
 
 
 <script setup lang="ts">
-    import { ref, onMounted } from "vue";
+    import { ref, defineEmits, onMounted } from "vue";
     import { GAME_STATES as GS, useGameState } from "@/store/gameState";
     import { usePlayerStore } from "@/store/playerStore";
     import { SoundManager } from "@/game/sound/SoundManager";
     import SettingsOverlay from "./settings/SettingsOverlay.vue";
 
+    // подключаем store
     const gameStore = useGameState();
     const playerStore = usePlayerStore();
     const soundManager = SoundManager.getInstance();
+
+    // подключаем emit
+    const emit = defineEmits(['event']);
 
     const isMainMenuEnabled = ref(false);
     const isSettingsEnabled = ref(false);
@@ -47,6 +51,7 @@
     ];
 
     function startGame() {
+        emit('event', 'startGame');
         soundManager.resume();
 
         soundManager.play("sfx_3");

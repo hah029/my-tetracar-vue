@@ -149,6 +149,10 @@
         font-family: 'vla_shu';
         src: url('./assets/fonts/VlaShu.ttf')
     }
+    @font-face {
+        font-family: 'jost';
+        src: url('./assets/fonts/Jost-Regular.ttf')
+    }
 
     html,
     body,
