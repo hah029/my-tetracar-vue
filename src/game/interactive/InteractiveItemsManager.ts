@@ -154,6 +154,13 @@ export class InteractiveItemsManager {
     }
   }
 
+  public spawnDiamondCoin(lane: number, baseZ: number) {
+    this.coinManager.spawnDiamond(lane, baseZ);
+  }
+  public spawnGoldCoin(lane: number, baseZ: number) {
+    this.coinManager.spawnGold(lane, baseZ);
+  }
+
   public spawnCoinLine(lane: number, baseZ: number) {
     for (let i = 0; i < 5; i++) {
       this.coinManager.spawnGold(lane, baseZ - i * 4);
@@ -166,6 +173,12 @@ export class InteractiveItemsManager {
     } else {
       this.boosterManager.spawnShield(lane, baseZ);
     }
+  }
+  public spawnNitroBooster(lane: number, baseZ: number) {
+    this.boosterManager.spawnNitro(lane, baseZ);
+  }
+  public spawnShieldBooster(lane: number, baseZ: number) {
+    this.boosterManager.spawnShield(lane, baseZ);
   }
 
   public spawnBulletItem(lane: number, baseZ: number) {

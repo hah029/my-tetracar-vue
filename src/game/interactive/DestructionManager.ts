@@ -20,6 +20,24 @@ export class DestructionManager {
     removalHeight: -10,
   };
 
+  private transformMapping: {
+    [K in
+      | "gold_coin"
+      | "diamond_coin"
+      | "nitro_booster"
+      | "shield_booster"
+      | "bullet"]: (lane: number, z: number) => void;
+  } = {
+    gold_coin: (lane, z) => this.interactiveItemsManager.spawnGoldCoin(lane, z),
+    diamond_coin: (lane, z) =>
+      this.interactiveItemsManager.spawnDiamondCoin(lane, z),
+    nitro_booster: (lane, z) =>
+      this.interactiveItemsManager.spawnNitroBooster(lane, z),
+    shield_booster: (lane, z) =>
+      this.interactiveItemsManager.spawnShieldBooster(lane, z),
+    bullet: (lane, z) => this.interactiveItemsManager.spawnBulletItem(lane, z),
+  };
+
   public static getInstance(): DestructionManager {
     if (!DestructionManager.instance) {
       DestructionManager.instance = new DestructionManager();
@@ -134,39 +152,35 @@ export class DestructionManager {
   }
 
   private spawnDrop(
-    drop: "coin" | "booster" | "bullet" | null,
+    drop: keyof typeof this.transformMapping | null,
     lane: number,
     z: number,
   ): boolean {
     if (!drop) return false;
 
-    switch (drop) {
-      case "coin":
-        this.interactiveItemsManager.spawnSingleCoin(lane, z);
-        break;
-
-      case "booster":
-        this.interactiveItemsManager.spawnBooster(lane, z);
-        break;
-
-      case "bullet":
-        this.interactiveItemsManager.spawnBulletItem(lane, z);
-        break;
+    const spawner = this.transformMapping[drop];
+    if (spawner) {
+      spawner(lane, z);
+      return true;
     }
-
-    return true;
+    return false;
   }
 
-  private rollDrop() {
-    const choices = ["coin", "booster", "bullet", null];
-    const weights: number[] = [1, 1, 1, 1];
+  private rollDrop(): keyof typeof this.transformMapping | null {
+    const dropTypes = Object.keys(
+      this.transformMapping,
+    ) as (keyof typeof this.transformMapping)[];
+    const choices: (keyof typeof this.transformMapping | null)[] = [
+      ...dropTypes,
+      null,
+    ];
+    const weights = [...dropTypes.map(() => 1), 1]; // пример: все веса = 1
 
-    let i;
-    for (i = 1; i < weights.length; i++) weights[i]! += weights[i - 1]!;
-    var random = Math.random() * weights[weights.length - 1]!;
-    for (i = 0; i < weights.length; i++) if (weights[i]! > random) break;
-
-    return choices[i];
+    let totalWeight = 0;
+    const cumulativeWeights = weights.map((w) => (totalWeight += w));
+    const random = Math.random() * totalWeight;
+    const index = cumulativeWeights.findIndex((cw) => cw > random);
+    return choices[index]!;
   }
 
   public reset() {
