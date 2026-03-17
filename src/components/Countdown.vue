@@ -21,7 +21,7 @@ onMounted(() => {
             soundManager.play("sfx_start");
             gameStore.setState(GameStates.Play);
         }
-    }, 1000);
+    }, 650);
 });
 </script>
 
