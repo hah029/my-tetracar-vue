@@ -1,0 +1,126 @@
+// имитация появления дороги (сдвиг вверх черного градиентного фона)
+@keyframes fading_keys {
+    from { 
+        top: 0%;
+    }
+    to { 
+        top: -200%;
+    }
+}
+
+
+// #region - блок анимаций логотипа
+    // анимации появления / исчезновения всего контейнера с логотипом игры
+    .game_logo_whole_menu_showing-enter-active {
+        transition: all ease-in-out 0.5s;
+    }
+    .game_logo_whole_menu_showing-enter-from {
+        opacity: 0;
+    }
+    .game_logo_whole_menu_showing-leave-active {
+        transition: all ease-in-out 0.5s;
+    }
+    .game_logo_whole_menu_showing-leave-to {
+        opacity: 0;
+    }
+
+    // анимация появления текста логотипа игры из темноты при старте игры
+    .game_logo_showing-enter-active {
+        transition: all ease-in-out 2.5s;
+        // transition-delay: 1s;
+    }
+    .game_logo_showing-enter-from {
+        opacity: 0;
+    }
+
+    // анимация поднятия текста лого вверх при переходе в главное меню
+    .logo_mooving {
+        animation: logoMovingAnim 0.5s cubic-bezier(0.42, 0, 1, 1) forwards;
+    }
+    @keyframes logoMovingAnim {
+        0% {
+            top: 18.47%;
+        }
+        100% {
+            top: 13.04%;
+        }
+    }
+
+    // анимации возникновения неоновых подсветкок логотипа
+    .neon_glow {
+        opacity: 0;
+        animation: neonFlicker 3s ease-out forwards;
+    }
+    .neon_left {
+        animation-delay: 0.4s;
+    }
+    .neon_right {
+        animation-delay: 1.0s;
+    }
+    @keyframes neonFlicker {
+        0% {
+            opacity: 0;
+        }
+        2.22% {
+            opacity: 0.8; /* вспышка */
+        }
+        4.44% {
+            opacity: 0; /* затухание */
+        }
+        6.67% {
+            opacity: 0.8; /* вспышка */
+        }
+        8.89% {
+            opacity: 0; /* затухание */
+        }
+        35% {
+            opacity: 0; /* пауза */
+        }
+        100% {
+            opacity: 1; /* финальная постоянная яркость */
+        }
+    }
+// #endregion
+
+
+// #region - блок анимаций кнопок Главного меню
+    .buttons_group_showing-enter-active {
+        animation: slideIn 0.5s cubic-bezier(0.25, 0.1, 0.25, 1) backwards;
+    }
+
+    @keyframes slideIn {
+        0% {
+            opacity: 0;
+            transform: translateY(-25px);
+        }
+        100% {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    // Для исчезновения
+    .buttons_group_showing-leave-active {
+        animation: slideOut 0.5s cubic-bezier(0.25, 0.1, 0.25, 1) forwards;
+    }
+
+    @keyframes slideOut {
+        0% {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        100% {
+            opacity: 0;
+            transform: translateY(-25px);
+        }
+    }
+// #endregion
+
+// #region - блок анимаций кнопок раздела "Настройки"
+    .header_footer_block_anim-enter-active {
+        animation: slideIn 0.5s cubic-bezier(0.25, 0.1, 0.25, 1) backwards;
+    }
+    .header_footer_block_anim-leave-active {
+        animation: slideOut 0.5s cubic-bezier(0.25, 0.1, 0.25, 1) forwards;
+    }
+// #endregion
