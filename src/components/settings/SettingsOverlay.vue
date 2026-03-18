@@ -5,12 +5,13 @@
             <div class="sub_container">
                 <Transition name="header_footer_block_anim">
                     <div v-if="isHeaderShown" class="header_block">
-                        <div class="header_text">Настройки</div>
+                        <div class="header_text">{{ dynamicTitleName }}</div>
                         <div class="header_image">
                             <img class='image' src="@/assets/images/title_line_image.svg">
                         </div>
                     </div>
                 </Transition>
+
                 <TransitionGroup 
                     name="buttons_group_showing"
                     tag="div"
@@ -18,7 +19,7 @@
                 >
                     <button 
                         v-for="(btn, index) in menuButtons" 
-                        v-if="isButtonsShown"
+                        v-if="isMainButtonsShown && settingsStateId==0"
                         :key="btn.id" 
                         class="menu_btn" 
                         :style="{ animationDelay: `${index * 0.06}s` }"
@@ -26,29 +27,28 @@
                     >
                         {{ btn.text }}
                     </button>
+                    <div v-else-if="isMainButtonsShown && settingsStateId==1" class="asd">
+                        <SoundSettings />
+                    </div>
+                    <div v-else-if="isMainButtonsShown && settingsStateId==2" class="asd">Язык...</div>
+                    <div v-else-if="isMainButtonsShown && settingsStateId==3" class="asd">Управление...</div>
+                    <div v-else-if="isMainButtonsShown && settingsStateId==4" class="asd">
+                        <DebugSettings />
+                    </div>
                 </TransitionGroup>
+
             </div>
 
             <Transition name="header_footer_block_anim">
-                <button v-if="isBackButtonsShown" class="menu_btn" @click="goBackToMenu">- Назад -</button>
+                <button v-if="isBackButtonsShown" class="menu_btn" @click="backButtonClick()">- Назад -</button>
             </Transition>
         </div>
-
-        <!-- <ul class="settings-menu-list">
-            <li @click="settingsType = key" :class="settingsType == key ? 'selected' : ''"
-                v-for="(value, key, _) in menuList">
-                {{ value.name }}
-            </li>
-        </ul>
-        <div class="settings-inner-overlay">
-            <component :is="getSettingsComponent" />
-        </div> -->
     </div>
 </template>
 
 
 <script setup lang="ts">
-    // import DebugSettings from "./DebugSettings.vue";
+    import DebugSettings from "./DebugSettings.vue";
     import SoundSettings from "./SoundSettings.vue";
     import { onMounted, computed, defineEmits, ref } from "vue";
 
@@ -57,14 +57,22 @@
 
     const settingsType = ref("sound");
     const isHeaderShown = ref(false);
-    const isButtonsShown = ref(false);
+
+    const isMainButtonsShown = ref(false);
+    // const isGraphicsButtonsShown = ref(false);
+
     const isBackButtonsShown = ref(false);
 
+    const settingsStateId = ref(0);
+
+    const dynamicTitleNameDefault = ref('Настройки');
+    const dynamicTitleName = ref('Настройки');
+
     const menuButtons = [
-        { id: 1, text: '- Графика и аудио -', action: null },
-        { id: 2, text: '- Язык -', action: null },
-        { id: 3, text: '- Управление -', action: null },
-        { id: 4, text: '- Об игре -', action: null },
+        { id: 1, text: '- Графика и аудио -', action: switchToGraphics },
+        { id: 2, text: '- Язык -', action: switchToLanguage },
+        { id: 3, text: '- Управление -', action: switchToControls },
+        { id: 4, text: '- Об игре -', action: switchToAbout },
     ];
 
     const menuList = {
@@ -77,26 +85,49 @@
 
     const getSettingsComponent = computed(() => menuList[settingsType.value].comp || null);
 
-    function goBackToMenu() {
-        
-        
-        isHeaderShown.value = false;
-        setTimeout(() => {
-            isButtonsShown.value = false;
-        }, 100);
-        setTimeout(() => {
-            isBackButtonsShown.value = false;
-        }, 400);
+    function switchToGraphics() {
+        settingsStateId.value = 1;
+        dynamicTitleName.value = menuButtons[settingsStateId.value - 1].text;
+    };
+    function switchToLanguage() {
+        settingsStateId.value = 2;
+        dynamicTitleName.value = menuButtons[settingsStateId.value - 1].text;
+    };
+    function switchToControls() {
+        settingsStateId.value = 3;
+        dynamicTitleName.value = menuButtons[settingsStateId.value - 1].text;
+    };
+    function switchToAbout() {
+        settingsStateId.value = 4;
+        dynamicTitleName.value = menuButtons[settingsStateId.value - 1].text;
+    };
 
-        setTimeout(() => {
-            emit('event', 'goBackToMainMenu');
-        }, 500);
+    function backButtonClick() {
+        if (settingsStateId.value == 0) {
+            isHeaderShown.value = false;
+            setTimeout(() => {
+                isMainButtonsShown.value = false;
+            }, 100);
+            setTimeout(() => {
+                isBackButtonsShown.value = false;
+            }, 400);
+    
+            setTimeout(() => {
+                emit('event', 'goBackToMainMenu');
+            }, 500);
+
+        } else {
+            settingsStateId.value = 0;
+            dynamicTitleName.value = dynamicTitleNameDefault.value;
+        };
     };
 
     onMounted(() => {
+        settingsStateId.value = 0;
+        dynamicTitleName.value = dynamicTitleNameDefault.value;
         isHeaderShown.value = true;
         setTimeout(() => {
-            isButtonsShown.value = true;
+            isMainButtonsShown.value = true;
         }, 200);
         setTimeout(() => {
             isBackButtonsShown.value = true;

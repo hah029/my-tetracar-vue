@@ -42,9 +42,9 @@
 
     const menuButtons = [
         { id: 1, text: '- Старт -', action: startGame },
-        { id: 2, text: '- Магазин -', action: goToSettings },
+        { id: 2, text: '- Магазин -', action: null },
         { id: 3, text: '- Настройки -', action: goToSettings },
-        { id: 4, text: '- Рекорды -', action: goToSettings },
+        { id: 4, text: '- Рекорды -', action: null },
     ];
 
     function startGame() {
