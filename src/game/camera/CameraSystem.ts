@@ -20,7 +20,19 @@ class CameraSystemClass {
   private impactOffset = new THREE.Vector3();
 
   initialize(camera: THREE.PerspectiveCamera) {
+    const cameraStore = useCameraStore();
+
     this.camera = camera;
+    this.camera.position.set(
+      cameraStore.CAMERA_INIT_POSITION_X,
+      cameraStore.CAMERA_INIT_POSITION_Y,
+      cameraStore.CAMERA_INIT_POSITION_Z,
+    );
+    this.camera.lookAt(
+      cameraStore.CAMERA_INIT_LOOKAT_X,
+      cameraStore.CAMERA_INIT_LOOKAT_Y,
+      cameraStore.CAMERA_INIT_LOOKAT_Z,
+    );
   }
 
   update(
@@ -112,7 +124,10 @@ class CameraSystemClass {
   }
 
   reset(carPosition: THREE.Vector3) {
-    if (!this.camera) return;
+    if (!this.camera) {
+      console.warn("[CameraSystem.reset] camera is null");
+      return;
+    }
     this.shakeTimer = 0;
     this.shakeOffset.set(0, 0, 0);
 
@@ -128,11 +143,12 @@ class CameraSystemClass {
     this.camera.rotation.z = 0;
     this.camera.updateProjectionMatrix();
 
-    this.camera.lookAt(
+    const lookAt = new THREE.Vector3(
       carPosition.x,
       carPosition.y + cameraStore.LOOKAT_Y_OFFSET,
       carPosition.z - cameraStore.CAMERA_LOOKAHEAD,
     );
+    this.camera.lookAt(lookAt);
   }
 
   private applyShake(speedFactor: number, deltaTime = 1) {

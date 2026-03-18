@@ -1,6 +1,6 @@
 import type { Segment } from "./Segment";
 import { LanePattern as L } from "../types/LanePattern";
-import { SegmentType as T } from "../types/SegmentType";
+import { SegmentTypes as T } from "../types/SegmentType";
 
 const SEGMENT_LENGHT = 1;
 
@@ -222,17 +222,31 @@ export const SEGMENTS: Segment[] = [
   },
 
   {
-    id: "boost_lane",
-    difficulty: 2,
+    id: "boost_reward",
+    difficulty: 1,
     length: SEGMENT_LENGHT,
     type: T.Boost,
     weight: 3,
 
     pattern: [
       [L.Empty, L.Empty, L.Empty, L.Empty, L.Empty],
-      [L.Empty, L.Coin, L.Coin, L.Coin, L.Empty],
+      [L.Coin, L.Coin, L.Coin, L.Coin, L.Coin],
       [L.Empty, L.Empty, L.Booster, L.Empty, L.Empty],
       [L.Empty, L.Empty, L.Empty, L.Empty, L.Empty],
+    ],
+  },
+
+  {
+    id: "bullet_lane",
+    difficulty: 2,
+    length: SEGMENT_LENGHT,
+    type: T.Boost,
+    weight: 100,
+
+    pattern: [
+      [L.Empty, L.Empty, L.Empty, L.Empty, L.Empty],
+      [L.Empty, L.Coin, L.Coin, L.Coin, L.Empty],
+      [L.Empty, L.Empty, L.BulletItem, L.Empty, L.Empty],
     ],
   },
 

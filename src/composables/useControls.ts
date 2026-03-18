@@ -1,22 +1,25 @@
 // src/composables/useControls.ts
 import { onMounted, onUnmounted } from "vue";
-import { GAME_STATES, useGameState } from "@/store/gameState";
+import { useGameState } from "@/store/gameState";
 import type { useGame } from "./useGame";
+import { usePlayerStore } from "@/store/playerStore";
+import { CarManager } from "@/game/car";
+import { GameStates } from "@/game/core/GameState";
 
 export function useControls(game: ReturnType<typeof useGame>) {
   const gameStore = useGameState();
 
   function processEscape() {
     switch (gameStore.currentState) {
-      case GAME_STATES.PLAY:
+      case GameStates.Play:
         gameStore.pauseGame();
         break;
-      case GAME_STATES.PAUSE:
+      case GameStates.Pause:
         gameStore.resumeGame();
         break;
-      case GAME_STATES.MENU:
+      case GameStates.Menu:
         break;
-      case GAME_STATES.GAMEOVER:
+      case GameStates.Gameover:
         gameStore.goToMenu();
         break;
     }
@@ -27,34 +30,39 @@ export function useControls(game: ReturnType<typeof useGame>) {
 
     switch (e.key) {
       case "ArrowLeft":
-        game.movePlayerLeft();
+        game.movePlayerLeft(60 / 1000);
         break;
       case "ArrowRight":
-        game.movePlayerRight();
+        game.movePlayerRight(60 / 1000);
         break;
-      // case " ":
-      //   gameStore.enableNitro();
-      //   break;
+      case " ":
+        game.shoot();
+        break;
+      case "n":
+        usePlayerStore().enableNitro();
+        CarManager.getInstance().enableNitro();
+        break;
       case "Escape":
         processEscape();
         break;
     }
   }
 
-  // function handleKeyUp(e: KeyboardEvent) {
-  //   if (e.key === " ") {
-  //     e.preventDefault();
-  //     gameStore.disableNitro();
-  //   }
-  // }
+  function handleKeyUp(e: KeyboardEvent) {
+    if (e.key === "n") {
+      e.preventDefault();
+      usePlayerStore().disableNitro();
+      CarManager.getInstance().disableNitro();
+    }
+  }
 
   onMounted(() => {
     window.addEventListener("keydown", handleKeyDown);
-    // window.addEventListener("keyup", handleKeyUp);
+    window.addEventListener("keyup", handleKeyUp);
   });
 
   onUnmounted(() => {
     window.removeEventListener("keydown", handleKeyDown);
-    // window.removeEventListener("keyup", handleKeyUp);
+    window.removeEventListener("keyup", handleKeyUp);
   });
 }

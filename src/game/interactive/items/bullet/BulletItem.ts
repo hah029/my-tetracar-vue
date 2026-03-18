@@ -1,9 +1,9 @@
 // src/game/coin/Coin.ts
 
 import { BaseItem } from "../BaseItem";
-import { COIN_MATERIAL_CONFIG } from "./config";
+import { MATERIAL_CONFIG } from "./config";
 
-export class Coin extends BaseItem {
+export class BulletItem extends BaseItem {
   public value: number;
 
   constructor(
@@ -12,8 +12,8 @@ export class Coin extends BaseItem {
     yPos: number = 0.2,
     value: number = 10,
   ) {
-    super(laneIndex, zPos, yPos, COIN_MATERIAL_CONFIG);
+    super(laneIndex, zPos, yPos, MATERIAL_CONFIG);
     this.value = value;
-    this.itemType = "coin";
+    this.itemType = "bullet";
   }
 }

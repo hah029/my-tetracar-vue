@@ -2,8 +2,11 @@
 import * as THREE from "three";
 import { type Ref, onMounted, onUnmounted } from "vue";
 import { EffectComposer } from "three/examples/jsm/postprocessing/EffectComposer.js";
-import { AfterimagePass } from "three/examples/jsm/postprocessing/AfterimagePass.js";
+// import { AfterimagePass } from "three/examples/jsm/postprocessing/AfterimagePass.js";
+import { UnrealBloomPass } from "three/examples/jsm/postprocessing/UnrealBloomPass.js";
 import { RenderPass } from "three/examples/jsm/postprocessing/RenderPass.js";
+import { useGameState } from "@/store/gameState";
+import { useEnvironmentStore } from "@/store/environmentStore";
 
 // Типы
 export type ThreeRefs = {
@@ -16,8 +19,7 @@ let scene: THREE.Scene;
 let camera: THREE.PerspectiveCamera;
 let renderer: THREE.WebGLRenderer;
 let composer: EffectComposer;
-let afterimagePass: AfterimagePass;
-// let listener: THREE.AudioListener;
+// let afterimagePass: AfterimagePass;
 
 export function useThree(container: Ref<HTMLElement | null>) {
   function init() {
@@ -25,17 +27,17 @@ export function useThree(container: Ref<HTMLElement | null>) {
 
     // ---- Scene ----
     scene = new THREE.Scene();
-    scene.fog = new THREE.Fog(0x000000, 0, 100);
+    // scene.fog = new THREE.Fog(0x000000, 0, 100);
 
     // ---- Camera ----
     const aspect = container.value.clientWidth / container.value.clientHeight;
     camera = new THREE.PerspectiveCamera(75, aspect, 0.1, 1000);
-    camera.position.set(0, 4, 5);
-    camera.lookAt(0, 1, -10);
 
-    // // ---- Audio ----
-    // listener = new THREE.AudioListener();
-    // camera.add(listener);
+    // Axis
+    if (useGameState().isDebug) {
+      const axesHelper = new THREE.AxesHelper(useEnvironmentStore().AXES_SIZE);
+      scene.add(axesHelper);
+    }
 
     // ---- Renderer ----
     renderer = new THREE.WebGLRenderer({
@@ -45,13 +47,26 @@ export function useThree(container: Ref<HTMLElement | null>) {
     });
     renderer.setSize(container.value.clientWidth, container.value.clientHeight);
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1));
-    // renderer.shadowMap.enabled = false;
-    // renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    renderer.toneMappingExposure = 1.5;
+    renderer.shadowMap.enabled = true;
+    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    const bloomPass = new UnrealBloomPass(
+      new THREE.Vector2(
+        container.value.clientWidth,
+        container.value.clientHeight,
+      ),
+      0.3, // strength
+      0.8, // radius
+      0.85, // threshold
+    );
+
     composer = new EffectComposer(renderer);
     composer.addPass(new RenderPass(scene, camera));
 
-    afterimagePass = new AfterimagePass(0.96); // оригинальное значение damp
-    composer.addPass(afterimagePass);
+    composer.addPass(bloomPass);
+
+    // afterimagePass = new AfterimagePass(1); // оригинальное значение damp
+    // composer.addPass(afterimagePass);
 
     container.value.appendChild(renderer.domElement);
 
@@ -94,15 +109,15 @@ export function useThree(container: Ref<HTMLElement | null>) {
     return composer;
   }
 
-  function getMotionBlurPass() {
-    return afterimagePass;
-  }
+  // function getMotionBlurPass() {
+  //   return afterimagePass;
+  // }
 
   return {
     getScene,
     getCamera,
     getRenderer,
     getComposer,
-    getMotionBlurPass,
+    // getMotionBlurPass,
   };
 }

@@ -2,11 +2,16 @@ import * as THREE from "three";
 import { cameraTarget } from "@/game/camera/cameraTarget.js";
 import { RoadManager } from "../road/RoadManager.js";
 import { type CarState, type CarConfig } from "./types";
-import { DEFAULT_CAR_CONFIG } from "./config";
+import {
+  CAR_EMISSION_CONFIG_EXTRA,
+  CAR_MATERIAL_CONFIG_EXTRA,
+  DEFAULT_CAR_CONFIG,
+} from "./config";
 import { CarCollider } from "./CarCollider";
 import { CarCubesBuilder } from "./CarCubesBuilder";
 import { CarPhysics } from "./CarPhysics";
 import { useGameState } from "@/store/gameState.js";
+import { CarVisualState, type CarVisualEffect } from "./CarVisualState";
 
 export class Car extends THREE.Group {
   private scene: THREE.Scene;
@@ -18,10 +23,10 @@ export class Car extends THREE.Group {
 
   private currentLane: number;
   private cubes: THREE.Object3D[] = [];
+  private visualState: CarVisualState | null = null;
 
   constructor(scene: THREE.Scene, config: Partial<CarConfig> = {}) {
     super();
-    // Сначала сохраняем scene
     this.scene = scene;
 
     this.config = { ...DEFAULT_CAR_CONFIG, ...config };
@@ -87,12 +92,18 @@ export class Car extends THREE.Group {
     }
   }
 
+  public startShieldCooldown(duration: number) {
+    this.visualState?.startBlink(duration);
+  }
+
   // Обновление
-  public update(): void {
+  public update(dt: number): void {
     if (this.state.isDestroyed) {
       this.physics.updateDestroyedCubes(this.cubes, this.scene);
       return;
     }
+
+    this.visualState?.update(dt);
 
     const roadManager = RoadManager.getInstance();
     const lanes = roadManager.getLanes();
@@ -145,23 +156,24 @@ export class Car extends THREE.Group {
   }
 
   // Построение машины
-  public async build(
-    useGLB: boolean = true,
-    // cubeModelUrl: string = "",
-  ): Promise<void> {
+  public async build(useGLB: boolean = true): Promise<void> {
     // Очищаем текущую машину
     this.clearCubes();
 
     // Строим новые кубики
-    this.cubes = await this.builder.buildFromCubes(
-      useGLB,
-      // cubeModelUrl,
-      (cube) => {
-        this.add(cube);
-      },
-    );
+    this.cubes = await this.builder.buildFromCubes(useGLB, (cube) => {
+      this.add(cube);
+    });
 
     this.state.cubes = this.cubes;
+    this.visualState = new CarVisualState(this.cubes);
+
+    this.visualState.preloadTextures(CAR_MATERIAL_CONFIG_EXTRA);
+    Object.entries(CAR_EMISSION_CONFIG_EXTRA).forEach(([k, v]) => {
+      if (k !== "default") {
+        this.visualState?.setEmissiveColor(k as any, v);
+      }
+    });
 
     // Добавляем камеру обратно
     this.add(cameraTarget);
@@ -274,5 +286,29 @@ export class Car extends THREE.Group {
     } else {
       this.collider.disableDebug(this.scene);
     }
+  }
+
+  public enableNitro() {
+    this.visualState?.enable("nitro" as CarVisualEffect);
+  }
+
+  public disableNitro() {
+    this.visualState?.disable("nitro" as CarVisualEffect);
+  }
+
+  public enableShield() {
+    this.visualState?.enable("shield" as CarVisualEffect);
+  }
+
+  public disableShield() {
+    this.visualState?.disable("shield" as CarVisualEffect);
+  }
+
+  public showDamage() {
+    this.visualState?.enable("damage" as CarVisualEffect);
+
+    setTimeout(() => {
+      this.visualState?.disable("damage" as CarVisualEffect);
+    }, 400);
   }
 }

@@ -52,9 +52,9 @@ export class CarManager {
       this.car = null;
     }
   }
-  public update(): void {
+  public update(dt: number): void {
     if (this.car) {
-      this.car.update();
+      this.car.update(dt);
       this.car.toggleDebugCollider(useGameState().isDebug);
     }
   }
@@ -106,5 +106,21 @@ export class CarManager {
 
   public isReady(): boolean {
     return this.car !== null;
+  }
+
+  public enableNitro() {
+    this.car?.enableNitro();
+  }
+
+  public disableNitro() {
+    this.car?.disableNitro();
+  }
+
+  public enableShield() {
+    this.car?.enableShield();
+  }
+
+  public disableShield() {
+    this.car?.disableShield();
   }
 }

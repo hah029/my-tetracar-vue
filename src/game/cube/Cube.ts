@@ -34,6 +34,7 @@ export class CubeBuilder {
               color: materialConfig.color ?? 0xffffff,
               emissive: materialConfig.emissive ?? 0x000000,
               emissiveIntensity: materialConfig.emissiveIntensity ?? 1,
+              transparent: true,
             });
           }
         });
@@ -53,6 +54,7 @@ export class CubeBuilder {
           color: materialConfig?.color ?? 0xffffff,
           emissive: materialConfig?.emissive ?? 0x000000,
           emissiveIntensity: materialConfig?.emissiveIntensity ?? 1,
+          transparent: true,
         });
       }
       cube = CubeBuilder.createPrimitiveCube(geomConfig, material);
@@ -86,8 +88,8 @@ export class CubeBuilder {
     cube.traverse((child) => {
       if ((child as THREE.Mesh).isMesh) {
         const mesh = child as THREE.Mesh;
-        mesh.castShadow = true;
-        mesh.receiveShadow = true;
+        mesh.castShadow = false;
+        mesh.receiveShadow = false;
       }
     });
     // Логирование для диагностики масштаба
@@ -103,8 +105,8 @@ export class CubeBuilder {
     const pos = config.pos ?? [0, 0, 0];
     cube.position.set(pos[0], pos[1], pos[2]);
     cube.scale.set(config.scale[0], config.scale[1], config.scale[2]);
-    cube.castShadow = true;
-    cube.receiveShadow = true;
+    cube.castShadow = false;
+    cube.receiveShadow = false;
     return cube;
   }
 
@@ -119,6 +121,7 @@ export class CubeBuilder {
       configIndex: index,
       velocity: new THREE.Vector3(0, 0, 0),
       rotationSpeed: new THREE.Vector3(0, 0, 0),
+      name: config.name ?? "default",
     };
   }
 }

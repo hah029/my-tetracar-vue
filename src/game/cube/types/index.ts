@@ -11,6 +11,11 @@ export interface MaterialConfig {
   color?: number;
   emissive?: number;
   emissiveIntensity?: number;
+  ior?: number;
+  transmission?: number;
+  metalness?: number;
+  roughness?: number;
+  thickness?: number;
 }
 
 export interface CubeUserData {
@@ -19,4 +24,5 @@ export interface CubeUserData {
   configIndex: number | null;
   velocity: THREE.Vector3;
   rotationSpeed: THREE.Vector3;
+  name?: string;
 }

@@ -15,7 +15,6 @@ export class CarCubesBuilder {
    */
   public async buildFromCubes(
     useGLB: boolean,
-    // cubeModelUrl: string,
     onCubeCreated?: (cube: THREE.Object3D) => void,
   ): Promise<THREE.Object3D[]> {
     const cubes: THREE.Object3D[] = [];
@@ -30,7 +29,6 @@ export class CarCubesBuilder {
         pos: config.pos,
         scale: config.scale,
         name: config.name,
-        // Если используется GLB, добавляем modelUrl
         modelUrl: useGLB ? config.modelUrl : undefined,
       };
 
@@ -53,7 +51,6 @@ export class CarCubesBuilder {
         if (onCubeCreated) onCubeCreated(cube);
       } catch (error) {
         console.error(`❌ Ошибка создания кубика ${i}:`, error);
-        // В случае ошибки создаём примитивный куб без GLB
         const fallbackCube = await CubeBuilder.build({
           index: i,
           geomConfig,

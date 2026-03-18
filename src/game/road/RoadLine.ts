@@ -8,6 +8,8 @@ export class RoadLine extends THREE.Mesh {
     const geometry = new THREE.BoxGeometry(0.01, 0.01, length);
     const material = new THREE.MeshStandardMaterial({
       color,
+      emissive: 0xffffff,
+      emissiveIntensity: 1.0,
       side: THREE.DoubleSide,
     });
 

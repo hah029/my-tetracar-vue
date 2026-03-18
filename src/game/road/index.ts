@@ -7,6 +7,5 @@ export * from "./Road";
 export * from "./RoadLine";
 export * from "./SpeedLine";
 export * from "./edges";
-export * from "./SideObject";
 
 export { RoadManager };

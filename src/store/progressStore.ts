@@ -6,10 +6,15 @@ export const useProgressStore = defineStore("progressStore", () => {
   const currentDistance = ref(0);
   const score = ref(0);
   const highScore = ref(0);
+  const diamondScore = ref(0);
 
   function addScore(amount: number) {
     score.value += amount;
     if (score.value > highScore.value) highScore.value = score.value;
+  }
+
+  function addDiamondScore(amount: number) {
+    diamondScore.value += amount;
   }
 
   function resetScore() {
@@ -51,5 +56,6 @@ export const useProgressStore = defineStore("progressStore", () => {
     getDistance,
     getDistanceInCubes,
     saveHighScore,
+    addDiamondScore,
   };
 });

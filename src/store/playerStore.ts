@@ -18,8 +18,13 @@ export const usePlayerStore = defineStore("playerStore", () => {
   // nitro
   const isNitroEnabled = ref(false);
   const nitroTimer = ref(BASE_NITRO_TIMER);
+  const goldNitroMultiplier = ref(2);
+  const diamondNitroMultiplier = ref(2);
   // nitro
   const isShieldEnabled = ref(false);
+  //ammo
+  const ammo = ref(100);
+  const maxAmmo = ref(100);
   // position
   const currentLane = ref(1); // 0..3 для полос
   const carPosition = ref({ x: 0, y: 0, z: 0 });
@@ -82,6 +87,16 @@ export const usePlayerStore = defineStore("playerStore", () => {
     accelerationType.value = type;
   }
 
+  function addAmmo(): void {
+    if (ammo.value < maxAmmo.value) ammo.value += 1;
+  }
+  function consumeAmmo() {
+    if (ammo.value > 0) ammo.value -= 1;
+  }
+  function canShoot(): boolean {
+    return ammo.value > 0;
+  }
+
   return {
     // states
     // NITRO_MULTIPLIER,
@@ -98,6 +113,10 @@ export const usePlayerStore = defineStore("playerStore", () => {
     carPosition,
     cameraPosition,
     nitroTimer,
+    ammo,
+    maxAmmo,
+    goldNitroMultiplier,
+    diamondNitroMultiplier,
 
     // methods
     enableNitro,
@@ -111,5 +130,9 @@ export const usePlayerStore = defineStore("playerStore", () => {
     getCurrentSpeedInCubesPerHour,
     getCurrentAcceleration,
     setAccelerationType,
+
+    addAmmo,
+    consumeAmmo,
+    canShoot,
   };
 });

@@ -5,4 +5,6 @@ import type { MaterialConfig } from "@/game/cube/types";
 export const SHIELD_MATERIAL_CONFIG: MaterialConfig = {
   textureUrl: base_texture,
   // color: 0x00ff00,
+  emissive: 0xffffff,
+  emissiveIntensity: 0.6,
 };

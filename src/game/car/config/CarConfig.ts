@@ -1,9 +1,15 @@
 import * as THREE from "three";
 import type { CarConfig } from "../types";
 import type { GeometryConfig, MaterialConfig } from "@/game/cube/types";
-import base_texture from "@/assets/textures/cube_base.svg";
-import cubeGLB from "@/assets/models/cube.glb";
 import { XZ_SCALING } from "@/game/cube/config";
+// models
+import cubeGLB from "@/assets/models/cube.glb";
+// texture
+import base_texture from "@/assets/textures/cube_base.svg";
+import nitro_texture from "@/assets/textures/cube_nitro.svg";
+import shield_texture from "@/assets/textures/cube_armor.svg";
+import damage_texture from "@/assets/textures/cube_bullet.svg";
+import type { TextureMap } from "../CarVisualState";
 
 const COLS: [number, number, number] = [-XZ_SCALING * 2, 0, XZ_SCALING * 2];
 const ROWS: [number, number, number, number] = [
@@ -23,49 +29,67 @@ export const CAR_CUBES_CONFIG: GeometryConfig[] = [
   {
     pos: [COLS[1], HEIGHT, ROWS[3]],
     scale: GLB_SCALES,
-    name: "задний-центр",
+    name: "shield",
     modelUrl: cubeGLB,
   },
-  {
-    pos: [COLS[0], HEIGHT, ROWS[2]],
-    scale: GLB_SCALES,
-    name: "левый-2",
-    modelUrl: cubeGLB,
-  },
+
   {
     pos: [COLS[1], HEIGHT, ROWS[2]],
     scale: GLB_SCALES,
-    name: "центр-2",
+    name: "default",
     modelUrl: cubeGLB,
   },
-  {
-    pos: [COLS[2], HEIGHT, ROWS[2]],
-    scale: GLB_SCALES,
-    name: "правый-2",
-    modelUrl: cubeGLB,
-  },
+
   {
     pos: [COLS[1], HEIGHT, ROWS[1]],
     scale: GLB_SCALES,
-    name: "центр-3",
+    name: "default",
     modelUrl: cubeGLB,
   },
+  // передние колеса
   {
     pos: [COLS[0], HEIGHT, ROWS[0]],
     scale: GLB_SCALES,
-    name: "левый-передний",
+    name: "nitro",
     modelUrl: cubeGLB,
   },
   {
     pos: [COLS[2], HEIGHT, ROWS[0]],
     scale: GLB_SCALES,
-    name: "правый-передний",
+    name: "nitro",
+    modelUrl: cubeGLB,
+  },
+  // передние колеса
+  {
+    pos: [COLS[2], HEIGHT, ROWS[2]],
+    scale: GLB_SCALES,
+    name: "nitro",
+    modelUrl: cubeGLB,
+  },
+  {
+    pos: [COLS[0], HEIGHT, ROWS[2]],
+    scale: GLB_SCALES,
+    name: "nitro",
     modelUrl: cubeGLB,
   },
 ];
 
 export const CAR_MATERIAL_CONFIG: MaterialConfig = {
   textureUrl: base_texture,
+};
+
+export const CAR_MATERIAL_CONFIG_EXTRA: TextureMap = {
+  default: base_texture,
+  nitro: nitro_texture,
+  shield: shield_texture,
+  damage: damage_texture,
+};
+
+export const CAR_EMISSION_CONFIG_EXTRA = {
+  default: 0x000000,
+  nitro: 0x005500,
+  shield: 0x555555,
+  damage: 0x550000,
 };
 
 // Конфигурация машины по умолчанию
