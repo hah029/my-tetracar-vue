@@ -4,58 +4,58 @@ import { ref } from "vue";
 
 import { usePlayerStore } from "./playerStore";
 import { useProgressStore } from "./progressStore";
-
-export enum GAME_STATES {
-  PRELOADER,
-  MENU,
-  PLAY,
-  GAMEOVER,
-  PAUSE,
-}
+import { GameStates } from "@/game/core/GameState";
 
 export const useGameState = defineStore("gameState", () => {
   // ---- Состояния ----
-  const currentState = ref<GAME_STATES>(GAME_STATES.PRELOADER);
+  const currentState = ref<GameStates>(GameStates.Preloader);
   const isDebug = ref(false);
+  const isFirstGame = ref(true);
 
   // ---- Actions ----
   function toggleDebug() {
     isDebug.value = !isDebug.value;
   }
 
-  function setState(state: GAME_STATES) {
+  function setState(state: GameStates) {
     currentState.value = state;
   }
 
   function startGame() {
-    setState(GAME_STATES.PLAY);
+    setState(GameStates.Play);
     useProgressStore().score = 0;
     usePlayerStore().speed = 0;
   }
 
+  function startCountdown() {
+    currentState.value = GameStates.Countdown;
+  }
+
   function pauseGame() {
-    if (currentState.value === GAME_STATES.PLAY) setState(GAME_STATES.PAUSE);
+    if (currentState.value === GameStates.Play) setState(GameStates.Pause);
   }
 
   function resumeGame() {
-    if (currentState.value === GAME_STATES.PAUSE) setState(GAME_STATES.PLAY);
+    if (currentState.value === GameStates.Pause) setState(GameStates.Play);
   }
 
   function endGame() {
-    setState(GAME_STATES.GAMEOVER);
+    setState(GameStates.Gameover);
     useProgressStore().saveHighScore();
   }
 
   function goToMenu() {
-    setState(GAME_STATES.MENU);
+    setState(GameStates.Menu);
   }
 
   return {
     currentState,
     isDebug,
+    isFirstGame,
 
     setState,
     startGame,
+    startCountdown,
     pauseGame,
     resumeGame,
     endGame,

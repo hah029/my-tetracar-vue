@@ -1,64 +1,159 @@
-<!-- src/components/MainMenu.vue -->
 <template>
-  <div class="menu-overlay">
-    <h1 class="menu-title">TETROCAR</h1>
-    <button class="menu-btn" @click="letsPlay">НАЖМИ НА КНОПКУ</button>
-  </div>
+    <div class="container">
+        <button 
+            class="menu_btn" 
+            :class="{
+                'button-enter': isEntering,     // класс для анимации появления
+                'leaving': isLeaving            // класс для анимации исчезновения
+            }" 
+            @click="letsPlay"
+            @animationend="onAnimationEnd">
+                {{ $t("preloader.pressAnyButton") }}
+        </button>
+    </div>
 </template>
 
+
 <script setup lang="ts">
-import { GAME_STATES as GS, useGameState } from "@/store/gameState";
+    import { GameStates } from "@/game/core/GameState";
+    import { useGameState } from "@/store/gameState";
+    import { onMounted, defineEmits, ref } from "vue";
 
-// Подключаем store
-const gameStore = useGameState();
+    // подключаем store
+    const gameStore = useGameState();
+    const gameState = useGameState();
 
-function letsPlay() {
-  gameStore.setState(GS.MENU);
-}
+    // подключаем emit
+    const emit = defineEmits(['event']);
+
+    const isEntering = ref(false);      // флаг для анимации появления
+    const isLeaving = ref(false);       // флаг для анимации исчезновения
+
+    // переходим в главное меню
+    function letsPlay() {
+        // смещаем лого наверх
+        isLeaving.value = true;
+        isEntering.value = false;
+        emit('event', 'moving');
+
+        // переходим в главное меню
+        setTimeout(() => {
+            gameState.isFirstGame = false;
+            gameStore.setState(GameStates.Menu);
+        }, 500);
+    };
+
+    function onAnimationEnd(event: AnimationEvent) {
+        // Проверяем, какая анимация закончилась
+        if (event.animationName === 'buttonFadeOut') {
+            // Анимация исчезновения завершена
+            isLeaving.value = false;
+            gameStore.setState(GS.MENU);
+        };
+        
+        if (event.animationName === 'buttonFadeIn') {
+            // Анимация появления завершена
+            isEntering.value = false;
+        };
+    };
+
+    onMounted(() => {
+        emit('event', 'showing');
+
+        // выводим кнопку
+        setTimeout(() => {
+            setTimeout(() => {
+                isEntering.value = true;
+            }, 50);
+        }, 3200);
+    });
 </script>
 
-<style scoped>
-.menu-title {
-  font-size: 72px;
-  margin-bottom: 50px;
-  text-shadow: 0 0 20px rgba(0, 255, 255, 0.741);
-}
 
-@keyframes pulse {
-  0% {
-    transform: scale(1);
-    opacity: 0.3;
-  }
+<style lang="scss" scoped>
+    @use "@/styles/menu.scss";
 
-  50% {
-    transform: scale(1.05);
-    opacity: 0.5;
-  }
+    .menu_btn {
+        z-index: 2500;
+        position: absolute;
+        bottom: 30.435%;
+        height: fit-content;
+        background: none;
+        border: none;
+        // ---
+        font-family: 'vla_shu';
+        font-size: 2.25rem; // (36px)
+        color: #FDFFE3;
+        filter: drop-shadow(0 0 15px rgba(255, 246, 25, 0.4));
+        cursor: pointer;
+        transition: all 0.2s ease-in-out;
 
-  100% {
-    transform: scale(1);
-    opacity: 0.3;
-  }
-}
+        opacity: 0;
+        // transform: scale(0.8);
+        // animation: buttonFadeIn 1.5s ease-in-out forwards;
+        // animation-delay: 1s;
 
-.menu-btn {
-  background: none;
-  color: white;
-  border: none;
-  padding: 20px 60px;
-  margin: 10px;
-  font-size: 18px;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  animation: pulse 2s infinite;
+        // Неоновое свечение с анимацией мерцания
+        // animation: enhancedBreathing 2s ease-in-out infinite;
 
-}
+        &:hover {
+            transform: scale(1.02);
+            color: #ffffff;
+            filter: drop-shadow(0 0 20px rgba(255, 255, 255, 0.6));
+            transition: all 0.2s ease-in-out;
+            // animation: enhancedBreathing 2s ease-in-out infinite;
+        }
+    }
 
-.menu-btn:hover {
-  /* background-color: rgba(255, 255, 255, 0.181); */
-  transform: scale(1.05);
-  animation: none;
-  opacity: 0.75;
-  text-shadow: 0 0 20px rgba(0, 255, 255, 0.741);
-}
+    // класс для анимации появления
+    .menu_btn.button-enter {
+        animation: buttonFadeIn 1.5s ease-in-out forwards;
+        animation-delay: 1s;
+    }
+
+    // класс для анимации исчезновения
+    .menu_btn.leaving {
+        animation: buttonFadeOut 1s ease-in-out forwards;
+        // animation-delay: 1s;
+    }
+
+    /* анимация появления */
+    @keyframes buttonFadeIn {
+        0% {
+            opacity: 0;
+        }
+        100% {
+            opacity: 1;
+        }
+    }
+
+    /* анимация исчезновения */
+    @keyframes buttonFadeOut {
+        0% {
+            opacity: 1;
+        }
+        100% {
+            opacity: 0;
+        }
+    }
+
+    // постоянное свечение кнопки входа в игру
+    @keyframes enhancedBreathing {
+        0%, 100% {
+            filter: drop-shadow(0 0 15px rgba(255, 246, 25, 0.4));
+        }
+        30% {
+            filter: drop-shadow(0 0 0.75rem rgba(255, 246, 25, 0.25))
+                    drop-shadow(0 0 1.0625rem rgba(255, 246, 25, 0.1));
+        }
+        60% {
+            filter: drop-shadow(0 0 1.375rem rgba(255, 246, 25, 0.55))
+                    drop-shadow(0 0 1.5625rem rgba(255, 246, 25, 0.2));
+        }
+        80% {
+            filter: drop-shadow(0 0 1.1875rem rgba(255, 246, 25, 0.42))
+            drop-shadow(0 0 1.1875rem rgba(255, 246, 25, 0.12));
+            color: #ffffff;
+        }
+    }
 </style>

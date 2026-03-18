@@ -2,21 +2,21 @@
   <div class="settings">
 
     <div class="settings-row">
-      <span>Музыка</span>
+      <span>{{ $t("settings.music.musicEnabled") }}</span>
       <button class="toggle-btn" @click="toggleMusic">
-        {{ audioStore.musicEnabled ? "ON" : "OFF" }}
+        {{ audioStore.musicEnabled ? $t("settings.toggleOn") : $t("settings.toggleOff") }}
       </button>
     </div>
 
     <div class="settings-row">
-      <span>Звуки</span>
+      <span>{{ $t("settings.music.sfxEnabled") }}</span>
       <button class="toggle-btn" @click="toggleSound">
-        {{ audioStore.sfxEnabled ? "ON" : "OFF" }}
+        {{ audioStore.sfxEnabled ? $t("settings.toggleOn") : $t("settings.toggleOff") }}
       </button>
     </div>
 
     <div class="settings-row volume-row">
-      <span>Громкость</span>
+      <span>{{ $t("settings.music.volumeLevel") }}</span>
       <input type="range" min="0" max="1" step="0.01" v-model="volume" @input="updateVolume" />
       <span class="volume-value">{{ Math.round(volume * 100) }}%</span>
     </div>
