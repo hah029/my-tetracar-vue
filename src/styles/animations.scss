@@ -83,7 +83,7 @@
 // #endregion
 
 
-// #region - блок анимаций кнопок Гланвого меню
+// #region - блок анимаций кнопок Главного меню
     .buttons_group_showing-enter-active {
         animation: slideIn 0.5s cubic-bezier(0.25, 0.1, 0.25, 1) backwards;
     }
@@ -113,5 +113,14 @@
             opacity: 0;
             transform: translateY(-25px);
         }
+    }
+// #endregion
+
+// #region - блок анимаций кнопок раздела "Настройки"
+    .header_footer_block_anim-enter-active {
+        animation: slideIn 0.5s cubic-bezier(0.25, 0.1, 0.25, 1) backwards;
+    }
+    .header_footer_block_anim-leave-active {
+        animation: slideOut 0.5s cubic-bezier(0.25, 0.1, 0.25, 1) forwards;
     }
 // #endregion

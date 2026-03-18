@@ -17,10 +17,7 @@
             </button>
         </TransitionGroup>
         
-        <div v-if="isSettingsEnabled">
-            <SettingsOverlay />
-            <button class="menu_btn" @click="goBackToMenu">Назад</button>
-        </div>
+        <SettingsOverlay v-if="isSettingsEnabled" @event="handleEvent"/>
     </div>
 </template>
 
@@ -44,10 +41,10 @@
     const isSettingsEnabled = ref(false);
 
     const menuButtons = [
-        { id: 1, text: 'Старт', action: startGame },
-        { id: 2, text: 'Гараж', action: goToSettings },
-        { id: 3, text: 'Настройки', action: goToSettings },
-        { id: 4, text: 'Рекорды', action: goToSettings },
+        { id: 1, text: '- Старт -', action: startGame },
+        { id: 2, text: '- Магазин -', action: goToSettings },
+        { id: 3, text: '- Настройки -', action: goToSettings },
+        { id: 4, text: '- Рекорды -', action: goToSettings },
     ];
 
     function startGame() {
@@ -64,13 +61,21 @@
 
     function goToSettings() {
         isMainMenuEnabled.value = false;
-        isSettingsEnabled.value = true;
+        setTimeout(() => {
+            isSettingsEnabled.value = true;
+        }, 300);
     };
 
-    function goBackToMenu() {
-        isSettingsEnabled.value = false;
-        isMainMenuEnabled.value = true;
-    };
+    // ловим и обрабатываем события из дочерней компоненты SettingsOverlay.vue
+    function handleEvent(val_) {
+        if (val_ == 'goBackToMainMenu') {
+            isSettingsEnabled.value = false;
+            isMainMenuEnabled.value = true;
+            // setTimeout(() => {
+            //     isMainMenuEnabled.value = true;
+            // }, 300);
+        };
+    }  
 
     onMounted(() => {
         isMainMenuEnabled.value = true;
@@ -108,7 +113,6 @@
         cursor: pointer;
         transition: all 0.1s ease-in-out;
         
-
         &:hover {
             color: #72B3EE;
             filter: drop-shadow(0 0 20px rgba(121, 190, 255, 1));

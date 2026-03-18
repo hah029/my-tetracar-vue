@@ -38,7 +38,7 @@
 
     let handleParam = ref(false);
 
-    // // ловим и обрабатываем события из дочерней компоненты Preloader.vue
+    // ловим и обрабатываем события из дочерней компоненты Preloader.vue
     function handleEvent(val_: any) {
         handleParam.value = val_;
     }    
@@ -93,20 +93,20 @@
         () => gameState.currentState,
         async (newState, oldState) => {
             if ((oldState === GS.GAMEOVER || oldState === GS.MENU) && newState === GS.PLAY) {
-            console.log("🔄 Game restart detected, resetting game...");
+                console.log("🔄 Game restart detected, resetting game...");
 
-            // 1️⃣ Ждём обновления DOM/реактивных данных
-            await nextTick();
+                // 1️⃣ Ждём обновления DOM/реактивных данных
+                await nextTick();
 
-            // 2️⃣ Сбрасываем игру
-            game.reset();
+                // 2️⃣ Сбрасываем игру
+                game.reset();
 
-            const carMesh = game.car.value.mesh;
-            if (carMesh) {
-                CameraSystem.reset(carMesh.position.clone());
-            }
+                const carMesh = game.car.value.mesh;
+                if (carMesh) {
+                    CameraSystem.reset(carMesh.position.clone());
+                }
 
-            console.log("✅ Game reset complete");
+                console.log("✅ Game reset complete");
             };
         }
     );
