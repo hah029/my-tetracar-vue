@@ -15,7 +15,7 @@
     // composable
     import { useThree } from "./composables/useThree";
     import { useGame } from "./composables/useGame";
-    import { GAME_STATES as GS, useGameState } from "./store/gameState";
+    import { useGameState } from "./store/gameState";
     import { useControls } from "./composables/useControls";
     import { GameLoop } from "./composables/useAnimate";
     // components
@@ -24,15 +24,17 @@
     import PauseMenu from "./components/PauseMenu.vue";
     import HUD from "./components/hud/HUD.vue";
     import GameOverMenu from "./components/GameOverMenu.vue";
+    import Countdown from "./components/Countdown.vue";
     import GameLogo from "./components/ui/GameLogo.vue";
     // managers
     import { CameraSystem } from "@/game/camera/CameraSystem";
     import { SoundManager } from "./game/sound/SoundManager";
     import { DebugColliderVisualizer } from "./helpers/debug/DebugColliderVisualizer";
+    import { GameStates } from "./game/core/GameState";
 
 
     const threeRoot = ref<HTMLDivElement | null>(null);
-    const { getScene, getCamera, getComposer, getMotionBlurPass } = useThree(threeRoot);
+        const { getScene, getCamera, getComposer } = useThree(threeRoot);
     const game = useGame();
     const gameState = useGameState();
 
@@ -47,16 +49,18 @@
 
     const getUIComponent = computed(() => {
         switch (gameState.currentState) {
-            case GS.PRELOADER:
-            return Preloader;
-            case GS.MENU:
-            return MainMenu;
-            case GS.PAUSE:
-            return PauseMenu;
-            case GS.GAMEOVER:
-            return GameOverMenu;
-            case GS.PLAY:
-            return HUD;
+            case GameStates.Preloader:
+                return Preloader;
+            case GameStates.Menu:
+                return MainMenu;
+            case GameStates.Pause:
+                return PauseMenu;
+            case GameStates.Gameover:
+                return GameOverMenu;
+            case GameStates.Play:
+                return HUD;
+            case GameStates.Countdown:   // ←
+                return Countdown;
         };
     });
 
@@ -67,7 +71,6 @@
         const scene = getScene();
         const camera = getCamera();
         const composer = getComposer();
-        const motionBlur = getMotionBlurPass();
 
         // game init
         game.init(scene);
@@ -81,7 +84,7 @@
 
         // main loop initialize
         const debugCollider = new DebugColliderVisualizer(scene);
-        loop = GameLoop(game, composer, motionBlur, debugCollider);
+        loop = GameLoop(game, composer, debugCollider);
         loop.start();
     });
 
@@ -92,7 +95,7 @@
     watch(
         () => gameState.currentState,
         async (newState, oldState) => {
-            if ((oldState === GS.GAMEOVER || oldState === GS.MENU) && newState === GS.PLAY) {
+            if ((oldState === GameStates.Gameover || oldState === GameStates.Pause) && (newState === GameStates.Countdown || newState === GameStates.Menu)) {
                 console.log("🔄 Game restart detected, resetting game...");
 
                 // 1️⃣ Ждём обновления DOM/реактивных данных
@@ -113,31 +116,23 @@
 
     watch(
         () => gameState.currentState,
-        (state) => {
-            if (state === GS.MENU) {
-                soundManager.fadeOut("music_background", 0.1);
-                setTimeout(() => {
+        (newState) => {
+            console.log(`State changed to ${newState}`);
+            switch (newState) {
+                case GameStates.Preloader:
+                    soundManager.stopAllMusic();
+                    break;
+                case GameStates.Menu:
                     soundManager.playMusicSequence("music_intro", "music_background");
-                }, 100);
-            };
-
-            if (state === GS.PLAY) {
-            // soundManager.fadeOut("music_background", 0.1);
-            soundManager.stopAllMusic();
-                setTimeout(() => {
-                    soundManager.play("music_background");
-                }, 100);
-            };
-
-            if (state === GS.GAMEOVER) {
-                soundManager.fadeOut("music_background", 0.1);
-                setTimeout(() => {
-                    soundManager.play("music_gameover");
-                }, 100);
-            };
-
-            if (state === GS.PRELOADER) {
-                soundManager.stopAllMusic();
+                    break;
+                case GameStates.Play:
+                    soundManager.playMusic("music_background", true);
+                    break;
+                case GameStates.Gameover:
+                    soundManager.playMusic("music_gameover");
+                    break;
+                // Countdown и Pause игнорируем – музыкой управляет сам компонент Countdown,
+                // а в паузе музыка продолжает играть (можно добавить fadeOut, если нужно)
             };
         }
     );

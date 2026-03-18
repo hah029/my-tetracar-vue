@@ -24,15 +24,12 @@
 
 <script setup lang="ts">
     import { ref, defineEmits, onMounted } from "vue";
-    import { GAME_STATES as GS, useGameState } from "@/store/gameState";
-    import { usePlayerStore } from "@/store/playerStore";
-    import { SoundManager } from "@/game/sound/SoundManager";
+    import { useGameState } from "@/store/gameState";
     import SettingsOverlay from "./settings/SettingsOverlay.vue";
+    import { GameStates } from "@/game/core/GameState";
 
     // подключаем store
     const gameStore = useGameState();
-    const playerStore = usePlayerStore();
-    const soundManager = SoundManager.getInstance();
 
     // подключаем emit
     const emit = defineEmits(['event']);
@@ -41,22 +38,17 @@
     const isSettingsEnabled = ref(false);
 
     const menuButtons = [
-        { id: 1, text: '- Старт -', action: startGame },
+        // { id: 1, text: '- Старт -', action: startGame },
+        { id: 1, text: $t("mainMenu.startGame"), action: startGame },
         { id: 2, text: '- Магазин -', action: null },
-        { id: 3, text: '- Настройки -', action: goToSettings },
+        // { id: 3, text: '- Настройки -', action: goToSettings },
+        { id: 3, text: $t("mainMenu.settings"), action: goToSettings },
         { id: 4, text: '- Рекорды -', action: null },
     ];
 
     function startGame() {
         emit('event', 'startGame');
-        soundManager.resume();
-
-        soundManager.play("sfx_3");
-        soundManager.play("sfx_2");
-        soundManager.play("sfx_start");
-        playerStore.resetGameData();
-
-        gameStore.setState(GS.PLAY);
+        gameStore.setState(GameStates.Countdown);
     };
 
     function goToSettings() {

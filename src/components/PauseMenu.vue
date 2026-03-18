@@ -1,6 +1,6 @@
 <template>
     <div v-if="isVisible" class="menu_overlay">
-        <h4 class="menu-title__mini">TETROCAR</h4>
+        <h4 class="menu-title__mini">{{ $t("gameTitle") }}</h4>
 
         <template v-if="isSettingsEnabled">
             <SettingsOverlay />
@@ -24,8 +24,9 @@
 
 <script setup lang="ts">
     import { ref, defineEmits, computed } from "vue";
-    import { GAME_STATES as GS, useGameState } from "@/store/gameState";
+    import { useGameState } from "@/store/gameState";
     import SettingsOverlay from "./settings/SettingsOverlay.vue";
+    import { GameStates } from "@/game/core/GameState";
 
     // подключаем store
     const gameStore = useGameState();
@@ -35,14 +36,14 @@
 
     const isSettingsEnabled = ref(false);
 
-    const isVisible = computed(() => gameStore.currentState === GS.PAUSE);
+    const isVisible = computed(() => gameStore.currentState === GameStates.Pause);
 
     function resumeGame() {
-        gameStore.setState(GS.PLAY);
+        gameStore.setState(GameStates.Play);
     };
 
     function goToMainMenu() {
-        gameStore.setState(GS.MENU);
+        gameStore.setState(GameStates.Menu);
         emit('event', 'returnToMenu');
     };
 

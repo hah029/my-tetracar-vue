@@ -40,7 +40,7 @@
             </div>
 
             <Transition name="header_footer_block_anim">
-                <button v-if="isBackButtonsShown" class="menu_btn" @click="backButtonClick()">- Назад -</button>
+                <button v-if="isBackButtonsShown" class="menu_btn" @click="backButtonClick()">{{ $t("mainMenu.goBack") }}</button>
             </Transition>
         </div>
     </div>
@@ -50,12 +50,16 @@
 <script setup lang="ts">
     import DebugSettings from "./DebugSettings.vue";
     import SoundSettings from "./SoundSettings.vue";
+    import LanguageSettings from "./LanguageSettings.vue";
     import { onMounted, computed, defineEmits, ref } from "vue";
+    import { useTranslation } from "i18next-vue";
+
+    const { t } = useTranslation();
 
     // подключаем emit
     const emit = defineEmits(['event']);
 
-    const settingsType = ref("sound");
+    const settingsType = ref<'controls' | 'sound' | 'graphic' | 'debug' | 'lang'>("sound")
     const isHeaderShown = ref(false);
 
     const isMainButtonsShown = ref(false);
@@ -65,7 +69,8 @@
 
     const settingsStateId = ref(0);
 
-    const dynamicTitleNameDefault = ref('Настройки');
+    // const dynamicTitleNameDefault = ref('Настройки');
+    const dynamicTitleNameDefault = ref($t("settings.title"));
     const dynamicTitleName = ref('Настройки');
 
     const menuButtons = [
@@ -75,15 +80,15 @@
         { id: 4, text: '- Об игре -', action: switchToAbout },
     ];
 
-    const menuList = {
-        sound: { name: "Графика и аудио", comp: SoundSettings },
-        language: { name: "Язык", comp: null },
-        controls: { name: "Управление", comp: null },
-        about: { name: "Об игре", comp: null },
-        // debug: { name: "Дебаг", comp: DebugSettings },
-    };
+    const menuList = computed(() => ({
+        controls: { name: t("settings.settingsMenuList.controls"), comp: null },
+        sound: { name: t("settings.settingsMenuList.sound"), comp: SoundSettings },
+        graphic: { name: t("settings.settingsMenuList.graphic"), comp: null },
+        debug: { name: t("settings.settingsMenuList.debug"), comp: DebugSettings },
+        lang: { name: t("settings.settingsMenuList.lang"), comp: LanguageSettings },
+    }));
 
-    const getSettingsComponent = computed(() => menuList[settingsType.value].comp || null);
+    const getSettingsComponent = computed(() => menuList.value[settingsType.value]?.comp || null);
 
     function switchToGraphics() {
         settingsStateId.value = 1;

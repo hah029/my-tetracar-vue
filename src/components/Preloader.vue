@@ -8,14 +8,15 @@
             }" 
             @click="letsPlay"
             @animationend="onAnimationEnd">
-                - Нажми на кнопку -
+                {{ $t("preloader.pressAnyButton") }}
         </button>
     </div>
 </template>
 
 
 <script setup lang="ts">
-    import { GAME_STATES as GS, useGameState } from "@/store/gameState";
+    import { GameStates } from "@/game/core/GameState";
+    import { useGameState } from "@/store/gameState";
     import { onMounted, defineEmits, ref } from "vue";
 
     // подключаем store
@@ -38,7 +39,7 @@
         // переходим в главное меню
         setTimeout(() => {
             gameState.isFirstGame = false;
-            gameStore.setState(GS.MENU);
+            gameStore.setState(GameStates.Menu);
         }, 500);
     };
 
