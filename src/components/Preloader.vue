@@ -20,6 +20,7 @@
 
     // подключаем store
     const gameStore = useGameState();
+    const gameState = useGameState();
 
     // подключаем emit
     const emit = defineEmits(['event']);
@@ -36,6 +37,7 @@
 
         // переходим в главное меню
         setTimeout(() => {
+            gameState.isFirstGame = false;
             gameStore.setState(GS.MENU);
         }, 500);
     };
@@ -62,7 +64,7 @@
             setTimeout(() => {
                 isEntering.value = true;
             }, 50);
-        }, 4500);
+        }, 3200);
     });
 </script>
 

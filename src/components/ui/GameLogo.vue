@@ -1,41 +1,47 @@
 <template>
-    <div v-show="isWholeLogoShown" class="menu_overlay">
-        <div class="background" :class="switchBackgroundStyle()"></div>
-        <div class="gradient"></div>
-
-        <div class="container">
-            <Transition name="game_logo_showing">
-                <div v-if="isLettersShown" class="logo_group" :class="changeLogoPos()">
-                    <div class="logo_left">
-                        <img class='logo_img' src="@/assets/images/logo_tetro_back.svg">
+    <Transition name="game_logo_whole_menu_showing">
+        <div v-show="isWholeLogoShown" class="menu_overlay">
+            <div class="background" :class="switchBackgroundStyle()"></div>
+            <div class="gradient"></div>
+    
+            <div class="container">
+                <Transition name="game_logo_showing">
+                    <div v-if="isLettersShown" class="logo_group" :class="changeLogoPos()" :style="setLogoPosition()">
+                        <div class="logo_left">
+                            <img class='logo_img' src="@/assets/images/logo_tetro_back.svg">
+                        </div>
+                        <div class="logo_right">
+                            <img class='logo_img' src="@/assets/images/logo_car_back.svg">
+                        </div>
                     </div>
-                    <div class="logo_right">
-                        <img class='logo_img' src="@/assets/images/logo_car_back.svg">
+                </Transition>
+                <Transition name="game_logo_showing">
+                    <div v-if="isLettersShown" class="logo_group" :class="changeLogoPos()" :style="setLogoPosition()">
+                        <div v-if="isLinesShown" class="logo_left neon_left" :class="acivateNeonAnimation()">
+                            <img class='logo_img neon_blue' src="@/assets/images/logo_tetro_lines.svg">
+                        </div>
+                        <div v-if="isLinesShown" class="logo_right neon_right" :class="acivateNeonAnimation()">
+                            <img class='logo_img neon_pink' src="@/assets/images/logo_car_lines.svg">
+                        </div>
                     </div>
-                </div>
-            </Transition>
-            <Transition name="game_logo_showing">
-                <div v-if="isLettersShown" class="logo_group" :class="changeLogoPos()">
-                    <div v-if="isLinesShown" class="logo_left neon_glow neon_left">
-                        <img class='logo_img neon_blue' src="@/assets/images/logo_tetro_lines.svg">
-                    </div>
-                    <div v-if="isLinesShown" class="logo_right neon_glow neon_right">
-                        <img class='logo_img neon_pink' src="@/assets/images/logo_car_lines.svg">
-                    </div>
-                </div>
-            </Transition>
+                </Transition>
+            </div>
         </div>
-    </div>
+    </Transition>
 </template>
 
 
 <script setup lang="ts">
     import { ref, watch, Transition } from "vue";
+    import { useGameState } from "@/store/gameState";
 
     let isWholeLogoShown = ref(true);
     let isLettersShown = ref(false);
     let isLettersMovedToTop = ref(false);
     let isLinesShown = ref(false);
+
+    // подключаем store
+    const gameState = useGameState();
 
     // инициализируем пропсы
     interface Props {
@@ -56,7 +62,7 @@
         
                 setTimeout(() => {
                     isLinesShown.value = true;  // вводим мерцанием левую (а потом правую) часть неоновых линий
-                }, 2000);
+                }, 1000);
 
             } else if (val_ == 'moving') {
                 // смещаем логотип вверх (при входе в главное меню)
@@ -75,15 +81,32 @@
 
     // смещаем логотип при переходе в главное меню
     function changeLogoPos() {
-        if (isLettersMovedToTop.value == true) {
+        if (gameState.isFirstGame == true && isLettersMovedToTop.value == true) {
             return 'logo_mooving';
+        };
+    };
+
+    // определяем местоположение логотипа (относ. верхн. границы экрана)
+    function setLogoPosition() {
+        let myPos = gameState.isFirstGame == false ? 13.04 : 18.47;
+        return {
+            top: `${myPos}%`,
+        };
+    };
+
+    // активируем анимацию мерцания ламп логотипа в зависимости от сценария
+    function acivateNeonAnimation() {
+        if (gameState.isFirstGame == true) {
+            return 'neon_glow';
         };
     };
 
     // динамические стили темного фона на заднем плане
     function switchBackgroundStyle() {
-        if (isLettersMovedToTop.value == true) {
-            return 'logo_mooving';
+        if (gameState.isFirstGame == true) {
+            return 'fading_background';
+        } else {
+            return 'background_second_state';
         };
     };
 </script>
@@ -96,7 +119,6 @@
     // #region - фон
         .background {
             position: absolute;
-            top: 0;
             left: 0;
             width: 100%;
             height: 200%;
@@ -106,14 +128,15 @@
                 #000000 50%,     /* Черный цвет до середины */
                 rgba(0, 0, 0, 0) 100%  /* Прозрачность внизу */
                 );
-            animation: fading_keys 3s forwards; // (лежит в animations.scss)
-            animation-delay: 4.4s;
         }
-        // .fading_background {
-        //     animation: fading_keys 3s forwards; // (лежит в animations.scss)
-        //     animation-delay: 4.4s;
-        // }
-
+        .background_second_state {
+            top: -200%;
+        }
+        .fading_background {
+            top: 0%;
+            animation: fading_keys 3s forwards; // (лежит в animations.scss)
+            animation-delay: 3.2s;
+        }
         .gradient {
             position: absolute;
             bottom: 0%;
@@ -126,31 +149,25 @@
     // #region - буквенный логотип
         .logo_group {
             position: absolute;
-            top: 18.47%;
             width: 81.25%;
             height: 49.13%;
             display: flex;
             align-items: center;
             justify-content: space-between;
         }
-
         .logo_left {
             width: 50%;
         }
-
         .logo_right {
             width: 50%;
         }
-
         .logo_img {
             width: 100%;
             shape-rendering: geometricPrecision;
         }
-
         .neon_blue {
             filter: drop-shadow(0 0 20px rgba(121, 190, 255, 1));
         }
-
         .neon_pink {
             filter: drop-shadow(0 0 20px rgba(237, 37, 255, 1));
         }

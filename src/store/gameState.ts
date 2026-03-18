@@ -17,6 +17,7 @@ export const useGameState = defineStore("gameState", () => {
   // ---- Состояния ----
   const currentState = ref<GAME_STATES>(GAME_STATES.PRELOADER);
   const isDebug = ref(false);
+  const isFirstGame = ref(true);
 
   // ---- Actions ----
   function toggleDebug() {
@@ -53,6 +54,7 @@ export const useGameState = defineStore("gameState", () => {
   return {
     currentState,
     isDebug,
+    isFirstGame,
 
     setState,
     startGame,

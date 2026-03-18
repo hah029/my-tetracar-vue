@@ -10,6 +10,20 @@
 
 
 // #region - блок анимаций логотипа
+    // анимации появления / исчезновения всего контейнера с логотипом игры
+    .game_logo_whole_menu_showing-enter-active {
+        transition: all ease-in-out 0.5s;
+    }
+    .game_logo_whole_menu_showing-enter-from {
+        opacity: 0;
+    }
+    .game_logo_whole_menu_showing-leave-active {
+        transition: all ease-in-out 0.5s;
+    }
+    .game_logo_whole_menu_showing-leave-to {
+        opacity: 0;
+    }
+
     // анимация появления текста логотипа игры из темноты при старте игры
     .game_logo_showing-enter-active {
         transition: all ease-in-out 2.5s;
@@ -21,7 +35,7 @@
 
     // анимация поднятия текста лого вверх при переходе в главное меню
     .logo_mooving {
-        animation: logoMovingAnim 0.7s cubic-bezier(0.42, 0, 1, 1) forwards;
+        animation: logoMovingAnim 0.5s cubic-bezier(0.42, 0, 1, 1) forwards;
     }
     @keyframes logoMovingAnim {
         0% {
@@ -41,7 +55,7 @@
         animation-delay: 0.4s;
     }
     .neon_right {
-        animation-delay: 1.2s;
+        animation-delay: 1.0s;
     }
     @keyframes neonFlicker {
         0% {
