@@ -17,9 +17,9 @@ import { ref, defineEmits, onMounted, computed } from "vue";
 import { useGameState } from "@/store/gameState";
 import SettingsOverlay from "./settings/SettingsOverlay.vue";
 import { GameStates } from "@/game/core/GameState";
-import { useTranslation } from "i18next-vue";
+import { createNewText } from '@/helpers/functions';
 
-const { t } = useTranslation();
+const foo = createNewText();
 
 // подключаем store
 const gameStore = useGameState();
@@ -31,12 +31,10 @@ const isMainMenuEnabled = ref(false);
 const isSettingsEnabled = ref(false);
 
 const menuButtons = computed(() => [
-    // { id: 1, text: '- Старт -', action: startGame },
-    { id: 1, text: t("mainMenu.startGame"), action: startGame },
-    { id: 2, text: '- Магазин -', action: null },
-    // { id: 3, text: '- Настройки -', action: goToSettings },
-    { id: 3, text: t("mainMenu.settings"), action: goToSettings },
-    { id: 4, text: '- Рекорды -', action: null },
+    { id: 1, text: foo.makeText("mainMenu.startGame"), action: startGame },
+    { id: 2, text: foo.makeText("mainMenu.shop"), action: null },
+    { id: 3, text: foo.makeText("mainMenu.settings"), action: goToSettings },
+    { id: 4, text: foo.makeText("mainMenu.leaderboards"), action: null },
 ]);
 
 function startGame() {
@@ -56,9 +54,6 @@ function handleEvent(val_) {
     if (val_ == 'goBackToMainMenu') {
         isSettingsEnabled.value = false;
         isMainMenuEnabled.value = true;
-        // setTimeout(() => {
-        //     isMainMenuEnabled.value = true;
-        // }, 300);
     };
 }
 

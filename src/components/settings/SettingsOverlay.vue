@@ -16,13 +16,18 @@
                     <button v-for="(btn, index) in menuButtons" v-if="isMainButtonsShown && settingsStateId == 0"
                         :key="btn.id" class="menu_btn" :style="{ animationDelay: `${index * 0.06}s` }"
                         @click="btn.action">
-                        {{ btn.text }}
+                            {{ btn.text }}
                     </button>
                     <div v-else-if="isMainButtonsShown && settingsStateId == 1" class="asd">
                         <SoundSettings />
                     </div>
-                    <div v-else-if="isMainButtonsShown && settingsStateId == 2" class="asd">Язык...</div>
-                    <div v-else-if="isMainButtonsShown && settingsStateId == 3" class="asd">Управление...</div>
+                    <div v-else-if="isMainButtonsShown && settingsStateId == 2" class="asd">
+                        <LanguageSettings />
+                    </div>
+                    <div v-else-if="isMainButtonsShown && settingsStateId == 3" class="asd">
+                        <!-- Управление... -->
+                        {{ foo_1.makeText("preloader.pressAnyButton") }}
+                    </div>
                     <div v-else-if="isMainButtonsShown && settingsStateId == 4" class="asd">
                         <DebugSettings />
                     </div>
@@ -31,8 +36,7 @@
             </div>
 
             <Transition name="header_footer_block_anim">
-                <button v-if="isBackButtonsShown" class="menu_btn" @click="backButtonClick()">{{ $t("mainMenu.goBack")
-                }}</button>
+                <button v-if="isBackButtonsShown" class="menu_btn" @click="backButtonClick()">{{ foo_1.makeText("mainMenu.goBack") }}</button>
             </Transition>
         </div>
     </div>
@@ -40,96 +44,78 @@
 
 
 <script setup lang="ts">
-import DebugSettings from "./DebugSettings.vue";
-import SoundSettings from "./SoundSettings.vue";
-import LanguageSettings from "./LanguageSettings.vue";
-import { onMounted, computed, defineEmits, ref } from "vue";
-import { useTranslation } from "i18next-vue";
+    import DebugSettings from "./DebugSettings.vue";
+    import SoundSettings from "./SoundSettings.vue";
+    import LanguageSettings from "./LanguageSettings.vue";
+    import { onMounted, computed, defineEmits, ref } from "vue";
+    import { createNewText } from '@/helpers/functions';
+    import { deleteTextLines } from '@/helpers/functions';
+    
 
-const { t } = useTranslation();
+    
 
-// подключаем emit
-const emit = defineEmits(['event']);
 
-const settingsType = ref<'controls' | 'sound' | 'graphic' | 'debug' | 'lang'>("sound")
-const isHeaderShown = ref(false);
+    
+    // подключаем emit
+    const emit = defineEmits(['event']);
 
-const isMainButtonsShown = ref(false);
-// const isGraphicsButtonsShown = ref(false);
+    // const settingsType = ref<'controls' | 'sound' | 'graphic' | 'debug' | 'lang'>("sound");
 
-const isBackButtonsShown = ref(false);
+    const isHeaderShown = ref(false);
+    const isMainButtonsShown = ref(false);
+    // const isGraphicsButtonsShown = ref(false);
+    const isBackButtonsShown = ref(false);
+    const settingsStateId = ref(0);
+    
+    const foo_1 = createNewText();
+    const foo_2 = deleteTextLines();
 
-const settingsStateId = ref(0);
 
-// const dynamicTitleNameDefault = ref('Настройки');
-const dynamicTitleNameDefault = ref(t("settings.title"));
-const dynamicTitleName = ref('Настройки');
 
-const menuButtons = [
-    { id: 1, text: '- Графика и аудио -', action: switchToGraphics },
-    { id: 2, text: '- Язык -', action: switchToLanguage },
-    { id: 3, text: '- Управление -', action: switchToControls },
-    { id: 4, text: '- Об игре -', action: switchToAbout },
-];
+    
 
-// const menuList = computed(() => ({
-//     controls: { name: t("settings.settingsMenuList.controls"), comp: null },
-//     sound: { name: t("settings.settingsMenuList.sound"), comp: SoundSettings },
-//     graphic: { name: t("settings.settingsMenuList.graphic"), comp: null },
-//     debug: { name: t("settings.settingsMenuList.debug"), comp: DebugSettings },
-//     lang: { name: t("settings.settingsMenuList.lang"), comp: LanguageSettings },
-// }));
+    const menuButtons = computed(() => [
+        { id: 1, text: foo_1.makeText("settings.settingsMenuList.technical"), action: () => { settingsStateId.value = 1 } },
+        { id: 2, text: foo_1.makeText("settings.settingsMenuList.lang"), action: () => { settingsStateId.value = 2 } },
+        { id: 3, text: foo_1.makeText("settings.settingsMenuList.controls"), action: () => { settingsStateId.value = 3 } },
+        { id: 4, text: foo_1.makeText("settings.settingsMenuList.about"), action: () => { settingsStateId.value = 4 } },
+    ]);
 
-// const getSettingsComponent = computed(() => menuList.value[settingsType.value]?.comp || null);
+    const dynamicTitleName = computed(() => {
+        return foo_2.correctText(menuButtons.value[settingsStateId.value - 1]?.text || foo_1.makeText("settings.title", 'empty'));
+    });
 
-function switchToGraphics() {
-    settingsStateId.value = 1;
-    dynamicTitleName.value = menuButtons[settingsStateId.value - 1].text;
-};
-function switchToLanguage() {
-    settingsStateId.value = 2;
-    dynamicTitleName.value = menuButtons[settingsStateId.value - 1].text;
-};
-function switchToControls() {
-    settingsStateId.value = 3;
-    dynamicTitleName.value = menuButtons[settingsStateId.value - 1].text;
-};
-function switchToAbout() {
-    settingsStateId.value = 4;
-    dynamicTitleName.value = menuButtons[settingsStateId.value - 1].text;
-};
+    // сценарии клика по кнопке "Назад"
+    function backButtonClick() {
+        if (settingsStateId.value == 0) {
+            isHeaderShown.value = false;
+            setTimeout(() => {
+                isMainButtonsShown.value = false;
+            }, 100);
+            setTimeout(() => {
+                isBackButtonsShown.value = false;
+            }, 400);
 
-function backButtonClick() {
-    if (settingsStateId.value == 0) {
-        isHeaderShown.value = false;
-        setTimeout(() => {
-            isMainButtonsShown.value = false;
-        }, 100);
-        setTimeout(() => {
-            isBackButtonsShown.value = false;
-        }, 400);
+            setTimeout(() => {
+                emit('event', 'goBackToMainMenu');
+            }, 500);
 
-        setTimeout(() => {
-            emit('event', 'goBackToMainMenu');
-        }, 500);
-
-    } else {
-        settingsStateId.value = 0;
-        dynamicTitleName.value = dynamicTitleNameDefault.value;
+        } else {
+            settingsStateId.value = 0;
+        };
     };
-};
 
-onMounted(() => {
-    settingsStateId.value = 0;
-    dynamicTitleName.value = dynamicTitleNameDefault.value;
-    isHeaderShown.value = true;
-    setTimeout(() => {
-        isMainButtonsShown.value = true;
-    }, 200);
-    setTimeout(() => {
-        isBackButtonsShown.value = true;
-    }, 500);
-});
+    // монтируем компоненту
+    onMounted(() => {
+        settingsStateId.value = 0;
+        isHeaderShown.value = true;
+        setTimeout(() => {
+            isMainButtonsShown.value = true;
+        }, 200);
+        setTimeout(() => {
+            isBackButtonsShown.value = true;
+        }, 500);
+    });
 </script>
 
 

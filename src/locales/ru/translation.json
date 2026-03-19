@@ -2,9 +2,10 @@
     "gameTitle": "тетрокар",
     "mainMenu": {
         "goBack": "назад",
-        "title": "главное меню",
-        "startGame": "начать игру",
-        "settings": "настройки"
+        "startGame": "старт",
+        "shop": "магазин",
+        "settings": "настройки",
+        "leaderboards": "рекорды"
     },
     "preloader": {
         "pressAnyButton": "нажми на кнопку"
@@ -16,11 +17,10 @@
         "toggleOn": "вкл",
         "toggleOff": "выкл",
         "settingsMenuList": {
+            "technical": "графика и аудио",
+            "lang": "язык",
             "controls": "управление",
-            "sound": "звук",
-            "graphic": "графика",
-            "debug": "отладка",
-            "lang": "язык"
+            "about": "об игре"
         },
         "music": {
             "musicEnabled": "музыка",

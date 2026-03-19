@@ -4,65 +4,68 @@
             'button-enter': isEntering,     // класс для анимации появления
             'leaving': isLeaving            // класс для анимации исчезновения
         }" @click="letsPlay" @animationend="onAnimationEnd">
-            {{ $t("preloader.pressAnyButton") }}
+            {{ foo.makeText("preloader.pressAnyButton") }}
+            <!-- {{ text("preloader.pressAnyButton") }} -->
         </button>
     </div>
 </template>
 
 
 <script setup lang="ts">
-import { GameStates } from "@/game/core/GameState";
-import { useGameState } from "@/store/gameState";
-import { onMounted, defineEmits, ref } from "vue";
+    import { GameStates } from "@/game/core/GameState";
+    import { useGameState } from "@/store/gameState";
+    import { createNewText } from '@/helpers/functions';
+    import { onMounted, defineEmits, ref } from "vue";
 
-// подключаем store
-const gameStore = useGameState();
-const gameState = useGameState();
+    // подключаем store
+    const gameStore = useGameState();
+    const gameState = useGameState();
+    const foo = createNewText();
 
-// подключаем emit
-const emit = defineEmits(['event']);
+    // подключаем emit
+    const emit = defineEmits(['event']);
 
-const isEntering = ref(false);      // флаг для анимации появления
-const isLeaving = ref(false);       // флаг для анимации исчезновения
-
-// переходим в главное меню
-function letsPlay() {
-    // смещаем лого наверх
-    isLeaving.value = true;
-    isEntering.value = false;
-    emit('event', 'moving');
+    const isEntering = ref(false);      // флаг для анимации появления
+    const isLeaving = ref(false);       // флаг для анимации исчезновения
 
     // переходим в главное меню
-    setTimeout(() => {
-        gameState.isFirstGame = false;
-        gameStore.setState(GameStates.Menu);
-    }, 500);
-};
-
-function onAnimationEnd(event: AnimationEvent) {
-    // Проверяем, какая анимация закончилась
-    if (event.animationName === 'buttonFadeOut') {
-        // Анимация исчезновения завершена
-        isLeaving.value = false;
-        gameStore.setState(GameStates.Menu);
-    };
-
-    if (event.animationName === 'buttonFadeIn') {
-        // Анимация появления завершена
+    function letsPlay() {
+        // смещаем лого наверх
+        isLeaving.value = true;
         isEntering.value = false;
-    };
-};
+        emit('event', 'moving');
 
-onMounted(() => {
-    emit('event', 'showing');
-
-    // выводим кнопку
-    setTimeout(() => {
+        // переходим в главное меню
         setTimeout(() => {
-            isEntering.value = true;
-        }, 50);
-    }, 3200);
-});
+            gameState.isFirstGame = false;
+            gameStore.setState(GameStates.Menu);
+        }, 500);
+    };
+
+    function onAnimationEnd(event: AnimationEvent) {
+        // Проверяем, какая анимация закончилась
+        if (event.animationName === 'buttonFadeOut') {
+            // Анимация исчезновения завершена
+            isLeaving.value = false;
+            gameStore.setState(GameStates.Menu);
+        };
+
+        if (event.animationName === 'buttonFadeIn') {
+            // Анимация появления завершена
+            isEntering.value = false;
+        };
+    };
+
+    onMounted(() => {
+        emit('event', 'showing');
+
+        // выводим кнопку
+        setTimeout(() => {
+            setTimeout(() => {
+                isEntering.value = true;
+            }, 50);
+        }, 3200);
+    });
 </script>
 
 
