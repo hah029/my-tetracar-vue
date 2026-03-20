@@ -1,13 +1,23 @@
 <template>
     <div v-if="isVisible" class="menu_overlay">
-        <h4 class="menu-title__mini">{{ $t("gameTitle") }}</h4>
+        <!-- <h4 class="menu-title__mini">{{ $t("gameTitle") }}</h4> -->
 
-        <template v-if="isSettingsEnabled">
-            <SettingsOverlay />
-            <button class="menu-btn" @click="goBackToPauseMenu">
-                НАЗАД
-            </button>
-        </template>
+        <!-- <div class="container correction">
+            <div class="settings_container">
+
+            </div>
+        </div> -->
+
+        <!-- <Transition name="header_footer_block_anim">
+            <div v-if="isHeaderShown" class="header_block">
+                <div class="header_text">{{ dynamicTitleName }}</div>
+                <div class="header_image">
+                    <img class='image' src="@/assets/images/title_line_image.svg">
+                </div>
+            </div>
+        </Transition> -->
+
+        <SettingsOverlay v-if="isSettingsEnabled" @event="handleEvent" />
 
         <template v-else>
             <h1 class="menu-subtitle">ПАУЗА</h1>
@@ -51,8 +61,11 @@
         isSettingsEnabled.value = true;
     };
 
-    function goBackToPauseMenu() {
-        isSettingsEnabled.value = false;
+    // ловим и обрабатываем события из дочерней компоненты SettingsOverlay.vue
+    function handleEvent(val_) {
+        if (val_ == 'goBackToMainMenu') {
+            isSettingsEnabled.value = false;
+        };
     };
 </script>
 

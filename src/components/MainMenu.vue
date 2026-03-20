@@ -55,7 +55,7 @@ function handleEvent(val_) {
         isSettingsEnabled.value = false;
         isMainMenuEnabled.value = true;
     };
-}
+};
 
 onMounted(() => {
     isMainMenuEnabled.value = true;
