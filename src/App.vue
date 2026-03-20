@@ -25,7 +25,7 @@
     import HUD from "./components/hud/HUD.vue";
     import GameOverMenu from "./components/GameOverMenu.vue";
     import Countdown from "./components/Countdown.vue";
-    import GameLogo from "./components/ui/GameLogo.vue";
+    import GameLogo from "@/components/ui/GameLogo.vue";
     // managers
     import { CameraSystem } from "@/game/camera/CameraSystem";
     import { SoundManager } from "./game/sound/SoundManager";
@@ -164,19 +164,5 @@
     .three-root {
         width: 100%;
         height: 100%;
-    }
-
-    .menu_overlay {
-        position: fixed;
-        inset: 0;
-        display: flex;
-        flex-direction: column;
-        justify-content: center;
-        align-items: center;
-        background-color: rgba(0, 0, 0, 0.5);
-        z-index: 2000;
-        backdrop-filter: blur(2px);
-        /* text-align: center; */
-        /* color: white; */
     }
 </style>

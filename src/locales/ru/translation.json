@@ -10,13 +10,20 @@
     "preloader": {
         "pressAnyButton": "нажми на кнопку"
     },
-    "pauseMenu": {},
+    "pauseMenu": {
+        "title": "пауза",
+        "menuList": {
+            "resume": "продолжить",
+            "settings": "настройки",
+            "menu": "выйти в меню"
+        }
+    },
     "gameOverMenu": {},
     "settings": {
         "title": "настройки",
         "toggleOn": "вкл",
         "toggleOff": "выкл",
-        "settingsMenuList": {
+        "menuList": {
             "technical": "графика и аудио",
             "lang": "язык",
             "controls": "управление",

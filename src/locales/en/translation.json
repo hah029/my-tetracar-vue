@@ -10,13 +10,20 @@
     "preloader": {
         "pressAnyButton": "tap to start"
     },
-    "pauseMenu": {},
+    "pauseMenu": {
+        "title": "pause",
+        "menuList": {
+            "resume": "resume",
+            "settings": "settings",
+            "menu": "main menu"
+        }
+    },
     "gameOverMenu": {},
     "settings": {
         "title": "settings",
         "toggleOn": "on",
         "toggleOff": "off",
-        "settingsMenuList": {
+        "menuList": {
             "technical": "video & sound",
             "lang": "language",
             "controls": "controls",

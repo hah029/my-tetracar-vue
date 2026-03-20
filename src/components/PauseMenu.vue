@@ -1,42 +1,36 @@
 <template>
-    <div v-if="isVisible" class="menu_overlay">
-        <!-- <h4 class="menu-title__mini">{{ $t("gameTitle") }}</h4> -->
+    <div v-if="isVisible" class="container">
+        <div v-if="!isSettingsEnabled" class="pause_container">
 
-        <!-- <div class="container correction">
-            <div class="settings_container">
-
-            </div>
-        </div> -->
-
-        <!-- <Transition name="header_footer_block_anim">
-            <div v-if="isHeaderShown" class="header_block">
-                <div class="header_text">{{ dynamicTitleName }}</div>
-                <div class="header_image">
-                    <img class='image' src="@/assets/images/title_line_image.svg">
+            <Transition name="header_footer_block_anim">
+                <div v-if="isHeaderShown" class="header_block">
+                    <div class="header_text corr_header_size">{{ dynamicTitleName }}</div>
+                    <div class="header_image">
+                        <img class='image' src="@/assets/images/title_line_image.svg">
+                    </div>
                 </div>
-            </div>
-        </Transition> -->
+            </Transition>
+
+            <TransitionGroup name="buttons_group_showing" tag="div" class="buttons_group">
+                <button v-for="(btn, index) in menuButtons" v-if="isPauseButtonsEnabled" :key="btn.id" class="menu_btn"
+                    :style="{ animationDelay: `${index * 0.06}s` }" @click="btn.action">
+                    {{ btn.text }}
+                </button>
+            </TransitionGroup>
+
+        </div>
 
         <SettingsOverlay v-if="isSettingsEnabled" @event="handleEvent" />
-
-        <template v-else>
-            <h1 class="menu-subtitle">ПАУЗА</h1>
-            <div class="menu-btns">
-                <button class="menu-btn resume-btn" @click="resumeGame">Продолжить</button>
-                <button class="menu-btn settings-btn" @click="goToSettings">Настройки</button>
-                <button class="menu-btn main-menu-btn" @click="goToMainMenu">Выйти в меню</button>
-            </div>
-        </template>
-
     </div>
 </template>
 
 
 <script setup lang="ts">
-    import { ref, defineEmits, computed } from "vue";
+    import { onMounted, ref, defineEmits, computed } from "vue";
     import { useGameState } from "@/store/gameState";
     import SettingsOverlay from "./settings/SettingsOverlay.vue";
     import { GameStates } from "@/game/core/GameState";
+    import { createNewText } from '@/helpers/functions';
 
     // подключаем store
     const gameStore = useGameState();
@@ -45,109 +39,107 @@
     const emit = defineEmits(['event']);
 
     const isSettingsEnabled = ref(false);
-
+    const isHeaderShown = ref(false);
+    const isPauseButtonsEnabled = ref(false);
     const isVisible = computed(() => gameStore.currentState === GameStates.Pause);
 
+    const foo = createNewText();
+
+    const menuButtons = computed(() => [
+        { id: 1, text: foo.makeText("pauseMenu.menuList.resume"), action: resumeGame },
+        { id: 2, text: foo.makeText("pauseMenu.menuList.settings"), action: goToSettings },
+        { id: 3, text: foo.makeText("pauseMenu.menuList.menu"), action: goToMainMenu },
+    ]);
+
+    const dynamicTitleName = computed(() => {
+        return foo.makeText("pauseMenu.title", 'empty');
+    });
+
+    // события на клик по кнопке "Продолжить"
     function resumeGame() {
         gameStore.setState(GameStates.Play);
+        emit('event', 'resumeGame');
     };
 
+    // события на клик по кнопке "Выйти в меню"
     function goToMainMenu() {
         gameStore.setState(GameStates.Menu);
         emit('event', 'returnToMenu');
     };
 
+    // события на клик по кнопке "Настройки"
     function goToSettings() {
-        isSettingsEnabled.value = true;
+        isPauseButtonsEnabled.value = false;
+
+        setTimeout(() => {
+            isSettingsEnabled.value = true;
+            // emit('event', 'switchToSettings');
+        }, 300);
     };
 
     // ловим и обрабатываем события из дочерней компоненты SettingsOverlay.vue
     function handleEvent(val_) {
         if (val_ == 'goBackToMainMenu') {
             isSettingsEnabled.value = false;
+            isHeaderShown.value = false;
+            isPauseButtonsEnabled.value = true;
         };
     };
+
+    // монтируем компоненту
+    onMounted(() => {
+        emit('event', 'activateBackground');
+        isHeaderShown.value = true;
+
+        setTimeout(() => {
+            isPauseButtonsEnabled.value = true;
+        }, 200);
+    });
 </script>
 
 
 <style scoped lang="scss">
-    .menu-container {
-        text-align: center;
-        color: white;
+    @use "@/styles/menu.scss";
+    @use "@/styles/animations.scss";
+
+    .pause_container {
+        justify-content: flex-start;
+        margin-top: 16.875rem;
     }
 
-    .menu-title__mini {
-        font-size: 28px;
-        margin: 0;
-        margin-bottom: 10px;
-        text-shadow: 0 0 20px rgba(0, 255, 255, 0.741);
-        border-bottom: 1px solid white;
+    .corr_header_size {
+        font-size: 3.125rem !important;
     }
 
-    .menu-subtitle {
-        font-size: 54px;
-        margin: 0 0 30px 0;
-        text-shadow: 0 0 20px rgba(0, 255, 255, 0.741);
-    }
-
-    .menu-btns {
+    .buttons_group {
+        height: fit-content;
         display: flex;
         flex-direction: column;
-        padding: 20px;
-    }
-
-    .menu-btn {
         background: none;
-        text-transform: uppercase;
-        color: white;
         border: none;
-        padding: 10px;
-        margin: 10px 0;
-        font-size: 18px;
-        cursor: pointer;
-        transition: all 0.1s ease;
+        margin-top: 2.4rem;
 
-        &:hover {
-            opacity: 0.75;
-            text-shadow: 0 0 20px rgba(0, 255, 255, 0.741);
+        // имитируем row-gap (между кнопками)
+        &>*+* {
+            margin-top: 1.56rem;
         }
     }
 
-    /* SETTINGS */
-    .settings {
-        display: flex;
-        flex-direction: column;
-        gap: 25px;
-        margin: 30px 0;
-    }
-
-    .settings-row {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        gap: 20px;
-    }
-
-    .toggle-btn {
+    .menu_btn {
         background: none;
-        border: 1px solid white;
-        color: white;
-        padding: 6px 14px;
+        border: none;
+        // ---
+        font-family: 'vla_shu';
+        font-size: 1.875rem;
+        color: #FDFFE3;
+        filter: drop-shadow(0 0 15px rgba(255, 246, 25, 0.4));
         cursor: pointer;
-        transition: 0.1s;
+        transition: all 0.1s ease-in-out;
 
         &:hover {
-            background: white;
-            color: black;
+            color: #72B3EE;
+            filter: drop-shadow(0 0 20px rgba(121, 190, 255, 1));
+            transition: all 0.1s ease-in-out;
         }
-    }
-
-    .volume-row input {
-        flex: 1;
-    }
-
-    .volume-value {
-        width: 50px;
-        text-align: right;
     }
 </style>

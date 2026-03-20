@@ -77,6 +77,8 @@
     position: absolute;
     bottom: 30.435%;
     height: fit-content;
+    opacity: 0;
+
     background: none;
     border: none;
     // ---
@@ -86,11 +88,6 @@
     filter: drop-shadow(0 0 15px rgba(255, 246, 25, 0.4));
     cursor: pointer;
     transition: all 0.2s ease-in-out;
-
-    opacity: 0;
-    // transform: scale(0.8);
-    // animation: buttonFadeIn 1.5s ease-in-out forwards;
-    // animation-delay: 1s;
 
     // Неоновое свечение с анимацией мерцания
     // animation: enhancedBreathing 2s ease-in-out infinite;

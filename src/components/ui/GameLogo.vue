@@ -68,13 +68,18 @@
                 // смещаем логотип вверх (при входе в главное меню)
                 isLettersMovedToTop.value = true;
 
-            } else if (val_ == 'startGame') {
+            } else if (val_ == 'startGame' || val_ == 'resumeGame') {
                 // стартуем гонку
                 isWholeLogoShown.value = false;
 
             } else if (val_ == 'returnToMenu') {
                 // возвращаемся в Главное меню
                 isWholeLogoShown.value = true;
+            
+            } else if (val_ == 'activateBackground') {
+                // затемняем фон (в Паузе)
+                isWholeLogoShown.value = true;
+                isLettersShown.value = false;
             };
         }
     );
@@ -141,7 +146,7 @@
             position: absolute;
             bottom: 0%;
             width: 100%;
-            height: 35%;
+            height: 55%;
             background: linear-gradient(rgba(0, 0, 0, 0), rgba(0, 0, 0, 0.8));
         }
     // #endregion

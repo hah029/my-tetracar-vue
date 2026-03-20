@@ -75,10 +75,10 @@
     
 
     const menuButtons = computed(() => [
-        { id: 1, text: foo_1.makeText("settings.settingsMenuList.technical"), action: () => { settingsStateId.value = 1 } },
-        { id: 2, text: foo_1.makeText("settings.settingsMenuList.lang"), action: () => { settingsStateId.value = 2 } },
-        { id: 3, text: foo_1.makeText("settings.settingsMenuList.controls"), action: () => { settingsStateId.value = 3 } },
-        { id: 4, text: foo_1.makeText("settings.settingsMenuList.about"), action: () => { settingsStateId.value = 4 } },
+        { id: 1, text: foo_1.makeText("settings.menuList.technical"), action: () => { settingsStateId.value = 1 } },
+        { id: 2, text: foo_1.makeText("settings.menuList.lang"), action: () => { settingsStateId.value = 2 } },
+        { id: 3, text: foo_1.makeText("settings.menuList.controls"), action: () => { settingsStateId.value = 3 } },
+        { id: 4, text: foo_1.makeText("settings.menuList.about"), action: () => { settingsStateId.value = 4 } },
     ]);
 
     const dynamicTitleName = computed(() => {
@@ -137,38 +137,7 @@
     padding-bottom: 2.687rem;
 }
 
-.sub_container {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: flex-start;
-}
 
-// #region - header
-.header_block {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: flex-end;
-}
-
-.header_text {
-    font-family: 'vla_shu';
-    font-size: 2.5rem; // (40px)
-    color: #72B3EE;
-    margin-bottom: 1rem;
-    line-height: 1;
-}
-
-.header_image {
-    width: 34.625rem;
-}
-
-.image {
-    filter: invert(86%) sepia(40%) saturate(5593%) hue-rotate(183deg) brightness(104%) contrast(101%);
-}
-
-// #endregion
 
 .buttons_group {
     height: fit-content;
