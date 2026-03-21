@@ -22,8 +22,8 @@ export class DestructionManager {
   private physicsConfig: CubePhysicsConfig = {
     bounceFactor: 0.4,
     collisionFactor: 0.2,
-    friction: 0.85,
-    gravity: 0.01,
+    friction: 0.7,
+    gravity: 0.005,
     removalHeight: -10,
   };
 

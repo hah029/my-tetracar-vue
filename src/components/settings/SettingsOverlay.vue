@@ -1,121 +1,134 @@
 <template>
-    <div class="container correction">
+    <div class="container">
         <div class="settings_container">
 
             <div class="sub_container">
+                <!-- HEADER -->
                 <Transition name="header_footer_block_anim">
-                    <div v-if="isHeaderShown" class="header_block">
+                    <div class="header_block">
                         <div class="header_text">{{ dynamicTitleName }}</div>
                         <div class="header_image">
-                            <img class='image' src="@/assets/images/title_line_image.svg">
+                            <img class="image" src="@/assets/images/title_line_image.svg" />
                         </div>
                     </div>
                 </Transition>
 
-                <TransitionGroup name="buttons_group_showing" tag="div" class="buttons_group">
-                    <button v-for="(btn, index) in menuButtons" v-if="isMainButtonsShown && settingsStateId == 0"
-                        :key="btn.id" class="menu_btn" :style="{ animationDelay: `${index * 0.06}s` }"
-                        @click="btn.action">
-                            {{ btn.text }}
-                    </button>
-                    <div v-else-if="isMainButtonsShown && settingsStateId == 1" class="asd">
-                        <SoundSettings />
-                    </div>
-                    <div v-else-if="isMainButtonsShown && settingsStateId == 2" class="asd">
-                        <LanguageSettings />
-                    </div>
-                    <div v-else-if="isMainButtonsShown && settingsStateId == 3" class="asd">
-                        <!-- Управление... -->
-                        {{ foo_1.makeText("preloader.pressAnyButton") }}
-                    </div>
-                    <div v-else-if="isMainButtonsShown && settingsStateId == 4" class="asd">
-                        <DebugSettings />
-                    </div>
-                </TransitionGroup>
+                <!-- CONTENT -->
+                <Transition name="fade" mode="out-in">
+                    <div :key="currentView">
 
+                        <!-- MAIN -->
+                        <div v-if="currentView === SettingsView.Main" class="buttons_group">
+                            <button v-for="(btn, index) in menuButtons" :key="btn.id" class="menu_btn"
+                                :style="{ animationDelay: `${index * 0.06}s` }" @click="btn.action">
+                                {{ btn.text }}
+                            </button>
+                        </div>
+
+                        <!-- SUBMENUS -->
+                        <SoundSettings v-else-if="currentView === SettingsView.Sound" />
+                        <LanguageSettings v-else-if="currentView === SettingsView.Language" />
+
+                        <div v-else-if="currentView === SettingsView.Controls">
+                            {{ foo_1.makeText("preloader.pressAnyButton") }}
+                        </div>
+
+                        <DebugSettings v-else-if="currentView === SettingsView.Debug" />
+
+                    </div>
+                </Transition>
             </div>
 
+            <!-- BACK -->
             <Transition name="header_footer_block_anim">
-                <button v-if="isBackButtonsShown" class="menu_btn" @click="backButtonClick()">{{ foo_1.makeText("mainMenu.goBack") }}</button>
+                <button class="menu_btn" @click="backButtonClick">
+                    {{ foo_1.makeText("mainMenu.goBack") }}
+                </button>
             </Transition>
+
         </div>
     </div>
 </template>
 
 
 <script setup lang="ts">
-    import DebugSettings from "./DebugSettings.vue";
-    import SoundSettings from "./SoundSettings.vue";
-    import LanguageSettings from "./LanguageSettings.vue";
-    import { onMounted, computed, defineEmits, ref } from "vue";
-    import { createNewText } from '@/helpers/functions';
-    import { deleteTextLines } from '@/helpers/functions';
-    
+import DebugSettings from "./DebugSettings.vue";
+import SoundSettings from "./SoundSettings.vue";
+import LanguageSettings from "./LanguageSettings.vue";
 
-    
+import { computed, ref } from "vue";
+import { createNewText, deleteTextLines } from '@/helpers/functions';
+import { useGameState } from "@/store/gameState";
 
+enum SettingsView {
+    Main,
+    Sound,
+    Language,
+    Controls,
+    Debug,
+}
 
-    
-    // подключаем emit
-    const emit = defineEmits(['event']);
+// ===== STORES =====
+const gameState = useGameState();
 
-    // const settingsType = ref<'controls' | 'sound' | 'graphic' | 'debug' | 'lang'>("sound");
+// ===== LOCAL STATE =====
+const currentView = ref<SettingsView>(SettingsView.Main);
 
-    const isHeaderShown = ref(false);
-    const isMainButtonsShown = ref(false);
-    // const isGraphicsButtonsShown = ref(false);
-    const isBackButtonsShown = ref(false);
-    const settingsStateId = ref(0);
-    
-    const foo_1 = createNewText();
-    const foo_2 = deleteTextLines();
+// ===== TEXT =====
+const foo_1 = createNewText();
+const foo_2 = deleteTextLines();
 
+// ===== UI STATE (без таймаутов) =====
+const isInSubMenu = computed(() => currentView.value !== SettingsView.Main);
 
+// ===== MENU =====
+const menuButtons = computed(() => [
+    {
+        id: 1,
+        text: foo_1.makeText("settings.menuList.technical"),
+        action: () => currentView.value = SettingsView.Sound,
+    },
+    {
+        id: 2,
+        text: foo_1.makeText("settings.menuList.lang"),
+        action: () => currentView.value = SettingsView.Language,
+    },
+    {
+        id: 3,
+        text: foo_1.makeText("settings.menuList.controls"),
+        action: () => currentView.value = SettingsView.Controls,
+    },
+    {
+        id: 4,
+        text: foo_1.makeText("settings.menuList.about"),
+        action: () => currentView.value = SettingsView.Debug,
+    },
+]);
 
-    
+// ===== TITLE =====
+const dynamicTitleName = computed(() => {
+    if (!isInSubMenu.value) {
+        return foo_1.makeText("settings.title", "empty");
+    }
 
-    const menuButtons = computed(() => [
-        { id: 1, text: foo_1.makeText("settings.menuList.technical"), action: () => { settingsStateId.value = 1 } },
-        { id: 2, text: foo_1.makeText("settings.menuList.lang"), action: () => { settingsStateId.value = 2 } },
-        { id: 3, text: foo_1.makeText("settings.menuList.controls"), action: () => { settingsStateId.value = 3 } },
-        { id: 4, text: foo_1.makeText("settings.menuList.about"), action: () => { settingsStateId.value = 4 } },
-    ]);
-
-    const dynamicTitleName = computed(() => {
-        return foo_2.correctText(menuButtons.value[settingsStateId.value - 1]?.text || foo_1.makeText("settings.title", 'empty'));
-    });
-
-    // сценарии клика по кнопке "Назад"
-    function backButtonClick() {
-        if (settingsStateId.value == 0) {
-            isHeaderShown.value = false;
-            setTimeout(() => {
-                isMainButtonsShown.value = false;
-            }, 100);
-            setTimeout(() => {
-                isBackButtonsShown.value = false;
-            }, 400);
-
-            setTimeout(() => {
-                emit('event', 'goBackToMainMenu');
-            }, 500);
-
-        } else {
-            settingsStateId.value = 0;
-        };
+    const map = {
+        [SettingsView.Sound]: menuButtons.value[0]!.text,
+        [SettingsView.Language]: menuButtons.value[1]!.text,
+        [SettingsView.Controls]: menuButtons.value[2]!.text,
+        [SettingsView.Debug]: menuButtons.value[3]!.text,
     };
 
-    // монтируем компоненту
-    onMounted(() => {
-        settingsStateId.value = 0;
-        isHeaderShown.value = true;
-        setTimeout(() => {
-            isMainButtonsShown.value = true;
-        }, 200);
-        setTimeout(() => {
-            isBackButtonsShown.value = true;
-        }, 500);
-    });
+    return foo_2.correctText(map[currentView.value]);
+});
+
+// ===== BACK =====
+function backButtonClick() {
+    if (isInSubMenu.value) {
+        currentView.value = SettingsView.Main;
+    } else {
+        gameState.closeOverlay();
+    }
+}
 </script>
 
 

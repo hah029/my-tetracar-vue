@@ -1,19 +1,19 @@
 <template>
     <div class="container">
-        <TransitionGroup name="buttons_group_showing" tag="div" class="buttons_group">
-            <button v-for="(btn, index) in menuButtons" v-if="isMainMenuEnabled" :key="btn.id" class="menu_btn"
+
+        <SettingsOverlay v-if="gameStore.activeOverlay === 'settings'" />
+        <TransitionGroup v-else name="buttons_group_showing" tag="div" class="buttons_group">
+            <button v-for="(btn, index) in menuButtons" :key="btn.id" class="menu_btn"
                 :style="{ animationDelay: `${index * 0.06}s` }" @click="btn.action">
                 {{ btn.text }}
             </button>
         </TransitionGroup>
-
-        <SettingsOverlay v-if="isSettingsEnabled" @event="handleEvent" />
     </div>
 </template>
 
 
 <script setup lang="ts">
-import { ref, defineEmits, onMounted, computed } from "vue";
+import { computed } from "vue";
 import { useGameState } from "@/store/gameState";
 import SettingsOverlay from "./settings/SettingsOverlay.vue";
 import { GameStates } from "@/game/core/GameState";
@@ -24,11 +24,8 @@ const foo = createNewText();
 // подключаем store
 const gameStore = useGameState();
 
-// подключаем emit
-const emit = defineEmits(['event']);
-
-const isMainMenuEnabled = ref(false);
-const isSettingsEnabled = ref(false);
+// const isMainMenuEnabled = ref(false);
+// const isSettingsEnabled = ref(false);
 
 const menuButtons = computed(() => [
     { id: 1, text: foo.makeText("mainMenu.startGame"), action: startGame },
@@ -38,28 +35,31 @@ const menuButtons = computed(() => [
 ]);
 
 function startGame() {
-    emit('event', 'startGame');
     gameStore.setState(GameStates.Countdown);
 };
 
 function goToSettings() {
-    isMainMenuEnabled.value = false;
-    setTimeout(() => {
-        isSettingsEnabled.value = true;
-    }, 300);
-};
+    gameStore.openSettings();
+}
+
+// function goToSettings() {
+//     isMainMenuEnabled.value = false;
+//     setTimeout(() => {
+//         isSettingsEnabled.value = true;
+//     }, 300);
+// };
 
 // ловим и обрабатываем события из дочерней компоненты SettingsOverlay.vue
-function handleEvent(val_) {
-    if (val_ == 'goBackToMainMenu') {
-        isSettingsEnabled.value = false;
-        isMainMenuEnabled.value = true;
-    };
-};
+// function handleEvent(val_) {
+//     if (val_ == 'goBackToMainMenu') {
+//         isSettingsEnabled.value = false;
+//         isMainMenuEnabled.value = true;
+//     };
+// };
 
-onMounted(() => {
-    isMainMenuEnabled.value = true;
-});
+// onMounted(() => {
+//     isMainMenuEnabled.value = true;
+// });
 </script>
 
 
