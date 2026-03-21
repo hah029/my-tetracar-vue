@@ -24,9 +24,6 @@ const foo = createNewText();
 // подключаем store
 const gameStore = useGameState();
 
-// const isMainMenuEnabled = ref(false);
-// const isSettingsEnabled = ref(false);
-
 const menuButtons = computed(() => [
     { id: 1, text: foo.makeText("mainMenu.startGame"), action: startGame },
     { id: 2, text: foo.makeText("mainMenu.shop"), action: null },
@@ -41,25 +38,6 @@ function startGame() {
 function goToSettings() {
     gameStore.openSettings();
 }
-
-// function goToSettings() {
-//     isMainMenuEnabled.value = false;
-//     setTimeout(() => {
-//         isSettingsEnabled.value = true;
-//     }, 300);
-// };
-
-// ловим и обрабатываем события из дочерней компоненты SettingsOverlay.vue
-// function handleEvent(val_) {
-//     if (val_ == 'goBackToMainMenu') {
-//         isSettingsEnabled.value = false;
-//         isMainMenuEnabled.value = true;
-//     };
-// };
-
-// onMounted(() => {
-//     isMainMenuEnabled.value = true;
-// });
 </script>
 
 

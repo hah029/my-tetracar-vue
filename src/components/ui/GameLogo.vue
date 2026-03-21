@@ -1,6 +1,6 @@
 <template>
     <Transition name="game_logo_whole_menu_showing">
-        <div v-show="isWholeLogoShown">
+        <div v-if="isWholeLogoShown">
             <div class="background" :class="backgroundClass"></div>
             <div class="gradient"></div>
 
@@ -8,11 +8,11 @@
                 <!-- BASE -->
                 <Transition name="game_logo_showing">
                     <div v-if="isLettersShown" class="logo_group" :class="logoMoveClass" :style="logoStyle">
-                        <div class="logo_left">
-                            <img class="logo_img" src="@/assets/images/logo_tetro_back.svg" />
+                        <div class="logo_tetro">
+                            <img class="logo__img" src="@/assets/images/logo_tetro_back.svg" />
                         </div>
-                        <div class="logo_right">
-                            <img class="logo_img" src="@/assets/images/logo_car_back.svg" />
+                        <div class="logo_car">
+                            <img class="logo__img" src="@/assets/images/logo_car_back.svg" />
                         </div>
                     </div>
                 </Transition>
@@ -20,12 +20,12 @@
                 <!-- NEON -->
                 <Transition name="game_logo_showing">
                     <div v-if="isLettersShown" class="logo_group" :class="logoMoveClass" :style="logoStyle">
-                        <div v-if="isLinesShown" class="logo_left neon_left" :class="neonClass">
-                            <img class="logo_img neon_blue" src="@/assets/images/logo_tetro_lines.svg" />
+                        <div v-if="isLinesShown" class="logo_tetro neon_left" :class="neonClass">
+                            <img class="logo__img neon_blue" src="@/assets/images/logo_tetro_lines.svg" />
                         </div>
 
-                        <div v-if="isLinesShown" class="logo_right neon_right" :class="neonClass">
-                            <img class="logo_img neon_pink" src="@/assets/images/logo_car_lines.svg" />
+                        <div v-if="isLinesShown" class="logo_car neon_right" :class="neonClass">
+                            <img class="logo__img neon_pink" src="@/assets/images/logo_car_lines.svg" />
                         </div>
                     </div>
                 </Transition>
@@ -82,10 +82,10 @@ watch(
                 isLettersShown.value = false;
                 break;
 
-            // ===== GAME OVER =====
-            case GameStates.Gameover:
-                isWholeLogoShown.value = true;
-                break;
+            // // ===== GAME OVER =====
+            // case GameStates.Gameover:
+            //     isWholeLogoShown.value = true;
+            //     break;
         }
     },
     { immediate: true }
@@ -170,15 +170,15 @@ const backgroundClass = computed(() => {
     justify-content: space-between;
 }
 
-.logo_left {
+.logo_tetro {
     width: 50%;
 }
 
-.logo_right {
+.logo_car {
     width: 50%;
 }
 
-.logo_img {
+.logo__img {
     width: 100%;
     shape-rendering: geometricPrecision;
 }
