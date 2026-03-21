@@ -12,5 +12,7 @@ export class DiamondCoin extends CoinItem {
     super(laneIndex, zPos, yPos, DIAMOND_MATERIAL_CONFIG);
     this.value = value;
     this.itemType = "diamond";
+    this.userData.isCoin = true;
+    this.userData.coinType = "diamond";
   }
 }

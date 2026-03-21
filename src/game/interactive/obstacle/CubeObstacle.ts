@@ -24,6 +24,7 @@ export class CubeObstacle extends BaseObstacle {
     customConfig?: Partial<PhysicsConfig>,
   ) {
     super();
+    this.userData.isObstacle = true;
     this.scene = scene;
     this.physicsConfig = {
       gravity: 0.01,
@@ -73,38 +74,6 @@ export class CubeObstacle extends BaseObstacle {
     this.cubes = cubes;
   }
 
-  // public destroy(impactPoint?: THREE.Vector3) {
-  //   if (this.isDestroyed) return;
-  //   this.isDestroyed = true;
-
-  //   // Отсоединяем кубики от группы и добавляем в сцену
-  //   this.cubes.forEach((cube) => {
-  //     const worldPos = cube.getWorldPosition(new THREE.Vector3());
-  //     const worldRot = cube.getWorldQuaternion(new THREE.Quaternion());
-  //     this.remove(cube);
-  //     this.scene.add(cube);
-  //     cube.position.copy(worldPos);
-  //     cube.quaternion.copy(worldRot);
-  //     const ud = cube.userData as any;
-  //     ud.velocity = new THREE.Vector3(
-  //       (Math.random() - 0.5) * this.physicsConfig.explosionForce,
-  //       Math.random() * this.physicsConfig.explosionUpward + 0.1,
-  //       (Math.random() - 0.5) * this.physicsConfig.explosionForce,
-  //     );
-  //     if (impactPoint) {
-  //       const dir = cube.position.clone().sub(impactPoint).normalize();
-  //       ud.velocity.copy(dir.multiplyScalar(this.physicsConfig.explosionForce));
-  //     }
-  //     ud.rotationSpeed = new THREE.Vector3(
-  //       (Math.random() - 0.5) * this.physicsConfig.cubeRotationSpeed,
-  //       (Math.random() - 0.5) * this.physicsConfig.cubeRotationSpeed,
-  //       (Math.random() - 0.5) * this.physicsConfig.cubeRotationSpeed,
-  //     );
-  //   });
-
-  //   // Регистрируем кубики в менеджере для последующей очистки при reset
-  //   DestructionManager.getInstance().registerCubes(this.cubes);
-  // }
   public destroy(impactPoint?: THREE.Vector3) {
     if (this.isDestroyed) return;
     this.isDestroyed = true;
