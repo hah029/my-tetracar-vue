@@ -66,47 +66,10 @@ function goToSettings() {
 @use "@/styles/menu.scss";
 @use "@/styles/animations.scss";
 
-.container {
-    justify-content: center;
-}
 
-.corr_header_size {
-    font-size: 3.125rem !important;
-}
-
-// .pause_container {
-//     justify-content: flex-start;
-//     margin-top: 16.875rem;
+// .corr_header_size {
+//     font-size: 3.125rem !important;
 // }
 
 /* TransitionGroup для кнопок */
-.buttons_group {
-    height: fit-content;
-    display: flex;
-    flex-direction: column;
-    background: none;
-    border: none;
-    margin-top: 2.4rem;
-
-    &>*+* {
-        margin-top: 1.56rem;
-    }
-}
-
-.menu_btn {
-    background: none;
-    border: none;
-    font-family: 'vla_shu';
-    font-size: 1.875rem;
-    color: #FDFFE3;
-    filter: drop-shadow(0 0 15px rgba(255, 246, 25, 0.4));
-    cursor: pointer;
-    transition: all 0.1s ease-in-out;
-
-    &:hover {
-        color: #72B3EE;
-        filter: drop-shadow(0 0 20px rgba(121, 190, 255, 1));
-        transition: all 0.1s ease-in-out;
-    }
-}
 </style>

@@ -3,11 +3,14 @@
     <div ref="threeRoot" class="three-root"></div>
 
     <!-- UI -->
-    <div class="menu_overlay container">
-        <GameLogo />
-        <transition>
-            <component :is="getUIComponent" />
-        </transition>
+    <div class="menu_overlay container"
+        :class="[GameStates.Play, GameStates.Countdown].includes(gameState.currentState) ? '' : 'background'">
+        <div class="menu_layout">
+            <GameLogo />
+            <transition>
+                <component :is="getUIComponent" />
+            </transition>
+        </div>
     </div>
 </template>
 
@@ -138,7 +141,7 @@ body,
     height: 100%;
 }
 
-.container {
+/* .container {
     position: absolute;
     top: 0;
     left: 0;
@@ -149,5 +152,43 @@ body,
     width: 100vw;
     height: 100vh;
     z-index: 2000;
+} */
+.container {
+    position: absolute;
+    inset: 0;
+
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
+    z-index: 2000;
+}
+
+.menu_layout {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+
+    gap: 3rem;
+
+    width: 100%;
+    max-width: 900px;
+    padding: 2rem;
+}
+
+.background {
+    /* position: absolute; */
+    /* left: 0; */
+    /* width: 100%; */
+    /* height: 200%; */
+    background: linear-gradient(to bottom,
+            #000000 0%,
+            /* Черный цвет вверху */
+            #000000bb 100%,
+            /* Черный цвет до середины */
+            rgba(204, 183, 183, 0) 100%
+            /* Прозрачность внизу */
+        );
 }
 </style>

@@ -1,35 +1,34 @@
 <template>
-    <Transition name="game_logo_whole_menu_showing">
-        <div class="wrapper" v-if="isWholeLogoShown">
-            <!-- BASE -->
-            <Transition name="game_logo_showing">
-                <div class="logo_group" :class="logoMoveClass" :style="logoStyle">
-                    <div v-if="isLettersShown" class="logo_tetro">
-                        <img class="logo__img" src="@/assets/images/logo_tetro_back.svg" />
-                    </div>
-                    <div v-if="isLettersShown" class="logo_car">
-                        <img class="logo__img" src="@/assets/images/logo_car_back.svg" />
-                    </div>
-                    <div v-if="isLinesShown" class="logo_tetro neon_left" :class="neonClass">
-                        <img class="logo__img neon_blue" src="@/assets/images/logo_tetro_lines.svg" />
-                    </div>
-
-                    <div v-if="isLinesShown" class="logo_car neon_right" :class="neonClass">
-                        <img class="logo__img neon_pink" src="@/assets/images/logo_car_lines.svg" />
-                    </div>
+    <div class="wrapper" v-show="isWholeLogoShown">
+        <div class="logo">
+            <!-- <Transition name="game_logo_showing"> -->
+            <div class="logo_group" :class="logoMoveClass">
+                <!-- BASE -->
+                <div v-if="isLettersShown" class="logo_tetro">
+                    <img class="logo__img" src="@/assets/images/logo_tetro_back.svg" />
                 </div>
-            </Transition>
-
-            <!-- NEON -->
-            <Transition name="game_logo_showing">
-                <div v-if="isLettersShown" class="logo_group" :class="logoMoveClass" :style="logoStyle">
-
+                <div v-if="isLettersShown" class="logo_car">
+                    <img class="logo__img" src="@/assets/images/logo_car_back.svg" />
                 </div>
-            </Transition>
-            <div class="background" :class="backgroundClass"></div>
-            <div class="gradient"></div>
+                <!-- NEON -->
+                <div v-if="isLinesShown" class="logo_tetro neon_left" :class="neonClass">
+                    <img class="logo__img neon_blue" src="@/assets/images/logo_tetro_lines.svg" />
+                </div>
+                <div v-if="isLinesShown" class="logo_car neon_right" :class="neonClass">
+                    <img class="logo__img neon_pink" src="@/assets/images/logo_car_lines.svg" />
+                </div>
+            </div>
+            <!-- </Transition> -->
+
+            <!-- <Transition name="game_logo_showing">
+                <div v-if="isLettersShown" class="logo_group" :class="logoMoveClass" :style="logoStyle"> </div>
+            </Transition> -->
         </div>
-    </Transition>
+        <div class="background" :class="backgroundClass"></div>
+        <div class="gradient"></div>
+    </div>
+    <!-- <Transition name="game_logo_whole_menu_showing">
+    </Transition> -->
 </template>
 
 
@@ -56,16 +55,19 @@ watch(
             case GameStates.Preloader:
                 isWholeLogoShown.value = true;
                 isLettersShown.value = true;
+                isLinesShown.value = true;
 
-                setTimeout(() => {
-                    isLinesShown.value = true;
-                }, 1000);
+                // setTimeout(() => {
+                // }, 1000);
                 break;
 
             // ===== MENU =====
             case GameStates.Menu:
-                isWholeLogoShown.value = true;
-                isLettersMovedToTop.value = true;
+                if (gameState.activeOverlay === 'settings') {
+                    isWholeLogoShown.value = false;
+                } else {
+                    isWholeLogoShown.value = true;
+                }
                 break;
 
             // ===== START GAME =====
@@ -76,7 +78,7 @@ watch(
 
             // ===== PAUSE =====
             case GameStates.Pause:
-                isWholeLogoShown.value = true;
+                isWholeLogoShown.value = false;
                 isLettersShown.value = false;
                 break;
 
@@ -92,10 +94,10 @@ watch(
 // ===== COMPUTED =====
 
 // позиция логотипа
-const logoStyle = computed(() => {
-    const top = gameState.isFirstGame ? 18.47 : 13.04;
-    return { top: `${top}%` };
-});
+// const logoStyle = computed(() => {
+//     const top = gameState.isFirstGame ? 18.47 : 13.04;
+//     return { top: `${top}%` };
+// });
 
 // класс смещения
 const logoMoveClass = computed(() => {
@@ -122,15 +124,11 @@ const backgroundClass = computed(() => {
 @use "@/styles/menu.scss";
 @use "@/styles/animations.scss";
 
-.wrapper {
-    position: relative;
-    width: 100%;
-    // display: flex;
-}
+
 
 // #region - фон
 .background {
-    // position: absolute;
+    position: absolute;
     left: 0;
     width: 100%;
     height: 200%;
@@ -139,7 +137,7 @@ const backgroundClass = computed(() => {
             /* Черный цвет вверху */
             #000000 50%,
             /* Черный цвет до середины */
-            rgba(0, 0, 0, 0) 100%
+            rgba(204, 183, 183, 0) 100%
             /* Прозрачность внизу */
         );
 }
@@ -167,28 +165,26 @@ const backgroundClass = computed(() => {
 // #region - буквенный логотип
 .logo_group {
     position: relative;
-
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
+    width: 100%;
+    aspect-ratio: 3 / 1; // подгони под свой SVG
 }
+
+
 
 .logo_tetro {
     position: absolute;
     top: 0;
     left: 0;
+    height: 100%;
     width: 50%;
-    // width: 81.25%;
-    // height: 49.13%;
 }
 
 .logo_car {
     position: absolute;
     top: 0;
     right: 0;
+    height: 100%;
     width: 50%;
-    // width: 81.25%;
-    // height: 49.13%;
 }
 
 .logo__img {
@@ -202,6 +198,16 @@ const backgroundClass = computed(() => {
 
 .neon_pink {
     filter: drop-shadow(0 0 20px rgba(237, 37, 255, 1));
+}
+
+.wrapper {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+}
+
+.logo {
+    width: min(80vw, 700px); // 🔥 ограничение ширины
 }
 
 // #endregion</style>

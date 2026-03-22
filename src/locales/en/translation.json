@@ -15,7 +15,7 @@
         "menuList": {
             "resume": "resume",
             "settings": "settings",
-            "menu": "main menu"
+            "menu": "menu"
         }
     },
     "gameOverMenu": {

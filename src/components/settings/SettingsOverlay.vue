@@ -4,47 +4,43 @@
 
             <div class="sub_container">
                 <!-- HEADER -->
-                <Transition name="header_footer_block_anim">
-                    <div class="header_block">
-                        <div class="header_text">{{ dynamicTitleName }}</div>
-                        <div class="header_image">
-                            <img class="image" src="@/assets/images/title_line_image.svg" />
-                        </div>
+                <div class="header_block">
+                    <div class="header_text">{{ dynamicTitleName }}</div>
+                    <div class="header_image">
+                        <img class="image" src="@/assets/images/title_line_image.svg" />
                     </div>
-                </Transition>
+                </div>
+                <!-- <Transition name="header_footer_block_anim">
+                </Transition> -->
 
                 <!-- CONTENT -->
-                <Transition name="fade" mode="out-in">
-                    <div :key="currentView">
+                <div :key="currentView">
 
-                        <!-- MAIN -->
-                        <div v-if="currentView === SettingsView.Main" class="buttons_group">
-                            <button v-for="(btn, index) in menuButtons" :key="btn.id" class="menu_btn"
-                                :style="{ animationDelay: `${index * 0.06}s` }" @click="btn.action">
-                                {{ btn.text }}
-                            </button>
-                        </div>
-
-                        <!-- SUBMENUS -->
-                        <SoundSettings v-else-if="currentView === SettingsView.Sound" />
-                        <LanguageSettings v-else-if="currentView === SettingsView.Language" />
-
-                        <div v-else-if="currentView === SettingsView.Controls">
-                            {{ foo_1.makeText("preloader.pressAnyButton") }}
-                        </div>
-
-                        <DebugSettings v-else-if="currentView === SettingsView.Debug" />
-
+                    <!-- MAIN -->
+                    <div v-if="currentView === SettingsView.Main" class="buttons_group">
+                        <button v-for="(btn, index) in menuButtons" :key="btn.id" class="menu_btn"
+                            :style="{ animationDelay: `${index * 0.06}s` }" @click="btn.action">
+                            {{ btn.text }}
+                        </button>
                     </div>
-                </Transition>
+
+                    <!-- SUBMENUS -->
+                    <SoundSettings v-else-if="currentView === SettingsView.Sound" />
+                    <LanguageSettings v-else-if="currentView === SettingsView.Language" />
+                    <ControlSettings v-else-if="currentView === SettingsView.Controls" />
+                    <DebugSettings v-else-if="currentView === SettingsView.Debug" />
+
+                </div>
+                <!-- <Transition name="fade" mode="out-in"> -->
+                <!-- </Transition> -->
             </div>
 
             <!-- BACK -->
-            <Transition name="header_footer_block_anim">
-                <button class="menu_btn" @click="backButtonClick">
-                    {{ foo_1.makeText("mainMenu.goBack") }}
-                </button>
-            </Transition>
+            <button class="menu_btn" @click="backButtonClick">
+                {{ foo_1.makeText("mainMenu.goBack") }}
+            </button>
+            <!-- <Transition name="header_footer_block_anim"> -->
+            <!-- </Transition> -->
 
         </div>
     </div>
@@ -55,6 +51,7 @@
 import DebugSettings from "./DebugSettings.vue";
 import SoundSettings from "./SoundSettings.vue";
 import LanguageSettings from "./LanguageSettings.vue";
+import ControlSettings from "./ControlSettings.vue";
 
 import { computed, ref } from "vue";
 import { createNewText, deleteTextLines } from '@/helpers/functions';
@@ -136,110 +133,15 @@ function backButtonClick() {
 @use "@/styles/menu.scss";
 @use "@/styles/animations.scss";
 
-.correction {
-    justify-content: flex-end !important;
-}
 
 .settings_container {
-    height: 30rem;
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: space-between;
     box-sizing: border-box;
-    padding-bottom: 2.687rem;
+    gap: 10rem;
 }
-
-
-
-.buttons_group {
-    height: fit-content;
-    display: flex;
-    flex-direction: column;
-    background: none;
-    border: none;
-    margin-top: 2.4rem;
-
-    // имитируем row-gap (между кнопками)
-    &>*+* {
-        margin-top: 0.938rem;
-    }
-}
-
-.menu_btn {
-    background: none;
-    border: none;
-    // ---
-    font-family: 'vla_shu';
-    font-size: 1.875rem; // (30px)
-    color: #FDFFE3;
-    filter: drop-shadow(0 0 15px rgba(255, 246, 25, 0.4));
-    cursor: pointer;
-    transition: all 0.1s ease-in-out;
-
-    &:hover {
-        color: #72B3EE;
-        filter: drop-shadow(0 0 20px rgba(121, 190, 255, 1));
-        transition: all 0.1s ease-in-out;
-    }
-}
-
-// .back_button {
-//     // margin-bottom: 0;
-//     margin-top: 1rem;
-// }
-
-
-
-
-.settings-overlay {
-    display: flex;
-    justify-content: flex-start;
-    gap: 60px;
-    // border: 1px solid red;
-    padding: 50px;
-}
-
-.settings-inner-overlay {
-    min-width: 20rem;
-    min-height: 10rem;
-}
-
-.settings-menu-list {
-    list-style-type: none;
-    margin: 0;
-    padding: 0;
-    width: 10rem;
-    min-width: 100px;
-    border-right: 1px solid rgb(255, 255, 255, 0.1);
-
-    &>li {
-        height: 50px;
-        line-height: 50px;
-        text-transform: uppercase;
-        cursor: pointer;
-        transition: all 300ms;
-        text-align: center;
-        vertical-align: center;
-
-        &:hover {
-            background-color: rgb(255, 255, 255, 0.5);
-        }
-
-        &.selected {
-            background-color: rgb(255, 255, 255, 0.2);
-        }
-    }
-}
-
-
-.menu-subtitle {
-    font-size: 54px;
-    text-transform: uppercase;
-    margin: 0 0 30px 0;
-    text-shadow: 0 0 20px rgba(0, 255, 255, 0.741);
-}
-
 
 /* we will explain what these classes do next! */
 .v-enter-active {
@@ -248,6 +150,6 @@ function backButtonClick() {
 
 .v-enter-from,
 .v-leave-to {
-    opacity: 0;
+    opacity: 1;
 }
 </style>

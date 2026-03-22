@@ -1,29 +1,23 @@
 .menu_overlay {
-    position: fixed;
-    inset: 0;
     display: flex;
     flex-direction: column;
-    justify-content: center;
     align-items: center;
-    background-color: rgba(0, 0, 0, 0.5);
-    backdrop-filter: blur(2px);
-    z-index: 2000;
-    /* text-align: center; */
-    /* color: white; */
+    justify-content: center;
+    gap: 3rem;
 }
 
-.container {
-    position: absolute;
-    top: 0;
-    left: 0;
-    display: flex;
-    flex-direction: column;
-    justify-content: flex-start;
-    align-items: center;
-    width: 100vw;
-    height: 100vh;
-    z-index: 2000;
-}
+// .container {
+//     position: absolute;
+//     top: 0;
+//     left: 0;
+//     display: flex;
+//     flex-direction: column;
+//     justify-content: flex-start;
+//     align-items: center;
+//     width: 100vw;
+//     height: 100vh;
+//     z-index: 2000;
+// }
 
 .sub_container {
     display: flex;
@@ -78,7 +72,7 @@
     border: none;
     // ---
     font-family: 'vla_shu';
-    font-size: 24px; // (36px)
+    font-size: min(5rem, 24px); // (36px)
     color: #FDFFE3;
     filter: drop-shadow(0 0 15px rgba(255, 246, 25, 0.4));
     cursor: pointer;
