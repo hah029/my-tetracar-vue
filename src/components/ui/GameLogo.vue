@@ -1,35 +1,33 @@
 <template>
     <Transition name="game_logo_whole_menu_showing">
-        <div v-if="isWholeLogoShown">
+        <div class="wrapper" v-if="isWholeLogoShown">
+            <!-- BASE -->
+            <Transition name="game_logo_showing">
+                <div class="logo_group" :class="logoMoveClass" :style="logoStyle">
+                    <div v-if="isLettersShown" class="logo_tetro">
+                        <img class="logo__img" src="@/assets/images/logo_tetro_back.svg" />
+                    </div>
+                    <div v-if="isLettersShown" class="logo_car">
+                        <img class="logo__img" src="@/assets/images/logo_car_back.svg" />
+                    </div>
+                    <div v-if="isLinesShown" class="logo_tetro neon_left" :class="neonClass">
+                        <img class="logo__img neon_blue" src="@/assets/images/logo_tetro_lines.svg" />
+                    </div>
+
+                    <div v-if="isLinesShown" class="logo_car neon_right" :class="neonClass">
+                        <img class="logo__img neon_pink" src="@/assets/images/logo_car_lines.svg" />
+                    </div>
+                </div>
+            </Transition>
+
+            <!-- NEON -->
+            <Transition name="game_logo_showing">
+                <div v-if="isLettersShown" class="logo_group" :class="logoMoveClass" :style="logoStyle">
+
+                </div>
+            </Transition>
             <div class="background" :class="backgroundClass"></div>
             <div class="gradient"></div>
-
-            <div class="container">
-                <!-- BASE -->
-                <Transition name="game_logo_showing">
-                    <div v-if="isLettersShown" class="logo_group" :class="logoMoveClass" :style="logoStyle">
-                        <div class="logo_tetro">
-                            <img class="logo__img" src="@/assets/images/logo_tetro_back.svg" />
-                        </div>
-                        <div class="logo_car">
-                            <img class="logo__img" src="@/assets/images/logo_car_back.svg" />
-                        </div>
-                    </div>
-                </Transition>
-
-                <!-- NEON -->
-                <Transition name="game_logo_showing">
-                    <div v-if="isLettersShown" class="logo_group" :class="logoMoveClass" :style="logoStyle">
-                        <div v-if="isLinesShown" class="logo_tetro neon_left" :class="neonClass">
-                            <img class="logo__img neon_blue" src="@/assets/images/logo_tetro_lines.svg" />
-                        </div>
-
-                        <div v-if="isLinesShown" class="logo_car neon_right" :class="neonClass">
-                            <img class="logo__img neon_pink" src="@/assets/images/logo_car_lines.svg" />
-                        </div>
-                    </div>
-                </Transition>
-            </div>
         </div>
     </Transition>
 </template>
@@ -124,9 +122,15 @@ const backgroundClass = computed(() => {
 @use "@/styles/menu.scss";
 @use "@/styles/animations.scss";
 
+.wrapper {
+    position: relative;
+    width: 100%;
+    // display: flex;
+}
+
 // #region - фон
 .background {
-    position: absolute;
+    // position: absolute;
     left: 0;
     width: 100%;
     height: 200%;
@@ -151,7 +155,7 @@ const backgroundClass = computed(() => {
 }
 
 .gradient {
-    position: absolute;
+    position: fixed;
     bottom: 0%;
     width: 100%;
     height: 55%;
@@ -162,20 +166,29 @@ const backgroundClass = computed(() => {
 
 // #region - буквенный логотип
 .logo_group {
-    position: absolute;
-    width: 81.25%;
-    height: 49.13%;
+    position: relative;
+
     display: flex;
     align-items: center;
     justify-content: space-between;
 }
 
 .logo_tetro {
+    position: absolute;
+    top: 0;
+    left: 0;
     width: 50%;
+    // width: 81.25%;
+    // height: 49.13%;
 }
 
 .logo_car {
+    position: absolute;
+    top: 0;
+    right: 0;
     width: 50%;
+    // width: 81.25%;
+    // height: 49.13%;
 }
 
 .logo__img {

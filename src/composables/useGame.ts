@@ -365,19 +365,6 @@ export function useGame() {
       return;
     }
 
-    // Логирование состояния сцены до очистки
-    if (sceneRef) {
-      const childrenBefore = sceneRef.children.length;
-      console.log(`[useGame.reset] children before: ${childrenBefore}`);
-      // Можно залогировать типы объектов
-      sceneRef.children.forEach((child, idx) => {
-        console.log(
-          `  [${idx}] ${child.type} ${child.name || ""}`,
-          child.userData,
-        );
-      });
-    }
-
     carManager.resetCar();
     interactiveManager.reset();
     destructionManager.reset();
@@ -410,7 +397,6 @@ export function useGame() {
       toRemove.forEach((obj) => {
         obj.parent?.remove(obj);
       });
-      console.log(`[useGame.reset] removed ${toRemove.size} tagged objects`);
     }
 
     roadManager.createRoad();
@@ -431,19 +417,6 @@ export function useGame() {
     useProgressStore().resetDistance();
 
     CameraSystem.reset(car.value.mesh.position);
-
-    // Логирование после очистки
-    if (sceneRef) {
-      const childrenAfter = sceneRef.children.length;
-      console.log(`[useGame.reset] children after: ${childrenAfter}`);
-      // Детальный вывод оставшихся объектов
-      sceneRef.children.forEach((child, idx) => {
-        console.log(
-          `  [${idx}] ${child.type} ${child.name || ""}`,
-          child.userData,
-        );
-      });
-    }
   }
 
   function shoot() {

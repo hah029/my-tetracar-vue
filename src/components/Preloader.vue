@@ -1,13 +1,13 @@
 <template>
-    <div class="container">
-        <button class="menu_btn" :class="{
-            'button-enter': isEntering,     // класс для анимации появления
-            'leaving': isLeaving            // класс для анимации исчезновения
-        }" @click="letsPlay" @animationend="onAnimationEnd">
-            {{ foo.makeText("preloader.pressAnyButton") }}
-            <!-- {{ text("preloader.pressAnyButton") }} -->
-        </button>
-    </div>
+    <!-- <div class="container"> -->
+    <button class="menu_btn" :class="{
+        'button-enter': isEntering,     // класс для анимации появления
+        'leaving': isLeaving            // класс для анимации исчезновения
+    }" @click="letsPlay" @animationend="onAnimationEnd">
+        {{ foo.makeText("preloader.pressAnyButton") }}
+        <!-- {{ text("preloader.pressAnyButton") }} -->
+    </button>
+    <!-- </div> -->
 </template>
 
 

@@ -1,14 +1,14 @@
 <template>
-    <div class="container">
+    <!-- <div class="container"> -->
 
-        <SettingsOverlay v-if="gameStore.activeOverlay === 'settings'" />
-        <TransitionGroup v-else name="buttons_group_showing" tag="div" class="buttons_group">
-            <button v-for="(btn, index) in menuButtons" :key="btn.id" class="menu_btn"
-                :style="{ animationDelay: `${index * 0.06}s` }" @click="btn.action">
-                {{ btn.text }}
-            </button>
-        </TransitionGroup>
-    </div>
+    <SettingsOverlay v-if="gameStore.activeOverlay === 'settings'" />
+    <TransitionGroup v-else name="buttons_group_showing" tag="div" class="buttons_group">
+        <button v-for="(btn, index) in menuButtons" :key="btn.id" class="menu_btn"
+            :style="{ animationDelay: `${index * 0.06}s` }" @click="btn.action">
+            {{ btn.text }}
+        </button>
+    </TransitionGroup>
+    <!-- </div> -->
 </template>
 
 
@@ -45,38 +45,46 @@ function goToSettings() {
 @use "@/styles/menu.scss";
 @use "@/styles/animations.scss";
 
-.buttons_group {
-    position: absolute;
-    bottom: 19.57%;
-    height: fit-content;
-    display: flex;
-    flex-direction: column;
-    background: none;
-    border: none;
-
-    // имитируем row-gap (между кнопками)
-    &>*+* {
-        margin-top: 1.56rem;
-    }
+.container {
+    margin: 0 auto;
+    // text-align: center;
+    background: #000000bb;
+    justify-content: center;
 }
 
-.menu_btn {
-    background: none;
-    border: none;
-    // ---
-    font-family: 'vla_shu';
-    font-size: 2.25rem; // (36px)
-    color: #FDFFE3;
-    filter: drop-shadow(0 0 15px rgba(255, 246, 25, 0.4));
-    cursor: pointer;
-    transition: all 0.1s ease-in-out;
+// .buttons_group {
+//     // position: absolute;
+//     // bottom: 19.57%;
+//     height: fit-content;
+//     display: flex;
+//     flex-direction: column;
+//     background: none;
+//     border: none;
+//     gap: 2rem;
 
-    &:hover {
-        color: #72B3EE;
-        filter: drop-shadow(0 0 20px rgba(121, 190, 255, 1));
-        transition: all 0.1s ease-in-out;
-    }
-}
+//     // имитируем row-gap (между кнопками)
+//     &>*+* {
+//         margin-top: 1.56rem;
+//     }
+// }
+
+// .menu_btn {
+//     background: none;
+//     border: none;
+//     // ---
+//     font-family: 'vla_shu';
+//     font-size: 2.25rem; // (36px)
+//     color: #FDFFE3;
+//     filter: drop-shadow(0 0 15px rgba(255, 246, 25, 0.4));
+//     cursor: pointer;
+//     transition: all 0.1s ease-in-out;
+
+//     &:hover {
+//         color: #72B3EE;
+//         filter: drop-shadow(0 0 20px rgba(121, 190, 255, 1));
+//         transition: all 0.1s ease-in-out;
+//     }
+// }
 
 
 

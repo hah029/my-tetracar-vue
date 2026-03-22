@@ -3,7 +3,7 @@
     <div ref="threeRoot" class="three-root"></div>
 
     <!-- UI -->
-    <div class="menu_overlay">
+    <div class="menu_overlay container">
         <GameLogo />
         <transition>
             <component :is="getUIComponent" />
@@ -136,5 +136,18 @@ body,
 .three-root {
     width: 100%;
     height: 100%;
+}
+
+.container {
+    position: absolute;
+    top: 0;
+    left: 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    align-items: center;
+    width: 100vw;
+    height: 100vh;
+    z-index: 2000;
 }
 </style>

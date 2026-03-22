@@ -1,58 +1,58 @@
 <template>
-    <div class="container">
+    <!-- <div class="container"> -->
 
-        <Transition name="header_footer_block_anim" mode="out-in">
-            <div class="header_block">
-                <div class="header_text corr_header_size">{{ $t("gameOverMenu.title") }}</div>
-                <div class="header_image">
-                    <img class='image' src="@/assets/images/title_line_image.svg" />
-                </div>
-            </div>
-        </Transition>
-
-        <div class="score-container">
-            <div class="settings-row">
-                <span>{{ $t("gameOverMenu.summary.points.label") }}</span>
-                <span>
-                    <span class="score-value gold">{{ scoreRounded }} / </span>
-                    <span class="score-value gold newRecord">
-                        {{ highScoreRounded }}
-                    </span>
-                </span>
-            </div>
-            <div class="settings-row">
-                <span>{{ $t("gameOverMenu.summary.speed.label") }}</span>
-                <span>
-                    <span class="score-value gold">
-                        {{ currentSpeedRounded }}
-                    </span>
-                    <span class="score-value gold newRecord">
-                        {{ $t("gameOverMenu.summary.speed.units") }}
-                    </span>
-                </span>
-            </div>
-
-            <div class="settings-row">
-                <span>{{ $t("gameOverMenu.summary.distance.label") }}</span>
-                <span>
-                    <span class="score-value gold">
-                        {{ distance }}
-                    </span>
-                    <span class="score-value gold newRecord">
-                        {{ $t("gameOverMenu.summary.distance.units") }}
-                    </span>
-                </span>
+    <Transition name="header_footer_block_anim" mode="out-in">
+        <div class="header_block">
+            <div class="header_text corr_header_size">{{ $t("gameOverMenu.title") }}</div>
+            <div class="header_image">
+                <img class='image' src="@/assets/images/title_line_image.svg" />
             </div>
         </div>
+    </Transition>
 
-        <TransitionGroup name="buttons_group_showing" tag="div" class="buttons_group">
-            <button v-for="(btn, index) in menuButtons" v-if="gameStore.activeOverlay !== 'settings'" :key="btn.id"
-                class="menu_btn" :style="{ animationDelay: `${index * 0.06}s` }" @click="btn.action">
-                {{ btn.text }}
-            </button>
-        </TransitionGroup>
+    <div class="score-container">
+        <div class="settings-row">
+            <span>{{ $t("gameOverMenu.summary.points.label") }}</span>
+            <span>
+                <span class="score-value gold">{{ scoreRounded }} / </span>
+                <span class="score-value gold newRecord">
+                    {{ highScoreRounded }}
+                </span>
+            </span>
+        </div>
+        <div class="settings-row">
+            <span>{{ $t("gameOverMenu.summary.speed.label") }}</span>
+            <span>
+                <span class="score-value gold">
+                    {{ currentSpeedRounded }}
+                </span>
+                <span class="score-value gold newRecord">
+                    {{ $t("gameOverMenu.summary.speed.units") }}
+                </span>
+            </span>
+        </div>
 
+        <div class="settings-row">
+            <span>{{ $t("gameOverMenu.summary.distance.label") }}</span>
+            <span>
+                <span class="score-value gold">
+                    {{ distance }}
+                </span>
+                <span class="score-value gold newRecord">
+                    {{ $t("gameOverMenu.summary.distance.units") }}
+                </span>
+            </span>
+        </div>
     </div>
+
+    <TransitionGroup name="buttons_group_showing" tag="div" class="buttons_group">
+        <button v-for="(btn, index) in menuButtons" v-if="gameStore.activeOverlay !== 'settings'" :key="btn.id"
+            class="menu_btn" :style="{ animationDelay: `${index * 0.06}s` }" @click="btn.action">
+            {{ btn.text }}
+        </button>
+    </TransitionGroup>
+
+    <!-- </div> -->
 </template>
 
 
@@ -113,6 +113,7 @@ function goToMainMenu() {
     flex-direction: column;
     background: none;
     border: none;
+    gap: 2rem;
 
     // имитируем row-gap (между кнопками)
     &>*+* {
@@ -125,7 +126,7 @@ function goToMainMenu() {
     border: none;
     // ---
     font-family: 'vla_shu';
-    font-size: 2.25rem; // (36px)
+    font-size: 24px; // (36px)
     color: #FDFFE3;
     filter: drop-shadow(0 0 15px rgba(255, 246, 25, 0.4));
     cursor: pointer;
@@ -143,12 +144,9 @@ function goToMainMenu() {
 .score-container {
     display: flex;
     flex-direction: column;
-    gap: 20px;
-    width: 30%;
-    margin-bottom: 30px;
-    padding: 20px 0;
-    // border-top: 1px solid white;
-    // border-bottom: 1px solid white;
+    gap: 5rem;
+    width: 40%;
+    margin: 50px;
     font-family: 'vla_shu';
 }
 
