@@ -74,7 +74,10 @@ export class CubeObstacle extends BaseObstacle {
     this.cubes = cubes;
   }
 
-  public destroy(impactPoint?: THREE.Vector3) {
+  public destroy(
+    impactPoint: THREE.Vector3,
+    transformRequired: boolean = true,
+  ) {
     if (this.isDestroyed) return;
     this.isDestroyed = true;
 
@@ -121,7 +124,7 @@ export class CubeObstacle extends BaseObstacle {
     });
 
     // Регистрируем кубики в DestructionManager
-    dm.registerCubes(this.cubes);
+    dm.registerCubes(this.cubes, transformRequired);
   }
 
   protected updateNormalCubes(dt: number, speed: number) {

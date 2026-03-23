@@ -72,9 +72,12 @@ export class DestructionManager {
     this.interactiveItemsManager = itemsManager;
   }
 
-  public registerCubes(cubes: THREE.Object3D[]) {
+  public registerCubes(
+    cubes: THREE.Object3D[],
+    transformRequired: boolean = true,
+  ) {
     cubes.forEach((cube) => {
-      const drop = this.rollDrop();
+      const drop = transformRequired ? this.rollDrop() : null;
       if (drop) {
         const texture = loadTexture(this.textureMapping[drop]);
         texture.flipY = false;

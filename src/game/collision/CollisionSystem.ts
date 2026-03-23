@@ -39,7 +39,6 @@ class CollisionSystemClass {
       if (collides) {
         this.lastCollisionTime = currentTime;
         car.startShieldCooldown(COLLISION_COOLDOWN_MS / 1000);
-        // obstacle.destroy();
         return {
           collision: true,
           obstacle: obstacle,

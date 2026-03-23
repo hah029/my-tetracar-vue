@@ -36,9 +36,10 @@ export function GameLoop(
   let rafId: number | null = null;
 
   // --- Вспомогательные функции (без изменений) ---
-  function updateDestruction(deltaTime: number) {
+  function updateDestruction(deltaTime: number, speed: number) {
     CameraSystem.updateDestroyed(game.car.value.cubes, deltaTime);
-    game.updateInteractiveItems(deltaTime, 0, UpdateMode.Destruction);
+    game.updateInteractiveItems(deltaTime, speed, UpdateMode.Destruction);
+    game.updateDestructionItems(deltaTime, speed);
   }
 
   function updateGame(deltaTime: number, currentSpeed: number) {
@@ -54,21 +55,27 @@ export function GameLoop(
     if (collisionResult.collision) {
       if (collisionResult.jump) {
         game.jumpPlayer(deltaTime);
-      } else if (collisionResult.obstacle && playerStore.isShieldEnabled) {
-        game.destroyObstacles(collisionResult.impactPoint, [
-          collisionResult.obstacle,
-        ]);
-        CarManager.getInstance().disableShield();
-        playerStore.disableShield();
-      } else {
-        game.destroyCar(collisionResult.impactPoint);
-        // game.destroyObstacles(collisionResult.impactPoint);
-        soundManager.play("sfx_destroy_bot");
-        const strength = Math.min(currentSpeed / playerStore.maxSpeed, 1);
-        CameraSystem.triggerImpactShake(strength);
-        // motionBlur.damp = 0.82;
-        gameState.endGame();
-        return false;
+      } else if (collisionResult.obstacle) {
+        if (playerStore.isShieldEnabled) {
+          game.destroyObstacles(collisionResult.impactPoint!, [
+            collisionResult.obstacle,
+          ]);
+          CarManager.getInstance().disableShield();
+          playerStore.disableShield();
+        } else {
+          game.destroyCar(collisionResult.impactPoint);
+          game.destroyObstacles(
+            collisionResult.impactPoint!,
+            [collisionResult.obstacle],
+            false,
+          );
+          soundManager.play("sfx_destroy_bot");
+          const strength = Math.min(currentSpeed / playerStore.maxSpeed, 1);
+          CameraSystem.triggerImpactShake(strength);
+          // motionBlur.damp = 0.82;
+          gameState.endGame();
+          return false;
+        }
       }
     }
 
@@ -176,7 +183,7 @@ export function GameLoop(
       game.updatePlayer(deltaTime);
 
       if (isGameOver) {
-        updateDestruction(deltaTime);
+        updateDestruction(deltaTime, 0);
       } else {
         const stillPlaying = updateGame(deltaTime, currentSpeed);
         debugCollider?.update();

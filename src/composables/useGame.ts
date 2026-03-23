@@ -197,17 +197,18 @@ export function useGame() {
   }
 
   function destroyObstacles(
-    impactPoint?: THREE.Vector3,
+    impactPoint: THREE.Vector3,
     obstacles: BaseObstacle[] = [],
+    transformRequired: boolean = true,
   ) {
     if (!obstacleManager) return;
     if (obstacles.length != 0) {
       obstacles.forEach((o) => {
-        o.destroy(impactPoint);
+        o.destroy(impactPoint, transformRequired);
       });
     } else {
       obstacleManager.getObstacles().forEach((o) => {
-        o.destroy(impactPoint);
+        o.destroy(impactPoint, transformRequired);
       });
     }
     // Не нужно обновлять obstacles.value здесь, т.к. следующий кадр updateInteractiveItems сделает это
