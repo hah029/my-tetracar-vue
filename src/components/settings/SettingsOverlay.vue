@@ -1,121 +1,131 @@
 <template>
-    <div class="container correction">
+    <div class="container">
         <div class="settings_container">
 
             <div class="sub_container">
-                <Transition name="header_footer_block_anim">
-                    <div v-if="isHeaderShown" class="header_block">
-                        <div class="header_text">{{ dynamicTitleName }}</div>
-                        <div class="header_image">
-                            <img class='image' src="@/assets/images/title_line_image.svg">
-                        </div>
+                <!-- HEADER -->
+                <div class="header_block">
+                    <div class="header_text">{{ dynamicTitleName }}</div>
+                    <div class="header_image">
+                        <img class="image" src="@/assets/images/title_line_image.svg" />
                     </div>
-                </Transition>
+                </div>
+                <!-- <Transition name="header_footer_block_anim">
+                </Transition> -->
 
-                <TransitionGroup name="buttons_group_showing" tag="div" class="buttons_group">
-                    <button v-for="(btn, index) in menuButtons" v-if="isMainButtonsShown && settingsStateId == 0"
-                        :key="btn.id" class="menu_btn" :style="{ animationDelay: `${index * 0.06}s` }"
-                        @click="btn.action">
+                <!-- CONTENT -->
+                <div :key="currentView">
+
+                    <!-- MAIN -->
+                    <div v-if="currentView === SettingsView.Main" class="buttons_group">
+                        <button v-for="(btn, index) in menuButtons" :key="btn.id" class="menu_btn"
+                            :style="{ animationDelay: `${index * 0.06}s` }" @click="btn.action">
                             {{ btn.text }}
-                    </button>
-                    <div v-else-if="isMainButtonsShown && settingsStateId == 1" class="asd">
-                        <SoundSettings />
+                        </button>
                     </div>
-                    <div v-else-if="isMainButtonsShown && settingsStateId == 2" class="asd">
-                        <LanguageSettings />
-                    </div>
-                    <div v-else-if="isMainButtonsShown && settingsStateId == 3" class="asd">
-                        <!-- Управление... -->
-                        {{ foo_1.makeText("preloader.pressAnyButton") }}
-                    </div>
-                    <div v-else-if="isMainButtonsShown && settingsStateId == 4" class="asd">
-                        <DebugSettings />
-                    </div>
-                </TransitionGroup>
 
+                    <!-- SUBMENUS -->
+                    <SoundSettings v-else-if="currentView === SettingsView.Sound" />
+                    <LanguageSettings v-else-if="currentView === SettingsView.Language" />
+                    <ControlSettings v-else-if="currentView === SettingsView.Controls" />
+                    <DebugSettings v-else-if="currentView === SettingsView.Debug" />
+
+                </div>
+                <!-- <Transition name="fade" mode="out-in"> -->
+                <!-- </Transition> -->
             </div>
 
-            <Transition name="header_footer_block_anim">
-                <button v-if="isBackButtonsShown" class="menu_btn" @click="backButtonClick()">{{ foo_1.makeText("mainMenu.goBack") }}</button>
-            </Transition>
+            <!-- BACK -->
+            <button class="menu_btn" @click="backButtonClick">
+                {{ foo_1.makeText("mainMenu.goBack") }}
+            </button>
+            <!-- <Transition name="header_footer_block_anim"> -->
+            <!-- </Transition> -->
+
         </div>
     </div>
 </template>
 
 
 <script setup lang="ts">
-    import DebugSettings from "./DebugSettings.vue";
-    import SoundSettings from "./SoundSettings.vue";
-    import LanguageSettings from "./LanguageSettings.vue";
-    import { onMounted, computed, defineEmits, ref } from "vue";
-    import { createNewText } from '@/helpers/functions';
-    import { deleteTextLines } from '@/helpers/functions';
-    
+import DebugSettings from "./DebugSettings.vue";
+import SoundSettings from "./SoundSettings.vue";
+import LanguageSettings from "./LanguageSettings.vue";
+import ControlSettings from "./ControlSettings.vue";
 
-    
+import { computed, ref } from "vue";
+import { createNewText, deleteTextLines } from '@/helpers/functions';
+import { useGameState } from "@/store/gameState";
 
+enum SettingsView {
+    Main,
+    Sound,
+    Language,
+    Controls,
+    Debug,
+}
 
-    
-    // подключаем emit
-    const emit = defineEmits(['event']);
+// ===== STORES =====
+const gameState = useGameState();
 
-    // const settingsType = ref<'controls' | 'sound' | 'graphic' | 'debug' | 'lang'>("sound");
+// ===== LOCAL STATE =====
+const currentView = ref<SettingsView>(SettingsView.Main);
 
-    const isHeaderShown = ref(false);
-    const isMainButtonsShown = ref(false);
-    // const isGraphicsButtonsShown = ref(false);
-    const isBackButtonsShown = ref(false);
-    const settingsStateId = ref(0);
-    
-    const foo_1 = createNewText();
-    const foo_2 = deleteTextLines();
+// ===== TEXT =====
+const foo_1 = createNewText();
+const foo_2 = deleteTextLines();
 
+// ===== UI STATE (без таймаутов) =====
+const isInSubMenu = computed(() => currentView.value !== SettingsView.Main);
 
+// ===== MENU =====
+const menuButtons = computed(() => [
+    {
+        id: 1,
+        text: foo_1.makeText("settings.menuList.technical"),
+        action: () => currentView.value = SettingsView.Sound,
+    },
+    {
+        id: 2,
+        text: foo_1.makeText("settings.menuList.lang"),
+        action: () => currentView.value = SettingsView.Language,
+    },
+    {
+        id: 3,
+        text: foo_1.makeText("settings.menuList.controls"),
+        action: () => currentView.value = SettingsView.Controls,
+    },
+    {
+        id: 4,
+        text: foo_1.makeText("settings.menuList.about"),
+        action: () => currentView.value = SettingsView.Debug,
+    },
+]);
 
-    
+// ===== TITLE =====
+const dynamicTitleName = computed(() => {
+    if (!isInSubMenu.value) {
+        return foo_1.makeText("settings.title", "empty");
+    }
 
-    const menuButtons = computed(() => [
-        { id: 1, text: foo_1.makeText("settings.menuList.technical"), action: () => { settingsStateId.value = 1 } },
-        { id: 2, text: foo_1.makeText("settings.menuList.lang"), action: () => { settingsStateId.value = 2 } },
-        { id: 3, text: foo_1.makeText("settings.menuList.controls"), action: () => { settingsStateId.value = 3 } },
-        { id: 4, text: foo_1.makeText("settings.menuList.about"), action: () => { settingsStateId.value = 4 } },
-    ]);
-
-    const dynamicTitleName = computed(() => {
-        return foo_2.correctText(menuButtons.value[settingsStateId.value - 1]?.text || foo_1.makeText("settings.title", 'empty'));
-    });
-
-    // сценарии клика по кнопке "Назад"
-    function backButtonClick() {
-        if (settingsStateId.value == 0) {
-            isHeaderShown.value = false;
-            setTimeout(() => {
-                isMainButtonsShown.value = false;
-            }, 100);
-            setTimeout(() => {
-                isBackButtonsShown.value = false;
-            }, 400);
-
-            setTimeout(() => {
-                emit('event', 'goBackToMainMenu');
-            }, 500);
-
-        } else {
-            settingsStateId.value = 0;
-        };
+    const map = {
+        [SettingsView.Sound]: menuButtons.value[0]!.text,
+        [SettingsView.Language]: menuButtons.value[1]!.text,
+        [SettingsView.Controls]: menuButtons.value[2]!.text,
+        [SettingsView.Debug]: menuButtons.value[3]!.text,
     };
 
-    // монтируем компоненту
-    onMounted(() => {
-        settingsStateId.value = 0;
-        isHeaderShown.value = true;
-        setTimeout(() => {
-            isMainButtonsShown.value = true;
-        }, 200);
-        setTimeout(() => {
-            isBackButtonsShown.value = true;
-        }, 500);
-    });
+    return foo_2.correctText(map[currentView.value]);
+});
+
+// ===== BACK =====
+function backButtonClick() {
+    if (isInSubMenu.value) {
+        currentView.value = SettingsView.Main;
+    } else {
+        gameState.closeOverlay();
+    }
+}
 </script>
 
 
@@ -123,110 +133,15 @@
 @use "@/styles/menu.scss";
 @use "@/styles/animations.scss";
 
-.correction {
-    justify-content: flex-end !important;
-}
 
 .settings_container {
-    height: 30rem;
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: space-between;
     box-sizing: border-box;
-    padding-bottom: 2.687rem;
+    gap: 10rem;
 }
-
-
-
-.buttons_group {
-    height: fit-content;
-    display: flex;
-    flex-direction: column;
-    background: none;
-    border: none;
-    margin-top: 2.4rem;
-
-    // имитируем row-gap (между кнопками)
-    &>*+* {
-        margin-top: 0.938rem;
-    }
-}
-
-.menu_btn {
-    background: none;
-    border: none;
-    // ---
-    font-family: 'vla_shu';
-    font-size: 1.875rem; // (30px)
-    color: #FDFFE3;
-    filter: drop-shadow(0 0 15px rgba(255, 246, 25, 0.4));
-    cursor: pointer;
-    transition: all 0.1s ease-in-out;
-
-    &:hover {
-        color: #72B3EE;
-        filter: drop-shadow(0 0 20px rgba(121, 190, 255, 1));
-        transition: all 0.1s ease-in-out;
-    }
-}
-
-// .back_button {
-//     // margin-bottom: 0;
-//     margin-top: 1rem;
-// }
-
-
-
-
-.settings-overlay {
-    display: flex;
-    justify-content: flex-start;
-    gap: 60px;
-    // border: 1px solid red;
-    padding: 50px;
-}
-
-.settings-inner-overlay {
-    min-width: 20rem;
-    min-height: 10rem;
-}
-
-.settings-menu-list {
-    list-style-type: none;
-    margin: 0;
-    padding: 0;
-    width: 10rem;
-    min-width: 100px;
-    border-right: 1px solid rgb(255, 255, 255, 0.1);
-
-    &>li {
-        height: 50px;
-        line-height: 50px;
-        text-transform: uppercase;
-        cursor: pointer;
-        transition: all 300ms;
-        text-align: center;
-        vertical-align: center;
-
-        &:hover {
-            background-color: rgb(255, 255, 255, 0.5);
-        }
-
-        &.selected {
-            background-color: rgb(255, 255, 255, 0.2);
-        }
-    }
-}
-
-
-.menu-subtitle {
-    font-size: 54px;
-    text-transform: uppercase;
-    margin: 0 0 30px 0;
-    text-shadow: 0 0 20px rgba(0, 255, 255, 0.741);
-}
-
 
 /* we will explain what these classes do next! */
 .v-enter-active {
@@ -235,6 +150,6 @@
 
 .v-enter-from,
 .v-leave-to {
-    opacity: 0;
+    opacity: 1;
 }
 </style>

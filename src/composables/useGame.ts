@@ -23,6 +23,7 @@ import { usePlayerStore } from "@/store/playerStore";
 import { CameraSystem } from "@/game/camera/CameraSystem";
 import { useGameState } from "@/store/gameState";
 import { GameStates } from "@/game/core/GameState";
+import type { BaseObstacle } from "@/game/interactive/obstacle/BaseObstacle";
 
 // Интерфейс для реактивной ссылки car
 interface CarRef {
@@ -195,12 +196,20 @@ export function useGame() {
     cityManager.update(deltaTime, speed);
   }
 
-  function destroyObstacles(impactPoint?: THREE.Vector3) {
+  function destroyObstacles(
+    impactPoint?: THREE.Vector3,
+    obstacles: BaseObstacle[] = [],
+  ) {
     if (!obstacleManager) return;
-    const obstacles = obstacleManager.getObstacles();
-    obstacles.forEach((o) => {
-      o.destroy(impactPoint);
-    });
+    if (obstacles.length != 0) {
+      obstacles.forEach((o) => {
+        o.destroy(impactPoint);
+      });
+    } else {
+      obstacleManager.getObstacles().forEach((o) => {
+        o.destroy(impactPoint);
+      });
+    }
     // Не нужно обновлять obstacles.value здесь, т.к. следующий кадр updateInteractiveItems сделает это
   }
 
@@ -336,7 +345,15 @@ export function useGame() {
       ...obstacleManager.getObstacles(),
     ]);
   }
+  function findRootTaggedObject(obj: THREE.Object3D): THREE.Object3D {
+    let current: THREE.Object3D | null = obj;
 
+    while (current.parent && !current.parent.isScene) {
+      current = current.parent;
+    }
+
+    return current;
+  }
   function reset() {
     if (!carManager || !obstacleManager || !roadManager || !sceneRef) {
       console.warn("[useGame.reset] missing managers:", {
@@ -355,6 +372,33 @@ export function useGame() {
     CollisionSystem.reset();
     BulletSystem.getInstance().reset();
 
+    // Дополнительная очистка: удаляем оставшиеся объекты по тегам
+    if (sceneRef) {
+      // const toRemove: THREE.Object3D[] = [];
+      // let traverseCount = 0;
+      const toRemove = new Set<THREE.Object3D>();
+
+      sceneRef.traverse((obj) => {
+        const ud = obj.userData;
+
+        if (
+          ud.isObstacle ||
+          ud.isCoin ||
+          ud.isBooster ||
+          ud.isBulletItem ||
+          ud.isJump ||
+          ud.isInteractiveItem
+        ) {
+          const root = findRootTaggedObject(obj);
+          toRemove.add(root);
+        }
+      });
+
+      toRemove.forEach((obj) => {
+        obj.parent?.remove(obj);
+      });
+    }
+
     roadManager.createRoad();
 
     const newCar = carManager.getCar();
@@ -365,7 +409,7 @@ export function useGame() {
 
     resetJumps();
     obstacles.value = [];
-    updateInteractiveItems(0, 0, UpdateMode.Destruction); // синхронизация
+    // updateInteractiveItems(0, 0, UpdateMode.Destruction); // синхронизация
 
     playerStore.disableNitro();
     playerStore.resetGameData();

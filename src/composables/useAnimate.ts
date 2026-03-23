@@ -54,12 +54,15 @@ export function GameLoop(
     if (collisionResult.collision) {
       if (collisionResult.jump) {
         game.jumpPlayer(deltaTime);
-      } else if (playerStore.isShieldEnabled) {
+      } else if (collisionResult.obstacle && playerStore.isShieldEnabled) {
+        game.destroyObstacles(collisionResult.impactPoint, [
+          collisionResult.obstacle,
+        ]);
         CarManager.getInstance().disableShield();
         playerStore.disableShield();
       } else {
         game.destroyCar(collisionResult.impactPoint);
-        game.destroyObstacles(collisionResult.impactPoint);
+        // game.destroyObstacles(collisionResult.impactPoint);
         soundManager.play("sfx_destroy_bot");
         const strength = Math.min(currentSpeed / playerStore.maxSpeed, 1);
         CameraSystem.triggerImpactShake(strength);

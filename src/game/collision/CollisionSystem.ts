@@ -10,6 +10,7 @@ type CollisionResult = {
   collision: boolean;
   impactPoint?: THREE.Vector3;
   jump?: boolean;
+  obstacle?: BaseObstacle;
 };
 
 class CollisionSystemClass {
@@ -38,9 +39,10 @@ class CollisionSystemClass {
       if (collides) {
         this.lastCollisionTime = currentTime;
         car.startShieldCooldown(COLLISION_COOLDOWN_MS / 1000);
-        obstacle.destroy();
+        // obstacle.destroy();
         return {
           collision: true,
+          obstacle: obstacle,
           impactPoint: obstacle.position.clone(),
         };
       }

@@ -103,12 +103,18 @@ export class InteractiveItemsManager {
   public spawnSegment(dt: number, speed: number, baseZ: number) {
     const segment = this.segmentQueue.getNext();
 
-    const rowSpacing = 3;
+    const rowSpacing = 4;
+    const isReversed = Math.random() < 0.5;
 
     segment.pattern.forEach((row, rowIndex) => {
       const z = baseZ - rowIndex * rowSpacing;
+      let row_ = [...row];
 
-      row.forEach((value, lane) => {
+      if (isReversed) {
+        row_ = row_.reverse();
+      }
+
+      row_.forEach((value, lane) => {
         switch (value) {
           case LanePattern.Obstacle:
             this.obstacleManager.spawnStaticObstacle(lane, z);

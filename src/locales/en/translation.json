@@ -15,10 +15,29 @@
         "menuList": {
             "resume": "resume",
             "settings": "settings",
-            "menu": "main menu"
+            "menu": "menu"
         }
     },
-    "gameOverMenu": {},
+    "gameOverMenu": {
+        "title": "gameover",
+        "menuList": {
+            "restartGame": "restart",
+            "goToMainMenu": "menu"
+        },
+        "summary": {
+            "points": {
+                "label": "points"
+            },
+            "speed": {
+                "label": "speed",
+                "units": "cube/h"
+            },
+            "distance": {
+                "label": "distance",
+                "units": "cubes"
+            }
+        }
+    },
     "settings": {
         "title": "settings",
         "toggleOn": "on",

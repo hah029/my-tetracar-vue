@@ -6,7 +6,7 @@ export const usePlayerStore = defineStore("playerStore", () => {
   // const BASE_SPEED = 2.0;
   const BASE_SPEED = 0.02; // м/с
   const NITRO_MULTIPLIER = 1.5;
-  const MAX_SPEED = 1.0; // м/с
+  const MAX_SPEED = 0.5; // м/с
   const ACCELERATION = 1e-5;
   const BASE_NITRO_TIMER = 5000;
   // speed
@@ -14,7 +14,7 @@ export const usePlayerStore = defineStore("playerStore", () => {
   const baseSpeed = ref(BASE_SPEED);
   const maxSpeed = ref(MAX_SPEED);
   const acceleration = ref(ACCELERATION);
-  const accelerationType = ref<"exponential" | "logarithmic">("exponential");
+  const accelerationType = ref<"exponential" | "logarithmic">("logarithmic");
   // nitro
   const isNitroEnabled = ref(false);
   const nitroTimer = ref(BASE_NITRO_TIMER);

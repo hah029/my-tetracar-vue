@@ -18,7 +18,26 @@
             "menu": "выйти в меню"
         }
     },
-    "gameOverMenu": {},
+    "gameOverMenu": {
+        "title": "gameover",
+        "menuList": {
+            "restartGame": "играть снова",
+            "goToMainMenu": "меню"
+        },
+        "summary": {
+            "points": {
+                "label": "очки"
+            },
+            "speed": {
+                "label": "скорость",
+                "units": "куб/ч"
+            },
+            "distance": {
+                "label": "расстояние",
+                "units": "кубов"
+            }
+        }
+    },
     "settings": {
         "title": "настройки",
         "toggleOn": "вкл",

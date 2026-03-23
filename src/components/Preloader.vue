@@ -1,117 +1,83 @@
 <template>
-    <div class="container">
-        <button class="menu_btn" :class="{
-            'button-enter': isEntering,     // класс для анимации появления
-            'leaving': isLeaving            // класс для анимации исчезновения
-        }" @click="letsPlay" @animationend="onAnimationEnd">
-            {{ foo.makeText("preloader.pressAnyButton") }}
-            <!-- {{ text("preloader.pressAnyButton") }} -->
-        </button>
-    </div>
+    <!-- <div class="container"> -->
+    <button class="menu_btn" :class="{
+        // 'button-enter': isEntering,     // класс для анимации появления
+        // 'leaving': isLeaving            // класс для анимации исчезновения
+    }" @click="letsPlay">
+        {{ foo.makeText("preloader.pressAnyButton") }}
+        <!-- {{ text("preloader.pressAnyButton") }} -->
+    </button>
+    <!-- </div> -->
 </template>
 
 
 <script setup lang="ts">
-    import { GameStates } from "@/game/core/GameState";
-    import { useGameState } from "@/store/gameState";
-    import { createNewText } from '@/helpers/functions';
-    import { onMounted, defineEmits, ref } from "vue";
+import { GameStates } from "@/game/core/GameState";
+import { useGameState } from "@/store/gameState";
+import { createNewText } from '@/helpers/functions';
+import { onMounted, ref } from "vue";
 
-    // подключаем store
-    const gameStore = useGameState();
-    const gameState = useGameState();
-    const foo = createNewText();
+// подключаем store
+const gameState = useGameState();
+const foo = createNewText();
 
-    // подключаем emit
-    const emit = defineEmits(['event']);
 
-    const isEntering = ref(false);      // флаг для анимации появления
-    const isLeaving = ref(false);       // флаг для анимации исчезновения
+const isEntering = ref(false);      // флаг для анимации появления
+const isLeaving = ref(false);       // флаг для анимации исчезновения
+
+// переходим в главное меню
+function letsPlay() {
+    // смещаем лого наверх
+    isLeaving.value = true;
+    isEntering.value = false;
 
     // переходим в главное меню
-    function letsPlay() {
-        // смещаем лого наверх
-        isLeaving.value = true;
-        isEntering.value = false;
-        emit('event', 'moving');
+    setTimeout(() => {
+        gameState.isFirstGame = false;
+        gameState.setState(GameStates.Menu);
+    }, 500);
+};
 
-        // переходим в главное меню
+// function onAnimationEnd(event: AnimationEvent) {
+//     // Проверяем, какая анимация закончилась
+//     if (event.animationName === 'buttonFadeOut') {
+//         // Анимация исчезновения завершена
+//         // isLeaving.value = false;
+//         gameStore.setState(GameStates.Menu);
+//     };
+
+//     // if (event.animationName === 'buttonFadeIn') {
+//     //     // Анимация появления завершена
+//     //     isEntering.value = false;
+//     // };
+// };
+
+onMounted(() => {
+    // выводим кнопку
+    setTimeout(() => {
         setTimeout(() => {
-            gameState.isFirstGame = false;
-            gameStore.setState(GameStates.Menu);
-        }, 500);
-    };
-
-    function onAnimationEnd(event: AnimationEvent) {
-        // Проверяем, какая анимация закончилась
-        if (event.animationName === 'buttonFadeOut') {
-            // Анимация исчезновения завершена
-            isLeaving.value = false;
-            gameStore.setState(GameStates.Menu);
-        };
-
-        if (event.animationName === 'buttonFadeIn') {
-            // Анимация появления завершена
-            isEntering.value = false;
-        };
-    };
-
-    onMounted(() => {
-        emit('event', 'showing');
-
-        // выводим кнопку
-        setTimeout(() => {
-            setTimeout(() => {
-                isEntering.value = true;
-            }, 50);
-        }, 3200);
-    });
+            isEntering.value = true;
+        }, 50);
+    }, 3200);
+});
 </script>
 
 
 <style lang="scss" scoped>
 @use "@/styles/menu.scss";
 
-.menu_btn {
-    z-index: 2500;
-    position: absolute;
-    bottom: 30.435%;
-    height: fit-content;
-    opacity: 0;
-
-    background: none;
-    border: none;
-    // ---
-    font-family: 'vla_shu';
-    font-size: 2.25rem; // (36px)
-    color: #FDFFE3;
-    filter: drop-shadow(0 0 15px rgba(255, 246, 25, 0.4));
-    cursor: pointer;
-    transition: all 0.2s ease-in-out;
-
-    // Неоновое свечение с анимацией мерцания
-    // animation: enhancedBreathing 2s ease-in-out infinite;
-
-    &:hover {
-        transform: scale(1.02);
-        color: #ffffff;
-        filter: drop-shadow(0 0 20px rgba(255, 255, 255, 0.6));
-        transition: all 0.2s ease-in-out;
-        // animation: enhancedBreathing 2s ease-in-out infinite;
-    }
-}
 
 // класс для анимации появления
-.menu_btn.button-enter {
-    animation: buttonFadeIn 1.5s ease-in-out forwards;
-    animation-delay: 1s;
-}
+// .menu_btn.button-enter {
+//     animation: buttonFadeIn 1.5s ease-in-out forwards;
+//     animation-delay: 1s;
+// }
 
 // класс для анимации исчезновения
-.menu_btn.leaving {
-    animation: buttonFadeOut 1s ease-in-out forwards;
-    // animation-delay: 1s;
-}
+// .menu_btn.leaving {
+//     animation: buttonFadeOut 300ms ease-in-out forwards;
+//     // animation-delay: 1s;
+// }
 
 /* анимация появления */
 @keyframes buttonFadeIn {

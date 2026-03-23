@@ -2,22 +2,22 @@
   <div class="settings">
 
     <div class="settings-row">
-      <span>{{ $t("settings.debug.debugEnabled") }}</span>
-      <button class="toggle-btn" @click="toggleDebug">
+      <span>{{ $t("settings.controls") }}</span>
+      <!-- <button class="toggle-btn" @click="toggleDebug">
         {{ gameState.isDebug ? $t("settings.toggleOn") : $t("settings.toggleOff") }}
-      </button>
+      </button> -->
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { useGameState } from "@/store/gameState";
+// import { useGameState } from "@/store/gameState";
 
-const gameState = useGameState();
+// const gameState = useGameState();
 
-function toggleDebug() {
-  gameState.toggleDebug();
-}
+// function toggleDebug() {
+//   gameState.toggleDebug();
+// }
 
 </script>
 

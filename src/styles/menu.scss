@@ -1,29 +1,23 @@
 .menu_overlay {
-    position: fixed;
-    inset: 0;
     display: flex;
     flex-direction: column;
-    justify-content: center;
     align-items: center;
-    background-color: rgba(0, 0, 0, 0.5);
-    backdrop-filter: blur(2px);
-    z-index: 2000;
-    /* text-align: center; */
-    /* color: white; */
+    justify-content: center;
+    gap: 3rem;
 }
 
-.container {
-    position: absolute;
-    top: 0;
-    left: 0;
-    display: flex;
-    flex-direction: column;
-    justify-content: flex-start;
-    align-items: center;
-    width: 100vw;
-    height: 100vh;
-    z-index: 2000;
-}
+// .container {
+//     position: absolute;
+//     top: 0;
+//     left: 0;
+//     display: flex;
+//     flex-direction: column;
+//     justify-content: flex-start;
+//     align-items: center;
+//     width: 100vw;
+//     height: 100vh;
+//     z-index: 2000;
+// }
 
 .sub_container {
     display: flex;
@@ -33,26 +27,60 @@
 }
 
 // #region - header
-    .header_block {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: flex-end;
-    }
+.header_block {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-end;
+}
 
-    .header_text {
-        font-family: 'vla_shu';
-        font-size: 2.5rem; // (40px)
-        color: #72B3EE;
-        margin-bottom: 1rem;
-        line-height: 1;
-    }
+.header_text {
+    font-family: 'vla_shu';
+    font-size: 36px; // (40px)
+    color: #72B3EE;
+    margin-bottom: 1rem;
+    line-height: 1;
+}
 
-    .header_image {
-        width: 34.625rem;
-    }
+.header_image {
+    // width: 34.625rem;
+    scale: 50%;
+}
 
-    .image {
-        filter: invert(86%) sepia(40%) saturate(5593%) hue-rotate(183deg) brightness(104%) contrast(101%);
-    }
+.image {
+    filter: invert(86%) sepia(40%) saturate(5593%) hue-rotate(183deg) brightness(104%) contrast(101%);
+}
 // #endregion
+
+.buttons_group {
+    // position: absolute;
+    // bottom: 19.57%;
+    height: fit-content;
+    display: flex;
+    flex-direction: column;
+    background: none;
+    border: none;
+    gap: 2rem;
+
+    // имитируем row-gap (между кнопками)
+    &>*+* {
+        margin-top: 1.56rem;
+    }
+}
+.menu_btn {
+    background: none;
+    border: none;
+    // ---
+    font-family: 'vla_shu';
+    font-size: min(5rem, 24px); // (36px)
+    color: #FDFFE3;
+    filter: drop-shadow(0 0 15px rgba(255, 246, 25, 0.4));
+    cursor: pointer;
+    transition: all 0.1s ease-in-out;
+
+    &:hover {
+        color: #72B3EE;
+        filter: drop-shadow(0 0 20px rgba(121, 190, 255, 1));
+        transition: all 0.1s ease-in-out;
+    }
+}

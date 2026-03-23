@@ -20,6 +20,7 @@ export class BaseItem extends THREE.Group {
     material: MaterialConfig | null = null,
   ) {
     super();
+    this.userData = { isInteractiveItem: true };
     const x = RoadManager.getInstance().getLanePosition(laneIndex);
     this.initialPosition = new THREE.Vector3(x, yPos, zPos);
     this.cube.position.copy(this.initialPosition);

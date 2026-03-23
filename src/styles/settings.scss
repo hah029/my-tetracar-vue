@@ -1,0 +1,41 @@
+
+.settings {
+  display: flex;
+  flex-direction: column;
+  gap: 25px;
+}
+
+.settings-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: min(12rem, 100px);
+  font-size: min(4rem, 24px);
+  font-family: 'vla_shu';
+  color: white;
+}
+
+.settings-row>select {
+  font-family: 'vla_shu';
+  background: none;
+  border:2px solid white;
+  color: white;
+  border-radius: 5px;
+  padding: 5px;
+}
+
+.toggle-btn {
+  background: none;
+  border: 1px solid white;
+  color: white;
+  padding: 6px 14px;
+  cursor: pointer;
+  transition: 0.1s;
+  font-family: 'vla_shu';
+//   width: max-content;
+
+  &:hover {
+    background: white;
+    color: black;
+  }
+}
