@@ -1,23 +1,27 @@
 .menu_overlay {
+    position: absolute;
+    inset: 0;
+    z-index: 2000;
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    gap: 3rem;
-}
+    background-color: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(2px);
+} 
 
-// .container {
-//     position: absolute;
-//     top: 0;
-//     left: 0;
-//     display: flex;
-//     flex-direction: column;
-//     justify-content: flex-start;
-//     align-items: center;
-//     width: 100vw;
-//     height: 100vh;
-//     z-index: 2000;
-// }
+.container {
+    position: absolute;
+    top: 0;
+    left: 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    align-items: center;
+    width: 100vw;
+    height: 100vh;
+    z-index: 2000;
+}
 
 .sub_container {
     display: flex;
@@ -53,14 +57,14 @@
 // #endregion
 
 .buttons_group {
-    // position: absolute;
-    // bottom: 19.57%;
+    position: absolute;
+    bottom: 19.57%;
     height: fit-content;
     display: flex;
     flex-direction: column;
     background: none;
     border: none;
-    gap: 2rem;
+    // gap: 2rem;
 
     // имитируем row-gap (между кнопками)
     &>*+* {

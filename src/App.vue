@@ -3,15 +3,12 @@
     <div ref="threeRoot" class="three-root"></div>
 
     <!-- UI -->
-    <div class="menu_overlay container"
-        :class="[GameStates.Play, GameStates.Countdown].includes(gameState.currentState) ? '' : 'background'">
-        <div class="menu_layout">
-            <GameLogo />
-            <transition>
-                <component :is="getUIComponent" />
-            </transition>
-        </div>
-    </div>
+    <!-- <div class="menu_overlay"> -->
+    <GameLogo />
+    <transition>
+        <component :is="getUIComponent" />
+    </transition>
+    <!-- </div> -->
 </template>
 
 
@@ -114,81 +111,56 @@ onUnmounted(() => {
 
 
 <style>
-@font-face {
-    font-family: 'vla_shu';
-    src: url('./assets/fonts/VlaShu.ttf')
-}
+    @font-face {
+        font-family: 'vla_shu';
+        src: url('./assets/fonts/VlaShu.ttf')
+    }
 
-@font-face {
-    font-family: 'jost';
-    src: url('./assets/fonts/Jost-Regular.ttf')
-}
+    @font-face {
+        font-family: 'jost';
+        src: url('./assets/fonts/Jost-Regular.ttf')
+    }
 
-html,
-body,
-#app {
-    margin: 0;
-    width: 100%;
-    height: 100%;
-    overflow: hidden;
-    /* font-size: 16px; */
-    font-size: 0.8333vw;
-    /* font-family: Helvetica, Arial, sans-serif; */
-}
+    html,
+    body,
+    #app {
+        margin: 0;
+        width: 100%;
+        height: 100%;
+        overflow: hidden;
+        font-size: 0.833vw;
+    }
 
-.three-root {
-    width: 100%;
-    height: 100%;
-}
+    .three-root {
+        width: 100%;
+        height: 100%;
+    }
 
-/* .container {
-    position: absolute;
-    top: 0;
-    left: 0;
-    display: flex;
-    flex-direction: column;
-    justify-content: flex-start;
-    align-items: center;
-    width: 100vw;
-    height: 100vh;
-    z-index: 2000;
-} */
-.container {
-    position: absolute;
-    inset: 0;
+    .menu_layout {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
 
-    display: flex;
-    justify-content: center;
-    align-items: center;
+        gap: -10rem;
 
-    z-index: 2000;
-}
+        width: 100%;
+        max-width: 900px;
+        padding: 2rem;
+    }
 
-.menu_layout {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-
-    gap: 3rem;
-
-    width: 100%;
-    max-width: 900px;
-    padding: 2rem;
-}
-
-.background {
-    /* position: absolute; */
-    /* left: 0; */
-    /* width: 100%; */
-    /* height: 200%; */
-    background: linear-gradient(to bottom,
-            #000000 0%,
-            /* Черный цвет вверху */
-            #000000bb 100%,
-            /* Черный цвет до середины */
-            rgba(204, 183, 183, 0) 100%
-            /* Прозрачность внизу */
-        );
-}
+    .background {
+        /* position: absolute; */
+        /* left: 0; */
+        /* width: 100%; */
+        /* height: 200%; */
+        background: linear-gradient(to bottom,
+                #000000 0%,
+                /* Черный цвет вверху */
+                #000000bb 100%,
+                /* Черный цвет до середины */
+                rgba(204, 183, 183, 0) 100%
+                /* Прозрачность внизу */
+            );
+    }
 </style>
