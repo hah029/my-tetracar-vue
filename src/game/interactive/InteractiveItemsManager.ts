@@ -201,7 +201,7 @@ export class InteractiveItemsManager {
     this.obstacleManager.spawnJump(lane, jumpZ);
 
     const trajectory = simulateJumpTrajectory({
-      startY: 0, // высота машины при прыжке
+      startY: 0.5, // высота машины при прыжке
       jumpHeight: DEFAULT_CAR_CONFIG.jumpHeight,
       gravity: DEFAULT_CAR_CONFIG.gravity,
       deltaTime: deltaTime,
@@ -212,7 +212,7 @@ export class InteractiveItemsManager {
     for (let i = 0; i < trajectory.length; i += step) {
       const point = trajectory[i];
       if (point === undefined) continue;
-      const coinZ = jumpZ + point.zOffset;
+      const coinZ = jumpZ + point.zOffset + 1;
       this.coinManager.spawnGold(lane, coinZ, point.y, 5);
     }
   }

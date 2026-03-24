@@ -125,7 +125,7 @@ export class Car extends THREE.Group {
     this.rotation.y = newRotationY;
 
     // Обновляем прыжок
-    const jumpResult = this.physics.updateJump(this.position.y);
+    const jumpResult = this.physics.updateJump(this.position.y, dt);
     this.position.y = jumpResult.newY;
     this.state.isJumping = jumpResult.isJumping;
     this.rotation.x += (jumpResult.pitch - this.rotation.x) * 0.2;

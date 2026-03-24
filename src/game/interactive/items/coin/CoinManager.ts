@@ -30,7 +30,7 @@ export class CoinManager {
     laneIndex: number,
     zPos: number,
     yPos: number = 0.2,
-    value: number = 10,
+    value: number = 1,
   ): void {
     const coin = new GoldCoin(laneIndex, zPos, yPos, value);
     this.coins.push(coin);

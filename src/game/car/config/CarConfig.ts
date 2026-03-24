@@ -110,9 +110,9 @@ export const DEFAULT_CAR_CONFIG: Required<CarConfig> = {
   tiltSmoothing: 0.2,
 
   // Прыжки
-  jumpHeight: 3.0,
+  jumpHeight: 2.0,
   jumpDuration: 0.4,
-  gravity: 0.005,
+  gravity: 10.0,
 
   // Разрушение
   explosionForce: 0.2,
