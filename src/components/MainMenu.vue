@@ -18,7 +18,7 @@
 
 
 <script setup lang="ts">
-    import { ref, computed, onMounted } from "vue";
+    import { watch, ref, computed, onMounted } from "vue";
     import { useGameState } from "@/store/gameState";
     import { GameStates } from "@/game/core/GameState";
     import { createNewText } from '@/helpers/functions';
@@ -48,6 +48,13 @@
             gameStore.openSettings();
         }, 300);
     };
+
+    watch(
+        () => gameStore.activeOverlay,
+        (newState) => {
+            newState === 'settings' ? "" : isMainMenuEnabled.value = true;
+        },
+    );
 
     onMounted(() => {
         isMainMenuEnabled.value = true;

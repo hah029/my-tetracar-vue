@@ -1,41 +1,51 @@
-
-.settings {
-  display: flex;
-  flex-direction: column;
-  gap: 25px;
+.settings_sub_container {
+    width: 25rem;
+    display: flex;
+    flex-direction: column;
+    font-family: 'jost';
+    text-transform: uppercase;
+    font-weight: 100;
+    // font-size: min(4rem, 24px);
+    font-size: 1.375rem;
+    color: #FDFFE3;
+    
+    // имитируем row-gap (между кнопками)
+    &>*+* {
+        margin-top: 1.25rem;
+    }
 }
 
 .settings-row {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: min(12rem, 100px);
-  font-size: min(4rem, 24px);
-  font-family: 'vla_shu';
-  color: white;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: min(12rem, 100px);
+    // font-size: min(4rem, 24px);
+    // font-family: 'vla_shu';
+    // color: white;
 }
 
 .settings-row>select {
-  font-family: 'vla_shu';
-  background: none;
-  border:2px solid white;
-  color: white;
-  border-radius: 5px;
-  padding: 5px;
+    font-family: 'vla_shu';
+    background: none;
+    border:2px solid white;
+    color: white;
+    border-radius: 5px;
+    padding: 5px;
 }
 
 .toggle-btn {
-  background: none;
-  border: 1px solid white;
-  color: white;
-  padding: 6px 14px;
-  cursor: pointer;
-  transition: 0.1s;
-  font-family: 'vla_shu';
-//   width: max-content;
+    background: none;
+    border: 1px solid white;
+    color: white;
+    padding: 6px 14px;
+    cursor: pointer;
+    transition: 0.1s;
+    // font-family: 'vla_shu';
+    //   width: max-content;
 
-  &:hover {
-    background: white;
-    color: black;
-  }
+    &:hover {
+        background: white;
+        color: black;
+    }
 }

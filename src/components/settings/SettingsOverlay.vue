@@ -26,13 +26,13 @@
                     >
                         {{ btn.text }}
                     </button>
-    
-                    <!-- SUBMENUS -->
-                    <SoundSettings v-else-if="currentView === SettingsView.Sound" />
-                    <LanguageSettings v-else-if="currentView === SettingsView.Language" />
-                    <ControlSettings v-else-if="currentView === SettingsView.Controls" />
-                    <DebugSettings v-else-if="currentView === SettingsView.Debug" />
                 </TransitionGroup>
+    
+                <!-- SUBMENUS -->
+                <SoundSettings v-if="currentView === SettingsView.Sound" />
+                <LanguageSettings v-else-if="currentView === SettingsView.Language" />
+                <ControlSettings v-else-if="currentView === SettingsView.Controls" />
+                <DebugSettings v-else-if="currentView === SettingsView.Debug" />
             </div>
 
             <!-- BACK -->
@@ -82,7 +82,7 @@
     const foo_2 = deleteTextLines();
 
     // ===== UI STATE (без таймаутов) =====
-    const isInSubMenu = computed(() => currentView.value !== SettingsView.Main);
+    const isInSubMenu = computed(() => currentView.value !== SettingsView.Main && currentView.value !== SettingsView.null);
 
     // ===== MENU =====
     const menuButtons = computed(() => [
@@ -110,18 +110,17 @@
 
     // ===== TITLE =====
     const dynamicTitleName = computed(() => {
-        if (!isInSubMenu.value) {
+        if (isInSubMenu.value) {
+            const map = {
+                [SettingsView.Sound]: menuButtons.value[0]!.text,
+                [SettingsView.Language]: menuButtons.value[1]!.text,
+                [SettingsView.Controls]: menuButtons.value[2]!.text,
+                [SettingsView.Debug]: menuButtons.value[3]!.text,
+            };
+            return foo_2.correctText(map[currentView.value]);
+        } else {
             return foo_1.makeText("settings.title", "empty");
         };
-
-        const map = {
-            [SettingsView.Sound]: menuButtons.value[0]!.text,
-            [SettingsView.Language]: menuButtons.value[1]!.text,
-            [SettingsView.Controls]: menuButtons.value[2]!.text,
-            [SettingsView.Debug]: menuButtons.value[3]!.text,
-        };
-
-        return foo_2.correctText(map[currentView.value]);
     });
 
     // ===== BACK =====
@@ -130,9 +129,9 @@
             currentView.value = SettingsView.Main;
         } else {
             isHeaderShown.value = false;
-            // setTimeout(() => {
-            //     isMainButtonsShown.value = false;
-            // }, 100);
+            setTimeout(() => {
+                currentView.value = SettingsView.null;
+            }, 100);
             setTimeout(() => {
                 isBackButtonsShown.value = false;
             }, 400);
@@ -143,7 +142,6 @@
         };
     };
 
-    // монтируем компоненту
     onMounted(() => {
         isHeaderShown.value = true;
         setTimeout(() => {
