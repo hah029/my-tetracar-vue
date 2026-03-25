@@ -20,7 +20,7 @@
         </Transition>
 
         <!-- Кнопки с TransitionGroup -->
-        <TransitionGroup name="buttons_group_showing" tag="div" class="buttons_group">
+        <TransitionGroup name="buttons_group_showing" tag="div" class="buttons_group group_correction">
             <button v-for="(btn, index) in menuButtons" v-if="gameStore.activeOverlay !== 'settings'" :key="btn.id"
                 class="menu_btn" :style="{ animationDelay: `${index * 0.06}s` }" @click="btn.action">
                 {{ btn.text }}
@@ -66,7 +66,11 @@ function goToSettings() {
 @use "@/styles/menu.scss";
 @use "@/styles/animations.scss";
 
-
+.group_correction {
+    &>*+* {
+        margin-top: 1.56rem; // 25px - row-gap (между кнопками)
+    }
+}
 // .corr_header_size {
 //     font-size: 3.125rem !important;
 // }

@@ -1,6 +1,6 @@
 <template>
     <div class="container">
-        <button class="menu_btn" :class="{
+        <button class="menu_btn btn_correction" :class="{
             'button-enter': isEntering,     // класс для анимации появления
             'leaving': isLeaving            // класс для анимации исчезновения
         }" @click="letsPlay" @animationend="onAnimationEnd">
@@ -65,21 +65,14 @@
 <style lang="scss" scoped>
     @use "@/styles/menu.scss";
 
-    .menu_btn {
+    .btn_correction {
         z-index: 2500;
         position: absolute;
         bottom: 30.435%;
         height: fit-content;
         opacity: 0;
 
-        background: none;
-        border: none;
-        // ---
-        font-family: 'vla_shu';
-        font-size: 2.25rem; // (36px)
-        color: #FDFFE3;
-        filter: drop-shadow(0 0 15px rgba(255, 246, 25, 0.4));
-        cursor: pointer;
+        font-size: 2.1875rem; // (35px)
         transition: all 0.2s ease-in-out;
 
         // Неоновое свечение с анимацией мерцания
@@ -95,13 +88,13 @@
     }
 
     // класс для анимации появления
-    .menu_btn.button-enter {
+    .btn_correction.button-enter {
         animation: buttonFadeIn 1.5s ease-in-out forwards;
         animation-delay: 1s;
     }
 
     // класс для анимации исчезновения
-    .menu_btn.leaving {
+    .btn_correction.leaving {
         animation: buttonFadeOut 300ms ease-in-out forwards;
         // animation-delay: 1s;
     }

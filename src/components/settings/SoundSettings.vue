@@ -1,23 +1,44 @@
 <template>
     <TransitionGroup name="buttons_group_showing" tag="div" class="settings_sub_container">
         <div v-if="rowView[0]" class="settings-row">
-            <span>{{ $t("settings.music.musicEnabled") }}</span>
-            <button class="toggle-btn" @click="toggleMusic">
-                {{ audioStore.musicEnabled ? $t("settings.toggleOn") : $t("settings.toggleOff") }}
+            <span>{{ foo.makeText("settings.vfxAndMusic.vfxEnabled", "empty") }}</span>
+            <button class="toggle_btn" :class="{ 'toggle_btn--active': vfxTempStore }" @click="toggleVfx">
+                {{ vfxTempStore ? 
+                    foo.makeText("settings.toggleOn", "empty") : 
+                    foo.makeText("settings.toggleOff", "empty") 
+                }}
             </button>
         </div>
 
         <div v-if="rowView[1]" class="settings-row">
-            <span>{{ $t("settings.music.sfxEnabled") }}</span>
-            <button class="toggle-btn" @click="toggleSound">
-                {{ audioStore.sfxEnabled ? $t("settings.toggleOn") : $t("settings.toggleOff") }}
+            <span>{{ foo.makeText("settings.vfxAndMusic.musicEnabled", "empty") }}</span>
+            <button class="toggle_btn" :class="{ 'toggle_btn--active': audioStore.musicEnabled }" @click="toggleMusic" >
+                {{ audioStore.musicEnabled ? 
+                    foo.makeText("settings.toggleOn", "empty") : 
+                    foo.makeText("settings.toggleOff", "empty") 
+                }}
             </button>
         </div>
 
-        <div v-if="rowView[2]" class="settings-row volume-row">
-            <span>{{ $t("settings.music.volumeLevel") }}</span>
-            <input type="range" min="0" max="1" step="0.01" v-model="volume" @input="updateVolume" />
-            <span class="volume-value">{{ Math.round(volume * 100) }}%</span>
+        <div v-if="rowView[2]" class="settings-row">
+            <span>{{ $t("settings.vfxAndMusic.sfxEnabled") }}</span>
+            <button class="toggle_btn" :class="{ 'toggle_btn--active': audioStore.sfxEnabled }" @click="toggleSound">
+                {{ audioStore.sfxEnabled ? 
+                    foo.makeText("settings.toggleOn", "empty") : 
+                    foo.makeText("settings.toggleOff", "empty") 
+                }}
+            </button>
+        </div>
+
+        <div v-if="rowView[3]" class="settings-row">
+            <span>{{ $t("settings.vfxAndMusic.volumeLevel") }}</span>
+            <input 
+                type="range" 
+                min="0" max="1" step="0.01" 
+                v-model="volume" 
+                @input="updateVolume" 
+                class="custom_slider"
+            />
         </div>
     </TransitionGroup>
 </template>
@@ -27,11 +48,22 @@
     import { onMounted, defineProps, watch, ref } from "vue";
     import { useAudioStore } from "@/store/audioStore";
     import { SoundManager } from "@/game/sound/SoundManager";
+    import { createNewText } from '@/helpers/functions';
 
     const audioStore = useAudioStore();
     const soundManager = SoundManager.getInstance();
     const volume = ref(Number(localStorage.getItem("masterVolume") ?? 0.6));
-    const rowView = ref([false, false, false]);
+    const rowView = ref([false, false, false, false]);
+    const vfxTempStore = ref(false);
+
+    const foo = createNewText();
+    
+    function toggleVfx() {
+        console.log('Включаем / выключаем графические эффекты...');
+        vfxTempStore.value = !vfxTempStore.value;
+        // audioStore.toggleMusic();
+        // if (audioStore.vfxEnabled) soundManager.play("music_background");
+    };
 
     function toggleMusic() {
         audioStore.toggleMusic();
@@ -61,6 +93,9 @@
             setTimeout(() => {
                 rowView.value[2] = false;
             }, 200);
+            setTimeout(() => {
+                rowView.value[3] = false;
+            }, 300);
         };
     });
 
@@ -73,7 +108,10 @@
             setTimeout(() => {
                 rowView.value[2] = true;
             }, 200);
-        }, 300);
+            setTimeout(() => {
+                rowView.value[3] = true;
+            }, 300);
+        }, 400);
     });
 </script>
 
@@ -83,12 +121,32 @@
     @use "@/styles/settings.scss";
     @use "@/styles/animations.scss";
 
-    .volume-row input {
-        flex: 1;
+    // стили трека
+    .custom_slider {
+        appearance: none;   // сброс дефолтных стилей бегунка
+        width: 7.5rem;
+        height: 0.125rem;
+        background-color: #72B3EE;
     }
+    // .custom_slider::-webkit-slider-runnable-track {
+    //     width: 7.5rem;
+    //     height: 0.125rem;
+    //     background-color: #72B3EE;
+    // }
+    // .custom_slider::-moz-range-track {
+    //     width: 7.5rem;
+    //     height: 0.125rem;
+    //     background-color: #72B3EE;
+    // }
 
-    .volume-value {
-        width: 50px;
-        text-align: right;
+    // стили ручки
+    .custom_slider::-webkit-slider-thumb {
+        -webkit-appearance: none;
+        width: 18px;
+        height: 18px;
+        // border: none;
+        background-color: #72B3EE;
+        border: solid #72B3EE 0.15rem;
+        border-radius: 0.1875rem;
     }
 </style>

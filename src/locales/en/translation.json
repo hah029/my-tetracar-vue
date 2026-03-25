@@ -48,7 +48,8 @@
             "controls": "controls",
             "about": "about"
         },
-        "music": {
+        "vfxAndMusic": {
+            "vfxEnabled": "effects",
             "musicEnabled": "music",
             "sfxEnabled": "sounds",
             "volumeLevel": "volume"

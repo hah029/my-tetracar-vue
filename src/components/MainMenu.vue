@@ -1,12 +1,12 @@
 <template>
     <div class="container">
         <SettingsOverlay v-if="gameStore.activeOverlay === 'settings'" />
-        <TransitionGroup name="buttons_group_showing" tag="div" class="buttons_group">
+        <TransitionGroup name="buttons_group_showing" tag="div" class="buttons_group group_correction">
             <button 
                 v-for="(btn, index) in menuButtons" 
                 v-if="isMainMenuEnabled"
                 key="btn.id" 
-                class="menu_btn"
+                class="menu_btn btn_correction"
                 :style="{ animationDelay: `${index * 0.06}s` }" 
                 @click="btn.action"
             >
@@ -66,21 +66,15 @@
     @use "@/styles/menu.scss";
     @use "@/styles/animations.scss";
 
-    .menu_btn {
-        background: none;
-        border: none;
-        // ---
-        font-family: 'vla_shu';
-        font-size: 2.25rem; // (36px)
-        color: #FDFFE3;
-        filter: drop-shadow(0 0 15px rgba(255, 246, 25, 0.4));
-        cursor: pointer;
-        transition: all 0.1s ease-in-out;
+    .group_correction {
+        bottom: 19.57%;
 
-        &:hover {
-            color: #72B3EE;
-            filter: drop-shadow(0 0 20px rgba(121, 190, 255, 1));
-            transition: all 0.1s ease-in-out;
+        &>*+* {
+            margin-top: 1.56rem; // 25px - row-gap (между кнопками)
         }
+    }
+
+    .btn_correction {
+        font-size: 2.1875rem; // (35px)
     }
 </style>

@@ -2,7 +2,7 @@
     <div class="container correction">
         <div class="settings_container">
 
-            <div class="sub_container">
+            <!-- <div class="sub_container"> -->
                 <!-- HEADER -->
                 <Transition name="header_footer_block_anim">
                     <div v-if="isHeaderShown" class="header_block">
@@ -14,13 +14,13 @@
                 </Transition>
 
                 <!-- CONTENT -->
-                <TransitionGroup name="buttons_group_showing" tag="div" class="buttons_group">
+                <TransitionGroup name="buttons_group_showing" tag="div" class="buttons_group group_correction">
                     <!-- MAIN -->
                     <button
                         v-for="(btn, index) in menuButtons"
                         v-if="currentView === SettingsView.Main"
                         :key="btn.id" 
-                        class="menu_btn"
+                        class="menu_btn btn_correction"
                         :style="{ animationDelay: `${index * 0.06}s` }" 
                         @click="btn.action"
                     >
@@ -33,7 +33,7 @@
                 <LanguageSettings v-else-if="currentView === SettingsView.Language" />
                 <ControlSettings v-else-if="currentView === SettingsView.Controls" />
                 <DebugSettings v-else-if="currentView === SettingsView.Debug" />
-            </div>
+            <!-- </div> -->
 
             <!-- BACK -->
             <Transition name="header_footer_block_anim">
@@ -167,6 +167,7 @@
     }
 
     .settings_container {
+        position: relative;
         height: 30rem;
         display: flex;
         flex-direction: column;
@@ -176,37 +177,16 @@
         padding-bottom: 2.687rem;
     }
 
-    .buttons_group {
-        position: static;
-        height: fit-content;
-        display: flex;
-        flex-direction: column;
-        background: none;
-        border: none;
-        margin-top: 2.4rem;
-
-        // имитируем row-gap (между кнопками)
+    .group_correction {
+        top: 8.75rem;
+        
         &>*+* {
-            margin-top: 0.938rem;
+            margin-top: 0.938rem; // 15px - row-gap (между кнопками)
         }
     }
 
-    .menu_btn {
-        background: none;
-        border: none;
-        // ---
-        font-family: 'vla_shu';
+    .btn_correction {
         font-size: 1.875rem; // (30px)
-        color: #FDFFE3;
-        filter: drop-shadow(0 0 15px rgba(255, 246, 25, 0.4));
-        cursor: pointer;
-        transition: all 0.1s ease-in-out;
-
-        &:hover {
-            color: #72B3EE;
-            filter: drop-shadow(0 0 20px rgba(121, 190, 255, 1));
-            transition: all 0.1s ease-in-out;
-        }
     }
 
     /* we will explain what these classes do next! */

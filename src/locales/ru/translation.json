@@ -48,7 +48,8 @@
             "controls": "управление",
             "about": "об игре"
         },
-        "music": {
+        "vfxAndMusic": {
+            "vfxEnabled": "эффекты",
             "musicEnabled": "музыка",
             "sfxEnabled": "звуки",
             "volumeLevel": "громкость"
