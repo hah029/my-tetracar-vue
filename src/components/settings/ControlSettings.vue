@@ -1,7 +1,7 @@
 <template>
   <div class="settings">
 
-    <div class="settings-row">
+    <div class="settings_row">
       <span>{{ $t("settings.controls") }}</span>
       <!-- <button class="toggle-btn" @click="toggleDebug">
         {{ gameState.isDebug ? $t("settings.toggleOn") : $t("settings.toggleOff") }}

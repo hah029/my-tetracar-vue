@@ -60,8 +60,9 @@
         "language": {
             "label": "language",
             "availableList": {
-                "en": "english",
-                "ru": "russian"
+                "auto": "auto",
+                "ru": "русский",
+                "en": "english"
             }
         }
     }

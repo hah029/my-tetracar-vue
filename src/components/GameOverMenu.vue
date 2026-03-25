@@ -11,7 +11,7 @@
     </Transition>
 
     <div class="score-container">
-        <div class="settings-row">
+        <div class="settings_row">
             <span>{{ $t("gameOverMenu.summary.points.label") }}</span>
             <span>
                 <span class="score-value gold">{{ scoreRounded }} / </span>
@@ -20,7 +20,7 @@
                 </span>
             </span>
         </div>
-        <div class="settings-row">
+        <div class="settings_row">
             <span>{{ $t("gameOverMenu.summary.speed.label") }}</span>
             <span>
                 <span class="score-value gold">
@@ -32,7 +32,7 @@
             </span>
         </div>
 
-        <div class="settings-row">
+        <div class="settings_row">
             <span>{{ $t("gameOverMenu.summary.distance.label") }}</span>
             <span>
                 <span class="score-value gold">
@@ -121,7 +121,7 @@
         font-family: 'vla_shu';
     }
 
-    .settings-row {
+    .settings_row {
         display: flex;
         justify-content: space-between;
         font-size: 16px;

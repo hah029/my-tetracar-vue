@@ -1,6 +1,6 @@
 <template>
-    <TransitionGroup name="buttons_group_showing" tag="div" class="settings_sub_container">
-        <div v-if="rowView[0]" class="settings-row">
+    <TransitionGroup name="buttons_group_showing" tag="div" class="settings_sub_container addit_font">
+        <div v-if="rowView[0]" class="settings_row">
             <span>{{ foo.makeText("settings.vfxAndMusic.vfxEnabled", "empty") }}</span>
             <button class="toggle_btn" :class="{ 'toggle_btn--active': vfxTempStore }" @click="toggleVfx">
                 {{ vfxTempStore ? 
@@ -10,7 +10,7 @@
             </button>
         </div>
 
-        <div v-if="rowView[1]" class="settings-row">
+        <div v-if="rowView[1]" class="settings_row">
             <span>{{ foo.makeText("settings.vfxAndMusic.musicEnabled", "empty") }}</span>
             <button class="toggle_btn" :class="{ 'toggle_btn--active': audioStore.musicEnabled }" @click="toggleMusic" >
                 {{ audioStore.musicEnabled ? 
@@ -20,7 +20,7 @@
             </button>
         </div>
 
-        <div v-if="rowView[2]" class="settings-row">
+        <div v-if="rowView[2]" class="settings_row">
             <span>{{ $t("settings.vfxAndMusic.sfxEnabled") }}</span>
             <button class="toggle_btn" :class="{ 'toggle_btn--active': audioStore.sfxEnabled }" @click="toggleSound">
                 {{ audioStore.sfxEnabled ? 
@@ -30,7 +30,7 @@
             </button>
         </div>
 
-        <div v-if="rowView[3]" class="settings-row">
+        <div v-if="rowView[3]" class="settings_row">
             <span>{{ $t("settings.vfxAndMusic.volumeLevel") }}</span>
             <input 
                 type="range" 
@@ -147,6 +147,7 @@
         // border: none;
         background-color: #72B3EE;
         border: solid #72B3EE 0.15rem;
-        border-radius: 0.1875rem;
+        // border-radius: 0.1875rem;
+        border-radius: 50%;
     }
 </style>

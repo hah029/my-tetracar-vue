@@ -30,14 +30,14 @@
     
                 <!-- SUBMENUS -->
                 <SoundSettings v-if="currentView === SettingsView.Sound" :backStatus="isBackButtonClicked" />
-                <LanguageSettings v-else-if="currentView === SettingsView.Language" />
+                <LanguageSettings v-else-if="currentView === SettingsView.Language" :backStatus="isBackButtonClicked" />
                 <ControlSettings v-else-if="currentView === SettingsView.Controls" />
                 <DebugSettings v-else-if="currentView === SettingsView.Debug" />
             <!-- </div> -->
 
             <!-- BACK -->
             <Transition name="header_footer_block_anim">
-                <button v-if="isBackButtonShown" class="menu_btn" @click="backButtonClick">
+                <button v-if="isBackButtonShown" class="menu_btn btn_correction" @click="backButtonClick">
                     {{ foo_1.makeText("mainMenu.goBack") }}
                 </button>
             </Transition>
