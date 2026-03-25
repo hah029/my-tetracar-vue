@@ -24,6 +24,7 @@
 }
 
 .sub_container {
+    // position: relative;
     height: 100%;
     box-sizing: border-box;
     display: flex;
@@ -42,15 +43,14 @@
 
 .header_text {
     font-family: 'vla_shu';
-    font-size: 36px; // (40px)
+    font-size: 2.5rem; // (40px)
     color: #72B3EE;
     margin-bottom: 1rem;
     line-height: 1;
 }
 
 .header_image {
-    // width: 34.625rem;
-    scale: 50%;
+    width: 34.625rem;
 }
 
 .image {

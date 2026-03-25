@@ -29,7 +29,7 @@
                 </TransitionGroup>
     
                 <!-- SUBMENUS -->
-                <SoundSettings v-if="currentView === SettingsView.Sound" />
+                <SoundSettings v-if="currentView === SettingsView.Sound" :backStatus="isBackButtonClicked" />
                 <LanguageSettings v-else-if="currentView === SettingsView.Language" />
                 <ControlSettings v-else-if="currentView === SettingsView.Controls" />
                 <DebugSettings v-else-if="currentView === SettingsView.Debug" />
@@ -37,7 +37,7 @@
 
             <!-- BACK -->
             <Transition name="header_footer_block_anim">
-                <button v-if="isBackButtonsShown" class="menu_btn" @click="backButtonClick">
+                <button v-if="isBackButtonShown" class="menu_btn" @click="backButtonClick">
                     {{ foo_1.makeText("mainMenu.goBack") }}
                 </button>
             </Transition>
@@ -74,8 +74,8 @@
     const currentView = ref<SettingsView>(SettingsView.null);
 
     const isHeaderShown = ref(false);
-    // const isMainButtonsShown = ref(false);
-    const isBackButtonsShown = ref(false);
+    const isBackButtonShown = ref(false);
+    const isBackButtonClicked = ref(false);
 
     // ===== TEXT =====
     const foo_1 = createNewText();
@@ -126,14 +126,18 @@
     // ===== BACK =====
     function backButtonClick() {
         if (isInSubMenu.value) {
-            currentView.value = SettingsView.Main;
+            isBackButtonClicked.value = true;
+            setTimeout(() => {
+                isBackButtonClicked.value = false;
+                currentView.value = SettingsView.Main;
+            }, 500);
         } else {
             isHeaderShown.value = false;
             setTimeout(() => {
                 currentView.value = SettingsView.null;
             }, 100);
             setTimeout(() => {
-                isBackButtonsShown.value = false;
+                isBackButtonShown.value = false;
             }, 400);
 
             setTimeout(() => {
@@ -148,7 +152,7 @@
             currentView.value = SettingsView.Main
         }, 200);
         setTimeout(() => {
-            isBackButtonsShown.value = true;
+            isBackButtonShown.value = true;
         }, 500);
     });
 </script>
@@ -173,6 +177,7 @@
     }
 
     .buttons_group {
+        position: static;
         height: fit-content;
         display: flex;
         flex-direction: column;

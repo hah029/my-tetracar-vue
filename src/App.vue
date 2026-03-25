@@ -118,7 +118,7 @@ onUnmounted(() => {
 
     @font-face {
         font-family: 'jost';
-        src: url('./assets/fonts/Jost-Regular.ttf')
+        src: url('./assets/fonts/Jost-Light.ttf')
     }
 
     html,
