@@ -80,6 +80,11 @@
                 "pause": "esc",
                 "shop": "b"
             }
+        },
+        "about": {
+            "eula": "end user license agreement",
+            "thirdParty": "third-party notices",
+            "aboutUs": "about us"
         }
     }
 }

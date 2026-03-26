@@ -148,8 +148,8 @@
     }
 
     .checker_img {
-        width: 100%;
-        height: 100%;
+        width: 90%;
+        height: 90%;
         filter: invert(75%) sepia(7%) saturate(4910%) hue-rotate(179deg) brightness(96%) contrast(94%);
     }
 
