@@ -31,7 +31,7 @@
                 <!-- SUBMENUS -->
                 <SoundSettings v-if="currentView === SettingsView.Sound" :backStatus="isBackButtonClicked" />
                 <LanguageSettings v-else-if="currentView === SettingsView.Language" :backStatus="isBackButtonClicked" />
-                <ControlSettings v-else-if="currentView === SettingsView.Controls" />
+                <ControlSettings v-else-if="currentView === SettingsView.Controls" :backStatus="isBackButtonClicked" />
                 <DebugSettings v-else-if="currentView === SettingsView.Debug" />
             <!-- </div> -->
 
@@ -48,10 +48,10 @@
 
 
 <script setup lang="ts">
-    import DebugSettings from "./DebugSettings.vue";
-    import SoundSettings from "./SoundSettings.vue";
-    import LanguageSettings from "./LanguageSettings.vue";
-    import ControlSettings from "./ControlSettings.vue";
+    import DebugSettings from "./overlays/DebugSettings.vue";
+    import SoundSettings from "./overlays/SoundSettings.vue";
+    import LanguageSettings from "./overlays/LanguageSettings.vue";
+    import ControlSettings from "./overlays/ControlSettings.vue";
 
     import { onMounted, computed, ref } from "vue";
     import { createNewText, deleteTextLines } from '@/helpers/functions';

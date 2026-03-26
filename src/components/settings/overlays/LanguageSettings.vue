@@ -56,17 +56,14 @@
         ru: flag_ru,
         en: flag_en,
         es: flag_es,
-    }
+    };
 
     const availableLanguages = computed(() => {
-        let myLang = supportedLanguages.map((code) => ({
+        return supportedLanguages.map((code) => ({
             code,
             name: foo.makeText(`settings.language.availableList.${code}`, 'empty'),
             src: langSrc[code],
         }));
-        console.log(myLang);
-        
-        return myLang;
     });
 
     const props = defineProps<{
@@ -84,8 +81,7 @@
             i18next.changeLanguage(AUTO_LANG);
         } else {
             i18next.changeLanguage(code);
-        }
-        
+        };
     };
 
     onMounted(() => {

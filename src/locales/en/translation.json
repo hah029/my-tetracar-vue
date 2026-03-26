@@ -64,6 +64,22 @@
                 "ru": "русский",
                 "en": "english"
             }
+        },
+        "controls": {
+            "labels": {
+                "left": "left",
+                "right": "right",
+                "fire": "fire",
+                "pause": "pause",
+                "shop": "shop"
+            },
+            "keys": {
+                "left": "a",
+                "right": "d",
+                "fire": "space",
+                "pause": "esc",
+                "shop": "b"
+            }
         }
     }
 }
