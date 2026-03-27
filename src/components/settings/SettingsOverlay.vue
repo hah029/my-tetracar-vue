@@ -32,7 +32,7 @@
                 <SoundSettings v-if="currentView === SettingsView.Sound" :backStatus="isBackButtonClicked" />
                 <LanguageSettings v-else-if="currentView === SettingsView.Language" :backStatus="isBackButtonClicked" />
                 <ControlSettings v-else-if="currentView === SettingsView.Controls" :backStatus="isBackButtonClicked" />
-                <DebugSettings v-else-if="currentView === SettingsView.Debug" />
+                <AboutSettings v-else-if="currentView === SettingsView.About" :backStatus="isBackButtonClicked" />
             <!-- </div> -->
 
             <!-- BACK -->
@@ -48,10 +48,10 @@
 
 
 <script setup lang="ts">
-    import DebugSettings from "./overlays/DebugSettings.vue";
     import SoundSettings from "./overlays/SoundSettings.vue";
     import LanguageSettings from "./overlays/LanguageSettings.vue";
     import ControlSettings from "./overlays/ControlSettings.vue";
+    import AboutSettings from "./overlays/AboutSettings.vue";
 
     import { onMounted, computed, ref } from "vue";
     import { createNewText, deleteTextLines } from '@/helpers/functions';
@@ -62,7 +62,7 @@
         Sound,
         Language,
         Controls,
-        Debug,
+        About,
         null,
     }
 
@@ -104,7 +104,7 @@
         {
             id: 4,
             text: foo_1.makeText("settings.menuList.about"),
-            action: () => currentView.value = SettingsView.Debug,
+            action: () => currentView.value = SettingsView.About,
         },
     ]);
 
@@ -115,7 +115,7 @@
                 [SettingsView.Sound]: menuButtons.value[0]!.text,
                 [SettingsView.Language]: menuButtons.value[1]!.text,
                 [SettingsView.Controls]: menuButtons.value[2]!.text,
-                [SettingsView.Debug]: menuButtons.value[3]!.text,
+                [SettingsView.About]: menuButtons.value[3]!.text,
             };
             return foo_2.correctText(map[currentView.value]);
         } else {
