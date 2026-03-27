@@ -3,12 +3,10 @@
     <div ref="threeRoot" class="three-root"></div>
 
     <!-- UI -->
-    <!-- <div class="menu_overlay"> -->
     <GameLogo />
     <transition>
         <component :is="getUIComponent" />
     </transition>
-    <!-- </div> -->
 </template>
 
 

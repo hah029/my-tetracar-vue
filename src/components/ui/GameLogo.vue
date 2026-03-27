@@ -65,12 +65,18 @@
 
                 // ===== MENU =====
                 case GameStates.Menu:
+                    console.log(gameState.currentState);
                     if (gameState.activeOverlay === 'settings') {
                         // возвращаемся в Главное меню
-                        isWholeLogoShown.value = true;
+                        isWholeLogoShown.value = true;                   
+                        
                     } else {
                         // смещаем логотип вверх (при входе в главное меню)
                         isLettersMovedToTop.value = true;
+                    };
+                    if (gameState.currentState === 'menu') {
+                            isLettersShown.value = true;
+                            isLinesShown.value = true;
                     };
                     break;
 

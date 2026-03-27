@@ -54,16 +54,10 @@
             "sfxEnabled": "звуки",
             "volumeLevel": "громкость"
         },
-        "debug": {
-            "debugEnabled": "режим отладки"
-        },
         "language": {
-            "label": "язык",
-            "availableList": {
-                "auto": "авто",
-                "ru": "русский",
-                "en": "english"
-            }
+            "auto": "авто",
+            "ru": "русский",
+            "en": "english"
         },
         "controls": {
             "labels": {
@@ -85,6 +79,9 @@
             "eula": "лицензионное соглашение",
             "thirdParty": "сторонние лицензии",
             "aboutUs": "о нас"
+        },
+        "debug": {
+            "debugEnabled": "режим отладки"
         }
     }
 }

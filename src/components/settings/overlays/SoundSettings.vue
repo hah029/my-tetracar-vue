@@ -128,38 +128,15 @@
         height: 0.125rem;
         background-color: #72B3EE;
         border-radius: 2px;
-
+        
         &::-webkit-slider-thumb {
             -webkit-appearance: none;
             width: 1.125rem;
             height: 1.125rem;
             background-color: #72B3EE;
-            border: 0.15rem solid #72B3EE;
+            border: none;
             border-radius: 50%;
-            // margin-top: -0.5rem; // центрируем относительно трека
-            box-shadow: 0 0 0 0.3rem #000;
+            position: relative;
         }
     }
-
-    // .custom_slider::-webkit-slider-runnable-track {
-    //     width: 7.5rem;
-    //     height: 0.125rem;
-    //     background-color: #72B3EE;
-    // }
-    // .custom_slider::-moz-range-track {
-    //     width: 7.5rem;
-    //     height: 0.125rem;
-    //     background-color: #72B3EE;
-    // }
-
-    // стили ручки
-    // .custom_slider::-webkit-slider-thumb {
-    //     -webkit-appearance: none;
-    //     width: 1.125rem;
-    //     height: 1.125rem;
-    //     background-color: #72B3EE;
-    //     border: solid #72B3EE 0.15rem;
-    //     // border-radius: 0.1875rem;
-    //     border-radius: 50%;
-    // }
 </style>

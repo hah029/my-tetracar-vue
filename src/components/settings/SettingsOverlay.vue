@@ -1,12 +1,13 @@
 <template>
-    <div class="container correction">
+    <!-- <div class="container correction"> -->
+    <div class="container" :class="setContainerPos()">
         <div class="settings_container">
 
             <!-- <div class="sub_container"> -->
                 <!-- HEADER -->
-                <Transition name="header_footer_block_anim">
+                <Transition :name="gameState.currentState == 'menu' ? 'header_footer_block_anim' : ''">
                     <div v-if="isHeaderShown" class="header_block">
-                        <div class="header_text">{{ dynamicTitleName }}</div>
+                        <div class="header_text" :class="setHeaderSize()">{{ dynamicTitleName }}</div>
                         <div class="header_image">
                             <img class="image" src="@/assets/images/title_line_image.svg" />
                         </div>
@@ -131,8 +132,11 @@
                 isBackButtonClicked.value = false;
                 currentView.value = SettingsView.Main;
             }, 500);
+
         } else {
-            isHeaderShown.value = false;
+            if (gameState.currentState == 'menu') {
+                isHeaderShown.value = false;
+            };
             setTimeout(() => {
                 currentView.value = SettingsView.null;
             }, 100);
@@ -146,10 +150,23 @@
         };
     };
 
+    function setContainerPos() {
+        if (gameState.currentState == 'menu') {
+            return 'container_pos_main_menu';
+        } else if (gameState.currentState == 'pause') {
+            return 'container_pos_pause';
+        };
+    };
+    function setHeaderSize() {
+        if (gameState.currentState == 'pause') {
+            return 'header_pause';
+        };
+    };
+
     onMounted(() => {
         isHeaderShown.value = true;
         setTimeout(() => {
-            currentView.value = SettingsView.Main
+            currentView.value = SettingsView.Main;
         }, 200);
         setTimeout(() => {
             isBackButtonShown.value = true;
@@ -162,8 +179,15 @@
     @use "@/styles/menu.scss";
     @use "@/styles/animations.scss";
 
-    .correction {
+    .container_pos_main_menu {
         justify-content: flex-end !important;
+    }
+    .container_pos_pause {
+        justify-content: flex-start !important;
+        top: 19.75rem !important;
+    }
+    .header_pause {
+        font-size: 3.125rem; // (50px)
     }
 
     .settings_container {

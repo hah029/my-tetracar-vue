@@ -54,16 +54,10 @@
             "sfxEnabled": "sounds",
             "volumeLevel": "volume"
         },
-        "debug": {
-            "debugEnabled": "debug"
-        },
         "language": {
-            "label": "language",
-            "availableList": {
-                "auto": "auto",
-                "ru": "русский",
-                "en": "english"
-            }
+            "auto": "auto",
+            "ru": "русский",
+            "en": "english"
         },
         "controls": {
             "labels": {
@@ -85,6 +79,9 @@
             "eula": "end user license agreement",
             "thirdParty": "open Source Notices",
             "aboutUs": "about us"
+        },
+        "debug": {
+            "debugEnabled": "debug"
         }
     }
 }

@@ -1,6 +1,9 @@
 <template>
     <div class="container">
+        <!-- SETTINGS OVERLAY -->
         <SettingsOverlay v-if="gameStore.activeOverlay === 'settings'" />
+
+        <!-- MAIN MENU -->
         <TransitionGroup name="buttons_group_showing" tag="div" class="buttons_group group_correction">
             <button 
                 v-for="(btn, index) in menuButtons" 

@@ -61,7 +61,7 @@
     const availableLanguages = computed(() => {
         return supportedLanguages.map((code) => ({
             code,
-            name: foo.makeText(`settings.language.availableList.${code}`, 'empty'),
+            name: foo.makeText(`settings.language.${code}`, 'empty'),
             src: langSrc[code],
         }));
     });

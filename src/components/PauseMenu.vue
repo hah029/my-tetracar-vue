@@ -1,18 +1,13 @@
 <template>
-    <!-- <div class="container"> -->
-
     <!-- SETTINGS OVERLAY -->
-    <Transition name="fade" mode="out-in">
-        <SettingsOverlay v-if="gameStore.activeOverlay === 'settings'" :key="'settings'" />
-    </Transition>
+    <SettingsOverlay v-if="gameStore.activeOverlay === 'settings'" :key="'settings'" />
 
     <!-- PAUSE MENU -->
-    <div v-if="gameStore.activeOverlay !== 'settings'" :key="'pause'" class="pause_container">
-
+    <div v-if="gameStore.activeOverlay !== 'settings'" :key="'pause'" class="container container_correction">
         <!-- HEADER с анимацией -->
-        <Transition name="header_footer_block_anim" mode="out-in">
-            <div class="header_block">
-                <div class="header_text corr_header_size">{{ dynamicTitleName }}</div>
+        <Transition name="header_footer_block_anim">
+            <div v-if="isHeaderShown" class="header_block">
+                <div class="header_text header_correction">{{ dynamicTitleName }}</div>
                 <div class="header_image">
                     <img class='image' src="@/assets/images/title_line_image.svg" />
                 </div>
@@ -21,59 +16,107 @@
 
         <!-- Кнопки с TransitionGroup -->
         <TransitionGroup name="buttons_group_showing" tag="div" class="buttons_group group_correction">
-            <button v-for="(btn, index) in menuButtons" v-if="gameStore.activeOverlay !== 'settings'" :key="btn.id"
-                class="menu_btn" :style="{ animationDelay: `${index * 0.06}s` }" @click="btn.action">
+            <button 
+                v-for="(btn, index) in menuButtons" 
+                v-if="isButtonsShown" 
+                :key="btn.id"
+                class="menu_btn btn_correction" 
+                :style="{ animationDelay: `${index * 0.06}s` }" 
+                @click="btn.action"
+            >
                 {{ btn.text }}
             </button>
         </TransitionGroup>
-
     </div>
-    <!-- </div> -->
 </template>
 
+
 <script setup lang="ts">
-import { computed } from "vue";
-import { useGameState } from "@/store/gameState";
-import SettingsOverlay from "./settings/SettingsOverlay.vue";
-import { GameStates } from "@/game/core/GameState";
-import { createNewText } from '@/helpers/functions';
+    import { onMounted, watch, computed, ref } from "vue";
+    import { useGameState } from "@/store/gameState";
+    import SettingsOverlay from "./settings/SettingsOverlay.vue";
+    import { GameStates } from "@/game/core/GameState";
+    import { createNewText } from '@/helpers/functions';
 
-const gameStore = useGameState();
-const foo = createNewText();
+    const gameStore = useGameState();
+    const foo = createNewText();
 
-const menuButtons = computed(() => [
-    { id: 1, text: foo.makeText("pauseMenu.menuList.resume"), action: resumeGame },
-    { id: 2, text: foo.makeText("pauseMenu.menuList.settings"), action: goToSettings },
-    { id: 3, text: foo.makeText("pauseMenu.menuList.menu"), action: goToMainMenu },
-]);
+    const isHeaderShown = ref(false);
+    const isButtonsShown = ref(false);
 
-const dynamicTitleName = computed(() => foo.makeText("pauseMenu.title", 'empty'));
+    const menuButtons = computed(() => [
+        { id: 1, text: foo.makeText("pauseMenu.menuList.resume"), action: resumeGame },
+        { id: 2, text: foo.makeText("pauseMenu.menuList.settings"), action: goToSettings },
+        { id: 3, text: foo.makeText("pauseMenu.menuList.menu"), action: goToMainMenu },
+    ]);
 
-function resumeGame() {
-    gameStore.setState(GameStates.Play);
-}
+    const dynamicTitleName = computed(() => foo.makeText("pauseMenu.title", 'empty'));
 
-function goToMainMenu() {
-    gameStore.setState(GameStates.Menu);
-}
+    function showHideAllPauseElements(type_) {
+        isHeaderShown.value = type_;
+        setTimeout(() => {
+            isButtonsShown.value = type_;
+        }, 100);
+    };
 
-function goToSettings() {
-    gameStore.openSettings();
-}
+    function resumeGame() {
+        showHideAllPauseElements(false);
+        setTimeout(() => {
+            gameStore.setState(GameStates.Play);
+        }, 400);
+    };
+
+    function goToMainMenu() {
+        showHideAllPauseElements(false);
+        setTimeout(() => {
+            gameStore.setState(GameStates.Menu);
+        }, 400);
+    };
+
+    function goToSettings() {
+        isButtonsShown.value = false;
+        setTimeout(() => {
+            gameStore.openSettings();
+        }, 400);
+    };
+
+    watch(
+        () => gameStore.activeOverlay,
+        (newState) => {
+            if (newState !== 'settings') {
+                showHideAllPauseElements(true);
+            };
+        },
+    );
+
+    onMounted(() => {
+        showHideAllPauseElements(true);
+    });
 </script>
 
+
 <style scoped lang="scss">
-@use "@/styles/menu.scss";
-@use "@/styles/animations.scss";
+    @use "@/styles/menu.scss";
+    @use "@/styles/animations.scss";
 
-.group_correction {
-    &>*+* {
-        margin-top: 1.56rem; // 25px - row-gap (между кнопками)
+    .container_correction {
+        // justify-content: center !important;
+        justify-content: flex-start !important;
+        top: 19.75rem;
     }
-}
-// .corr_header_size {
-//     font-size: 3.125rem !important;
-// }
 
-/* TransitionGroup для кнопок */
+    .group_correction {
+        margin-top: 8.3125rem;
+        
+        &>*+* {
+            margin-top: 1.56rem; // 25px - row-gap (между кнопками)
+        }
+    }
+    
+    .header_correction {
+        font-size: 3.125rem; // (50px)
+    }
+    .btn_correction {
+        font-size: 1.875rem; // (30px)
+    }
 </style>
