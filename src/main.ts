@@ -5,13 +5,21 @@ import I18NextVue from "i18next-vue";
 
 import App from "./App.vue";
 import { locales } from "./locales";
+import { resolveAutoLanguage } from "./helpers/i18n";
 
+// 💾 что выбрал пользователь
+const savedLang = localStorage.getItem("lang") || "auto";
+
+// 🎯 итоговый язык
+const initialLang = savedLang === "auto" ? resolveAutoLanguage() : savedLang;
+
+// 🚀 init i18next
 i18next.init({
-  lng: "en",
+  lng: initialLang,
+  fallbackLng: "en",
   interpolation: {
     escapeValue: false,
   },
-  // fallbackLng: false,
   resources: {
     ru: { translation: locales.ru },
     en: { translation: locales.en },
