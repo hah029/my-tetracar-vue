@@ -18,6 +18,14 @@
             "menu": "menu"
         }
     },
+    "quitConfirm": {
+        "title": "quit game?",
+        "warning": "(progress will be lost)",
+        "menuList": {
+            "stay": "stay",
+            "quit": "quit"
+        }
+    },
     "gameOverMenu": {
         "title": "gameover",
         "menuList": {

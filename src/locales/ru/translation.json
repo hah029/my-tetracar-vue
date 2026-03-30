@@ -18,6 +18,14 @@
             "menu": "выйти в меню"
         }
     },
+    "quitConfirm": {
+        "title": "завершить игру?",
+        "warning": "(прогресс текущей игры будет потерян)",
+        "menuList": {
+            "stay": "остаться",
+            "quit": "завершить"
+        }
+    },
     "gameOverMenu": {
         "title": "gameover",
         "menuList": {

@@ -7,7 +7,7 @@ import { useProgressStore } from "./progressStore";
 import { GameStates } from "@/game/core/GameState";
 import { SoundManager } from "@/game/sound/SoundManager";
 
-type UIOverlay = null | "settings";
+type UIOverlay = null | "settings" | "quitConfirm";
 
 export const useGameState = defineStore("gameState", () => {
   // ===== STATE =====
@@ -15,6 +15,7 @@ export const useGameState = defineStore("gameState", () => {
   const isDebug = ref(false);
   const isFirstGame = ref(true);
   const activeOverlay = ref<UIOverlay>(null);
+  const previousState = ref<GameStates>(GameStates.Preloader); // Запоминаем предыдущее состояние
 
   let resetCallback: (() => void) | null = null;
 
@@ -140,6 +141,27 @@ export const useGameState = defineStore("gameState", () => {
     activeOverlay.value = "settings";
   }
 
+  function openQuitGameWindow() {
+    previousState.value = currentState.value; // Запоминаем текущее состояние
+    activeOverlay.value = "quitConfirm";
+  }
+
+  // Функция для подтверждения выхода
+  function confirmQuit() {
+    // Логика выхода из игры
+    console.log("👋 Игрок подтвердил выход");
+    // Возвращаемся в меню
+    setState(GameStates.Menu);
+    // Дополнительно: сброс игровых данных
+    resetCallback?.();
+  }
+
+  // Функция для отмены выхода
+  function cancelQuit() {
+    // Возвращаемся в предыдущее состояние
+    setState(previousState.value);
+  }
+
   function closeOverlay() {
     activeOverlay.value = null;
   }
@@ -163,6 +185,9 @@ export const useGameState = defineStore("gameState", () => {
     setResetCallback,
 
     openSettings,
+    openQuitGameWindow,
+    confirmQuit,
+    cancelQuit,
     closeOverlay,
 
     toggleDebug,
