@@ -27,6 +27,11 @@
                 {{ btn.text }}
             </button>
         </TransitionGroup>
+
+        <div v-if="gameStore.activeOverlay==='quitConfirm'" class="asd">
+            <div class="yes" @click="goToMainMenu()">да</div>
+            <div class="no" @click="hideQuitConfirmMenu()">нет</div>
+        </div>
     </div>
 </template>
 
@@ -47,7 +52,8 @@
     const menuButtons = computed(() => [
         { id: 1, text: foo.makeText("pauseMenu.menuList.resume"), action: resumeGame },
         { id: 2, text: foo.makeText("pauseMenu.menuList.settings"), action: goToSettings },
-        { id: 3, text: foo.makeText("pauseMenu.menuList.menu"), action: goToMainMenu },
+        // { id: 3, text: foo.makeText("pauseMenu.menuList.menu"), action: goToMainMenu },
+        { id: 3, text: foo.makeText("pauseMenu.menuList.menu"), action: showQuitConfirmMenu },
     ]);
 
     const dynamicTitleName = computed(() => foo.makeText("pauseMenu.title", 'empty'));
@@ -66,11 +72,22 @@
         }, 400);
     };
 
+    function showQuitConfirmMenu() {
+        gameStore.activeOverlay = 'quitConfirm';
+    };
+    function hideQuitConfirmMenu() {
+        gameStore.activeOverlay = null;
+    };
+
     function goToMainMenu() {
-        showHideAllPauseElements(false);
-        setTimeout(() => {
-            gameStore.setState(GameStates.Menu);
-        }, 400);
+        if (gameStore.activeOverlay === 'quitConfirm') {
+            gameStore.activeOverlay = null;
+            showHideAllPauseElements(false);
+            setTimeout(() => {
+                gameStore.setState(GameStates.Menu);
+            }, 400);
+        };
+
     };
 
     function goToSettings() {
@@ -98,6 +115,25 @@
 <style scoped lang="scss">
     @use "@/styles/menu.scss";
     @use "@/styles/animations.scss";
+
+    .asd {
+        color: white;
+        font-size: 30px;
+        display: flex;
+        gap: 20px;
+    }
+    .yes {
+        cursor: pointer;
+        &:hover {
+            color: aqua;
+        }
+    }
+    .no {
+        cursor: pointer;
+        &:hover {
+            color: aqua;
+        }
+    }
 
     .container_correction {
         // justify-content: center !important;

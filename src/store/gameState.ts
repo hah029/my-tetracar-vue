@@ -32,6 +32,8 @@ export const useGameState = defineStore("gameState", () => {
     [GameStates.Pause]: [GameStates.Play, GameStates.Menu],
 
     [GameStates.Gameover]: [GameStates.Menu, GameStates.Countdown],
+
+    [GameStates.QuitConfirm]: [GameStates.Menu, GameStates.Play, GameStates.Pause, GameStates.Gameover],
   };
 
   // ===== HOOKS =====
@@ -67,6 +69,14 @@ export const useGameState = defineStore("gameState", () => {
         progress.saveHighScore();
         sound.playMusic("music_gameover");
         break;
+
+      case GameStates.QuitConfirm:
+        // При входе в состояние подтверждения выхода
+        console.log("🚪 Открыто окно подтверждения выхода");
+        activeOverlay.value = "quitConfirm";
+        // Приостанавливаем музыку или оставляем фоном?
+        // sound.pauseMusic(); // если есть такой метод
+        break;
     }
   }
 
@@ -74,6 +84,14 @@ export const useGameState = defineStore("gameState", () => {
     switch (state) {
       case GameStates.Play:
         console.log("⬅️ Exit Play");
+        break;
+
+      case GameStates.QuitConfirm:
+        // При выходе из состояния подтверждения
+        console.log("🚪 Закрыто окно подтверждения выхода");
+        activeOverlay.value = null;
+        // const sound = SoundManager.getInstance();
+        // sound.resumeMusic(); // возобновляем музыку
         break;
     }
   }
