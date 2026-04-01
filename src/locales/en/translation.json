@@ -15,7 +15,7 @@
         "menuList": {
             "resume": "resume",
             "settings": "settings",
-            "menu": "menu"
+            "menu": "quit to menu"
         }
     },
     "quitConfirm": {

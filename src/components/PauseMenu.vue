@@ -14,10 +14,12 @@
             </div>
         </Transition>
 
-        <!-- Кнопки с TransitionGroup -->
-        <TransitionGroup name="buttons_group_showing" tag="div" class="buttons_group group_correction">
+        <!-- Кнопки меню "Пауза" -->
+        <TransitionGroup v-if="gameStore.activeOverlay !== 'quitConfirm'"
+            name="buttons_group_showing" tag="div" class="buttons_group group_correction"
+        >
             <button 
-                v-for="(btn, index) in menuButtons" 
+                v-for="(btn, index) in menuButtonsPause" 
                 v-if="isButtonsShown" 
                 :key="btn.id"
                 class="menu_btn btn_correction" 
@@ -28,10 +30,22 @@
             </button>
         </TransitionGroup>
 
-        <div v-if="gameStore.activeOverlay==='quitConfirm'" class="asd">
-            <div class="yes" @click="goToMainMenu()">да</div>
-            <div class="no" @click="hideQuitConfirmMenu()">нет</div>
-        </div>
+        <!-- Кнопки диалогового окна "Завершить игру?" -->
+        <TransitionGroup v-if="gameStore.activeOverlay === 'quitConfirm'"
+            name="buttons_group_showing" tag="div" class="buttons_group group_correction"
+        >
+            <span v-if="isWarningShown" class="warning">{{ foo.makeText('quitConfirm.warning', 'empty') }}</span>
+            <button 
+                v-for="(btn, index) in menuButtonsQuitConfirm" 
+                v-if="isConfirmButtonsShown" 
+                :key="btn.id"
+                class="menu_btn btn_correction" 
+                :style="{ animationDelay: `${index * 0.06}s` }" 
+                @click="btn.action"
+            >
+                {{ btn.text }}
+            </button>
+        </TransitionGroup>
     </div>
 </template>
 
@@ -48,23 +62,48 @@
 
     const isHeaderShown = ref(false);
     const isButtonsShown = ref(false);
+    const isConfirmButtonsShown = ref(false);
+    const isWarningShown = ref(false);
 
-    const menuButtons = computed(() => [
+    // кнопки меню "Пауза"
+    const menuButtonsPause = computed(() => [
         { id: 1, text: foo.makeText("pauseMenu.menuList.resume"), action: resumeGame },
         { id: 2, text: foo.makeText("pauseMenu.menuList.settings"), action: goToSettings },
-        // { id: 3, text: foo.makeText("pauseMenu.menuList.menu"), action: goToMainMenu },
         { id: 3, text: foo.makeText("pauseMenu.menuList.menu"), action: showQuitConfirmMenu },
     ]);
 
-    const dynamicTitleName = computed(() => foo.makeText("pauseMenu.title", 'empty'));
+    // кнопки диалогового окна "Завершить игру?"
+    const menuButtonsQuitConfirm = computed(() => [
+        { id: 1, text: foo.makeText("quitConfirm.menuList.stay"), action: hideQuitConfirmMenu },
+        { id: 2, text: foo.makeText("quitConfirm.menuList.quit"), action: goToMainMenu },
+    ]);
 
-    function showHideAllPauseElements(type_) {
+    // генерируем фразу для титула
+    const dynamicTitleName = computed(() => {
+        if (gameStore.activeOverlay == 'quitConfirm') {
+            return foo.makeText("quitConfirm.title", 'empty');
+        } else {
+            return foo.makeText("pauseMenu.title", 'empty');
+        };
+    });
+
+    // показываем (анимацией) титул и все кнопки меню
+    function showHideAllPauseElements(type_, isQuitGame = false) {
         isHeaderShown.value = type_;
+
+        if (isQuitGame) {
+            isWarningShown.value = false;
+            setTimeout(() => {
+                isConfirmButtonsShown.value = false;
+            }, 100);
+        };
+        
         setTimeout(() => {
             isButtonsShown.value = type_;
         }, 100);
     };
 
+    // продолжаем игру
     function resumeGame() {
         showHideAllPauseElements(false);
         setTimeout(() => {
@@ -72,24 +111,43 @@
         }, 400);
     };
 
+    // показываем диалоговое окно с подтверждением выхода из игры
     function showQuitConfirmMenu() {
-        gameStore.activeOverlay = 'quitConfirm';
-    };
-    function hideQuitConfirmMenu() {
-        gameStore.activeOverlay = null;
+        isButtonsShown.value = false;
+        setTimeout(() => {
+            gameStore.activeOverlay = 'quitConfirm';
+        }, 400);
+        setTimeout(() => {
+            isWarningShown.value = true;
+        }, 450);
+        setTimeout(() => {
+            isConfirmButtonsShown.value = true;
+        }, 500);
     };
 
-    function goToMainMenu() {
-        if (gameStore.activeOverlay === 'quitConfirm') {
+    // скрываем диалоговое окно с подтверждением выхода из игры
+    function hideQuitConfirmMenu () {
+        isWarningShown.value = false;
+        setTimeout(() => {
+            isConfirmButtonsShown.value = false;
+        }, 100);
+        setTimeout(() => {
             gameStore.activeOverlay = null;
-            showHideAllPauseElements(false);
-            setTimeout(() => {
-                gameStore.setState(GameStates.Menu);
-            }, 400);
-        };
-
+        }, 500);
     };
 
+    // переходим в главное меню
+    function goToMainMenu() {
+        showHideAllPauseElements(false, true);
+        setTimeout(() => {
+            gameStore.setState(GameStates.Menu);
+        }, 400);
+        setTimeout(() => {
+            gameStore.activeOverlay = null;
+        }, 500);
+    };
+
+    // переходим в настройки
     function goToSettings() {
         isButtonsShown.value = false;
         setTimeout(() => {
@@ -100,8 +158,8 @@
     watch(
         () => gameStore.activeOverlay,
         (newState) => {
-            if (newState !== 'settings') {
-                showHideAllPauseElements(true);
+            if (newState === null) {
+                showHideAllPauseElements(true, true);
             };
         },
     );
@@ -116,27 +174,17 @@
     @use "@/styles/menu.scss";
     @use "@/styles/animations.scss";
 
-    .asd {
-        color: white;
-        font-size: 30px;
-        display: flex;
-        gap: 20px;
-    }
-    .yes {
-        cursor: pointer;
-        &:hover {
-            color: aqua;
-        }
-    }
-    .no {
-        cursor: pointer;
-        &:hover {
-            color: aqua;
-        }
+    .warning {
+        font-family: 'jost';
+        text-transform: uppercase;
+        font-size: 1.375rem;
+        color: #F79CFF;
+        width: 25rem;
+        text-align: center;
+        margin-bottom: 1.563rem;
     }
 
     .container_correction {
-        // justify-content: center !important;
         justify-content: flex-start !important;
         top: 19.75rem;
     }

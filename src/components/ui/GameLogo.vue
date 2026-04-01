@@ -65,7 +65,6 @@
 
                 // ===== MENU =====
                 case GameStates.Menu:
-                    console.log(gameState.currentState);
                     if (gameState.activeOverlay === 'settings') {
                         // возвращаемся в Главное меню
                         isWholeLogoShown.value = true;                   
