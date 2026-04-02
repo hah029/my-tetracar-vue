@@ -1,6 +1,6 @@
 <template>
     <Transition name="game_logo_whole_menu_showing">
-        <div v-show="isWholeLogoShown" class="menu_overlay">
+        <div v-show="isWholeLogoShown" class="game_logo_overlay">
             <div class="background" :class="backgroundClass"></div>
             <div class="gradient"></div>
 
@@ -26,6 +26,22 @@
                     </div>
                 </Transition>
             </div>
+
+            <div class="rights_and_logo">
+                <div class="rights_group">
+                    <div class="a">TetroCar v0.0.1</div>
+                    <div class="a">© 2026 Все права под неоновой защитой</div>
+                </div>
+                <div @click="asd()" class="team_logo_group">
+                    <div class="team_name_text_group">
+                        <div class="a">wicked</div>
+                        <div class="a">team</div>
+                    </div>
+                    <div class="logo_container">
+                        <img class='logo_img' src="@/assets/images/logo_wicked_team.svg">
+                    </div>
+                </div>
+            </div>
         </div>
     </Transition>
 </template>
@@ -44,6 +60,11 @@
     const isLettersShown = ref(false);
     const isLettersMovedToTop = ref(false);
     const isLinesShown = ref(false);
+
+    function asd() {
+        console.log('asd');
+        
+    };
 
     // ===== STATE MACHINE =====
     // (сценарии работы с логотипом)
@@ -93,17 +114,14 @@
                     break;
 
                 // // ===== GAME OVER =====
-                // case GameStates.Gameover:
-                //     isWholeLogoShown.value = true;
-                //     break;
+                case GameStates.Gameover:
+                    isWholeLogoShown.value = true;
+                    isLettersShown.value = false;
+                    break;
             }
         },
         { immediate: true }
     );
-
-    // ===== COMPUTED =====
-
-    
 
     // смещаем логотип при переходе из Прелоадера в Главное меню
     const logoMoveClass = computed(() => {
@@ -137,6 +155,18 @@
     @use "@/styles/animations.scss";
 
     // #region - фон
+        .game_logo_overlay {
+            position: absolute;
+            inset: 0;
+            z-index: 2000;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background-color: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(2px);
+        }     
+        
         .background {
             position: absolute;
             left: 0;
@@ -193,6 +223,56 @@
         }
         .neon_pink {
             filter: drop-shadow(0 0 20px rgba(237, 37, 255, 1));
+        }
+    // #endregion
+
+    // #region - версия игры, права и логотип
+        .rights_and_logo {
+            position: absolute;
+            bottom: 0%;
+            width: 95.8%;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+            padding-bottom: 1.875rem;
+            opacity: 0.65;
+            font-family: 'jost';
+            font-size: 0.75rem;
+            color: white;
+            letter-spacing: 0.05rem;
+        }
+        
+        .rights_group {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            justify-content: flex-end;
+        }
+
+        .team_logo_group {
+            position: relative;
+            display: flex;
+            align-items: flex-end;
+            justify-content: flex-end;
+            pointer-events: all; 
+            // cursor: pointer;
+            // pointer-events: auto !important;
+            // z-index: 20000;
+
+            &:hover {
+                opacity: 1;
+            }
+        }
+        .logo_container {
+            width: 3.25rem;
+        }
+
+        .team_name_text_group {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            justify-content: flex-end;
+            text-transform: uppercase;
         }
     // #endregion
 </style>

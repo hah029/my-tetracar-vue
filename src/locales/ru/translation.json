@@ -27,10 +27,10 @@
         }
     },
     "gameOverMenu": {
-        "title": "gameover",
+        "title": "конец игры",
         "menuList": {
             "restartGame": "играть снова",
-            "goToMainMenu": "меню"
+            "goToMainMenu": "выйти в меню"
         },
         "summary": {
             "points": {
@@ -91,5 +91,13 @@
         "debug": {
             "debugEnabled": "режим отладки"
         }
+    },
+    "rightsAndVersions": {
+        "phrasesList": [
+            "© 2026 Все права светятся",
+            "© 2026 Все права под неоновой защитой",
+            "© 2026 Все права защищены неоном"
+        ],
+        "version": "TetroCar v"
     }
 }

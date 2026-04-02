@@ -27,10 +27,10 @@
         }
     },
     "gameOverMenu": {
-        "title": "gameover",
+        "title": "game over",
         "menuList": {
             "restartGame": "restart",
-            "goToMainMenu": "menu"
+            "goToMainMenu": "quit to menu"
         },
         "summary": {
             "points": {
@@ -91,5 +91,13 @@
         "debug": {
             "debugEnabled": "debug"
         }
+    },
+    "rightsAndVersions": {
+        "phrasesList": [
+            "© 2026 All rights neon-served",
+            "© 2026 All rights preserved… in neon",
+            "© 2026 All rights electrified"
+        ],
+        "version": "TetroCar v"
     }
 }

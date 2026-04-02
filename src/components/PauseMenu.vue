@@ -155,6 +155,7 @@
         }, 400);
     };
 
+    // следим за стостоянием оверлея
     watch(
         () => gameStore.activeOverlay,
         (newState) => {
@@ -200,6 +201,7 @@
     .header_correction {
         font-size: 3.125rem; // (50px)
     }
+
     .btn_correction {
         font-size: 1.875rem; // (30px)
     }
