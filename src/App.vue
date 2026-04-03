@@ -1,17 +1,16 @@
 <template>
-    <!-- canvas -->
+    <!-- 3d-canvas -->
     <div ref="threeRoot" class="three-root"></div>
 
     <!-- UI -->
     <GameLogo />
-    <transition>
-        <component :is="getUIComponent" />
-    </transition>
+    <component :is="getUIComponent" />
+    <rightsPanel />
 </template>
 
 
 <script setup lang="ts">
-    import { ref, onMounted, onUnmounted, computed, Transition } from "vue";
+    import { ref, onMounted, onUnmounted, computed } from "vue";
     // composable
     import { useThree } from "./composables/useThree";
     import { useGame } from "./composables/useGame";
@@ -26,6 +25,7 @@
     import GameOverMenu from "./components/GameOverMenu.vue";
     import Countdown from "./components/Countdown.vue";
     import GameLogo from "@/components/ui/GameLogo.vue";
+    import rightsPanel from "@/components/ui/rightsPanel.vue";
     // managers
     import { CameraSystem } from "@/game/camera/CameraSystem";
     import { SoundManager } from "./game/sound/SoundManager";
