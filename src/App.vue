@@ -5,7 +5,8 @@
     <!-- UI -->
     <GameLogo />
     <component :is="getUIComponent" />
-    <rightsPanel />
+    <RightsPanel />
+    <TeamLogo />
 </template>
 
 
@@ -25,7 +26,8 @@
     import GameOverMenu from "./components/GameOverMenu.vue";
     import Countdown from "./components/Countdown.vue";
     import GameLogo from "@/components/ui/GameLogo.vue";
-    import rightsPanel from "@/components/ui/rightsPanel.vue";
+    import RightsPanel from "@/components/ui/RightsPanel.vue";
+    import TeamLogo from "@/components/ui/TeamLogo.vue";
     // managers
     import { CameraSystem } from "@/game/camera/CameraSystem";
     import { SoundManager } from "./game/sound/SoundManager";

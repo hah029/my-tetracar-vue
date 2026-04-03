@@ -69,8 +69,10 @@
     const gameState = useGameState();
     const playerStore = usePlayerStore();
     const progressStore = useProgressStore();
+    const gameStore = useGameState();
     
     // генерируем фразу для титула
+    const foo = createNewText();
     const isHeaderShown = ref(false);
     const dynamicTitleName = computed(() => foo.makeText("gameOverMenu.title", 'empty'));
 
@@ -80,8 +82,6 @@
     const distance = computed(() => progressStore.getDistanceInCubes());
     const currentSpeedRounded = computed(() => playerStore.getCurrentSpeedInCubesPerHour(1));
 
-    const gameStore = useGameState();
-    const foo = createNewText();
     const menuButtons = computed(() => [
         { id: 1, text: foo.makeText("gameOverMenu.menuList.restartGame"), action: restartGame },
         { id: 2, text: foo.makeText("gameOverMenu.menuList.goToMainMenu"), action: goToMainMenu },

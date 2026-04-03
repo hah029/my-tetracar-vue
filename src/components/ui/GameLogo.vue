@@ -137,7 +137,8 @@
         .game_logo_overlay {
             position: absolute;
             inset: 0;
-            z-index: 2000;
+            // z-index: 2000;
+            z-index: 1000;
             display: flex;
             flex-direction: column;
             align-items: center;

@@ -2,11 +2,12 @@ import { reactive } from 'vue';
 import { useTranslation } from "i18next-vue";
 
 
-// основная функция реактивного(!) перевода каждой строки в игре
+// основная функция реактивного перевода каждой строки в игре
 export function createNewText() {
     const { t } = useTranslation();
     
     const newText = reactive({
+        // получаем реактивную фразу в нужном языке (с черточками по бокам и без)
         makeText: (val_: string, type_?: string) => {
             if (type_ != undefined) {
                 // не ставим черточки по бокам строки
@@ -15,6 +16,20 @@ export function createNewText() {
                 // черточки ставим (у кнопок)
                 return `- ${t(val_)} -`;
             };
+        },
+
+        // получаем случайный элемент из входящего массива 
+        //      (если на вход поступает не строка, а целый массив строк)
+        getRandomFromArray: (val_: any): any => {
+            const array = t(val_, { returnObjects: true }) as any[];
+            
+            if (!Array.isArray(array) || array.length === 0) {
+                console.warn(`Invalid array for val_: ${val_}`);
+                return '';
+            };
+            
+            const randomIndex = Math.floor(Math.random() * array.length);
+            return array[randomIndex];
         },
     });
     
