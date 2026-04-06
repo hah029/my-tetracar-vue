@@ -1,51 +1,53 @@
 <template>
-    <!-- SETTINGS OVERLAY -->
-    <SettingsOverlay v-if="gameStore.activeOverlay === 'settings'" :key="'settings'" />
-
-    <!-- PAUSE MENU -->
-    <div v-if="gameStore.activeOverlay !== 'settings'" :key="'pause'" class="container container_correction">
-        <!-- HEADER с анимацией -->
-        <Transition name="header_footer_block_anim">
-            <div v-if="isHeaderShown" class="header_block">
-                <div class="header_text header_correction">{{ dynamicTitleName }}</div>
-                <div class="header_image">
-                    <img class='image' src="@/assets/images/title_line_image.svg" />
+    <div class="container">
+        <!-- SETTINGS OVERLAY -->
+        <SettingsOverlay v-if="gameStore.activeOverlay === 'settings'" :key="'settings'" />
+    
+        <!-- PAUSE MENU -->
+        <div v-if="gameStore.activeOverlay !== 'settings'" :key="'pause'" class="container container_correction">
+            <!-- HEADER с анимацией -->
+            <Transition name="header_footer_block_anim">
+                <div v-if="isHeaderShown" class="header_block">
+                    <div class="header_text header_correction">{{ dynamicTitleName }}</div>
+                    <div class="header_image">
+                        <img class='image' src="@/assets/images/title_line_image.svg" />
+                    </div>
                 </div>
-            </div>
-        </Transition>
-
-        <!-- Кнопки меню "Пауза" -->
-        <TransitionGroup v-if="gameStore.activeOverlay !== 'quitConfirm'"
-            name="buttons_group_showing" tag="div" class="buttons_group group_correction"
-        >
-            <button 
-                v-for="(btn, index) in menuButtonsPause" 
-                v-if="isButtonsShown" 
-                :key="btn.id"
-                class="menu_btn btn_correction" 
-                :style="{ animationDelay: `${index * 0.06}s` }" 
-                @click="btn.action"
+            </Transition>
+    
+            <!-- Кнопки меню "Пауза" -->
+            <TransitionGroup v-if="gameStore.activeOverlay !== 'quitConfirm'"
+                name="buttons_group_showing" tag="div" class="buttons_group group_correction"
             >
-                {{ btn.text }}
-            </button>
-        </TransitionGroup>
-
-        <!-- Кнопки диалогового окна "Завершить игру?" -->
-        <TransitionGroup v-if="gameStore.activeOverlay === 'quitConfirm'"
-            name="buttons_group_showing" tag="div" class="buttons_group group_correction"
-        >
-            <span v-if="isWarningShown" class="warning">{{ foo.makeText('quitConfirm.warning', 'empty') }}</span>
-            <button 
-                v-for="(btn, index) in menuButtonsQuitConfirm" 
-                v-if="isConfirmButtonsShown" 
-                :key="btn.id"
-                class="menu_btn btn_correction" 
-                :style="{ animationDelay: `${index * 0.06}s` }" 
-                @click="btn.action"
+                <button 
+                    v-for="(btn, index) in menuButtonsPause" 
+                    v-if="isButtonsShown" 
+                    :key="btn.id"
+                    class="menu_btn btn_correction" 
+                    :style="{ animationDelay: `${index * 0.06}s` }" 
+                    @click="btn.action"
+                >
+                    {{ btn.text }}
+                </button>
+            </TransitionGroup>
+    
+            <!-- Кнопки диалогового окна "Завершить игру?" -->
+            <TransitionGroup v-if="gameStore.activeOverlay === 'quitConfirm'"
+                name="buttons_group_showing" tag="div" class="buttons_group group_correction"
             >
-                {{ btn.text }}
-            </button>
-        </TransitionGroup>
+                <span v-if="isWarningShown" class="warning">{{ foo.makeText('quitConfirm.warning', 'empty') }}</span>
+                <button 
+                    v-for="(btn, index) in menuButtonsQuitConfirm" 
+                    v-if="isConfirmButtonsShown" 
+                    :key="btn.id"
+                    class="menu_btn btn_correction" 
+                    :style="{ animationDelay: `${index * 0.06}s` }" 
+                    @click="btn.action"
+                >
+                    {{ btn.text }}
+                </button>
+            </TransitionGroup>
+        </div>
     </div>
 </template>
 

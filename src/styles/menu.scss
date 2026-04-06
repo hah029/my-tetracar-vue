@@ -1,3 +1,18 @@
+$z-layers: (
+    "canvas": 0,
+    "gradient": 1,
+    "background": 2,
+    "logo": 3,
+    "game_logo__root": 5,
+    "ui_component": 10,
+    "rights_and_logo": 100,
+    "modal": 1000,
+);
+
+@function z($layer) {
+    @return map-get($z-layers, $layer);
+}
+
 .container {
     position: absolute;
     top: 0;
@@ -8,7 +23,6 @@
     align-items: center;
     width: 100vw;
     height: 100vh;
-    z-index: 2000;
 }
 
 .sub_container {

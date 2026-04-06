@@ -1,6 +1,6 @@
 <template>
-    <Transition name="game_logo_whole_menu_showing">
-        <div v-show="isRightPanelShown" class="rights_group">
+    <Transition name="rights_panel_showing">
+        <div v-show="isRightPanelShown" class="rights_root">
             <span>{{ APP_NAME }} v{{ APP_VERSION }}</span>
             <span>© {{ CURRENT_YEAR }} {{ randomRightsPhrase }}</span>
         </div>
@@ -39,8 +39,8 @@
 
                 // ===== MENU =====
                 case GameStates.Menu:
-                    setTimeout(() => {
-                        isRightPanelShown.value = true;                   
+                    setTimeout(async () => {
+                        isRightPanelShown.value = true;
                     }, 400);
                     break;
 
@@ -60,10 +60,9 @@
 
 
 <style lang='scss' scoped>
-    @use "@/styles/menu.scss";
-    @use "@/styles/animations.scss";
+    @use "@/styles/menu.scss" as *;
     
-    .rights_group {
+    .rights_root {
         position: absolute;
         bottom: 1.875rem;
         left: 2.5rem;
@@ -74,8 +73,15 @@
         color: white;
         opacity: 0.65;
         font-size: 0.75rem;
-        z-index: 2000;
         font-family: 'jost';
         letter-spacing: 0.05rem;
+        z-index: z("rights_and_logo");
+    }
+
+    .rights_panel_showing-enter-active, .rights_panel_showing-leave-active {
+        transition: all ease-in-out 0.5s;
+    }
+    .rights_panel_showing-enter-from, .rights_panel_showing-leave-to {
+        opacity: 0;
     }
 </style>

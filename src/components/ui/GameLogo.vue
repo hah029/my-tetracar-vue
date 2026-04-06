@@ -1,8 +1,8 @@
 <template>
     <Transition name="game_logo_whole_menu_showing">
-        <div v-show="isWholeLogoShown" class="game_logo_overlay">
-            <div class="background" :class="backgroundClass"></div>
-            <div class="gradient"></div>
+        <div v-show="isWholeLogoShown" class="game_logo__root">
+            <div class="background_animated" :class="backgroundClass"></div>
+            <div class="gradient_bottom"></div>
 
             <div class="container">
                 <Transition name="game_logo_showing">
@@ -130,29 +130,29 @@
 
 
 <style lang='scss' scoped>
-    @use "@/styles/menu.scss";
+    @use "@/styles/menu.scss" as *;
     @use "@/styles/animations.scss";
 
     // #region - фон
-        .game_logo_overlay {
+        .game_logo__root {
             position: absolute;
             inset: 0;
-            // z-index: 2000;
-            z-index: 1000;
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
             background-color: rgba(0, 0, 0, 0.5);
             backdrop-filter: blur(2px);
+            z-index: z("game_logo__root");
         }     
         
-        .background {
+        .background_animated {
             position: absolute;
             left: 0;
             width: 100%;
             height: 200%;
             background: linear-gradient(to bottom, #000000 0%, #000000 50%, rgba(204, 183, 183, 0) 100%);
+            z-index: z("background");
         }
 
         .background_second_state {
@@ -165,12 +165,13 @@
             animation-delay: 3.2s;
         }
 
-        .gradient {
+        .gradient_bottom {
             position: fixed;
             bottom: 0%;
             width: 100%;
             height: 55%;
             background: linear-gradient(rgba(0, 0, 0, 0), rgba(0, 0, 0, 0.8));
+            z-index: z("gradient");
         }
     // #endregion
 
@@ -182,6 +183,7 @@
             display: flex;
             align-items: center;
             justify-content: space-between;
+            z-index: z("logo");
 
             // position: relative;
             // width: 100%;

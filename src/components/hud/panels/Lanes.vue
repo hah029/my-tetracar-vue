@@ -22,7 +22,6 @@ const laneCount = computed(() => RoadManager.getInstance().getLanesCount?.());
   inset: 0;
   pointer-events: none;
   font-family: monospace;
-  z-index: 5;
 }
 
 /* === COMMON PANEL STYLE === */

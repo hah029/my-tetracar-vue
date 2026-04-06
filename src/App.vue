@@ -1,10 +1,10 @@
 <template>
     <!-- 3d-canvas -->
-    <div ref="threeRoot" class="three-root"></div>
+    <div ref="threeRoot" class="three_js__root"></div>
 
     <!-- UI -->
     <GameLogo />
-    <component :is="getUIComponent" />
+    <component :is="getUIComponent" class="ui_components_root"/>
     <RightsPanel />
     <TeamLogo />
 </template>
@@ -109,7 +109,9 @@
 </script>
 
 
-<style>
+<style lang='scss'>
+    @use "@/styles/menu.scss" as *;
+
     @font-face {
         font-family: 'vla_shu';
         src: url('./assets/fonts/VlaShu.ttf')
@@ -141,9 +143,16 @@
         -ms-user-select: none;
     }
 
-    .three-root {
+    .three_js__root, .ui_components_root {
+        position: relative;
         width: 100%;
         height: 100%;
+    }
+    .three_js__root {
+        z-index: z("canvas");
+    }
+    .ui_components_root {
+        z-index: z("ui_component");
     }
 
     .menu_layout {

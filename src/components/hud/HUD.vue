@@ -1,218 +1,222 @@
 <template>
-  <div id="game-hud">
+    <div id="game-hud">
 
-    <!-- SCORE -->
-    <Score />
+        <!-- SCORE -->
+        <Score />
 
-    <!-- SPEED (TETRIS BLOCKS ANIMATION) -->
-    <Speed />
+        <!-- SPEED (TETRIS BLOCKS ANIMATION) -->
+        <Speed />
 
-    <!-- NITRO (TETRIS STYLE) -->
-    <Boosters />
+        <!-- NITRO (TETRIS STYLE) -->
+        <Boosters />
 
-    <!-- LANES -->
-    <Lanes />
+        <!-- LANES -->
+        <Lanes />
 
-    <!-- WARNING -->
-    <Notifications />
+        <!-- WARNING -->
+        <Notifications />
 
-  </div>
+    </div>
 </template>
 
+
 <script setup lang="ts">
-import Score from "./panels/Score.vue";
-import Speed from "./panels/Speed.vue";
-import Boosters from "./panels/Boosters.vue";
-import Lanes from "./panels/Lanes.vue";
-import Notifications from "./panels/Notifications.vue";
+    import Score from "./panels/Score.vue";
+    import Speed from "./panels/Speed.vue";
+    import Boosters from "./panels/Boosters.vue";
+    import Lanes from "./panels/Lanes.vue";
+    import Notifications from "./panels/Notifications.vue";
 </script>
 
-<style scoped>
-#game-hud {
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  font-family: monospace;
-  z-index: 5;
-}
 
-/* === COMMON PANEL STYLE === */
-.panel {
-  position: absolute;
-  background: rgba(0, 0, 0, 0.8);
-  padding: 12px 16px;
-  border: 2px solid #00ffff;
-  border-radius: 4px;
-  box-shadow: 0 0 8px rgba(0, 255, 255, 0.3);
-  color: #00ffff;
-}
+<style lang='scss' scoped>
+    @use "@/styles/menu.scss" as *;
+    
+    #game-hud {
+        position: absolute;
+        inset: 0;
+        pointer-events: none;
+        font-family: monospace;
+        z-index: z("ui_component");
+    }
 
-/* === SCORE PANEL === */
-.panel-left {
-  top: 20px;
-  left: 20px;
-}
+    /* === COMMON PANEL STYLE === */
+    .panel {
+        position: absolute;
+        background: rgba(0, 0, 0, 0.8);
+        padding: 12px 16px;
+        border: 2px solid #00ffff;
+        border-radius: 4px;
+        box-shadow: 0 0 8px rgba(0, 255, 255, 0.3);
+        color: #00ffff;
+    }
 
-.label {
-  font-size: 12px;
-  opacity: 0.7;
-  letter-spacing: 1px;
-}
+    /* === SCORE PANEL === */
+    .panel-left {
+        top: 20px;
+        left: 20px;
+    }
 
-.value {
-  font-size: 24px;
-  font-weight: bold;
-}
+    .label {
+        font-size: 12px;
+        opacity: 0.7;
+        letter-spacing: 1px;
+    }
 
-.value.gold {
-  color: #ffd700;
-  text-shadow: 0 0 4px #ffd700;
-}
+    .value {
+        font-size: 24px;
+        font-weight: bold;
+    }
 
-.sub {
-  font-size: 10px;
-  opacity: 0.5;
-}
+    .value.gold {
+        color: #ffd700;
+        text-shadow: 0 0 4px #ffd700;
+    }
 
-/* === SPEED PANEL === */
-.panel-right {
-  top: 20px;
-  right: 20px;
-}
+    .sub {
+        font-size: 10px;
+        opacity: 0.5;
+    }
 
-.speed-panel-tetris {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-}
+    /* === SPEED PANEL === */
+    .panel-right {
+        top: 20px;
+        right: 20px;
+    }
 
-.speed-label {
-  font-size: 12px;
-  letter-spacing: 1px;
-  margin-bottom: 5px;
-}
+    .speed-panel-tetris {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+    }
 
-.speed-blocks {
-  display: flex;
-  gap: 1px;
-  margin-bottom: 4px;
-}
+    .speed-label {
+        font-size: 12px;
+        letter-spacing: 1px;
+        margin-bottom: 5px;
+    }
 
-.speed-block {
-  width: 1px;
-  height: 16px;
-  background: rgba(0, 255, 255, 0.2);
-  /* border: 2px solid rgba(0, 255, 255, 0.4); */
-  transform: translateY(-20px);
-  opacity: 0;
-  animation: fall 0.3s forwards;
-}
+    .speed-blocks {
+        display: flex;
+        gap: 1px;
+        margin-bottom: 4px;
+    }
 
-.speed-block.active {
-  background: #00ffff;
-  box-shadow: 0 0 3px #00ffff;
-}
+    .speed-block {
+        width: 1px;
+        height: 16px;
+        background: rgba(0, 255, 255, 0.2);
+        /* border: 2px solid rgba(0, 255, 255, 0.4); */
+        transform: translateY(-20px);
+        opacity: 0;
+        animation: fall 0.3s forwards;
+    }
 
-.speed-value {
-  font-size: 14px;
-  font-weight: bold;
-  letter-spacing: 1px;
-}
+    .speed-block.active {
+        background: #00ffff;
+        box-shadow: 0 0 3px #00ffff;
+    }
 
-/* === NITRO PANEL === */
-.nitro {
-  top: 60px;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 280px;
-  border: 2px solid #ff4444;
-  border-radius: 4px;
-  padding: 8px;
-  background: rgba(0, 0, 0, 0.7);
-}
+    .speed-value {
+        font-size: 14px;
+        font-weight: bold;
+        letter-spacing: 1px;
+    }
 
-.nitro-header {
-  display: flex;
-  justify-content: space-between;
-  font-size: 10px;
-  margin-bottom: 4px;
-  color: #fff;
-}
+    /* === NITRO PANEL === */
+    .nitro {
+        top: 60px;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 280px;
+        border: 2px solid #ff4444;
+        border-radius: 4px;
+        padding: 8px;
+        background: rgba(0, 0, 0, 0.7);
+    }
 
-.nitro-header .active {
-  font-weight: bold;
-  color: #44ff44;
-}
+    .nitro-header {
+        display: flex;
+        justify-content: space-between;
+        font-size: 10px;
+        margin-bottom: 4px;
+        color: #fff;
+    }
 
-.nitro-bar-bg {
-  width: 100%;
-  height: 14px;
-  background: rgba(255, 255, 255, 0.1);
-  border-radius: 2px;
-  position: relative;
-  overflow: hidden;
-}
+    .nitro-header .active {
+        font-weight: bold;
+        color: #44ff44;
+    }
 
-.nitro-bar {
-  width: 100%;
-  height: 100%;
-  display: flex;
-}
+    .nitro-bar-bg {
+        width: 100%;
+        height: 14px;
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 2px;
+        position: relative;
+        overflow: hidden;
+    }
 
-.nitro-block {
-  width: 20%;
-  height: 100%;
-  transform: translateY(-20px);
-  opacity: 0;
-  animation: fall 0.25s forwards;
+    .nitro-bar {
+        width: 100%;
+        height: 100%;
+        display: flex;
+    }
 
-  &.active {
-    background: linear-gradient(90deg, #ff4444, #ff8844);
-  }
-}
+    .nitro-block {
+        width: 20%;
+        height: 100%;
+        transform: translateY(-20px);
+        opacity: 0;
+        animation: fall 0.25s forwards;
 
-/* === LANES === */
-.lane-indicator {
-  bottom: 30px;
-  left: 20px;
-  display: flex;
-  gap: 6px;
-  padding: 6px;
-  border: 2px solid #00ffff;
-  border-radius: 4px;
-  background: rgba(0, 0, 0, 0.7);
-}
+        &.active {
+            background: linear-gradient(90deg, #ff4444, #ff8844);
+        }
+    }
 
-.lane-dot {
-  width: 16px;
-  height: 16px;
-  background: rgba(0, 255, 255, 0.2);
-  border: 2px solid rgba(0, 255, 255, 0.5);
-  transition: .2s;
-}
+    /* === LANES === */
+    .lane-indicator {
+        bottom: 30px;
+        left: 20px;
+        display: flex;
+        gap: 6px;
+        padding: 6px;
+        border: 2px solid #00ffff;
+        border-radius: 4px;
+        background: rgba(0, 0, 0, 0.7);
+    }
 
-.lane-dot.active {
-  background: #00ffff;
-  box-shadow: 0 0 5px #00ffff;
-  transform: scale(1.2);
-}
+    .lane-dot {
+        width: 16px;
+        height: 16px;
+        background: rgba(0, 255, 255, 0.2);
+        border: 2px solid rgba(0, 255, 255, 0.5);
+        transition: .2s;
+    }
 
-/* === WARNING === */
-.warning-message {
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  font-size: 36px;
-  font-weight: bold;
-  text-shadow: 0 0 10px red;
-  pointer-events: none;
-}
+    .lane-dot.active {
+        background: #00ffff;
+        box-shadow: 0 0 5px #00ffff;
+        transform: scale(1.2);
+    }
 
-/* === ANIMATIONS === */
-@keyframes fall {
-  to {
-    transform: translateY(0);
-    opacity: 1;
-  }
-}
+    /* === WARNING === */
+    .warning-message {
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        font-size: 36px;
+        font-weight: bold;
+        text-shadow: 0 0 10px red;
+        pointer-events: none;
+    }
+
+    /* === ANIMATIONS === */
+    @keyframes fall {
+        to {
+            transform: translateY(0);
+            opacity: 1;
+        }
+    }
 </style>

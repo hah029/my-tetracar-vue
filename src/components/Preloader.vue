@@ -66,7 +66,6 @@
     @use "@/styles/menu.scss";
 
     .btn_correction {
-        z-index: 2500;
         position: absolute;
         bottom: 30.435%;
         height: fit-content;
