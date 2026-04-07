@@ -1,7 +1,10 @@
 <template>
     <div class="container">
-        <!-- SETTINGS OVERLAY -->
-        <SettingsOverlay v-if="gameStore.activeOverlay === 'settings'" />
+        <!-- SETTINGS -->
+        <SettingsRoot v-if="gameStore.activeOverlay === 'settings'" />
+
+        <!-- LEADERBOARDS -->
+        <LeaderBoardsRoot v-if="gameStore.activeOverlay === 'leaderBoards'" />
 
         <!-- MAIN MENU -->
         <TransitionGroup name="buttons_group_showing" tag="div" class="buttons_group group_correction">
@@ -25,7 +28,8 @@
     import { useGameState } from "@/store/gameState";
     import { GameStates } from "@/game/core/GameState";
     import { createNewText } from '@/helpers/functions';
-    import SettingsOverlay from "./settings/SettingsOverlay.vue";
+    import SettingsRoot from "./settings/SettingsRoot.vue";
+    import LeaderBoardsRoot from "./leaderboards/LeaderBoardsRoot.vue";
 
     const foo = createNewText();
 
@@ -38,7 +42,7 @@
         { id: 1, text: foo.makeText("mainMenu.startGame"), action: startGame },
         { id: 2, text: foo.makeText("mainMenu.shop"), action: null },
         { id: 3, text: foo.makeText("mainMenu.settings"), action: goToSettings },
-        { id: 4, text: foo.makeText("mainMenu.leaderboards"), action: null },
+        { id: 4, text: foo.makeText("mainMenu.leaderboards"), action: goToLeaderBoards },
     ]);
 
     function startGame() {
@@ -52,10 +56,17 @@
         }, 300);
     };
 
+    function goToLeaderBoards() {
+        isMainMenuEnabled.value = false;
+        setTimeout(() => {
+            gameStore.openLeaderBoards();
+        }, 300);
+    };
+
     watch(
         () => gameStore.activeOverlay,
         (newState) => {
-            newState === 'settings' ? "" : isMainMenuEnabled.value = true;
+            newState === 'settings' || newState === 'leaderBoards' ? "" : isMainMenuEnabled.value = true;
         },
     );
 

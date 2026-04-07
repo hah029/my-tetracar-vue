@@ -73,7 +73,7 @@
         color: white;
         opacity: 0.65;
         font-size: 0.75rem;
-        font-family: 'jost';
+        font-family: 'jost-light';
         letter-spacing: 0.05rem;
         z-index: z("rights_and_logo");
     }

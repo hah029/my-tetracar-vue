@@ -92,6 +92,16 @@
             "debugEnabled": "debug"
         }
     },
+    "leaderboards": {
+        "title": "leaderboards",
+        "emptyTable": "no records yet. play your first game!",
+        "firstGame": "play a game to get ranked!",
+        "syncError": "couldn't load scores. try again later.",
+        "tabList": {
+            "myBoard": "my position",
+            "topBoard": "top players"
+        }
+    },
     "rightsList": [
         "All rights neon-served",
         "All rights preserved… in neon",

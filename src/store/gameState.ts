@@ -7,7 +7,7 @@ import { useProgressStore } from "./progressStore";
 import { GameStates } from "@/game/core/GameState";
 import { SoundManager } from "@/game/sound/SoundManager";
 
-type UIOverlay = null | "settings" | "quitConfirm";
+type UIOverlay = null | "settings" | "quitConfirm" | "leaderBoards";
 
 export const useGameState = defineStore("gameState", () => {
   // ===== STATE =====
@@ -159,6 +159,10 @@ export const useGameState = defineStore("gameState", () => {
     activeOverlay.value = "settings";
   }
 
+  function openLeaderBoards() {
+    activeOverlay.value = "leaderBoards";
+  }
+
   function openQuitGameWindow() {
     previousState.value = currentState.value; // Запоминаем текущее состояние
     activeOverlay.value = "quitConfirm";
@@ -203,6 +207,7 @@ export const useGameState = defineStore("gameState", () => {
     setResetCallback,
 
     openSettings,
+    openLeaderBoards,
     openQuitGameWindow,
     confirmQuit,
     cancelQuit,

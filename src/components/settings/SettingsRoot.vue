@@ -3,38 +3,36 @@
     <div class="container" :class="setContainerPos()">
         <div class="settings_container">
 
-            <!-- <div class="sub_container"> -->
-                <!-- HEADER -->
-                <Transition :name="gameState.currentState == 'menu' ? 'header_footer_block_anim' : ''">
-                    <div v-if="isHeaderShown" class="header_block">
-                        <div class="header_text" :class="setHeaderSize()">{{ dynamicTitleName }}</div>
-                        <div class="header_image">
-                            <img class="image" src="@/assets/images/title_line_image.svg" />
-                        </div>
+            <!-- HEADER -->
+            <Transition :name="gameState.currentState == 'menu' ? 'header_footer_block_anim' : ''">
+                <div v-if="isHeaderShown" class="header_block">
+                    <div class="header_text" :class="setHeaderSize()">{{ dynamicTitleName }}</div>
+                    <div class="header_image">
+                        <img class="image" src="@/assets/images/title_line_image.svg" />
                     </div>
-                </Transition>
+                </div>
+            </Transition>
 
-                <!-- CONTENT -->
-                <TransitionGroup name="buttons_group_showing" tag="div" class="buttons_group group_correction">
-                    <!-- MAIN -->
-                    <button
-                        v-for="(btn, index) in menuButtons"
-                        v-if="currentView === SettingsView.Main"
-                        :key="btn.id" 
-                        class="menu_btn btn_correction"
-                        :style="{ animationDelay: `${index * 0.06}s` }" 
-                        @click="btn.action"
-                    >
-                        {{ btn.text }}
-                    </button>
-                </TransitionGroup>
-    
-                <!-- SUBMENUS -->
-                <SoundSettings v-if="currentView === SettingsView.Sound" :backStatus="isBackButtonClicked" />
-                <LanguageSettings v-else-if="currentView === SettingsView.Language" :backStatus="isBackButtonClicked" />
-                <ControlSettings v-else-if="currentView === SettingsView.Controls" :backStatus="isBackButtonClicked" />
-                <AboutSettings v-else-if="currentView === SettingsView.About" :backStatus="isBackButtonClicked" />
-            <!-- </div> -->
+            <!-- CONTENT -->
+            <TransitionGroup name="buttons_group_showing" tag="div" class="buttons_group group_correction">
+                <!-- MAIN -->
+                <button
+                    v-for="(btn, index) in menuButtons"
+                    v-if="currentView === SettingsView.Main"
+                    :key="btn.id" 
+                    class="menu_btn btn_correction"
+                    :style="{ animationDelay: `${index * 0.06}s` }" 
+                    @click="btn.action"
+                >
+                    {{ btn.text }}
+                </button>
+            </TransitionGroup>
+
+            <!-- SUBMENUS -->
+            <SoundSettings v-if="currentView === SettingsView.Sound" :backStatus="isBackButtonClicked" />
+            <LanguageSettings v-else-if="currentView === SettingsView.Language" :backStatus="isBackButtonClicked" />
+            <ControlSettings v-else-if="currentView === SettingsView.Controls" :backStatus="isBackButtonClicked" />
+            <AboutSettings v-else-if="currentView === SettingsView.About" :backStatus="isBackButtonClicked" />
 
             <!-- BACK -->
             <Transition name="header_footer_block_anim">

@@ -24,75 +24,80 @@ export const SEGMENTS: Segment[] = [
     difficulty: 1,
     length: SEGMENT_LENGHT,
     type: T.Safe,
+    // weight: 7,
     weight: 7,
 
     pattern: [
-      [L.EnemyCar, L.Empty, L.Empty, L.Empty, L.Coin],
-      [L.Empty, L.Empty, L.Empty, L.Empty, L.Coin],
-      [L.EnemyCar, L.Empty, L.Empty, L.Empty, L.Coin],
-      [L.Empty, L.Empty, L.Empty, L.Empty, L.Coin],
-      [L.EnemyCar, L.Empty, L.Empty, L.Empty, L.Coin],
-      [L.Empty, L.Empty, L.Empty, L.Empty, L.Coin],
-      [L.Empty, L.Empty, L.Empty, L.Empty, L.Coin],
-      [L.Empty, L.Empty, L.Empty, L.Empty, L.Coin],
-      [L.Empty, L.BulletItem, L.Empty, L.Empty, L.Coin],
-      [L.Empty, L.BulletItem, L.Empty, L.Empty, L.Coin],
-      [L.Empty, L.BulletItem, L.Empty, L.Empty, L.Coin],
-      [L.Empty, L.BulletItem, L.Empty, L.Empty, L.Coin],
-      [L.Empty, L.BulletItem, L.Empty, L.Empty, L.Coin],
-      [L.Empty, L.Empty, L.Empty, L.Empty, L.Coin],
-      [L.Empty, L.Empty, L.Empty, L.Empty, L.Coin]
-    ]
+      [L.Coin, L.Empty, L.Coin, L.Empty, L.Coin],
+      [L.Coin, L.Empty, L.Coin, L.Empty, L.Coin],
+      [L.Coin, L.Empty, L.Coin, L.Empty, L.Coin],
+      [L.Coin, L.Empty, L.Coin, L.Empty, L.Coin],
+      [L.Coin, L.Empty, L.Coin, L.Empty, L.Coin],
+    ],
   },
-//   {
-//     id: "safe_coins_1",
-//     difficulty: 1,
-//     length: SEGMENT_LENGHT,
-//     type: T.Safe,
-//     weight: 7,
 
-//     pattern: [
-//       [L.Empty, L.Empty, L.Coin, L.Empty, L.Empty],
-//       [L.Empty, L.Empty, L.Coin, L.Empty, L.Empty],
-//       [L.Empty, L.Empty, L.Coin, L.Empty, L.Empty],
-//       [L.Empty, L.Empty, L.Coin, L.Empty, L.Empty],
-//       [L.EnemyCar, L.Empty, L.EnemyCar, L.Empty, L.Empty]
-//     ]
-//   },
+  {
+    id: "safe_coins_2",
+    difficulty: 1,
+    length: SEGMENT_LENGHT,
+    type: T.Safe,
+    weight: 7,
 
-//   {
-//     id: "safe_coins_2",
-//     difficulty: 1,
-//     length: SEGMENT_LENGHT,
-//     type: T.Safe,
-//     weight: 7,
+    pattern: [
+      [L.Empty, L.Coin, L.Empty, L.Empty, L.Empty],
+      [L.Empty, L.Coin, L.Empty, L.Empty, L.Empty],
+      [L.Empty, L.Coin, L.Empty, L.Empty, L.Empty],
+      [L.Empty, L.Empty, L.Coin, L.Empty, L.Empty],
+      [L.Empty, L.Empty, L.Coin, L.Empty, L.Empty],
+      [L.Empty, L.Empty, L.Coin, L.Empty, L.Empty],
+    ],
+  },
 
-//     pattern: [
-//       [L.Empty, L.Coin, L.Empty, L.Empty, L.Empty],
-//       [L.Empty, L.Coin, L.Empty, L.Empty, L.Empty],
-//       [L.Empty, L.Coin, L.Empty, L.Empty, L.Empty],
-//       [L.Empty, L.Empty, L.Coin, L.Empty, L.Empty],
-//       [L.Empty, L.Empty, L.Coin, L.Empty, L.Empty],
-//       [L.Empty, L.Empty, L.Coin, L.Empty, L.Empty],
-//     ],
-//   },
+  {
+    id: "safe_coins_3",
+    difficulty: 1,
+    length: SEGMENT_LENGHT,
+    type: T.Safe,
+    weight: 7,
 
-//   {
-//     id: "safe_coins_3",
-//     difficulty: 1,
-//     length: SEGMENT_LENGHT,
-//     type: T.Safe,
-//     weight: 7,
+    pattern: [
+      [L.Coin, L.Empty, L.Empty, L.Empty, L.Empty],
+      [L.Coin, L.Empty, L.Empty, L.Empty, L.Empty],
+      [L.Empty, L.Coin, L.Empty, L.Empty, L.Empty],
+      [L.Empty, L.Coin, L.Empty, L.Empty, L.Empty],
+      [L.Empty, L.Empty, L.Coin, L.Empty, L.Empty],
+      [L.Empty, L.Empty, L.Coin, L.Empty, L.Empty],
+    ],
+  },
+  // {
+  //   id: "coin_wave",
+  //   difficulty: 1,
+  //   length: SEGMENT_LENGHT,
+  //   type: T.Coins,
+  //   weight: 6,
 
-//     pattern: [
-//       [L.Coin, L.Empty, L.Empty, L.Empty, L.Empty],
-//       [L.Coin, L.Empty, L.Empty, L.Empty, L.Empty],
-//       [L.Empty, L.Coin, L.Empty, L.Empty, L.Empty],
-//       [L.Empty, L.Coin, L.Empty, L.Empty, L.Empty],
-//       [L.Empty, L.Empty, L.Coin, L.Empty, L.Empty],
-//       [L.Empty, L.Empty, L.Coin, L.Empty, L.Empty],
-//     ],
-//   },
+  //   pattern: [
+  //     [L.Coin, L.Empty, L.Empty, L.Empty, L.Empty],
+  //     [L.Empty, L.Coin, L.Empty, L.Empty, L.Empty],
+  //     [L.Empty, L.Empty, L.Coin, L.Empty, L.Empty],
+  //     [L.Empty, L.Empty, L.Empty, L.Coin, L.Empty],
+  //   ],
+  // },
+
+  // {
+  //   id: "coin_spread",
+  //   difficulty: 1,
+  //   length: SEGMENT_LENGHT,
+  //   type: T.Coins,
+  //   weight: 6,
+
+  //   pattern: [
+  //     [L.Coin, L.Empty, L.Coin, L.Empty, L.Coin],
+  //     [L.Empty, L.Empty, L.Empty, L.Empty, L.Empty],
+  //     [L.Coin, L.Empty, L.Coin, L.Empty, L.Coin],
+  //     [L.Empty, L.Empty, L.Empty, L.Empty, L.Empty],
+  //   ],
+  // },
 
   /* ---------------- OBSTACLES ---------------- */
 

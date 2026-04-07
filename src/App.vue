@@ -116,10 +116,13 @@
         font-family: 'vla_shu';
         src: url('./assets/fonts/VlaShu.ttf')
     }
-
     @font-face {
-        font-family: 'jost';
+        font-family: 'jost-light';
         src: url('./assets/fonts/Jost-Light.ttf')
+    }
+    @font-face {
+        font-family: 'jost-regular';
+        src: url('./assets/fonts/Jost-Regular.ttf')
     }
 
     html,

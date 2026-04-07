@@ -80,7 +80,7 @@
         justify-content: flex-end;
         z-index: z("rights_and_logo");
 
-        font-family: 'jost';
+        font-family: 'jost-light';
         letter-spacing: 0.05rem;
         cursor: pointer;
 

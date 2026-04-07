@@ -10,8 +10,16 @@ export function createNewText() {
         // получаем реактивную фразу в нужном языке (с черточками по бокам и без)
         makeText: (val_: string, type_?: string) => {
             if (type_ != undefined) {
-                // не ставим черточки по бокам строки
-                return t(val_);
+                if (type_ == 'leftLine') {
+                    // ставим только одну черточку СЛЕВА от текста
+                    return `- ${t(val_)}`;
+                } else if (type_ == 'rightLine') {
+                    // ставим только одну черточку СПРАВА от текста
+                    return `${t(val_)} -`;
+                } else {
+                    // не ставим черточки по бокам строки
+                    return t(val_);
+                }
             } else {
                 // черточки ставим (у кнопок)
                 return `- ${t(val_)} -`;

@@ -143,7 +143,7 @@
         flex-direction: column;
 
 
-        font-family: 'jost';
+        font-family: 'jost-light';
         text-transform: uppercase;
         font-size: 1.375rem;
         color: #F79CFF;

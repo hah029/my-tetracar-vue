@@ -42,7 +42,7 @@ export function useControls(game: ReturnType<typeof useGame>) {
                 break;
 
             case GameStates.Menu:
-                if (gameStore.activeOverlay === 'settings') gameStore.activeOverlay = null;
+                if (gameStore.activeOverlay === 'settings' || gameStore.activeOverlay === 'leaderBoards') gameStore.activeOverlay = null;
                 break;
 
             case GameStates.Gameover:

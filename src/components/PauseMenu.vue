@@ -1,7 +1,7 @@
 <template>
     <div class="container">
         <!-- SETTINGS OVERLAY -->
-        <SettingsOverlay v-if="gameStore.activeOverlay === 'settings'" :key="'settings'" />
+        <SettingsRoot v-if="gameStore.activeOverlay === 'settings'" :key="'settings'" />
     
         <!-- PAUSE MENU -->
         <div v-if="gameStore.activeOverlay !== 'settings'" :key="'pause'" class="container container_correction">
@@ -55,7 +55,7 @@
 <script setup lang="ts">
     import { onMounted, watch, computed, ref } from "vue";
     import { useGameState } from "@/store/gameState";
-    import SettingsOverlay from "./settings/SettingsOverlay.vue";
+    import SettingsRoot from "./settings/SettingsRoot.vue";
     import { GameStates } from "@/game/core/GameState";
     import { createNewText } from '@/helpers/functions';
 
@@ -178,7 +178,7 @@
     @use "@/styles/animations.scss";
 
     .warning {
-        font-family: 'jost';
+        font-family: 'jost-light';
         text-transform: uppercase;
         font-size: 1.375rem;
         color: #F79CFF;
