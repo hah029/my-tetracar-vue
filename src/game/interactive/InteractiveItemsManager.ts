@@ -29,6 +29,9 @@ export class InteractiveItemsManager {
   private boosterEnabledTimer = 0;
   private boosterEnabledInterval = 5000;
 
+  private DIAMOND_SPAWN_PROBABILITY = 0.005;
+  private NITRO_SPAWN_PROBABILITY = 0.5;
+
   public static getInstance(): InteractiveItemsManager {
     if (!InteractiveItemsManager.instance) {
       InteractiveItemsManager.instance = new InteractiveItemsManager();
@@ -153,11 +156,11 @@ export class InteractiveItemsManager {
   }
 
   public spawnSingleCoin(lane: number, baseZ: number) {
-    if (Math.random() < 0.5) {
+    if (Math.random() < this.DIAMOND_SPAWN_PROBABILITY) {
       this.coinManager.spawnDiamond(lane, baseZ);
     } else {
       this.coinManager.spawnGold(lane, baseZ);
-    }
+    };
   }
 
   public spawnDiamondCoin(lane: number, baseZ: number) {
@@ -174,11 +177,11 @@ export class InteractiveItemsManager {
   }
 
   public spawnBooster(lane: number, baseZ: number) {
-    if (Math.random() < 0.5) {
+    if (Math.random() < this.NITRO_SPAWN_PROBABILITY) {
       this.boosterManager.spawnNitro(lane, baseZ);
     } else {
       this.boosterManager.spawnShield(lane, baseZ);
-    }
+    };
   }
   public spawnNitroBooster(lane: number, baseZ: number) {
     this.boosterManager.spawnNitro(lane, baseZ);
