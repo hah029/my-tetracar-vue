@@ -92,7 +92,6 @@ export class ObstacleManager {
   public update(dt: number, speed: number) {
     this.updateList(this.obstacles, dt, speed);
     this.updateList(this.jumps, dt, speed);
-    // this.updateDestroyedCubes(dt, speed);
   }
 
   private updateList<T extends { update(dt: number, s: number): boolean }>(

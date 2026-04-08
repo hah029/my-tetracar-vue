@@ -7,6 +7,8 @@ import { UnrealBloomPass } from "three/examples/jsm/postprocessing/UnrealBloomPa
 import { RenderPass } from "three/examples/jsm/postprocessing/RenderPass.js";
 import { useGameState } from "@/store/gameState";
 import { useEnvironmentStore } from "@/store/environmentStore";
+import { ShaderPass } from "three/examples/jsm/postprocessing/ShaderPass.js";
+import { FXAAShader } from "three/examples/jsm/shaders/FXAAShader.js";
 
 // Типы
 export type ThreeRefs = {
@@ -48,8 +50,8 @@ export function useThree(container: Ref<HTMLElement | null>) {
     renderer.setSize(container.value.clientWidth, container.value.clientHeight);
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1));
     renderer.toneMappingExposure = 1.5;
-    renderer.shadowMap.enabled = true;
-    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    renderer.shadowMap.enabled = false;
+    // renderer.shadowMap.type = THREE.PCFSoftShadowMap;
     const bloomPass = new UnrealBloomPass(
       new THREE.Vector2(
         container.value.clientWidth,
@@ -59,11 +61,14 @@ export function useThree(container: Ref<HTMLElement | null>) {
       0.8, // radius
       0.85, // threshold
     );
+    const fxaaPass = new ShaderPass(FXAAShader);
+    fxaaPass.material.uniforms.resolution!.value.set(1 / container.value.clientWidth, 1 / container.value.clientHeight);
 
     composer = new EffectComposer(renderer);
     composer.addPass(new RenderPass(scene, camera));
 
     composer.addPass(bloomPass);
+    // composer.addPass(fxaaPass);
 
     // afterimagePass = new AfterimagePass(1); // оригинальное значение damp
     // composer.addPass(afterimagePass);

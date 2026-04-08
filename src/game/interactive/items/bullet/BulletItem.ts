@@ -15,5 +15,6 @@ export class BulletItem extends BaseItem {
     super(laneIndex, zPos, yPos, MATERIAL_CONFIG);
     this.value = value;
     this.itemType = "bullet";
+    this.userData.isBulletItem = true;
   }
 }

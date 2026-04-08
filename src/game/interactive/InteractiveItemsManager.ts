@@ -29,6 +29,9 @@ export class InteractiveItemsManager {
   private boosterEnabledTimer = 0;
   private boosterEnabledInterval = 5000;
 
+  private DIAMOND_SPAWN_PROBABILITY = 0.005;
+  private NITRO_SPAWN_PROBABILITY = 0.5;
+
   public static getInstance(): InteractiveItemsManager {
     if (!InteractiveItemsManager.instance) {
       InteractiveItemsManager.instance = new InteractiveItemsManager();
@@ -103,12 +106,18 @@ export class InteractiveItemsManager {
   public spawnSegment(dt: number, speed: number, baseZ: number) {
     const segment = this.segmentQueue.getNext();
 
-    const rowSpacing = 3;
+    const rowSpacing = 4;
+    const isReversed = Math.random() < 0.5;
 
     segment.pattern.forEach((row, rowIndex) => {
       const z = baseZ - rowIndex * rowSpacing;
+      let row_ = [...row];
 
-      row.forEach((value, lane) => {
+      if (isReversed) {
+        row_ = row_.reverse();
+      }
+
+      row_.forEach((value, lane) => {
         switch (value) {
           case LanePattern.Obstacle:
             this.obstacleManager.spawnStaticObstacle(lane, z);
@@ -147,11 +156,11 @@ export class InteractiveItemsManager {
   }
 
   public spawnSingleCoin(lane: number, baseZ: number) {
-    if (Math.random() < 0.5) {
+    if (Math.random() < this.DIAMOND_SPAWN_PROBABILITY) {
       this.coinManager.spawnDiamond(lane, baseZ);
     } else {
       this.coinManager.spawnGold(lane, baseZ);
-    }
+    };
   }
 
   public spawnDiamondCoin(lane: number, baseZ: number) {
@@ -168,11 +177,11 @@ export class InteractiveItemsManager {
   }
 
   public spawnBooster(lane: number, baseZ: number) {
-    if (Math.random() < 0.5) {
+    if (Math.random() < this.NITRO_SPAWN_PROBABILITY) {
       this.boosterManager.spawnNitro(lane, baseZ);
     } else {
       this.boosterManager.spawnShield(lane, baseZ);
-    }
+    };
   }
   public spawnNitroBooster(lane: number, baseZ: number) {
     this.boosterManager.spawnNitro(lane, baseZ);
@@ -195,7 +204,7 @@ export class InteractiveItemsManager {
     this.obstacleManager.spawnJump(lane, jumpZ);
 
     const trajectory = simulateJumpTrajectory({
-      startY: 0, // высота машины при прыжке
+      startY: 0.5, // высота машины при прыжке
       jumpHeight: DEFAULT_CAR_CONFIG.jumpHeight,
       gravity: DEFAULT_CAR_CONFIG.gravity,
       deltaTime: deltaTime,
@@ -206,7 +215,7 @@ export class InteractiveItemsManager {
     for (let i = 0; i < trajectory.length; i += step) {
       const point = trajectory[i];
       if (point === undefined) continue;
-      const coinZ = jumpZ + point.zOffset;
+      const coinZ = jumpZ + point.zOffset + 1;
       this.coinManager.spawnGold(lane, coinZ, point.y, 5);
     }
   }

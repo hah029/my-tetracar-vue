@@ -8,6 +8,7 @@ export interface JumpConfig {
   pulseSpeed: number;
   pulsePhase: number;
   activated: boolean;
+  isJump: boolean;
 }
 
 export class Jump extends THREE.Mesh {
@@ -80,6 +81,7 @@ export class Jump extends THREE.Mesh {
       pulseSpeed: 0.3 + Math.random() * 0.3,
       pulsePhase: Math.random() * Math.PI * 2,
       activated: false,
+      isJump: true,
     };
 
     this.collider = new THREE.Box3().setFromObject(this);

@@ -17,7 +17,7 @@ export class CubePhysics {
     edges: RoadEdge[],
     onRemove?: (cube: THREE.Object3D) => void,
   ) {
-    const groundY = 0;
+    const groundY = 0.15;
 
     for (let i = 0; i < cubes.length; i++) {
       const cube = cubes[i];

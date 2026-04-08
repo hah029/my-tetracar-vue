@@ -13,5 +13,7 @@ export class GoldCoin extends CoinItem {
     super(laneIndex, zPos, yPos, { ...COIN_MATERIAL_CONFIG });
     this.value = value;
     this.itemType = "gold";
+    this.userData.isCoin = true;
+    this.userData.coinType = "gold";
   }
 }

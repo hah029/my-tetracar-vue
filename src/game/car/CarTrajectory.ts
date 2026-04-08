@@ -19,7 +19,7 @@ export function simulateJumpTrajectory(params: {
     gravity,
     deltaTime,
     forwardSpeed,
-    maxSteps = 60,
+    maxSteps = 200,
   } = params;
 
   const simulator = new JumpSimulator({
@@ -34,8 +34,10 @@ export function simulateJumpTrajectory(params: {
   let z = 0;
   const points: JumpPoint[] = [];
 
+  // deltaTime в миллисекундах, преобразуем в секунды
+  // const dtSeconds = deltaTime / 1000;
   for (let i = 0; i < maxSteps; i++) {
-    state = simulator.step(state);
+    state = simulator.step(state, deltaTime / 1000);
     z -= deltaTime * forwardSpeed;
 
     if (!state.isJumping) break;

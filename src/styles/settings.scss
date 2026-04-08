@@ -1,0 +1,51 @@
+.settings_sub_container {
+    position: absolute;
+    top: 8.75rem;
+    width: 25rem;
+    display: flex;
+    flex-direction: column;
+    
+    &>*+* {
+        margin-top: 1.25rem; // 20px - row-gap (между кнопками)
+    }
+}
+
+.addit_font {
+    font-family: 'jost-light';
+    text-transform: uppercase;
+    font-size: 1.375rem;
+    // font-size: min(4rem, 24px);
+    letter-spacing: 0.05em;
+    color: #FDFFE3;
+}
+
+.settings_row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.toggle_btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    // ---    
+    font-family: 'jost-light';
+    text-transform: uppercase;
+    font-size: 1.375rem;
+    letter-spacing: 0.05em;
+    color: #72B3EE;
+
+    &:hover {
+        background-color: rgba(114, 179, 238, 0.3);
+    }
+
+    &.toggle_btn--active {
+        color: #FDFFE3;
+        
+        &:hover {
+            background-color: rgba(253, 255, 227, 0.3);
+            color: white;
+        }
+    }
+}   

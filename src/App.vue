@@ -1,17 +1,17 @@
 <template>
-    <!-- canvas -->
-    <div ref="threeRoot" class="three-root"></div>
+    <!-- 3d-canvas -->
+    <div ref="threeRoot" class="three_js__root"></div>
 
     <!-- UI -->
-    <GameLogo :handleParam="handleParam"/>
-    <transition>
-        <component :is="getUIComponent" @event="handleEvent"/>
-    </transition>
+    <GameLogo />
+    <component :is="getUIComponent" class="ui_components_root"/>
+    <RightsPanel />
+    <TeamLogo />
 </template>
 
 
 <script setup lang="ts">
-    import { ref, onMounted, onUnmounted, computed, watch, nextTick, Transition } from "vue";
+    import { ref, onMounted, onUnmounted, computed } from "vue";
     // composable
     import { useThree } from "./composables/useThree";
     import { useGame } from "./composables/useGame";
@@ -25,7 +25,9 @@
     import HUD from "./components/hud/HUD.vue";
     import GameOverMenu from "./components/GameOverMenu.vue";
     import Countdown from "./components/Countdown.vue";
-    import GameLogo from "./components/ui/GameLogo.vue";
+    import GameLogo from "@/components/ui/GameLogo.vue";
+    import RightsPanel from "@/components/ui/RightsPanel.vue";
+    import TeamLogo from "@/components/ui/TeamLogo.vue";
     // managers
     import { CameraSystem } from "@/game/camera/CameraSystem";
     import { SoundManager } from "./game/sound/SoundManager";
@@ -34,16 +36,16 @@
 
 
     const threeRoot = ref<HTMLDivElement | null>(null);
-        const { getScene, getCamera, getComposer } = useThree(threeRoot);
+    const { getScene, getCamera, getComposer } = useThree(threeRoot);
     const game = useGame();
     const gameState = useGameState();
 
-    let handleParam = ref(false);
+    // let handleParam = ref(false);
 
-    // ловим и обрабатываем события из дочерней компоненты Preloader.vue
-    function handleEvent(val_: any) {
-        handleParam.value = val_;
-    }    
+    // // ловим и обрабатываем события из дочерней компоненты Preloader.vue
+    // function handleEvent(val_: any) {
+    //     handleParam.value = val_;
+    // }    
 
     useControls(game);
 
@@ -86,66 +88,40 @@
         const debugCollider = new DebugColliderVisualizer(scene);
         loop = GameLoop(game, composer, debugCollider);
         loop.start();
+
+        gameState.setResetCallback(() => {
+            console.log("🔄 FSM reset");
+
+            game.reset();
+
+            const carMesh = game.car.value.mesh;
+            if (carMesh) {
+                CameraSystem.reset(carMesh.position.clone());
+            }
+
+            console.log("✅ Game reset complete");
+        });
     });
 
     onUnmounted(() => {
         loop?.stop();
     });
-
-    watch(
-        () => gameState.currentState,
-        async (newState, oldState) => {
-            if ((oldState === GameStates.Gameover || oldState === GameStates.Pause) && (newState === GameStates.Countdown || newState === GameStates.Menu)) {
-                console.log("🔄 Game restart detected, resetting game...");
-
-                // 1️⃣ Ждём обновления DOM/реактивных данных
-                await nextTick();
-
-                // 2️⃣ Сбрасываем игру
-                game.reset();
-
-                const carMesh = game.car.value.mesh;
-                if (carMesh) {
-                    CameraSystem.reset(carMesh.position.clone());
-                }
-
-                console.log("✅ Game reset complete");
-            };
-        }
-    );
-
-    watch(
-        () => gameState.currentState,
-        (newState) => {
-            console.log(`State changed to ${newState}`);
-            switch (newState) {
-                case GameStates.Preloader:
-                    soundManager.stopAllMusic();
-                    break;
-                case GameStates.Menu:
-                    soundManager.playMusicSequence("music_intro", "music_background");
-                    break;
-                case GameStates.Play:
-                    soundManager.playMusic("music_background", true);
-                    break;
-                case GameStates.Gameover:
-                    soundManager.playMusic("music_gameover");
-                    break;
-                // Countdown и Pause игнорируем – музыкой управляет сам компонент Countdown,
-                // а в паузе музыка продолжает играть (можно добавить fadeOut, если нужно)
-            };
-        }
-    );
 </script>
 
 
-<style>
+<style lang='scss'>
+    @use "@/styles/menu.scss" as *;
+
     @font-face {
         font-family: 'vla_shu';
         src: url('./assets/fonts/VlaShu.ttf')
     }
     @font-face {
-        font-family: 'jost';
+        font-family: 'jost-light';
+        src: url('./assets/fonts/Jost-Light.ttf')
+    }
+    @font-face {
+        font-family: 'jost-regular';
         src: url('./assets/fonts/Jost-Regular.ttf')
     }
 
@@ -156,27 +132,57 @@
         width: 100%;
         height: 100%;
         overflow: hidden;
-        /* font-size: 16px; */
-        font-size: 0.8333vw;
-        /* font-family: Helvetica, Arial, sans-serif; */
+        font-size: 0.833vw;
+    }
+    
+    img {
+        pointer-events: none;
     }
 
-    .three-root {
+    button, input, label, span {
+        user-select: none;
+        -webkit-user-select: none;
+        -moz-user-select: none;
+        -ms-user-select: none;
+    }
+
+    .three_js__root, .ui_components_root {
+        position: relative;
         width: 100%;
         height: 100%;
     }
+    .three_js__root {
+        z-index: z("canvas");
+    }
+    .ui_components_root {
+        z-index: z("ui_component");
+    }
 
-    .menu_overlay {
-        position: fixed;
-        inset: 0;
+    .menu_layout {
         display: flex;
         flex-direction: column;
-        justify-content: center;
         align-items: center;
-        background-color: rgba(0, 0, 0, 0.5);
-        z-index: 2000;
-        backdrop-filter: blur(2px);
-        /* text-align: center; */
-        /* color: white; */
+        justify-content: center;
+
+        gap: -10rem;
+
+        width: 100%;
+        max-width: 900px;
+        padding: 2rem;
+    }
+
+    .background {
+        /* position: absolute; */
+        /* left: 0; */
+        /* width: 100%; */
+        /* height: 200%; */
+        background: linear-gradient(to bottom,
+                #000000 0%,
+                /* Черный цвет вверху */
+                #000000bb 100%,
+                /* Черный цвет до середины */
+                rgba(204, 183, 183, 0) 100%
+                /* Прозрачность внизу */
+            );
     }
 </style>

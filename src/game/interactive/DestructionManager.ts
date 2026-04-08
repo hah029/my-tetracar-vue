@@ -22,8 +22,8 @@ export class DestructionManager {
   private physicsConfig: CubePhysicsConfig = {
     bounceFactor: 0.4,
     collisionFactor: 0.2,
-    friction: 0.85,
-    gravity: 0.01,
+    friction: 0.7,
+    gravity: 0.005,
     removalHeight: -10,
   };
 
@@ -72,9 +72,12 @@ export class DestructionManager {
     this.interactiveItemsManager = itemsManager;
   }
 
-  public registerCubes(cubes: THREE.Object3D[]) {
+  public registerCubes(
+    cubes: THREE.Object3D[],
+    transformRequired: boolean = true,
+  ) {
     cubes.forEach((cube) => {
-      const drop = this.rollDrop();
+      const drop = transformRequired ? this.rollDrop() : null;
       if (drop) {
         const texture = loadTexture(this.textureMapping[drop]);
         texture.flipY = false;

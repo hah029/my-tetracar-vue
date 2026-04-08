@@ -1,3 +1,18 @@
+$z-layers: (
+    "canvas": 0,
+    "gradient": 1,
+    "background": 2,
+    "logo": 3,
+    "game_logo__root": 5,
+    "ui_component": 10,
+    "rights_and_logo": 100,
+    "modal": 1000,
+);
+
+@function z($layer) {
+    @return map-get($z-layers, $layer);
+}
+
 .container {
     position: absolute;
     top: 0;
@@ -8,5 +23,68 @@
     align-items: center;
     width: 100vw;
     height: 100vh;
-    z-index: 2000;
+}
+
+.sub_container {
+    // position: relative;
+    height: 100%;
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+}
+
+// #region - header
+    .header_block {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: flex-end;
+        user-select: none;
+        -webkit-user-select: none;
+        -moz-user-select: none;
+        -ms-user-select: none;
+    }
+    .header_text {
+        font-family: 'vla_shu';
+        font-size: 2.5rem; // (40px)
+        color: #72B3EE;
+        margin-bottom: 1rem;
+        line-height: 1;
+    }
+    .header_image {
+        width: 34.625rem;
+    }
+    .image {
+        width: 100%;
+        filter: invert(86%) sepia(40%) saturate(5593%) hue-rotate(183deg) brightness(104%) contrast(101%);
+    }
+// #endregion
+
+.buttons_group {
+    position: absolute;
+    height: fit-content;
+    display: flex;
+    flex-direction: column;
+    background: none;
+    border: none;
+}
+
+.menu_btn {
+    background: none;
+    border: none;
+    // ---
+    font-family: 'vla_shu';
+    font-size: min(5rem, 24px); // (36px)
+    color: #FDFFE3;
+    filter: drop-shadow(0 0 15px rgba(255, 246, 25, 0.4));
+    cursor: pointer;
+    transition: all 0.1s ease-in-out;
+
+    &:hover {
+        color: #72B3EE;
+        filter: drop-shadow(0 0 20px rgba(121, 190, 255, 1));
+        transition: all 0.1s ease-in-out;
+    }
 }

@@ -1,73 +1,91 @@
 <template>
-    <div v-if="isVisible" class="menu_overlay">
+    <div :key="'game_over'" class="container container_correction">
+        <Transition name="header_footer_block_anim">
+            <div v-if="isHeaderShown" class="header_block">
+                <div class="header_text header_correction">{{ dynamicTitleName }}</div>
+                <div class="header_image">
+                    <img class='image image_correction' src="@/assets/images/title_line_image.svg" />
+                </div>
+            </div>
+        </Transition>
+    
+        <div class="score_container">
+            <div class="settings_row">
+                <span>{{ $t("gameOverMenu.summary.points.label") }}</span>
+                <span>
+                    <span class="score-value gold">{{ scoreRounded }} / </span>
+                    <span class="score-value gold newRecord">
+                        {{ highScoreRounded }}
+                    </span>
+                </span>
+            </div>
+            <div class="settings_row">
+                <span>{{ $t("gameOverMenu.summary.speed.label") }}</span>
+                <span>
+                    <span class="score-value gold">
+                        {{ currentSpeedRounded }}
+                    </span>
+                    <span class="score-value gold newRecord">
+                        {{ $t("gameOverMenu.summary.speed.units") }}
+                    </span>
+                </span>
+            </div>
+            <div class="settings_row">
+                <span>{{ $t("gameOverMenu.summary.distance.label") }}</span>
+                <span>
+                    <span class="score-value gold">
+                        {{ distance }}
+                    </span>
+                    <span class="score-value gold newRecord">
+                        {{ $t("gameOverMenu.summary.distance.units") }}
+                    </span>
+                </span>
+            </div>
+        </div>
 
-        <h4 class="menu-title__mini">TETROCAR</h4>
-        <h1 class="menu-subtitle">GAME OVER</h1>
-
-        <div class="score-container">
-        <div class="settings-row">
-            <span>ОЧКИ</span>
-            <span>
-            <span class="score-value gold">{{ scoreRounded }} / </span>
-            <span class="score-value gold newRecord">
-                {{ highScoreRounded }}
-            </span>
-            </span>
+        <div class="header_image rotate_180">
+            <img class='image image_correction' src="@/assets/images/title_line_image.svg" />
         </div>
-        <div class="settings-row">
-            <span>СКОРОСТЬ</span>
-            <span>
-            <span class="score-value gold">
-                {{ currentSpeedRounded }}
-            </span>
-            <span class="score-value gold newRecord">
-                куб/ч
-            </span>
-            </span>
-        </div>
-
-        <div class="settings-row">
-            <span>ДИСТАНЦИЯ</span>
-            <span>
-            <span class="score-value gold">
-                {{ distance }}
-            </span>
-            <span class="score-value gold newRecord">
-                кубов
-            </span>
-            </span>
-        </div>
-        </div>
-
-        <div class="menu-btns">
-            <button class="menu-btn restart-btn" @click="restartGame">ИГРАТЬ СНОВА</button>
-            <button class="menu-btn main-menu-btn" @click="goToMainMenu">ГЛАВНОЕ МЕНЮ</button>
-        </div>
+    
+        <TransitionGroup name="buttons_group_showing" tag="div" class="buttons_group group_correction">
+            <button v-for="(btn, index) in menuButtons" v-if="gameStore.activeOverlay !== 'settings'" :key="btn.id"
+                class="menu_btn btn_correction" :style="{ animationDelay: `${index * 0.06}s` }" @click="btn.action">
+                {{ btn.text }}
+            </button>
+        </TransitionGroup>
     </div>
 </template>
 
 
 <script setup lang="ts">
-    import { computed, defineEmits } from "vue";
+    import { onMounted, ref, computed } from "vue";
     import { useGameState } from "../store/gameState";
     import { usePlayerStore } from "../store/playerStore";
     import { useProgressStore } from "@/store/progressStore";
     import { GameStates } from "@/game/core/GameState";
+    import { createNewText } from '@/helpers/functions';
 
     // подключаем store
     const gameState = useGameState();
     const playerStore = usePlayerStore();
     const progressStore = useProgressStore();
+    const gameStore = useGameState();
+    
+    // генерируем фразу для титула
+    const foo = createNewText();
+    const isHeaderShown = ref(false);
+    const dynamicTitleName = computed(() => foo.makeText("gameOverMenu.title", 'empty'));
 
-    // подключаем emit
-    const emit = defineEmits(['event']);
-
-    const isVisible = computed(() => gameState.currentState === GameStates.Gameover);
-
+    // генерируем результаты гонки
     const scoreRounded = computed(() => Math.floor(progressStore.score));
     const highScoreRounded = computed(() => Math.floor(progressStore.highScore));
     const distance = computed(() => progressStore.getDistanceInCubes());
     const currentSpeedRounded = computed(() => playerStore.getCurrentSpeedInCubesPerHour(1));
+
+    const menuButtons = computed(() => [
+        { id: 1, text: foo.makeText("gameOverMenu.menuList.restartGame"), action: restartGame },
+        { id: 2, text: foo.makeText("gameOverMenu.menuList.goToMainMenu"), action: goToMainMenu },
+    ]);
 
     function restartGame() {
         gameState.setState(GameStates.Countdown);
@@ -75,43 +93,68 @@
 
     function goToMainMenu() {
         gameState.setState(GameStates.Menu);
-        emit('event', 'returnToMenu');
     };
+
+    onMounted(() => {
+        isHeaderShown.value = true;
+    });
 </script>
 
 
 <style scoped lang="scss">
-    .menu-title__mini {
-        font-size: 28px;
-        margin: 0;
-        margin-bottom: 10px;
-        text-shadow: 0 0 20px rgba(85, 0, 0, 0.741);
-        border-bottom: 1px solid white;
+    @use "@/styles/menu.scss";
+    @use "@/styles/animations.scss";
+
+    .container_correction {
+        justify-content: flex-start !important;
+        top: 13.313rem;
     }
 
-    .menu-subtitle {
-        font-size: 54px;
-        margin: 0 0 30px 0;
-        text-shadow: 0 0 20px rgba(161, 0, 0, 0.741);
+    .header_correction {
+        font-size: 3.125rem; // (50px)
+        color: #F79CFF;
     }
 
-    .score-container {
+    .rotate_180 {
+        rotate: 180deg;
+    }
+
+    .image_correction {
+        filter: invert(90%) sepia(13%) saturate(4482%) hue-rotate(235deg) brightness(103%) contrast(101%);
+    }
+
+    .btn_correction {
+        font-size: 1.875rem; // (30px)
+    }
+
+    .group_correction {
+        margin-top: 25rem;
+        
+        &>*+* {
+            margin-top: 1.56rem; // 25px - row-gap (между кнопками)
+        }
+    }
+
+    .score_container {
+        width: 25rem;
+        margin: 2.5rem;
+        gap: 1rem;
         display: flex;
         flex-direction: column;
-        gap: 20px;
-        width: 30%;
-        margin-bottom: 30px;
-        padding: 20px 0;
-        border-top: 1px solid white;
-        border-bottom: 1px solid white;
+
+
+        font-family: 'jost-light';
+        text-transform: uppercase;
+        font-size: 1.375rem;
+        color: #F79CFF;
     }
 
-    .settings-row {
+    .settings_row {
         display: flex;
         justify-content: space-between;
-        font-size: 16px;
-        font-weight: bold;
-        text-shadow: 0 0 10px rgba(0, 255, 255, 0.3);
+        // font-size: 16px;
+        // font-weight: bold;
+        // color: #FDFFE3;
     }
 
     .score-value {
@@ -124,29 +167,6 @@
         &.newRecord {
             color: #ffd900bc;
             font-size: 16px;
-        }
-    }
-
-    .menu-btns {
-        display: flex;
-        flex-direction: column;
-        gap: 15px;
-    }
-
-    .menu-btn {
-        padding: 15px 40px;
-        font-size: 20px;
-        cursor: pointer;
-        font-weight: bold;
-        border: none;
-        color: white;
-        background: none;
-        text-transform: uppercase;
-        transition: all 0.2s ease;
-
-        &:hover {
-            opacity: 0.9;
-            text-shadow: 0 0 20px rgba(255, 0, 0, 1)
         }
     }
 </style>

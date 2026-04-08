@@ -2,40 +2,109 @@
     "gameTitle": "тетрокар",
     "mainMenu": {
         "goBack": "назад",
-        "title": "главное меню",
-        "startGame": "начать игру",
-        "settings": "настройки"
+        "startGame": "старт",
+        "shop": "магазин",
+        "settings": "настройки",
+        "leaderboards": "рекорды"
     },
     "preloader": {
         "pressAnyButton": "нажми на кнопку"
     },
-    "pauseMenu": {},
-    "gameOverMenu": {},
+    "pauseMenu": {
+        "title": "пауза",
+        "menuList": {
+            "resume": "продолжить",
+            "settings": "настройки",
+            "menu": "выйти в меню"
+        }
+    },
+    "quitConfirm": {
+        "title": "завершить игру?",
+        "warning": "прогресс текущей игры будет потерян",
+        "menuList": {
+            "stay": "остаться",
+            "quit": "завершить"
+        }
+    },
+    "gameOverMenu": {
+        "title": "конец игры",
+        "menuList": {
+            "restartGame": "играть снова",
+            "goToMainMenu": "выйти в меню"
+        },
+        "summary": {
+            "points": {
+                "label": "очки"
+            },
+            "speed": {
+                "label": "скорость",
+                "units": "куб/ч"
+            },
+            "distance": {
+                "label": "расстояние",
+                "units": "кубов"
+            }
+        }
+    },
     "settings": {
         "title": "настройки",
         "toggleOn": "вкл",
         "toggleOff": "выкл",
-        "settingsMenuList": {
+        "menuList": {
+            "technical": "графика и аудио",
+            "lang": "язык",
             "controls": "управление",
-            "sound": "звук",
-            "graphic": "графика",
-            "debug": "отладка",
-            "lang": "язык"
+            "about": "об игре"
         },
-        "music": {
+        "vfxAndMusic": {
+            "vfxEnabled": "эффекты",
             "musicEnabled": "музыка",
             "sfxEnabled": "звуки",
             "volumeLevel": "громкость"
         },
+        "language": {
+            "auto": "авто",
+            "ru": "русский",
+            "en": "english"
+        },
+        "controls": {
+            "labels": {
+                "left": "влево",
+                "right": "вправо",
+                "fire": "выстрел",
+                "pause": "пауза",
+                "shop": "магазин"
+            },
+            "keys": {
+                "left": "a",
+                "right": "d",
+                "fire": "пробел",
+                "pause": "esc",
+                "shop": "b"
+            }
+        },
+        "about": {
+            "eula": "лицензионное соглашение",
+            "thirdParty": "сторонние лицензии",
+            "aboutUs": "о нас"
+        },
         "debug": {
             "debugEnabled": "режим отладки"
-        },
-        "language": {
-            "label": "язык",
-            "availableList": {
-                "en": "английский",
-                "ru": "русский"
-            }
         }
-    }
+    },
+    "leaderboards": {
+        "title": "рекорды",
+        "emptyTable": "пока рекордов нет. будь первым!",
+        "firstGame": "вы еще не в таблице. Сыграйте партию!",
+        "syncError": "не удалось загрузить рекорды. попробуйте позже.",
+        "tabList": {
+            "myBoard": "мой рейтинг",
+            "topBoard": "топ игроков"
+        }
+    },
+    "rightsList": [
+        "Все права светятся",
+        "Все права под неоновой защитой",
+        "Все праsва защищены неоном"
+    ]
 }

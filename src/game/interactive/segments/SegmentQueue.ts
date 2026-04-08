@@ -3,7 +3,7 @@ import { SegmentGenerator } from "./SegmentGenerator";
 
 export class SegmentQueue {
   private queue: Segment[] = [];
-  private queueSize = 6;
+  private queueSize = 3;
   private difficulty: () => number;
 
   constructor(difficulty: () => number) {

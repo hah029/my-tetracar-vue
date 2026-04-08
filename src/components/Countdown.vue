@@ -39,7 +39,10 @@ onMounted(() => {
     align-items: center;
     justify-content: center;
     font-size: 120px;
-    color: white;
+    color: #FDFFE3;
+    filter: drop-shadow(0 0 15px rgba(255, 246, 25, 0.4));
     font-weight: bold;
+    font-family: 'vla_shu';
+    transition: all 0.1s ease-in-out;
 }
 </style>

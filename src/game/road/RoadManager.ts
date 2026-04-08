@@ -48,7 +48,7 @@ export class RoadManager {
     this.scene.add(this.road);
     this.scene.add(this.road);
     this.addEdges();
-    this.addRoadLines();
+    // this.addRoadLines();
     this.addSideObjects();
   }
 

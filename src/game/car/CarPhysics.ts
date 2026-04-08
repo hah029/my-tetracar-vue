@@ -43,7 +43,10 @@ export class CarPhysics {
     });
   }
 
-  public updateJump(currentY: number): {
+  public updateJump(
+    currentY: number,
+    deltaTime: number,
+  ): {
     newY: number;
     isJumping: boolean;
     pitch: number;
@@ -59,9 +62,11 @@ export class CarPhysics {
       };
     }
 
+    // Преобразуем deltaTime в секунды
+    const dtSeconds = deltaTime / 1000;
     // Активная фаза прыжка – используем симуляцию
     const prevVelocity = this.jumpState.velocity;
-    this.jumpState = this.jumpSimulator.step(this.jumpState);
+    this.jumpState = this.jumpSimulator.step(this.jumpState, dtSeconds);
     const pitch = prevVelocity > 0 ? 0.2 : -0.1;
     return {
       newY: this.jumpState.y,
