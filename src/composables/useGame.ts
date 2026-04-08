@@ -349,7 +349,8 @@ export function useGame() {
   function findRootTaggedObject(obj: THREE.Object3D): THREE.Object3D {
     let current: THREE.Object3D | null = obj;
 
-    while (current.parent && !current.parent.isScene) {
+//    while (current.parent && !current.parent.isScene) {
+    while (current.parent && (!('isScene' in current.parent) || !current.parent.isScene)) {  // а то компилятор ругался
       current = current.parent;
     }
 

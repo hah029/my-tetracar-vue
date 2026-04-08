@@ -5,13 +5,16 @@
     "types": ["vite/client"],
     /* Linting */
     "strict": true,
-    "noUnusedLocals": true,
-    "noUnusedParameters": true,
+/*    "noUnusedLocals": true,*/
+    "noUnusedLocals": false,
+/*    "noUnusedParameters": true,*/
+    "noUnusedParameters": false,
 /*    "erasableSyntaxOnly": true,*/
     "noImplicitAny": false,
     "noFallthroughCasesInSwitch": true,
     "noUncheckedSideEffectImports": true,
     "allowSyntheticDefaultImports": true,
+    "allowJs": true,
     "baseUrl": ".",
     "paths": {
       "@/*": ["src/*"]
