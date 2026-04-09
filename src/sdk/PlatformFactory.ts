@@ -4,7 +4,7 @@ import type { SDK, Player, LeaderboardEntriesData } from 'ysdk';
 export interface IGamePlatform {
     init(): Promise<void>;
     showFullscreenAd(object: any, openCallbackMethod: Function, closeCallback: Function): Promise<void>;
-    showRewardedVideoAd(object: any, openCallbackMethod: Function, rewardCallback: Function): Promise<void>;
+    showRewardedVideoAd(object: any, openCallbackMethod: Function, rewardCallback: Function, closeCallback: Function): Promise<void>;
     isPlayerAuthorized(): any | null;
     getPlayerId(): any | null;
     getPlayerName(): any | null;
@@ -53,7 +53,7 @@ class YandexPlatform implements IGamePlatform {
     }
     
 
-    async showRewardedVideoAd(callbackObject: any, openCallbackMethod: Function, rewardCallbackMethod: Function): Promise<void> {
+    async showRewardedVideoAd(callbackObject: any, openCallbackMethod: Function, rewardCallbackMethod: Function, closeCallbackMethod: Function): Promise<void> {
         if (!this.sdk) throw new Error('SDK not initialized');
         
         this.sdk.adv.showRewardedVideo({ 
@@ -64,9 +64,17 @@ class YandexPlatform implements IGamePlatform {
 									openCallbackMethod(callbackObject);
 								} 
 					}, 
-				onClose: () => console.log('Rewarded Ad closed'), 
+				onClose: () => {
+							console.log('Rewarded Ad closed');
+							if (closeCallbackMethod !== null) {
+								closeCallbackMethod(callbackObject);
+							}}, 
             	onRewarded: () => rewardCallbackMethod(callbackObject), 
-				onError: () => console.log('Rewarded Ad error') 
+				onError: () => {
+							console.log('Rewarded Ad error');
+							if (closeCallbackMethod !== null) {
+								closeCallbackMethod(callbackObject);
+							}} 
             } 
         });
     }
