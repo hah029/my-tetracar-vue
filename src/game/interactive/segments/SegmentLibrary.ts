@@ -58,21 +58,16 @@ export const SEGMENTS: Segment[] = [
     weight: 7,
 
     pattern: [
-      [L.EnemyCar, L.Empty, L.Empty, L.Empty, L.Coin],
-      [L.Empty, L.Empty, L.Empty, L.Empty, L.Coin],
-      [L.EnemyCar, L.Empty, L.Empty, L.Empty, L.Coin],
-      [L.Empty, L.Empty, L.Empty, L.Empty, L.Coin],
-      [L.EnemyCar, L.Empty, L.Empty, L.Empty, L.Coin],
-      [L.Empty, L.Empty, L.Empty, L.Empty, L.Coin],
-      [L.Empty, L.Empty, L.Empty, L.Empty, L.Coin],
-      [L.Empty, L.Empty, L.Booster, L.Empty, L.Coin],
-      [L.Empty, L.BulletItem, L.Empty, L.Empty, L.Coin],
-      [L.Empty, L.BulletItem, L.Empty, L.Empty, L.Coin],
-      [L.Empty, L.BulletItem, L.Empty, L.Empty, L.Coin],
-      [L.Empty, L.BulletItem, L.Empty, L.Empty, L.Coin],
-      [L.Empty, L.BulletItem, L.Empty, L.Empty, L.Coin],
-      [L.Empty, L.Empty, L.Empty, L.Empty, L.Coin],
-      [L.Empty, L.Empty, L.Empty, L.Empty, L.Coin]
+      [L.Booster, L.Coin, L.Empty, L.Empty, L.Empty],
+      [L.Empty, L.Coin, L.Empty, L.Obstacle, L.Obstacle],
+      [L.Empty, L.Coin, L.Empty, L.Empty, L.Empty],
+      [L.Empty, L.Empty, L.Coin, L.Empty, L.Empty],
+      [L.Obstacle, L.Empty, L.Coin, L.Empty, L.Obstacle],
+      [L.Empty, L.Empty, L.Coin, L.Empty, L.Empty],
+      [L.Empty, L.Empty, L.Empty, L.Coin, L.Empty],
+      [L.Obstacle, L.Obstacle, L.Empty, L.Coin, L.Empty],
+      [L.Empty, L.Empty, L.Empty, L.Coin, L.Empty],
+      [L.Empty, L.Empty, L.Empty, L.Coin, L.Empty]
     ]
   },
 
@@ -103,15 +98,15 @@ export const SEGMENTS: Segment[] = [
 
 
   /* ---------------- BOOST ---------------- */
-  {
-    id: "bullet_lane",
-    difficulty: 1,
-    length: SEGMENT_LENGHT,
-    type: T.Boost,
-    weight: 10,
+//   {
+//     id: "bullet_lane",
+//     difficulty: 1,
+//     length: SEGMENT_LENGHT,
+//     type: T.Boost,
+//     weight: 10,
 
-    pattern: [[L.Empty, L.Empty, L.BulletItem, L.Empty, L.Empty]],
-  },
+//     pattern: [[L.Empty, L.Empty, L.BulletItem, L.Empty, L.Empty]],
+//   },
 
   /* ---------------- JUMP (rare) ---------------- */
 
@@ -131,20 +126,20 @@ export const SEGMENTS: Segment[] = [
 //     ],
 //   },
 
-  {
-    id: "jump_left",
-    difficulty: 2,
-    length: SEGMENT_LENGHT,
-    type: T.Jump,
-    weight: 2,
+//   {
+//     id: "jump_left",
+//     difficulty: 2,
+//     length: SEGMENT_LENGHT,
+//     type: T.Jump,
+//     weight: 2,
 
-    pattern: [
-      [L.Empty, L.Empty, L.Empty, L.Empty, L.Empty],
-      [L.Jump, L.Empty, L.Empty, L.Empty, L.Empty],
-      [L.Obstacle, L.Obstacle, L.Obstacle, L.Obstacle, L.Empty],
-      [L.Empty, L.Empty, L.Empty, L.Empty, L.Empty],
-      [L.Empty, L.Empty, L.Empty, L.Empty, L.Empty],
-    ],
-  },
+//     pattern: [
+//       [L.Empty, L.Empty, L.Empty, L.Empty, L.Empty],
+//       [L.Jump, L.Empty, L.Empty, L.Empty, L.Empty],
+//       [L.Obstacle, L.Obstacle, L.Obstacle, L.Obstacle, L.Empty],
+//       [L.Empty, L.Empty, L.Empty, L.Empty, L.Empty],
+//       [L.Empty, L.Empty, L.Empty, L.Empty, L.Empty],
+//     ],
+//   },
 
 ];

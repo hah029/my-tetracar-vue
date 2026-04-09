@@ -8,7 +8,7 @@ export const usePlayerStore = defineStore("playerStore", () => {
   const NITRO_MULTIPLIER = 1.5;
   const MAX_SPEED = 0.5; // м/с
 //   const ACCELERATION = 1e-5;
-  const ACCELERATION = 0.000005;    // - темп ускорения машинки
+  const ACCELERATION = 0.000001;    // - темп ускорения машинки
   const BASE_NITRO_TIMER = 5000;
   // speed
   const speed = ref(BASE_SPEED);
