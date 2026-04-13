@@ -7,6 +7,11 @@
         "settings": "settings",
         "leaderboards": "leaderboards"
     },
+    "gamePlay": {
+        "progress": "progress",
+        "maxProgress": "max",
+        "speed": "speed"
+    },
     "preloader": {
         "pressAnyButton": "tap to start"
     },
@@ -86,6 +91,7 @@
         "about": {
             "eula": "end user license agreement",
             "thirdParty": "open Source Notices",
+            "howToPlay": "how to play",
             "aboutUs": "about us"
         },
         "debug": {

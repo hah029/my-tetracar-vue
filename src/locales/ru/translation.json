@@ -1,11 +1,16 @@
 {
-    "gameTitle": "тетрокар",
+    "gameTitle": "tetrocar",
     "mainMenu": {
         "goBack": "назад",
         "startGame": "старт",
         "shop": "магазин",
         "settings": "настройки",
         "leaderboards": "рекорды"
+    },
+    "gamePlay": {
+        "progress": "прогресс",
+        "maxProgress": "макс.",
+        "speed": "скорость"
     },
     "preloader": {
         "pressAnyButton": "нажми на кнопку"
@@ -86,6 +91,7 @@
         "about": {
             "eula": "лицензионное соглашение",
             "thirdParty": "сторонние лицензии",
+            "howToPlay": "как играть",
             "aboutUs": "о нас"
         },
         "debug": {

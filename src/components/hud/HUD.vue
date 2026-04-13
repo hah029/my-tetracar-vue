@@ -1,5 +1,11 @@
 <template>
-    <div id="game-hud">
+    <div id="game_hud">
+
+        <div class="top_panel"></div>
+        <div class="center_panel"></div>
+        <div class="bottom_panel">
+            <div class="bottom_subpanel"></div>
+        </div>
 
         <!-- SCORE -->
         <Score />
@@ -11,10 +17,10 @@
         <Boosters />
 
         <!-- LANES -->
-        <Lanes />
+        <!-- <Lanes /> -->
 
         <!-- WARNING -->
-        <Notifications />
+        <!-- <Notifications /> -->
 
     </div>
 </template>
@@ -24,20 +30,46 @@
     import Score from "./panels/Score.vue";
     import Speed from "./panels/Speed.vue";
     import Boosters from "./panels/Boosters.vue";
-    import Lanes from "./panels/Lanes.vue";
-    import Notifications from "./panels/Notifications.vue";
+    // import Lanes from "./panels/Lanes.vue";
+    // import Notifications from "./panels/Notifications.vue";
 </script>
 
 
 <style lang='scss' scoped>
     @use "@/styles/menu.scss" as *;
     
-    #game-hud {
+    #game_hud {
         position: absolute;
         inset: 0;
         pointer-events: none;
         font-family: monospace;
         z-index: z("ui_component");
+    }
+    .top_panel {
+        width: 100%;
+        height: 50px;
+        background-color: #ff8844;
+        position: absolute;
+        top: 0;
+    }
+    .bottom_panel {
+        width: 100%;
+        height: 50px;
+        position: absolute;
+        bottom: 0;
+        display: flex;
+        justify-content: center;
+    }
+    .bottom_subpanel {
+        width: 87.5rem;
+        // background-color: rgba(0, 0, 0, 0.55);
+        background: linear-gradient(
+            90deg,
+            rgba(0, 0, 0, 0) 0%,      /* 0% - полностью прозрачный */
+            rgba(0, 0, 0, 0.55) 10%,     /* 10% - полностью непрозрачный */
+            rgba(0, 0, 0, 0.55) 90%,     /* 90% - полностью непрозрачный */
+            rgba(0, 0, 0, 0) 100%     /* 100% - полностью прозрачный */
+        );
     }
 
     /* === COMMON PANEL STYLE === */
