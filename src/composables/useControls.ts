@@ -14,7 +14,10 @@ export function useControls(game: ReturnType<typeof useGame>) {
     // Refs для DOM элементов (будут установлены из HUD.vue)
     const swipeZoneRef = ref<HTMLElement | null>(null);
     let hammerManager: HammerManager | null = null;
-
+    
+    // Множество для отслеживания обработанных клавиш (защита от автоповтора)
+    const processedKeys = new Set<string>();
+    
     enum controlKeys {
         LEFT = 'ArrowLeft',
         LEFT_ALT = 'KeyA',
@@ -119,6 +122,15 @@ export function useControls(game: ReturnType<typeof useGame>) {
     };
 
     function handleKeyDown(e: KeyboardEvent) {
+        // Предотвращаем автоповтор: если клавиша уже была обработана и не отпущена — игнорируем
+        if (processedKeys.has(e.code)) {
+            e.preventDefault();
+            return;
+        }
+        
+        // Помечаем клавишу как обработанную
+        processedKeys.add(e.code);
+        
         if (e.key !== controlKeys.ESCAPE) e.preventDefault();
 
         switch (e.code) {
@@ -153,7 +165,9 @@ export function useControls(game: ReturnType<typeof useGame>) {
     };
 
     function handleKeyUp(e: KeyboardEvent) {
-//        if (e.key === "n") {
+        // Убираем клавишу из множества обработанных при отпускании
+        processedKeys.delete(e.code);
+        
         if (e.code === controlKeys.NITRO) {
             e.preventDefault();
             usePlayerStore().disableNitro();
@@ -182,6 +196,7 @@ export function useControls(game: ReturnType<typeof useGame>) {
     onUnmounted(() => {
         window.removeEventListener("keydown", handleKeyDown);
         window.removeEventListener("keyup", handleKeyUp);
+        processedKeys.clear(); // Очищаем множество при размонтировании
         cleanup();
     });
     
