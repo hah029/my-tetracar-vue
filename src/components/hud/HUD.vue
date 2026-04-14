@@ -3,13 +3,13 @@
 
 	<div class="controls-container">
 	
-		<div ref="swipeZoneRef" class="swipe-zone">
-	    </div>
-		
     	<div class="buttons-zone">
     	    <button id="btnAction1" class="action-btn" @click="handleShoot" @touchstart.prevent="handleShoot">💥 Стрельба</button>
 	    </div>
-	    
+
+		<div ref="swipeZoneRef" class="swipe-zone">
+	    </div>
+		
 	    
     </div>
 
