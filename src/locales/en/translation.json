@@ -1,5 +1,9 @@
 {
     "gameTitle": "tetrocar",
+    "preloader": {
+        "pressAnyButton": "click to start",
+        "pressAnyButtonMob": "tap to start"
+    },
     "mainMenu": {
         "goBack": "back",
         "startGame": "play",
@@ -11,9 +15,6 @@
         "progress": "progress",
         "maxProgress": "max",
         "speed": "speed"
-    },
-    "preloader": {
-        "pressAnyButton": "tap to start"
     },
     "pauseMenu": {
         "title": "pause",

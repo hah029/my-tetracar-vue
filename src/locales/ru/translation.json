@@ -1,5 +1,9 @@
 {
     "gameTitle": "tetrocar",
+    "preloader": {
+        "pressAnyButton": "нажми на кнопку",
+        "pressAnyButtonMob": "коснись, чтобы начать"
+    },
     "mainMenu": {
         "goBack": "назад",
         "startGame": "старт",
@@ -11,9 +15,6 @@
         "progress": "прогресс",
         "maxProgress": "макс.",
         "speed": "скорость"
-    },
-    "preloader": {
-        "pressAnyButton": "нажми на кнопку"
     },
     "pauseMenu": {
         "title": "пауза",
