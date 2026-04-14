@@ -153,7 +153,8 @@ export function useControls(game: ReturnType<typeof useGame>) {
     };
 
     function handleKeyUp(e: KeyboardEvent) {
-        if (e.key === "n") {
+//        if (e.key === "n") {
+        if (e.code === controlKeys.NITRO) {
             e.preventDefault();
             usePlayerStore().disableNitro();
             CarManager.getInstance().disableNitro();
