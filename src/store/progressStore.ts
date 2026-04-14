@@ -6,6 +6,7 @@ export const useProgressStore = defineStore("progressStore", () => {
   const currentDistance = ref(0);
   const score = ref(0);
   const highScore = ref(0);
+//   const goldens = ref(0);
   const diamondScore = ref(0);
 
   function addScore(amount: number) {
