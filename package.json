@@ -3,7 +3,7 @@
   "appName": "TetroCar",
   "teamName": "Wicked Team",
   "private": true,
-  "version": "0.0.5",
+  "version": "0.0.6",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -11,14 +11,16 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@types/ysdk": "^1.2.0",
+    "hammerjs": "^2.0.8",
     "i18next-vue": "^5.4.0",
     "pinia": "^3.0.4",
     "scss": "^0.2.4",
     "three": "^0.183.1",
-    "vue": "^3.5.25",
-    "@types/ysdk": "^1.2.0"
+    "vue": "^3.5.25"
   },
   "devDependencies": {
+    "@types/hammerjs": "^2.0.46",
     "@types/node": "^24.10.1",
     "@types/three": "^0.183.1",
     "@vitejs/plugin-vue": "^5.0.0",
