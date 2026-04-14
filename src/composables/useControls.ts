@@ -17,16 +17,14 @@ export function useControls(game: ReturnType<typeof useGame>) {
 
     enum controlKeys {
         LEFT = 'ArrowLeft',
-        LEFT_ALT = 'a',
-        LEFT_ALT_RU = 'ф',
+        LEFT_ALT = 'KeyA',
 
         RIGHT = 'ArrowRight',
-        RIGHT_ALT = 'd',
-        RIGHT_ALT_RU = 'в',
+        RIGHT_ALT = 'KeyD',
 
-        SPACE = ' ',
-        NITRO = 'n',
-        SHOP = 'b',
+        SPACE = 'Space',
+        NITRO = 'KeyN',
+        SHOP = 'KeyB',
         ESCAPE = 'Escape',
         ENTER = 'Enter',
         ENTER_NUMPAD = 'NumpadEnter',
@@ -123,16 +121,14 @@ export function useControls(game: ReturnType<typeof useGame>) {
     function handleKeyDown(e: KeyboardEvent) {
         if (e.key !== controlKeys.ESCAPE) e.preventDefault();
 
-        switch (e.key) {
+        switch (e.code) {
             case controlKeys.LEFT:
             case controlKeys.LEFT_ALT:
-            case controlKeys.LEFT_ALT_RU:
                 game.movePlayerLeft(60 / 1000);
                 break;
 
             case controlKeys.RIGHT:
             case controlKeys.RIGHT_ALT:
-            case controlKeys.RIGHT_ALT_RU:
                 game.movePlayerRight(60 / 1000);
                 break;
 
