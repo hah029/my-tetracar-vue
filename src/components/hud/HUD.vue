@@ -37,7 +37,7 @@
         </div>
 
         <!-- SCORE -->
-        <Score />
+        <!-- <Score /> -->
 
         <!-- SPEED (TETRIS BLOCKS ANIMATION) -->
         <Speed />

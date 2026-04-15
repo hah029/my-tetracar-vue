@@ -26,7 +26,7 @@
     import GameOverMenu from "./components/GameOverMenu.vue";
     import Countdown from "./components/Countdown.vue";
     import GameLogo from "@/components/ui/GameLogo.vue";
-    import RightsPanel from "@/components/ui/RightsPanel.vue";
+    import RightsPanel from "@/components/ui/QightsPanel.vue";
     import TeamLogo from "@/components/ui/TeamLogo.vue";
     // managers
     import { CameraSystem } from "@/game/camera/CameraSystem";
@@ -87,6 +87,7 @@
         // main loop initialize
         const debugCollider = new DebugColliderVisualizer(scene);
         loop = GameLoop(game, composer, debugCollider);
+        loop.setupEventListeners();
         loop.start();
 
         gameState.setResetCallback(() => {
@@ -104,6 +105,7 @@
     });
 
     onUnmounted(() => {
+        loop?.cleanupEventListeners();
         loop?.stop();
     });
 </script>
