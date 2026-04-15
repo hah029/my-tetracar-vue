@@ -26,7 +26,7 @@
     import GameOverMenu from "./components/GameOverMenu.vue";
     import Countdown from "./components/Countdown.vue";
     import GameLogo from "@/components/ui/GameLogo.vue";
-    import RightsPanel from "@/components/ui/QightsPanel.vue";
+    import RightsPanel from "@/components/ui/RightsPanel.vue";
     import TeamLogo from "@/components/ui/TeamLogo.vue";
     // managers
     import { CameraSystem } from "@/game/camera/CameraSystem";

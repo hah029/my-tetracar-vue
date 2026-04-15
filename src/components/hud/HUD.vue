@@ -2,13 +2,33 @@
     <div class="game_hud">
 
         <div class="top_panel">
-            <div class="buttons_group">
+            <div class="buttons_left_group">
                 <div class="pause_btn_container" @click="goToPause()">
-                    <img class='icon' src="@/assets/images/hud/btn_pause.svg" />
+                    <img class='icon is_clickable' src="@/assets/images/hud/btn_pause.svg" />
                 </div>
                 <div class="shop_btn_container" @click="goToShop()">
-                    <img class='icon' src="@/assets/images/hud/btn_shop.svg" />
+                    <img class='icon is_clickable' src="@/assets/images/hud/btn_shop.svg" />
                 </div>
+            </div>
+            <div class="buttons_right_group">
+                <div class="currency_block">
+                    <div class="currency_subblock">
+                        <div class="color_yellow_light">{{ goldens }}</div>
+                        <div class="currency_image_container" @click="goToPause()">
+                            <img class='icon' src="@/assets/images/hud/cube_golden.svg" />
+                        </div>
+                    </div>
+                    <div class="currency_subblock">
+                        <div class="color_blue_light">12</div>
+                        <div class="currency_image_container energon_glow_general" @click="goToPause()">
+                            <img class='icon icon_abs' src="@/assets/images/hud/cube_energon_grid_backward.svg" />
+                            <img class='icon icon_abs energon_glow_core' src="@/assets/images/hud/cube_energon_core.svg" />
+                            <img class='icon icon_abs energon_glow_grid' src="@/assets/images/hud/cube_energon_grid_frontal.svg" />
+                        </div>
+                    </div>
+                </div>
+                <div class="yellow_divider"></div>
+                <div class="multiply_block"></div>
             </div>
         </div>
         
@@ -40,10 +60,10 @@
         <!-- <Score /> -->
 
         <!-- SPEED (TETRIS BLOCKS ANIMATION) -->
-        <Speed />
+        <!-- <Speed /> -->
 
         <!-- NITRO (TETRIS STYLE) -->
-        <Boosters />
+        <!-- <Boosters /> -->
 
         <!-- LANES -->
         <!-- <Lanes /> -->
@@ -68,7 +88,7 @@
 
     const gameStore = useGameState();
     const progressStore = useProgressStore();
-    // const goldens = computed(() => Math.floor(progressStore.score));
+    const goldens = computed(() => Math.floor(progressStore.score));
     // const energons = computed(() => Math.floor(progressStore.score));
 
     function goToPause() {
@@ -88,8 +108,11 @@
             position: absolute;
             inset: 0;
             pointer-events: none;
-            font-family: monospace;
             z-index: z("ui_component");
+            font-family: 'jost-light';
+            text-transform: uppercase;
+            line-height: 1;
+            letter-spacing: 0.06rem;
         }
         .color_yellow {
             color: #FFD95C;
@@ -108,14 +131,15 @@
     // #region - top_panel
         .top_panel {
             width: 100%;
-            height: 50px;
             position: absolute;
+            box-sizing: border-box;
             top: 1.875rem;
-            padding: 0rem 3.125rem;
+            padding: 0rem 2.5rem;
             display: flex;
             justify-content: space-between;
         }
-        .buttons_group {
+
+        .buttons_left_group {
             display: flex;
             flex-direction: column;
             align-items: flex-start;
@@ -144,9 +168,51 @@
         }
         .icon {
             width: 100%; 
+        }
+        .icon_abs {
+            position: absolute;
+            top: 0;
+            left: 0;
+        }
+        .is_clickable {
             cursor: pointer;
             pointer-events: auto;
             transition: all 0.1s ease-in-out;
+        }   
+
+        .buttons_right_group{
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-start;
+            gap: 1.067rem;
+        }
+        .currency_block {
+            display: flex;
+            justify-content: flex-start;
+            align-items: center;
+            gap: 1.563rem;
+        }
+        .currency_subblock {
+            display: flex;
+            justify-content: flex-end;
+            align-items: center;
+            gap: 0.625rem;
+            font-size: 1.375rem;
+        }
+        .currency_image_container {
+            width: 2.3125rem;
+            height: 2.3125rem;
+            position: relative;
+        }
+        .energon_glow_general {
+            filter: drop-shadow(0 0 0.44rem rgb(43, 157, 229));
+        }
+        .energon_glow_grid {
+            filter: drop-shadow(0 0 1.25rem rgb(20, 212, 255));
+        }
+        .energon_glow_core {
+            filter: drop-shadow(0 0 0.625rem rgb(20, 212, 255));
         }
     // #endregion
 
@@ -171,10 +237,6 @@
             justify-content: flex-start;
             align-items: center;
             gap: 0.3125rem;
-            text-transform: uppercase;
-            font-family: 'jost-light';
-            line-height: 1;
-            letter-spacing: 0.06rem;
         }
         .metrics_text {
             font-size: 0.875rem;

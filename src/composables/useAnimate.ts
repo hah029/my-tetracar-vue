@@ -16,41 +16,45 @@ import { UpdateMode } from "@/game/core/UpdateMode";
 import { CarManager } from "@/game/car";
 import { BulletSystem } from "@/game/combat/BulletSystem";
 import { GameStates } from "@/game/core/GameState";
-import { onMounted, onUnmounted } from "vue";
 
 
 export function GameLoop(
-    game: ReturnType<typeof useGame>,
-    composer: EffectComposer,
-    // motionBlur: AfterimagePass,
-    debugCollider?: DebugColliderVisualizer,
-){
+        game: ReturnType<typeof useGame>,
+        composer: EffectComposer,
+        // motionBlur: AfterimagePass,
+        debugCollider?: DebugColliderVisualizer,
+    ){
+
     const gameState = useGameState();
     const playerStore = usePlayerStore();
     const progressStore = useProgressStore();
 
     const soundManager = SoundManager.getInstance();
 
+    // ----------------------------
+    // показываем / скрываем FPS-панель через Ctrl+Q
     const stats = new Stats();
     document.body.appendChild(stats.dom);
-        let isDevPanelVisible = true;
-
-        function handleKeyDown(event: KeyboardEvent) {
-            switch (event.key) {
-                case "q":
-                case 'Q':
-                case "й":
-                case 'Й':
-                    
-                    if (event.ctrlKey) {
-                        const el = document.body.appendChild(stats.dom);
-                        isDevPanelVisible = !isDevPanelVisible;
-                        el.style.visibility = isDevPanelVisible ? 'visible' : 'hidden';
-                    };
-                    break;
-            };
+    let isDevPanelVisible = false;
+    const el = document.body.appendChild(stats.dom);
+    el.style.visibility = isDevPanelVisible ? 'visible' : 'hidden';
+    // ---
+    function handleKeyDown(event: KeyboardEvent) {
+        switch (event.key) {
+            case "q":
+            case 'Q':
+            case "й":
+            case 'Й':
+                
+                if (event.ctrlKey) {
+                    isDevPanelVisible = !isDevPanelVisible;
+                    el.style.visibility = isDevPanelVisible ? 'visible' : 'hidden';
+                };
+                break;
         };
+    };
 
+    // ----------------------------
     let lastTime = 0;
     let rafId: number | null = null;
 
@@ -242,22 +246,12 @@ export function GameLoop(
         }
     };
 
-    // onMounted(() => {
-    //     console.log('mounted');
-    //     window.addEventListener("keydown", handleKeyDown);
-    // });
-
-    // onUnmounted(() => {
-    //     window.removeEventListener("keydown", handleKeyDown);
-    // });
-
     return { 
         start, 
         stop,
 
         setupEventListeners: () => {
             window.addEventListener("keydown", handleKeyDown);
-            console.log('event listeners added');
         },
         cleanupEventListeners: () => {
             window.removeEventListener("keydown", handleKeyDown);
