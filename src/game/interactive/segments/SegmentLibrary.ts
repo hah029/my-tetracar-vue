@@ -67,7 +67,7 @@ export const SEGMENTS: Segment[] = [
       [L.Empty, L.Empty, L.Empty, L.Coin, L.Empty],
       [L.Obstacle, L.Obstacle, L.Empty, L.Coin, L.Empty],
       [L.Empty, L.Empty, L.Empty, L.Coin, L.Empty],
-      [L.Empty, L.Empty, L.Empty, L.Coin, L.Empty]
+      [L.BulletItem, L.Empty, L.Empty, L.Coin, L.Empty]
     ]
   },
 

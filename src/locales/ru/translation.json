@@ -14,7 +14,20 @@
     "gamePlay": {
         "progress": "прогресс",
         "maxProgress": "макс.",
-        "speed": "скорость"
+        "speed": "скорость",
+        "keyStats": {
+            "progress": "прогресс",
+            "maxProgress": "макс.",
+            "speed": "скорость"
+        },
+        "notificationsList": {
+            "armorEquipped": "броня установлена!",
+            "maxArmor": "достигнут максимум брони!",
+            "nitroActivated": "нитро активировано!",
+            "ammoRefilled": "боезапас пополнен!",
+            "maxAmmo": "достигнут максимум патронов!",
+            "outOfAmmo!": "нет патронов!"
+        }
     },
     "pauseMenu": {
         "title": "пауза",

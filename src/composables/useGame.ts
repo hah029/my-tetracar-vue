@@ -419,7 +419,7 @@ export function useGame() {
     useProgressStore().resetDistance();
 
     CameraSystem.reset(car.value.mesh.position);
-  }
+  };
 
   function shoot() {
     if (useGameState().currentState != GameStates.Play) return;
@@ -428,12 +428,12 @@ export function useGame() {
     if (!playerStore.canShoot()) {
       console.warn("[useGame] cannot shoot, returning");
       return;
-    }
+    };
 
     BulletSystem.getInstance().spawnBullet(CarManager.getInstance().getCar());
     playerStore.consumeAmmo();
     soundManager.play("sfx_shot");
-  }
+  };
 
   return {
     car,

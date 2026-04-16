@@ -28,32 +28,60 @@
                     </div>
                 </div>
                 <div class="yellow_divider"></div>
-                <div class="multiply_block"></div>
+                <div class="multiply_block color_yellow">
+                    <div class="x_sign">x</div>
+                    <div class="x_number">2</div>
+                </div>
             </div>
         </div>
         
         <div class="central_panel">
             <div class="metrics_group">
                 <div class="metrics_block color_yellow_light">
-                    <div class="metrics_text">Прогресс</div>
+                    <div class="metrics_text">{{ foo.makeText('gamePlay.keyStats.progress', 'empty') }}</div>
                     <div class="metrics_number">639</div>
                     <!-- <div class="metrics_number">{{ goldens }}</div> -->
                 </div>
                 <div class="divider"></div>
                 <div class="metrics_block color_yellow_light">
-                    <div class="metrics_text">Макс.</div>
+                    <div class="metrics_text">{{ foo.makeText('gamePlay.keyStats.maxProgress', 'empty') }}</div>
                     <div class="metrics_number">5124</div>
                 </div>
                 <div class="divider"></div>
                 <div class="metrics_block color_blue">
-                    <div class="metrics_text">Скорость</div>
+                    <div class="metrics_text">{{ foo.makeText('gamePlay.keyStats.speed', 'empty') }}</div>
                     <div class="metrics_number">2</div>
                 </div>
+                <div v-if="newNotification!=''" class="asd" style="color: white;">{{ newNotification }}</div>
             </div>
         </div>
 
         <div class="bottom_panel">
-            <div class="bottom_subpanel"></div>
+            <div class="bottom_subpanel">
+                <div class="currency_subblock">
+                    <div :class="setBoosterTextColor('bullet')">{{ bulletsCount }}</div>
+                    <div class="boosters_image_container">
+                        <img v-if="bulletsCount > 0" class='icon with_shadow' src="@/assets/images/hud/cube_bullet.svg" />
+                        <img v-else class='icon with_white_glow' src="@/assets/images/hud/cube_booster_empty.svg" />
+                    </div>
+                </div>
+                <div class="boosters_divider"></div>
+                <div class="currency_subblock">
+                    <div :class="setBoosterTextColor('armor')">{{ armorsCount }}</div>
+                    <div class="boosters_image_container">
+                        <img v-if="isShieldActive" class='icon with_shadow' src="@/assets/images/hud/cube_armor.svg" />
+                        <img v-else class='icon with_white_glow' src="@/assets/images/hud/cube_booster_empty.svg" />
+                    </div>
+                </div>
+                <div class="boosters_divider"></div>
+                <div class="currency_subblock">
+                    <div :class="setBoosterTextColor('nitro')">{{ nitroTimer }}</div>
+                    <div class="boosters_image_container">
+                        <img v-if="isNitroActive" class='icon with_shadow' src="@/assets/images/hud/cube_nitro.svg" />
+                        <img v-else class='icon with_white_glow' src="@/assets/images/hud/cube_booster_empty.svg" />
+                    </div>
+                </div>
+            </div>
         </div>
 
         <!-- SCORE -->
@@ -76,9 +104,11 @@
 
 
 <script setup lang="ts">
-    import { computed } from "vue";
+    import { computed, watch } from "vue";
     import { useGameState } from "@/store/gameState";
+    import { usePlayerStore } from "@/store/playerStore";
     import { useProgressStore } from "@/store/progressStore";
+    import { createNewText } from '@/helpers/functions';
 
     import Score from "./panels/Score.vue";
     import Speed from "./panels/Speed.vue";
@@ -87,15 +117,65 @@
     // import Notifications from "./panels/Notifications.vue";
 
     const gameStore = useGameState();
+    const playerStore = usePlayerStore();
     const progressStore = useProgressStore();
+    const foo = createNewText();
+
     const goldens = computed(() => Math.floor(progressStore.score));
     // const energons = computed(() => Math.floor(progressStore.score));
+
+    // работаем с уведомлениями
+    const newNotification = computed(() => playerStore.notificationMsg);
+    watch(
+        () => newNotification.value,
+        (newState) => {
+            if (newState != '') {
+                setTimeout(() => {
+                    playerStore.addNewMsg('');
+                }, 3000);
+            };
+        },
+    );
+
+    // работаем с Патронами
+    const bulletsCount = computed(() => playerStore.ammo);
+
+    // работаем с Броней
+    const isShieldActive = computed(() => playerStore.isShieldEnabled);
+    const armorsCount = computed(() => playerStore.armor);
+    
+    // работаем с Нитро
+    const isNitroActive = computed(() => playerStore.isNitroEnabled);
+    const BLOCKS_TOTAL = 10;
+    const nitroTimer = computed(() => {
+        if (!playerStore.isNitroEnabled || playerStore.nitroTimer <= 0) {
+            return 0;
+        } else {
+            const ratio = playerStore.nitroTimer / playerStore.BASE_NITRO_TIMER;
+            return Math.ceil(ratio * BLOCKS_TOTAL);
+        };
+    });
 
     function goToPause() {
         gameStore.pauseGame();
     };
     function goToShop() {
         console.log('shop');
+    };
+
+    // красим текст цифр у бустеров в нужный цвет
+    function setBoosterTextColor(type_) {
+        if (type_ == 'nitro') {
+            if (!playerStore.isNitroEnabled || playerStore.nitroTimer <= 0) {
+                return 'color_gray';
+            } else {
+                return 'color_green_light';
+            };
+        } else if (type_ == 'armor') {
+            return isShieldActive.value ? 'color_white' : 'color_gray';
+        } else if (type_ == 'bullet') {
+            return bulletsCount.value > 0 ? 'color_red_light' : 'color_gray';
+        };
     };
 </script>
 
@@ -126,9 +206,21 @@
         .color_blue_light {
             color: #D7FBFF;
         }
+        .color_red_light {
+            color: #FFC3C5;
+        }
+        .color_green_light {
+            color: #BFFF8E;
+        }
+        .color_white {
+            color: white;
+        }
+        .color_gray {
+            color: rgba(255, 255, 255, 0.5);
+        }
     // #endregion
 
-    // #region - top_panel
+    // #region - top_panel_left_group
         .top_panel {
             width: 100%;
             position: absolute;
@@ -138,7 +230,6 @@
             display: flex;
             justify-content: space-between;
         }
-
         .buttons_left_group {
             display: flex;
             flex-direction: column;
@@ -179,7 +270,9 @@
             pointer-events: auto;
             transition: all 0.1s ease-in-out;
         }   
+    // #endregion
 
+    // #region - top_panel_right_group
         .buttons_right_group{
             display: flex;
             flex-direction: column;
@@ -187,6 +280,7 @@
             justify-content: flex-start;
             gap: 1.067rem;
         }
+
         .currency_block {
             display: flex;
             justify-content: flex-start;
@@ -205,6 +299,7 @@
             height: 2.3125rem;
             position: relative;
         }
+
         .energon_glow_general {
             filter: drop-shadow(0 0 0.44rem rgb(43, 157, 229));
         }
@@ -213,6 +308,34 @@
         }
         .energon_glow_core {
             filter: drop-shadow(0 0 0.625rem rgb(20, 212, 255));
+        }
+
+        .yellow_divider {
+            height: 1px;
+            width: 11.5rem;
+            background: linear-gradient(
+                90deg,
+                rgba(255, 217, 92, 0) 0%,
+                rgba(255, 217, 92, 0.55) 25%,
+                rgba(255, 217, 92, 0.55) 75%,
+                rgba(255, 217, 92, 0) 100%
+            );
+        }
+
+        .multiply_block {
+            display: flex;
+            justify-content: center;
+            align-items: flex-end;
+            gap: 0.125rem;
+            margin-top: -0.3125rem;
+        }
+        .x_sign {
+            font-size: 1.5625rem;
+            text-transform: lowercase;
+        }
+        .x_number {
+            font-size: 2.1875rem;
+            margin-bottom: -0.125rem;
         }
     // #endregion
 
@@ -262,6 +385,10 @@
         }
         .bottom_subpanel {
             width: 87.5rem;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 1.875rem;
             background: linear-gradient(
                 90deg,
                 rgba(0, 0, 0, 0) 0%,      /* 0% - полностью прозрачный */
@@ -269,6 +396,22 @@
                 rgba(0, 0, 0, 0.55) 90%,     /* 90% - полностью непрозрачный */
                 rgba(0, 0, 0, 0) 100%     /* 100% - полностью прозрачный */
             );
+        }
+        .boosters_image_container {
+            width: 1.875rem;
+            height: 1.875rem;
+            position: relative;
+        }
+        .boosters_divider {
+            height: 1.375rem;
+            width: 1px;
+            background-color: rgba(255, 255, 255, 0.3);
+        }
+        .with_shadow {
+            filter: drop-shadow(0 2px 15px rgba(0, 0, 0, 0.35));
+        }
+        .with_white_glow {
+            filter: drop-shadow(0 0px 10px rgba(255, 255, 255, 0.2));
         }
     // #endregion
 

@@ -76,77 +76,105 @@ export function GameLoop(
 
         const collisionResult = game.checkCollision(performance.now());
         if (collisionResult.collision) {
-        if (collisionResult.jump) {
-            game.jumpPlayer(deltaTime);
-        } else if (collisionResult.obstacle) {
-            if (playerStore.isShieldEnabled) {
-            game.destroyObstacles(collisionResult.impactPoint!, [
-                collisionResult.obstacle,
-            ]);
-            CarManager.getInstance().disableShield();
-            playerStore.disableShield();
-            } else {
-            game.destroyCar(collisionResult.impactPoint);
-            game.destroyObstacles(
-                collisionResult.impactPoint!,
-                [collisionResult.obstacle],
-                false,
-            );
-            soundManager.play("sfx_destroy_bot");
-            const strength = Math.min(currentSpeed / playerStore.maxSpeed, 1);
-            CameraSystem.triggerImpactShake(strength);
-            // motionBlur.damp = 0.82;
-            gameState.endGame();
-            return false;
-            }
-        }
-        }
+            if (collisionResult.jump) {
+                game.jumpPlayer(deltaTime);
+
+            } else if (collisionResult.obstacle) {
+                // отнимаем у игрока броню
+                if (playerStore.isShieldEnabled) {
+                    console.log('shield consuming');
+                    game.destroyObstacles(collisionResult.impactPoint!, [
+                        collisionResult.obstacle,
+                    ]);
+
+                    playerStore.consumeArmor();
+                    if (playerStore.armor == 0) {
+                        CarManager.getInstance().disableShield();
+                        playerStore.disableShield();
+                    };
+
+                } else {
+                    console.log('destroying');
+                    
+                    game.destroyCar(collisionResult.impactPoint);
+                    game.destroyObstacles(
+                        collisionResult.impactPoint!,
+                        [collisionResult.obstacle],
+                        false,
+                    );
+                    soundManager.play("sfx_destroy_bot");
+                    const strength = Math.min(currentSpeed / playerStore.maxSpeed, 1);
+                    CameraSystem.triggerImpactShake(strength);
+                    // motionBlur.damp = 0.82;
+                    gameState.endGame();
+                    return false;
+                };
+            };
+        };
 
         const coins = game.checkCoinCollision();
         if (coins.total > 0) {
-        soundManager.play("sfx_add_patron");
+            soundManager.play("sfx_add_patron");
 
-        if (playerStore.isNitroEnabled) {
-            coins.gold *= playerStore.goldNitroMultiplier;
-            coins.diamond *= playerStore.diamondNitroMultiplier;
-        }
-        if (coins.gold > 0) progressStore.addScore(coins.gold);
-        if (coins.diamond > 0) progressStore.addDiamondScore(coins.diamond);
-        }
+            if (playerStore.isNitroEnabled) {
+                coins.gold *= playerStore.goldNitroMultiplier;
+                coins.diamond *= playerStore.diamondNitroMultiplier;
+            }
+            if (coins.gold > 0) progressStore.addScore(coins.gold);
+            if (coins.diamond > 0) progressStore.addDiamondScore(coins.diamond);
+        };
 
         const bulletItems = game.checkBulletItemCollision();
         if (bulletItems > 0) {
-        soundManager.play("sfx_add_patron");
-        playerStore.addAmmo();
-        }
+            soundManager.play("sfx_add_patron");
+            playerStore.addAmmo();
+        };
 
+        // ловим Нитро и Броню
         const boostCollisions = game.checkBoosterCollision();
+        // ---
         if (boostCollisions.collision) {
-        if (boostCollisions.subject === "nitro") {
-            playerStore.enableNitro();
-            CarManager.getInstance().enableNitro();
-        } else if (boostCollisions.subject === "shield") {
-            playerStore.enableShield();
-            CarManager.getInstance().enableShield();
-        } else {
-            console.error(
-            "Undefined booster collision subject:",
-            boostCollisions.subject,
-            );
-        }
-        }
+            if (boostCollisions.subject === "nitro") {
+                playerStore.enableNitro();
+                CarManager.getInstance().enableNitro();
+
+            } else if (boostCollisions.subject === "shield") {
+
+                if (playerStore.armor < playerStore.maxArmor) {
+                    playerStore.addArmor();
+                    if (!playerStore.isShieldEnabled) { 
+                        playerStore.enableShield();
+                        CarManager.getInstance().enableShield();
+                    };
+                    playerStore.addNewMsg('armorEquipped');
+                    // playerStore.notificationMsg = 'armorEquipped';
+                    // console.log('armorEquipped');
+                } else {
+                    playerStore.addNewMsg('maxArmor');
+                    // playerStore.notificationMsg = 'maxArmor';
+                    // console.log('maxArmor');
+                };
+
+            } else {
+                console.error(
+                "Undefined booster collision subject:",
+                boostCollisions.subject,
+                );
+            };
+        };
 
         const realCar = game.car.value.mesh;
         if (realCar) {
-        CameraSystem.update(
-            {
-            position: realCar.position,
-            rotation: realCar.rotation,
-            isDestroyed: () => game.car.value.isDestroyed,
-            },
-            currentSpeed,
-        );
-        }
+            CameraSystem.update(
+                {
+                position: realCar.position,
+                rotation: realCar.rotation,
+                isDestroyed: () => game.car.value.isDestroyed,
+                },
+                currentSpeed,
+            );
+        };
+
         return true;
     };
 

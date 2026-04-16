@@ -14,7 +14,20 @@
     "gamePlay": {
         "progress": "progress",
         "maxProgress": "max",
-        "speed": "speed"
+        "speed": "speed",
+        "keyStats": {
+            "progress": "progress",
+            "maxProgress": "max",
+            "speed": "speed"
+        },
+        "notificationsList": {
+            "armorEquipped": "armor equipped!",
+            "maxArmor": "max armor reached!",
+            "nitroActivated": "nitro activated!",
+            "ammoRefilled": "ammo refilled!",
+            "maxAmmo": "max ammo reached!",
+            "outOfAmmo!": "out of ammo!"
+        }
     },
     "pauseMenu": {
         "title": "pause",
