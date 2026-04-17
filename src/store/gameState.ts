@@ -2,7 +2,7 @@
 import { defineStore } from "pinia";
 import { ref } from "vue";
 
-// import { usePlayerStore } from "./playerStore";
+import { usePlayerStore } from "@/store/playerStore";
 import { useProgressStore } from "./progressStore";
 import { GameStates } from "@/game/core/GameState";
 import { SoundManager } from "@/game/sound/SoundManager";
@@ -16,6 +16,7 @@ export const useGameState = defineStore("gameState", () => {
   const isFirstGame = ref(true);
   const activeOverlay = ref<UIOverlay>(null);
   const previousState = ref<GameStates>(GameStates.Preloader); // Запоминаем предыдущее состояние
+  const playerStore = usePlayerStore();
 
   let resetCallback: (() => void) | null = null;
 
@@ -140,6 +141,9 @@ export const useGameState = defineStore("gameState", () => {
   }
 
   function endGame() {
+    console.log('gameState 147');
+    
+    playerStore.resetPlayerAchievements();
     setState(GameStates.Gameover);
   }
 

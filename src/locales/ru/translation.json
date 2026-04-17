@@ -26,7 +26,7 @@
             "nitroActivated": "нитро активировано!",
             "ammoRefilled": "боезапас пополнен!",
             "maxAmmo": "достигнут максимум патронов!",
-            "outOfAmmo!": "нет патронов!"
+            "outOfAmmo": "нет патронов!"
         }
     },
     "pauseMenu": {

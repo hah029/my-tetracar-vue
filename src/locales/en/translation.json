@@ -26,7 +26,7 @@
             "nitroActivated": "nitro activated!",
             "ammoRefilled": "ammo refilled!",
             "maxAmmo": "max ammo reached!",
-            "outOfAmmo!": "out of ammo!"
+            "outOfAmmo": "out of ammo!"
         }
     },
     "pauseMenu": {

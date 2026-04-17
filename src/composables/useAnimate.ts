@@ -82,7 +82,6 @@ export function GameLoop(
             } else if (collisionResult.obstacle) {
                 // отнимаем у игрока броню
                 if (playerStore.isShieldEnabled) {
-                    console.log('shield consuming');
                     game.destroyObstacles(collisionResult.impactPoint!, [
                         collisionResult.obstacle,
                     ]);
@@ -94,8 +93,6 @@ export function GameLoop(
                     };
 
                 } else {
-                    console.log('destroying');
-                    
                     game.destroyCar(collisionResult.impactPoint);
                     game.destroyObstacles(
                         collisionResult.impactPoint!,
@@ -124,19 +121,25 @@ export function GameLoop(
             if (coins.diamond > 0) progressStore.addDiamondScore(coins.diamond);
         };
 
+        // ловим Патроны
         const bulletItems = game.checkBulletItemCollision();
         if (bulletItems > 0) {
-            soundManager.play("sfx_add_patron");
-            playerStore.addAmmo();
+            if (playerStore.ammo < playerStore.maxAmmo) {
+                soundManager.play("sfx_add_patron");
+                playerStore.addAmmo();
+                playerStore.addNewMsg('ammoRefilled');
+            } else if (playerStore.ammo == playerStore.maxAmmo) {
+                playerStore.addNewMsg('maxAmmo');
+            };
         };
 
         // ловим Нитро и Броню
         const boostCollisions = game.checkBoosterCollision();
-        // ---
         if (boostCollisions.collision) {
             if (boostCollisions.subject === "nitro") {
                 playerStore.enableNitro();
                 CarManager.getInstance().enableNitro();
+                playerStore.addNewMsg('nitroActivated');
 
             } else if (boostCollisions.subject === "shield") {
 
@@ -147,12 +150,8 @@ export function GameLoop(
                         CarManager.getInstance().enableShield();
                     };
                     playerStore.addNewMsg('armorEquipped');
-                    // playerStore.notificationMsg = 'armorEquipped';
-                    // console.log('armorEquipped');
                 } else {
                     playerStore.addNewMsg('maxArmor');
-                    // playerStore.notificationMsg = 'maxArmor';
-                    // console.log('maxArmor');
                 };
 
             } else {

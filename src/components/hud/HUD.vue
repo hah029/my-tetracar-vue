@@ -36,11 +36,11 @@
         </div>
         
         <div class="central_panel">
+            <!-- Основные статы (прогресс, макс. прогресс, скорость) -->
             <div class="metrics_group">
                 <div class="metrics_block color_yellow_light">
                     <div class="metrics_text">{{ foo.makeText('gamePlay.keyStats.progress', 'empty') }}</div>
                     <div class="metrics_number">639</div>
-                    <!-- <div class="metrics_number">{{ goldens }}</div> -->
                 </div>
                 <div class="divider"></div>
                 <div class="metrics_block color_yellow_light">
@@ -52,8 +52,22 @@
                     <div class="metrics_text">{{ foo.makeText('gamePlay.keyStats.speed', 'empty') }}</div>
                     <div class="metrics_number">2</div>
                 </div>
-                <div v-if="newNotification!=''" class="asd" style="color: white;">{{ newNotification }}</div>
             </div>
+            
+            <!-- Уведомления -->
+            <TransitionGroup name="notification_anim" tag="div" class="notifications_container">
+                <div v-for="(notif, index) in notificationsList" 
+                    :key="notif.id" 
+                    class="notifications_block"
+                >
+                    <div :class="setBoosterTextColor('detection', notif.message)">{{ makeNotification(notif.message) }}</div>
+                    <div class="boosters_image_container">
+                        <img v-if="getCubeType(notif.message) == 'ammo'" class='icon' src="@/assets/images/hud/cube_bullet.svg" />
+                        <img v-else-if="getCubeType(notif.message) == 'armor'" class='icon' src="@/assets/images/hud/cube_armor.svg" />
+                        <img v-else-if="getCubeType(notif.message) == 'nitro'" class='icon' src="@/assets/images/hud/cube_nitro.svg" />
+                    </div>
+                </div>
+            </TransitionGroup>
         </div>
 
         <div class="bottom_panel">
@@ -104,7 +118,7 @@
 
 
 <script setup lang="ts">
-    import { computed, watch } from "vue";
+    import { computed, watch, ref } from "vue";
     import { useGameState } from "@/store/gameState";
     import { usePlayerStore } from "@/store/playerStore";
     import { useProgressStore } from "@/store/progressStore";
@@ -121,21 +135,62 @@
     const progressStore = useProgressStore();
     const foo = createNewText();
 
+    // работаем с валютой (голдены / энергоны)
     const goldens = computed(() => Math.floor(progressStore.score));
     // const energons = computed(() => Math.floor(progressStore.score));
 
-    // работаем с уведомлениями
-    const newNotification = computed(() => playerStore.notificationMsg);
-    watch(
-        () => newNotification.value,
-        (newState) => {
-            if (newState != '') {
-                setTimeout(() => {
-                    playerStore.addNewMsg('');
-                }, 3000);
+    // #region - работаем с уведомлениями
+        interface NotificationItem {
+            id: number;
+            message: string;
+        };
+        let notificationsList = ref<NotificationItem[]>([]);
+        let nextId = ref(0);
+        const newNotification = computed(() => playerStore.notificationMsg);
+
+        watch(
+            () => newNotification.value,
+            (newState) => {
+                if (newState != '') {
+                    const newNotificationItem: NotificationItem = {
+                        id: nextId.value++,
+                        message: newState
+                    };
+                    
+                    notificationsList.value.unshift(newNotificationItem);
+                    
+                    setTimeout(() => {
+                        playerStore.addNewMsg('');
+                    }, 100);
+                    
+                    setTimeout(() => {
+                        const index = notificationsList.value.findIndex(n => n.id === newNotificationItem.id);
+                        if (index !== -1) {
+                            notificationsList.value.splice(index, 1);
+                        }
+                    }, 3000);
+                };
+            },
+        );
+
+        // генерируем текст уведомления
+        function makeNotification(notificationMessage: string) {
+            return foo.makeText('gamePlay.notificationsList.' + notificationMessage, 'empty');
+        };
+
+        // определяем какой кубик рисовать в уведомлениях
+        function getCubeType(notificationMessage: string)  {
+            let str = notificationMessage.toLowerCase();
+            if (str.includes('armor')) {
+                return 'armor';
+            } else if (str.includes('ammo')) {
+                return 'ammo';
+            } else if (str.includes('nitro')) {
+                return 'nitro';
             };
-        },
-    );
+            return '';
+        };
+    // #endregion
 
     // работаем с Патронами
     const bulletsCount = computed(() => playerStore.ammo);
@@ -156,25 +211,36 @@
         };
     });
 
+    // переходим в паузу при клике по кнопке на интерфейсе
     function goToPause() {
         gameStore.pauseGame();
     };
+
+    // переходим в магазин при клике по кнопке на интерфейсе (пока заглушка)
     function goToShop() {
         console.log('shop');
     };
 
     // красим текст цифр у бустеров в нужный цвет
-    function setBoosterTextColor(type_) {
+    function setBoosterTextColor(type_: string, notif_: string = 'undefined') {
         if (type_ == 'nitro') {
-            if (!playerStore.isNitroEnabled || playerStore.nitroTimer <= 0) {
-                return 'color_gray';
-            } else {
-                return 'color_green_light';
-            };
+            return !playerStore.isNitroEnabled || playerStore.nitroTimer <= 0 ? 'color_gray' : 'color_green_light';
+
         } else if (type_ == 'armor') {
             return isShieldActive.value ? 'color_white' : 'color_gray';
+
         } else if (type_ == 'bullet') {
             return bulletsCount.value > 0 ? 'color_red_light' : 'color_gray';
+
+        } else if (type_ == 'detection') {
+            let str = notif_.toLowerCase();
+            if (str.includes('armor')) {
+                return 'color_white';
+            } else if (str.includes('ammo')) {
+                return 'color_red_light';
+            } else if (str.includes('nitro')) {
+                return 'color_green_light';
+            };
         };
     };
 </script>
@@ -182,6 +248,7 @@
 
 <style lang='scss' scoped>
     @use "@/styles/menu.scss" as *;
+    @use "@/styles/animations.scss";
     
     // #region - general
         .game_hud {
@@ -345,8 +412,10 @@
             top: 1.875rem;
             width: 100%;
             display: flex;
-            justify-content: center;
-            align-items: flex-start;
+            flex-direction: column;
+            justify-content: flex-start;
+            align-items: center;
+            gap: 1.5625rem;
         }
         .metrics_group {
             display: flex;
@@ -371,6 +440,24 @@
             height: 1.563rem;
             width: 1px;
             background-color: rgba(255, 255, 255, 0.4);
+        }
+    // #endregion
+
+    // #region - notifications
+        .notifications_container {
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-start;
+            align-items: center;
+            gap: 0.5rem;
+            pointer-events: none;
+        }
+        .notifications_block {
+            display: flex;
+            justify-content: flex-end;
+            align-items: center;
+            gap: 1.25rem;
+            font-size: 1.125rem;
         }
     // #endregion
 

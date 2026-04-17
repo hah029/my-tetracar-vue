@@ -330,13 +330,13 @@ export function useGame() {
   }
 
   function checkBoosterCollision() {
-    if (!carManager || !boosterManager)
-      return { collision: false, subject: "" };
+    if (!carManager || !boosterManager) return { collision: false, subject: "" };
     return boosterManager.checkCarCollision(carManager.getCar());
   }
 
   function checkBulletItemCollision() {
     if (!carManager || !bulletItemManager) return 0;
+    // if (!carManager || !bulletItemManager) return { collision: false, subject: 0 };
     return bulletItemManager.checkCarCollision(carManager.getCar());
   }
 
@@ -426,7 +426,7 @@ export function useGame() {
     const playerStore = usePlayerStore();
 
     if (!playerStore.canShoot()) {
-      console.warn("[useGame] cannot shoot, returning");
+      playerStore.addNewMsg('outOfAmmo');
       return;
     };
 

@@ -8,6 +8,7 @@ import { GameStates } from "@/game/core/GameState";
 
 export function useControls(game: ReturnType<typeof useGame>) {
     const gameStore = useGameState();
+    const playerStore = usePlayerStore();
 
     enum controlKeys {
         LEFT = 'ArrowLeft',
@@ -46,6 +47,9 @@ export function useControls(game: ReturnType<typeof useGame>) {
                 break;
 
             case GameStates.Gameover:
+                console.log('useControls 50');
+                
+                playerStore.resetPlayerAchievements();
                 gameStore.goToMenu();
                 break;
         };
