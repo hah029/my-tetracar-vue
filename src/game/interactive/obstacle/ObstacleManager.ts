@@ -113,6 +113,10 @@ export class ObstacleManager {
     return this.obstacles;
   }
 
+  public getObstaclesCount() {
+    return this.obstacles.length;
+  }
+
   public getJumps() {
     return this.jumps;
   }

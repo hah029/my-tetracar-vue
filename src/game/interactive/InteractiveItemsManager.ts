@@ -14,6 +14,7 @@ import { SegmentQueue } from "./segments/SegmentQueue";
 import { usePlayerStore } from "@/store/playerStore";
 import { useProgressStore } from "@/store/progressStore";
 import { CarManager } from "../car";
+import { SEGMENT_ROW_LENGTH } from "./segments/SegmentLibrary";
 
 export class InteractiveItemsManager {
   private static instance: InteractiveItemsManager | null = null;
@@ -22,10 +23,8 @@ export class InteractiveItemsManager {
   private boosterManager!: BoosterManager;
   private bulletItemManager!: BulletItemManager;
   private segmentQueue!: SegmentQueue;
-  private distanceSinceLastSegment = 0;
-  private segmentLength = 18;
-  private difficultyStep = 150;
-  private nextSegmentZ = -60;
+  // private nextSegmentZ = -60;
+  private worldFrontZ = -60;
   private boosterEnabledTimer = 0;
   private boosterEnabledInterval = 5000;
 
@@ -39,22 +38,6 @@ export class InteractiveItemsManager {
     return InteractiveItemsManager.instance;
   }
 
-  // private constructor(
-  //   obstacleManager: ObstacleManager,
-  //   coinManager: CoinManager,
-  //   boosterManager: BoosterManager,
-  //   bulletItemManager: BulletItemManager,
-  // ) {
-  //   this.obstacleManager = obstacleManager;
-  //   this.coinManager = coinManager;
-  //   this.boosterManager = boosterManager;
-  //   this.bulletItemManager = bulletItemManager;
-  //   this.segmentQueue = new SegmentQueue(() => {
-  //     const distance = useProgressStore().getDistance();
-  //     return Math.floor(distance / this.difficultyStep) + 1;
-  //   });
-  // }
-
   public initialize(
     obstacleManager: ObstacleManager,
     coinManager: CoinManager,
@@ -65,30 +48,25 @@ export class InteractiveItemsManager {
     this.coinManager = coinManager;
     this.boosterManager = boosterManager;
     this.bulletItemManager = bulletItemManager;
-    this.segmentQueue = new SegmentQueue(() => {
-      const distance = useProgressStore().getDistance();
-      return Math.floor(distance / this.difficultyStep) + 1;
-    });
+    this.segmentQueue = new SegmentQueue();
   }
 
   public update(deltaTime: number, speed: number, mode: UpdateMode) {
-    // obstacles / jumps
-    const distance = useProgressStore().getDistance();
+    // const spawnAhead = 90;
 
-    if (distance - this.distanceSinceLastSegment >= this.segmentLength) {
-      this.spawnSegment(deltaTime, speed, this.nextSegmentZ);
-      this.nextSegmentZ -= this.segmentLength;
-      this.distanceSinceLastSegment = distance;
-    }
+    // const distance = useProgressStore().getDistance();
+    // const playerZ = -distance;
+    // const minZ = playerZ - spawnAhead;
+
+    this.ensureWorldFilled(deltaTime, speed);
 
     this.obstacleManager.update(deltaTime, speed);
     this.coinManager.update(deltaTime, speed);
     this.boosterManager.update(deltaTime, speed);
     this.bulletItemManager.update(deltaTime, speed);
 
-    if (mode === UpdateMode.Destruction) {
-      return; // ⛔ стоп спавн, таймеры, геймплей
-    }
+    if (mode === UpdateMode.Destruction) return;
+
     const playerStore = usePlayerStore();
 
     if (playerStore.isNitroEnabled) {
@@ -103,14 +81,33 @@ export class InteractiveItemsManager {
     }
   }
 
+  private ensureWorldFilled(deltaTime: number, speed: number) {
+    // 🚫 защита от спама за кадр
+    const MAX_SPAWNS_PER_FRAME = 2;
+    let spawned = 0;
+
+    const minZ = -90;
+
+    this.worldFrontZ += speed * deltaTime;
+
+    // console.log("minZ, this.worldFrontZ", minZ, this.worldFrontZ);
+    while (this.worldFrontZ > minZ && spawned < MAX_SPAWNS_PER_FRAME) {
+      const length = this.spawnSegment(deltaTime, speed, this.worldFrontZ);
+      this.worldFrontZ = this.worldFrontZ - length;
+      spawned++;
+    }
+  }
+
   public spawnSegment(dt: number, speed: number, baseZ: number) {
     const segment = this.segmentQueue.getNext();
 
-    const rowSpacing = 4;
-    const isReversed = Math.random() < 0.5;
+    const isReversed = segment.canReversed ? Math.random() < 0.5 : false;
+
+    // console.log("baseZ", baseZ);
 
     segment.pattern.forEach((row, rowIndex) => {
-      const z = baseZ - rowIndex * rowSpacing;
+      const z = baseZ - rowIndex * SEGMENT_ROW_LENGTH;
+
       let row_ = [...row];
 
       if (isReversed) {
@@ -120,7 +117,7 @@ export class InteractiveItemsManager {
       row_.forEach((value, lane) => {
         switch (value) {
           case LanePattern.Obstacle:
-            this.obstacleManager.spawnStaticObstacle(lane, z);
+            this.obstacleManager.spawnStaticObstacle(lane, z, 2);
             break;
 
           case LanePattern.Jump:
@@ -153,6 +150,8 @@ export class InteractiveItemsManager {
         }
       });
     });
+
+    return segment.pattern.length * SEGMENT_ROW_LENGTH;
   }
 
   public spawnSingleCoin(lane: number, baseZ: number) {
@@ -160,12 +159,13 @@ export class InteractiveItemsManager {
       this.coinManager.spawnDiamond(lane, baseZ);
     } else {
       this.coinManager.spawnGold(lane, baseZ);
-    };
+    }
   }
 
   public spawnDiamondCoin(lane: number, baseZ: number) {
     this.coinManager.spawnDiamond(lane, baseZ);
   }
+
   public spawnGoldCoin(lane: number, baseZ: number) {
     this.coinManager.spawnGold(lane, baseZ);
   }
@@ -181,11 +181,13 @@ export class InteractiveItemsManager {
       this.boosterManager.spawnNitro(lane, baseZ);
     } else {
       this.boosterManager.spawnShield(lane, baseZ);
-    };
+    }
   }
+
   public spawnNitroBooster(lane: number, baseZ: number) {
     this.boosterManager.spawnNitro(lane, baseZ);
   }
+
   public spawnShieldBooster(lane: number, baseZ: number) {
     this.boosterManager.spawnShield(lane, baseZ);
   }
@@ -250,8 +252,8 @@ export class InteractiveItemsManager {
     this.boosterManager.reset();
     this.bulletItemManager.reset();
     this.segmentQueue.reset();
-    this.distanceSinceLastSegment = 0;
-    this.nextSegmentZ = -60;
+    // this.nextSegmentZ = -60;
+    this.worldFrontZ = -60;
     this.boosterEnabledTimer = 0;
   }
 }
