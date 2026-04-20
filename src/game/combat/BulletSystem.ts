@@ -60,8 +60,7 @@ export class BulletSystem {
         this.obstacleBox.setFromObject(obstacle);
 
         if (this.bulletBox.intersectsBox(this.obstacleBox)) {
-///          obstacle.destroy(bullet.position.clone());
-obstacle.destroy(bullet.position.clone(), false);  // а то компилятор ругался
+            obstacle.destroy(bullet.position.clone(), true);  // а то компилятор ругался
 
           this.scene.remove(bullet);
           this.bullets.splice(i, 1);

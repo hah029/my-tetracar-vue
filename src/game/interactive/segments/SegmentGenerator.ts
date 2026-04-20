@@ -82,13 +82,15 @@ export class SegmentGenerator {
     return row.some(
       (cell) =>
         cell === LanePattern.Empty ||
+        // cell === LanePattern.Jump ||
         cell === LanePattern.Coin ||
         cell === LanePattern.CoinLine,
     );
   }
 
   static isSegmentPlayable(pattern: LanePattern[][]): boolean {
-    return pattern.every((row) => SegmentGenerator.hasSafeLane(row));
+    return true;
+    // return pattern.every((row) => SegmentGenerator.hasSafeLane(row));
   }
 
   private static weightedRandom(pool: Segment[]): Segment {

@@ -207,9 +207,9 @@ export class DestructionManager {
     const dropTypes = Object.keys(
       this.transformMapping,
     ) as (keyof typeof this.transformMapping)[];
-    const choices: (keyof typeof this.transformMapping | null)[] = [
+    const choices: (keyof typeof this.transformMapping)[] = [
       ...dropTypes,
-      null,
+      
     ];
     const weights = [...dropTypes.map(() => 1), 1]; // пример: все веса = 1
 

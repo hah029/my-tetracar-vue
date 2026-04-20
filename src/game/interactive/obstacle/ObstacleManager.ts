@@ -51,8 +51,8 @@ export class ObstacleManager {
 
   public spawnMovingObstacle(
     startLane: number,
-    width: number,
     z = -60,
+    width = 1,
     formIndex?: number,
   ) {
     const lanes = RoadManager.getInstance().getLanesCount();

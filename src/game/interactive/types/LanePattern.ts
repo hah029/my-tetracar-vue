@@ -7,7 +7,9 @@ export type LanePattern =
   | 5 // EnemyCar
   | 6 // Jump
   | 7 // Booster
-  | 8; // BulletItem
+  | 8 // BulletItem
+  | 9 // BulletItem
+  | 10; // BulletItem
 
 // Если нужны константы с именами:
 export const LanePattern = {
@@ -20,4 +22,6 @@ export const LanePattern = {
   Jump: 6,
   Booster: 7,
   BulletItem: 8,
+  Nitro: 9,
+  Shield: 10,
 } as const;

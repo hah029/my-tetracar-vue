@@ -4,11 +4,11 @@ import { ref } from "vue";
 export const usePlayerStore = defineStore("playerStore", () => {
     // #region - основные константы
         // const BASE_SPEED = 2.0;
-        const BASE_SPEED = 0.02;          // м/с - стартовая скорость машинки
+        const BASE_SPEED = 0.018;          // м/с - стартовая скорость машинки
         const NITRO_MULTIPLIER = 1.5;
         const MAX_SPEED = 0.5; // м/с
         //   const ACCELERATION = 1e-5;
-        const ACCELERATION = 0.000001;    // - темп ускорения машинки
+        const ACCELERATION = 0.0000006;    // - темп ускорения машинки
         const BASE_NITRO_TIMER = 5000;
 
         // speed
