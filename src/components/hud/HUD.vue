@@ -13,13 +13,13 @@
             <div class="buttons_right_group">
                 <div class="currency_block">
                     <div class="currency_subblock">
-                        <div class="color_yellow_light">{{ goldens }}</div>
+                        <div class="currency_value color_yellow_light">{{ goldens }}</div>
                         <div class="currency_image_container" @click="goToPause()">
                             <img class='icon' src="@/assets/images/hud/cube_golden.svg" />
                         </div>
                     </div>
                     <div class="currency_subblock">
-                        <div class="color_blue_light">12</div>
+                        <div class="currency_value color_blue_light">{{ energons }}</div>
                         <div class="currency_image_container energon_glow_general" @click="goToPause()">
                             <img class='icon icon_abs' src="@/assets/images/hud/cube_energon_grid_backward.svg" />
                             <img class='icon icon_abs energon_glow_core' src="@/assets/images/hud/cube_energon_core.svg" />
@@ -40,7 +40,7 @@
             <div class="metrics_group">
                 <div class="metrics_block color_yellow_light">
                     <div class="metrics_text">{{ foo.makeText('gamePlay.keyStats.progress', 'empty') }}</div>
-                    <div class="metrics_number">639</div>
+                    <div class="metrics_number">{{ currentDistance }}</div>
                 </div>
                 <div class="divider"></div>
                 <div class="metrics_block color_yellow_light">
@@ -137,7 +137,9 @@
 
     // работаем с валютой (голдены / энергоны)
     const goldens = computed(() => Math.floor(progressStore.score));
-    // const energons = computed(() => Math.floor(progressStore.score));
+    const energons = computed(() => Math.floor(progressStore.energons));
+    
+    const currentDistance = computed(() => Math.floor(progressStore.currentDistance));
 
     // #region - работаем с уведомлениями
         interface NotificationItem {
@@ -352,7 +354,8 @@
             display: flex;
             justify-content: flex-start;
             align-items: center;
-            gap: 1.563rem;
+            gap: 0.25rem;
+            // gap: 1.563rem;
         }
         .currency_subblock {
             display: flex;
@@ -360,6 +363,14 @@
             align-items: center;
             gap: 0.625rem;
             font-size: 1.375rem;
+        }
+        .currency_value {
+            min-width: 3ch;
+            text-align: right;
+            font-feature-settings: "tnum";
+            font-variant-numeric: tabular-nums;
+            white-space: nowrap;
+            transition: width 0.1s ease;  // Плавное расширение
         }
         .currency_image_container {
             width: 2.3125rem;

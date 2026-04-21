@@ -117,8 +117,8 @@ export function GameLoop(
                 coins.gold *= playerStore.goldNitroMultiplier;
                 coins.diamond *= playerStore.diamondNitroMultiplier;
             }
-            if (coins.gold > 0) progressStore.addScore(coins.gold);
-            if (coins.diamond > 0) progressStore.addDiamondScore(coins.diamond);
+            if (coins.gold > 0) progressStore.addGolden(coins.gold);
+            if (coins.diamond > 0) progressStore.addEnergon(coins.diamond);
         };
 
         // ловим Патроны

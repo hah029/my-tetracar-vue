@@ -125,6 +125,9 @@ export class InteractiveItemsManager {
 						break;
 
 					case LanePattern.Jump:
+						this.spawnJump(lane, dt, speed, z);
+						break;
+					case LanePattern.JumpCoins:
 						this.spawnJumpWithCoins(lane, dt, speed, z);
 						break;
 
@@ -232,6 +235,16 @@ export class InteractiveItemsManager {
 			const coinZ = jumpZ + point.zOffset + 1;
 			this.coinManager.spawnGold(lane, coinZ, point.y);
 		}
+	}
+
+    public spawnJump(
+		lane: number,
+		deltaTime: number,
+		speed: number,
+		baseZ: number
+	) {
+		const jumpZ = baseZ + this.getJumpDistance(deltaTime, speed);
+		this.obstacleManager.spawnJump(lane, jumpZ);
 	}
 
 	private getJumpDistance(deltaTime: number, speed: number): number {
