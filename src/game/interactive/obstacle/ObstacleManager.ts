@@ -62,6 +62,7 @@ export class ObstacleManager {
     if (!form) {
       return;
     }
+
     const obstacle = new MovingObstacle(
       startLane,
       width,
@@ -69,6 +70,7 @@ export class ObstacleManager {
       lanes,
       this.scene,
       this.useGLB,
+      Math.random() > 0.5 ? 1 : -1, // direction
       form,
     );
 
