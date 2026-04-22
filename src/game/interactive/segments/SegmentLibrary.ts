@@ -730,7 +730,7 @@ export const SEGMENTS: Segment[] = [
     {
         id: "jumpers4",
         type: T.Scenario,
-        weight: 2,
+        weight: 1,
         canReversed: true,
     
         pattern: [
@@ -907,7 +907,7 @@ export const SEGMENTS: Segment[] = [
     {
         id: "movingBlocks2",
         type: T.Scenario,
-        weight: 4,
+        weight: 3,
         canReversed: true,
     
         pattern: [

@@ -2,6 +2,7 @@ import * as THREE from "three";
 import { Bullet } from "./Bullet";
 import { Car } from "../car";
 import { ObstacleManager } from "../interactive/obstacle";
+import { useProgressStore } from "@/store/progressStore";
 
 export class BulletSystem {
   private static instance: BulletSystem | null = null;
@@ -40,6 +41,7 @@ export class BulletSystem {
 
   update(dt: number) {
     const obstacles = ObstacleManager.getInstance().getObstacles();
+    const progressStore = useProgressStore();
 
     for (let i = this.bullets.length - 1; i >= 0; i--) {
       const bullet = this.bullets[i];
@@ -61,6 +63,7 @@ export class BulletSystem {
 
         if (this.bulletBox.intersectsBox(this.obstacleBox)) {
             obstacle.destroy(bullet.position.clone(), true);  // а то компилятор ругался
+            progressStore.calcScore('bulletHit', 1);
 
           this.scene.remove(bullet);
           this.bullets.splice(i, 1);

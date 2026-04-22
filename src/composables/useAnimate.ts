@@ -74,10 +74,12 @@ export function GameLoop(
         game.updateDestructionItems(deltaTime, currentSpeed);
         BulletSystem.getInstance().update(deltaTime);
 
+        // обрабатываем коллизии машинки с игровыми предметами
         const collisionResult = game.checkCollision(performance.now());
         if (collisionResult.collision) {
             if (collisionResult.jump) {
                 game.jumpPlayer(deltaTime);
+                progressStore.calcScore('jump', 1);
 
             } else if (collisionResult.obstacle) {
                 // отнимаем у игрока броню
@@ -91,6 +93,8 @@ export function GameLoop(
                         CarManager.getInstance().disableShield();
                         playerStore.disableShield();
                     };
+
+                    progressStore.calcScore('consumeArmor', 1);
 
                 } else {
                     game.destroyCar(collisionResult.impactPoint);
@@ -109,6 +113,7 @@ export function GameLoop(
             };
         };
 
+        // ловим Голдены и Энергоны
         const coins = game.checkCoinCollision();
         if (coins.total > 0) {
             soundManager.play("sfx_add_patron");

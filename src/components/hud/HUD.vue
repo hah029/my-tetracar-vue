@@ -13,13 +13,13 @@
             <div class="buttons_right_group">
                 <div class="currency_block">
                     <div class="currency_subblock">
-                        <div class="currency_value color_yellow_light">{{ goldens }}</div>
+                        <div class="currency_value font_adaptation color_yellow_light">{{ goldens }}</div>
                         <div class="currency_image_container" @click="goToPause()">
                             <img class='icon' src="@/assets/images/hud/cube_golden.svg" />
                         </div>
                     </div>
                     <div class="currency_subblock">
-                        <div class="currency_value color_blue_light">{{ energons }}</div>
+                        <div class="currency_value font_adaptation color_blue_light">{{ energons }}</div>
                         <div class="currency_image_container energon_glow_general" @click="goToPause()">
                             <img class='icon icon_abs' src="@/assets/images/hud/cube_energon_grid_backward.svg" />
                             <img class='icon icon_abs energon_glow_core' src="@/assets/images/hud/cube_energon_core.svg" />
@@ -40,22 +40,30 @@
             <div class="metrics_group">
                 <div class="metrics_block color_yellow_light">
                     <div class="metrics_text">{{ foo.makeText('gamePlay.keyStats.progress', 'empty') }}</div>
-                    <div class="metrics_number">{{ currentDistance }}</div>
+                    <div class="font_adaptation metrics_number">{{ score }}</div>
                 </div>
                 <div class="divider"></div>
                 <div class="metrics_block color_yellow_light">
                     <div class="metrics_text">{{ foo.makeText('gamePlay.keyStats.maxProgress', 'empty') }}</div>
-                    <div class="metrics_number">5124</div>
+                    <div class="font_adaptation metrics_number">{{ highScore }}</div>
                 </div>
                 <div class="divider"></div>
                 <div class="metrics_block color_blue">
                     <div class="metrics_text">{{ foo.makeText('gamePlay.keyStats.speed', 'empty') }}</div>
-                    <div class="metrics_number">2</div>
+                    <div class="font_adaptation metrics_number">2</div>
                 </div>
             </div>
             
             <!-- Уведомления -->
             <TransitionGroup name="notification_anim" tag="div" class="notifications_container">
+                
+                <!-- <div v-if="isNewRecord" class="notifications_block">
+                    <div :class="setBoosterTextColor('newRecord')">{{ makeNotification('newRecord') }}</div>
+                    <div class="boosters_image_container">
+                        <img class='icon' src="@/assets/images/hud/cube_bullet.svg" />
+                    </div>
+                </div> -->
+
                 <div v-for="(notif, index) in notificationsList" 
                     :key="notif.id" 
                     class="notifications_block"
@@ -67,6 +75,7 @@
                         <img v-else-if="getCubeType(notif.message) == 'nitro'" class='icon' src="@/assets/images/hud/cube_nitro.svg" />
                     </div>
                 </div>
+
             </TransitionGroup>
         </div>
 
@@ -136,10 +145,12 @@
     const foo = createNewText();
 
     // работаем с валютой (голдены / энергоны)
-    const goldens = computed(() => Math.floor(progressStore.score));
-    const energons = computed(() => Math.floor(progressStore.energons));
-    
-    const currentDistance = computed(() => Math.floor(progressStore.currentDistance));
+    const goldens = computed(() => progressStore.goldens);
+    const energons = computed(() => progressStore.energons);
+    const score = computed(() => Math.floor(progressStore.score));
+    const highScore = computed(() => Math.floor(progressStore.highScore));
+    const newNotification = computed(() => playerStore.notificationMsg);
+    const isNewRecord = computed(() => progressStore.isNewRecord);
 
     // #region - работаем с уведомлениями
         interface NotificationItem {
@@ -148,7 +159,6 @@
         };
         let notificationsList = ref<NotificationItem[]>([]);
         let nextId = ref(0);
-        const newNotification = computed(() => playerStore.notificationMsg);
 
         watch(
             () => newNotification.value,
@@ -169,7 +179,7 @@
                         const index = notificationsList.value.findIndex(n => n.id === newNotificationItem.id);
                         if (index !== -1) {
                             notificationsList.value.splice(index, 1);
-                        }
+                        };
                     }, 3000);
                 };
             },
@@ -236,12 +246,15 @@
 
         } else if (type_ == 'detection') {
             let str = notif_.toLowerCase();
+            
             if (str.includes('armor')) {
                 return 'color_white';
             } else if (str.includes('ammo')) {
                 return 'color_red_light';
             } else if (str.includes('nitro')) {
                 return 'color_green_light';
+            } else if (str.includes('newrecord')) {
+                return 'color_yellow new_record_msg';
             };
         };
     };
@@ -286,6 +299,13 @@
         }
         .color_gray {
             color: rgba(255, 255, 255, 0.5);
+        }
+        .font_adaptation {
+            min-width: 3ch;
+            font-feature-settings: "tnum";
+            font-variant-numeric: tabular-nums;
+            white-space: nowrap;
+            transition: width 0.1s ease;  // Плавное расширение
         }
     // #endregion
 
@@ -365,12 +385,12 @@
             font-size: 1.375rem;
         }
         .currency_value {
-            min-width: 3ch;
             text-align: right;
-            font-feature-settings: "tnum";
-            font-variant-numeric: tabular-nums;
-            white-space: nowrap;
-            transition: width 0.1s ease;  // Плавное расширение
+            // min-width: 3ch;
+            // font-feature-settings: "tnum";
+            // font-variant-numeric: tabular-nums;
+            // white-space: nowrap;
+            // transition: width 0.1s ease;  // Плавное расширение
         }
         .currency_image_container {
             width: 2.3125rem;
@@ -469,6 +489,9 @@
             align-items: center;
             gap: 1.25rem;
             font-size: 1.125rem;
+        }
+        .new_record_msg {
+            font-size: 2.25rem;
         }
     // #endregion
 
