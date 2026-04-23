@@ -1,8 +1,11 @@
 import { defineStore } from "pinia";
 import { ref } from "vue";
+import { useProgressStore } from "@/store/progressStore";
 
 export const usePlayerStore = defineStore("playerStore", () => {
     // #region - основные константы
+        const progressStore = useProgressStore();
+
         const BASE_SPEED = 0.017;           // м/с - стартовая скорость машинки
         const MAX_SPEED = 0.5;              // м/с - максимальная скорость машинки
         const NITRO_MULTIPLIER = 1.5;
@@ -54,12 +57,14 @@ export const usePlayerStore = defineStore("playerStore", () => {
         // включаем нитро
         function enableNitro() {
             isNitroEnabled.value = true;
+            progressStore.riseCurrentMultiplier(2);
         };
 
         // отключаем нитро
         function disableNitro() {
             isNitroEnabled.value = false;
             nitroTimer.value = BASE_NITRO_TIMER;
+            if (progressStore.currentMultiplier != 1) progressStore.reduceCurrentMultiplier(2);
         };
     // #endregion
 

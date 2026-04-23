@@ -58,6 +58,7 @@
     import SettingsRoot from "./settings/SettingsRoot.vue";
     import { GameStates } from "@/game/core/GameState";
     import { createNewText } from '@/helpers/functions';
+    import { useProgressStore } from "@/store/progressStore";
 
     const gameStore = useGameState();
     const foo = createNewText();
@@ -66,6 +67,7 @@
     const isButtonsShown = ref(false);
     const isConfirmButtonsShown = ref(false);
     const isWarningShown = ref(false);
+    const progressStore = useProgressStore();
 
     // кнопки меню "Пауза"
     const menuButtonsPause = computed(() => [
@@ -142,6 +144,8 @@
     function goToMainMenu() {
         showHideAllPauseElements(false, true);
         setTimeout(() => {
+            // возвращаем назад старое значение рекорда, если игрок не доиграл до конца (заблаговременно вышел)
+            progressStore.returnBackOldHighScore();
             gameStore.setState(GameStates.Menu);
         }, 400);
         setTimeout(() => {

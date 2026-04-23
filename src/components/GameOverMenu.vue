@@ -88,14 +88,11 @@
     ]);
 
     function restartGame() {
-        console.log('GameOverMenu.vue - restartGame 91');
         playerStore.resetPlayerAchievements();
         gameState.setState(GameStates.Countdown);
     };
 
     function goToMainMenu() {
-        console.log('GameOverMenu.vue - goToMainMenu 97');
-        
         playerStore.resetPlayerAchievements();
         gameState.setState(GameStates.Menu);
     };

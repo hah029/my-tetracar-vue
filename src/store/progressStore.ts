@@ -9,6 +9,7 @@ export const useProgressStore = defineStore("progressStore", () => {
     const currentDistance = ref(0);
     const score = ref(0);
     const highScore = ref(0);
+    const oldHighScore = ref(0);
     const goldens = ref(0);
     const energons = ref(0);
     const currentMultiplier = ref(1);
@@ -21,8 +22,8 @@ export const useProgressStore = defineStore("progressStore", () => {
     const GOLDEN_MLT = 5;               // поимке Голдена
     const ENERGON_MLT = 50;             // поимке Энергона
     const SPEED_MLT = 0.2;              // фиксированной величине скорости
-    const OBSTACLE_CRUSHED_MLT = 35;    // разрушении препятствия (выстрелом или броней)
-    const JUMP_MLT = 15;                // прыжке на трамплине
+    const OBSTACLE_CRUSHED_MLT = 50;    // разрушении препятствия (выстрелом или броней)
+    const JUMP_MLT = 35;                // прыжке на трамплине
 
     // #region - очки прогресса
     function calcScore(type_: string, amount_: number) {
@@ -46,17 +47,23 @@ export const useProgressStore = defineStore("progressStore", () => {
 
         if (highScore.value != 0) {
             if (score.value > highScore.value) {
-                highScore.value = score.value;
                 if (!isNewRecord.value) {
                     isNewRecord.value = true;
                     playerStore.addNewMsg('newRecord');
+                    oldHighScore.value = highScore.value;   // запоминаем предыдущий рекорд
                 };
+                highScore.value = score.value;
             };
         };
     };
     
     function resetScore() {
         score.value = 0;
+    };
+
+    function returnBackOldHighScore() {
+        highScore.value = oldHighScore.value;
+        resetNewRecord();
     };
 
     function saveHighScore(): void {
@@ -68,6 +75,14 @@ export const useProgressStore = defineStore("progressStore", () => {
 
     function resetNewRecord() {
         isNewRecord.value = false;
+    };
+
+    function riseCurrentMultiplier(amount: number) {
+        currentMultiplier.value *= amount;
+        // playerStore.addNewMsg('multiplierRising');
+    };
+    function reduceCurrentMultiplier(amount: number) {
+        currentMultiplier.value /= amount;
     };
     // #endregion
 
@@ -124,8 +139,11 @@ export const useProgressStore = defineStore("progressStore", () => {
 
         calcScore,
         resetScore,
+        returnBackOldHighScore,
         saveHighScore,
         resetNewRecord,
+        riseCurrentMultiplier,
+        reduceCurrentMultiplier,
 
         addGolden,
         addEnergon,

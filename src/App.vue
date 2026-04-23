@@ -34,7 +34,6 @@
     import { DebugColliderVisualizer } from "./helpers/debug/DebugColliderVisualizer";
     import { GameStates } from "./game/core/GameState";
 
-
     const threeRoot = ref<HTMLDivElement | null>(null);
     const { getScene, getCamera, getComposer } = useThree(threeRoot);
     const game = useGame();
@@ -98,8 +97,8 @@
             const carMesh = game.car.value.mesh;
             if (carMesh) {
                 CameraSystem.reset(carMesh.position.clone());
-            }
-
+            };
+            
             console.log("✅ Game reset complete");
         });
     });
@@ -107,6 +106,7 @@
     onUnmounted(() => {
         loop?.cleanupEventListeners();
         loop?.stop();
+        console.log('onUnmounted');
     });
 </script>
 

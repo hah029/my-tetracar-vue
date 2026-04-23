@@ -6,9 +6,9 @@
                 <div class="pause_btn_container" @click="goToPause()">
                     <img class='icon is_clickable' src="@/assets/images/hud/btn_pause.svg" />
                 </div>
-                <div class="shop_btn_container" @click="goToShop()">
+                <!-- <div class="shop_btn_container" @click="goToShop()">
                     <img class='icon is_clickable' src="@/assets/images/hud/btn_shop.svg" />
-                </div>
+                </div> -->
             </div>
             <div class="buttons_right_group">
                 <div class="currency_block">
@@ -30,7 +30,7 @@
                 <div class="yellow_divider"></div>
                 <div class="multiply_block color_yellow">
                     <div class="x_sign">x</div>
-                    <div class="x_number">2</div>
+                    <div class="x_number">{{ currentMultiplier }}</div>
                 </div>
             </div>
         </div>
@@ -56,26 +56,23 @@
             
             <!-- Уведомления -->
             <TransitionGroup name="notification_anim" tag="div" class="notifications_container">
-                
-                <!-- <div v-if="isNewRecord" class="notifications_block">
-                    <div :class="setBoosterTextColor('newRecord')">{{ makeNotification('newRecord') }}</div>
-                    <div class="boosters_image_container">
-                        <img class='icon' src="@/assets/images/hud/cube_bullet.svg" />
-                    </div>
-                </div> -->
-
                 <div v-for="(notif, index) in notificationsList" 
                     :key="notif.id" 
                     class="notifications_block"
                 >
+                    <div v-if="notif.message=='newRecord'" class="flash_container">
+                        <img class='icon' src="@/assets/images/flashes/flash_golden.svg" />
+                    </div>
                     <div :class="setBoosterTextColor('detection', notif.message)">{{ makeNotification(notif.message) }}</div>
-                    <div class="boosters_image_container">
+                    <div v-if="notif.message=='newRecord'" class="flash_container">
+                        <img class='icon' src="@/assets/images/flashes/flash_golden.svg" />
+                    </div>
+                    <div v-else class="boosters_image_container">
                         <img v-if="getCubeType(notif.message) == 'ammo'" class='icon' src="@/assets/images/hud/cube_bullet.svg" />
                         <img v-else-if="getCubeType(notif.message) == 'armor'" class='icon' src="@/assets/images/hud/cube_armor.svg" />
                         <img v-else-if="getCubeType(notif.message) == 'nitro'" class='icon' src="@/assets/images/hud/cube_nitro.svg" />
                     </div>
                 </div>
-
             </TransitionGroup>
         </div>
 
@@ -150,7 +147,7 @@
     const score = computed(() => Math.floor(progressStore.score));
     const highScore = computed(() => Math.floor(progressStore.highScore));
     const newNotification = computed(() => playerStore.notificationMsg);
-    const isNewRecord = computed(() => progressStore.isNewRecord);
+    const currentMultiplier = computed(() => progressStore.currentMultiplier);
 
     // #region - работаем с уведомлениями
         interface NotificationItem {
@@ -521,6 +518,11 @@
         .boosters_image_container {
             width: 1.875rem;
             height: 1.875rem;
+            position: relative;
+        }
+        .flash_container {
+            width: 5.5rem;
+            height: 5.5rem;
             position: relative;
         }
         .boosters_divider {
