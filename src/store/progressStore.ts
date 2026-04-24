@@ -21,7 +21,6 @@ export const useProgressStore = defineStore("progressStore", () => {
     const DISTANCE_MLT = 1;             // прохождении одной единицы дистанции
     const GOLDEN_MLT = 5;               // поимке Голдена
     const ENERGON_MLT = 50;             // поимке Энергона
-    const SPEED_MLT = 0.2;              // фиксированной величине скорости
     const OBSTACLE_CRUSHED_MLT = 50;    // разрушении препятствия (выстрелом или броней)
     const JUMP_MLT = 35;                // прыжке на трамплине
 

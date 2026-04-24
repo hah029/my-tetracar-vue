@@ -82,7 +82,28 @@ export class SoundManager {
       this.currentMusic = sound;
       this.currentMusicName = name;
     }
-  }
+  };
+
+  // Метод для одноразовых звуков, которые не конфликтуют друг с другом
+  playOneShot(name: string, volume: number = 0.6) {
+        const audioStore = useAudioStore();
+        if (!audioStore.masterEnabled || !audioStore.sfxEnabled) return;
+
+        const originalSound = this.sounds[name];
+        if (!originalSound?.buffer) return;
+
+        // Создаём отдельный Audio для этого воспроизведения
+        const tempSound = new THREE.Audio(this.listener);
+        tempSound.setBuffer(originalSound.buffer);
+        tempSound.setVolume(volume);
+        tempSound.play();
+        
+        // Автоматическая очистка после окончания
+        tempSound.onEnded = () => {
+            tempSound.stop();
+            tempSound.disconnect();
+        };
+    };
 
   // Новый метод для управления музыкой (с проверкой дублей)
   playMusic(name: string, loop: boolean = false) {

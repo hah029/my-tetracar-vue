@@ -226,9 +226,9 @@
     };
 
     // переходим в магазин при клике по кнопке на интерфейсе (пока заглушка)
-    function goToShop() {
-        console.log('shop');
-    };
+    // function goToShop() {
+    //     console.log('shop');
+    // };
 
     // красим текст цифр у бустеров в нужный цвет
     function setBoosterTextColor(type_: string, notif_: string = 'undefined') {

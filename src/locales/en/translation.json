@@ -28,7 +28,8 @@
             "maxAmmo": "max ammo reached!",
             "outOfAmmo": "out of ammo!",
             "newRecord": "new record!"
-        }
+        },
+        "goMessage": "go!"
     },
     "pauseMenu": {
         "title": "pause",
