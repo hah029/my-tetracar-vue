@@ -1,18 +1,18 @@
 // music
-import sound_background from "@/assets/sounds/music/background.ogg";
-import sound_gameover from "@/assets/sounds/music/gameover.ogg";
-import sound_intro from "@/assets/sounds/music/intro.ogg";
+import sound_background from "@/assets/sounds/music/background.m4a";
+import sound_gameover from "@/assets/sounds/music/gameover.m4a";
+import sound_intro from "@/assets/sounds/music/intro.m4a";
 // sfx
-import sound_1 from "@/assets/sounds/sfx/1.ogg";
-import sound_2 from "@/assets/sounds/sfx/2.ogg";
-import sound_3 from "@/assets/sounds/sfx/3.ogg";
+import sound_1 from "@/assets/sounds/sfx/1.m4a";
+import sound_2 from "@/assets/sounds/sfx/2.m4a";
+import sound_3 from "@/assets/sounds/sfx/3.m4a";
 import sound_add_patron from "@/assets/sounds/sfx/add_patron.ogg";
 import sound_change_mode from "@/assets/sounds/sfx/change_mode.ogg";
 import sound_click from "@/assets/sounds/sfx/click.ogg";
 import sound_destroy_bot from "@/assets/sounds/sfx/destroy_bot.ogg";
 import sound_inc_100_progress from "@/assets/sounds/sfx/inc_100_progress.ogg";
 import sound_shot from "@/assets/sounds/sfx/shot.ogg";
-import sound_start from "@/assets/sounds/sfx/start.ogg";
+import sound_start from "@/assets/sounds/sfx/start.m4a";
 import type { AudioConfig } from "../types";
 
 export const SOUNDS_CONFIG: AudioConfig = {
