@@ -1,3 +1,5 @@
+@use "sass:map";
+
 $z-layers: (
     "canvas": 0,
     "gradient": 1,
@@ -10,7 +12,7 @@ $z-layers: (
 );
 
 @function z($layer) {
-    @return map-get($z-layers, $layer);
+    @return map.get($z-layers, $layer);
 }
 
 .container {
