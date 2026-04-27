@@ -6,21 +6,18 @@
                 <div class="pause_btn_container" @click="goToPause()">
                     <img class='icon is_clickable' src="@/assets/images/hud/btn_pause.svg" />
                 </div>
-                <!-- <div class="shop_btn_container" @click="goToShop()">
-                    <img class='icon is_clickable' src="@/assets/images/hud/btn_shop.svg" />
-                </div> -->
             </div>
             <div class="buttons_right_group">
                 <div class="currency_block">
                     <div class="currency_subblock">
                         <div class="currency_value font_adaptation color_yellow_light">{{ goldens }}</div>
-                        <div class="currency_image_container" @click="goToPause()">
+                        <div class="currency_image_container">
                             <img class='icon' src="@/assets/images/hud/cube_golden.svg" />
                         </div>
                     </div>
                     <div class="currency_subblock">
                         <div class="currency_value font_adaptation color_blue_light">{{ energons }}</div>
-                        <div class="currency_image_container energon_glow_general" @click="goToPause()">
+                        <div class="currency_image_container energon_glow_general">
                             <img class='icon icon_abs' src="@/assets/images/hud/cube_energon_grid_backward.svg" />
                             <img class='icon icon_abs energon_glow_core' src="@/assets/images/hud/cube_energon_core.svg" />
                             <img class='icon icon_abs energon_glow_grid' src="@/assets/images/hud/cube_energon_grid_frontal.svg" />
@@ -103,21 +100,24 @@
                 </div>
             </div>
         </div>
-
-        <!-- SCORE -->
-        <!-- <Score /> -->
-
-        <!-- SPEED (TETRIS BLOCKS ANIMATION) -->
-        <!-- <Speed /> -->
-
-        <!-- NITRO (TETRIS STYLE) -->
-        <!-- <Boosters /> -->
-
-        <!-- LANES -->
-        <!-- <Lanes /> -->
-
-        <!-- WARNING -->
-        <!-- <Notifications /> -->
+        
+        <div class="effects_container">
+            <div 
+                v-for="effect in effectsList" 
+                :key="effect.id"
+                class="effects_group"
+                :class="setBoosterAnimation(effect.type)"
+            >
+                <div v-if="effect.type == 'addEnergon'" class="currency_image_container energon_glow_general">
+                    <img class='icon icon_abs' src="@/assets/images/hud/cube_energon_grid_backward.svg" />
+                    <img class='icon icon_abs energon_glow_core' src="@/assets/images/hud/cube_energon_core.svg" />
+                    <img class='icon icon_abs energon_glow_grid' src="@/assets/images/hud/cube_energon_grid_frontal.svg" />
+                </div>
+                <img v-if="effect.type == 'addBullet'" class='icon' src="@/assets/images/hud/cube_bullet.svg" />
+                <img v-if="effect.type == 'addArmor'" class='icon' src="@/assets/images/hud/cube_armor.svg" />
+                <img v-if="effect.type == 'addNitro'" class='icon' src="@/assets/images/hud/cube_nitro.svg" />
+            </div>
+        </div>
 
     </div>
 </template>
@@ -130,12 +130,6 @@
     import { useProgressStore } from "@/store/progressStore";
     import { createNewText } from '@/helpers/functions';
 
-    import Score from "./panels/Score.vue";
-    import Speed from "./panels/Speed.vue";
-    import Boosters from "./panels/Boosters.vue";
-    // import Lanes from "./panels/Lanes.vue";
-    // import Notifications from "./panels/Notifications.vue";
-
     const gameStore = useGameState();
     const playerStore = usePlayerStore();
     const progressStore = useProgressStore();
@@ -147,6 +141,7 @@
     const score = computed(() => Math.floor(progressStore.score));
     const highScore = computed(() => Math.floor(progressStore.highScore));
     const newNotification = computed(() => playerStore.notificationMsg);
+    const eventType = computed(() => playerStore.eventType);
     const currentMultiplier = computed(() => progressStore.currentMultiplier);
 
     // #region - работаем с уведомлениями
@@ -201,6 +196,59 @@
         };
     // #endregion
 
+    // #region - работаем с событиями поимки бустеров (для включения анимаций)
+        // добавляем интерфейс для эффектов
+        interface EffectItem {
+            id: number;
+            type: string;  // 'addEnergon', 'addBullet', 'addArmor', 'addNitro'
+        };
+
+        // массив активных эффектов
+        let effectsList = ref<EffectItem[]>([]);
+        let effectNextId = ref(0);
+
+        // следим за событием
+        watch(
+            () => eventType.value,
+            (newEvent) => {
+                if (newEvent != '') {
+                    const newEffectItem: EffectItem = {
+                        id: effectNextId.value++,
+                        type: newEvent
+                    };
+                    
+                    effectsList.value.push(newEffectItem);
+                    
+                    // Сбрасываем событие в сторе
+                    // setTimeout(() => {
+                    //     playerStore.clearEventType();
+                    // }, 100);
+                    
+                    // Удаляем эффект через 0.5с (длительность анимации)
+                    setTimeout(() => {
+                        const index = effectsList.value.findIndex(e => e.id === newEffectItem.id);
+                        if (index !== -1) {
+                            effectsList.value.splice(index, 1);
+                        }
+                    }, 1000);
+                }
+            }
+        );
+
+        // назначаем тип анимации при поимке бустера / энергона
+        function setBoosterAnimation(type_) {
+            if (type_ == 'addEnergon') {
+                return 'energon_mooving';
+            } else if (type_ == 'addBullet') {
+                return 'bullet_mooving';
+            } else if (type_ == 'addArmor') {
+                return 'armor_mooving';
+            } else if (type_ == 'addNitro') {
+                return 'nitro_mooving';
+            };
+        };
+    // #end region
+
     // работаем с Патронами
     const bulletsCount = computed(() => playerStore.ammo);
 
@@ -224,11 +272,6 @@
     function goToPause() {
         gameStore.pauseGame();
     };
-
-    // переходим в магазин при клике по кнопке на интерфейсе (пока заглушка)
-    // function goToShop() {
-    //     console.log('shop');
-    // };
 
     // красим текст цифр у бустеров в нужный цвет
     function setBoosterTextColor(type_: string, notif_: string = 'undefined') {
@@ -255,6 +298,8 @@
             };
         };
     };
+
+    
 </script>
 
 
@@ -333,16 +378,6 @@
                 transform: translateY(-2px);
             }
         }
-        .shop_btn_container {
-            width: 3.125rem;
-            transition: all 0.1s ease-in-out;
-
-            &:hover .icon {
-                filter: drop-shadow(0 0 10px rgb(247, 156, 255));
-                transition: all 0.1s ease-in-out;
-                transform: translateY(-2px);
-            }
-        }
         .icon {
             width: 100%; 
         }
@@ -358,7 +393,7 @@
         }   
     // #endregion
 
-    // #region - top_panel_right_group
+    // #region - top_panel_right_group  
         .buttons_right_group{
             display: flex;
             flex-direction: column;
@@ -538,184 +573,66 @@
         }
     // #endregion
 
-    // #region - old
-        /* === COMMON PANEL STYLE === */
-        .panel {
+    // #region - анимации при поимке бустеров / энергонов
+        .effects_container {
             position: absolute;
-            background: rgba(0, 0, 0, 0.8);
-            padding: 12px 16px;
-            border: 2px solid #00ffff;
-            border-radius: 4px;
-            box-shadow: 0 0 8px rgba(0, 255, 255, 0.3);
-            color: #00ffff;
+            inset: 0;
+            pointer-events: none;
+            z-index: z("ui_component") + 1;
+        }      
+        .effects_group {
+            position: absolute;
+            width: 2.813rem;
+            height: 2.813rem;
+            bottom: 13.125rem;
+            left: 59.063rem;
         }
 
-        /* === SCORE PANEL === */
-        .panel-left {
-            top: 20px;
-            left: 20px;
+        .energon_mooving {
+            animation: energonMovingAnim 0.5s cubic-bezier(0.42, 0, 1, 1) forwards;
         }
-
-        .label {
-            font-size: 12px;
-            opacity: 0.7;
-            letter-spacing: 1px;
-        }
-
-        .value {
-            font-size: 24px;
-            font-weight: bold;
-        }
-
-        .value.gold {
-            color: #ffd700;
-            text-shadow: 0 0 4px #ffd700;
-        }
-
-        .sub {
-            font-size: 10px;
-            opacity: 0.5;
-        }
-
-        /* === SPEED PANEL === */
-        .panel-right {
-            top: 20px;
-            right: 20px;
-        }
-
-        .speed-panel-tetris {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-        }
-
-        .speed-label {
-            font-size: 12px;
-            letter-spacing: 1px;
-            margin-bottom: 5px;
-        }
-
-        .speed-blocks {
-            display: flex;
-            gap: 1px;
-            margin-bottom: 4px;
-        }
-
-        .speed-block {
-            width: 1px;
-            height: 16px;
-            background: rgba(0, 255, 255, 0.2);
-            /* border: 2px solid rgba(0, 255, 255, 0.4); */
-            transform: translateY(-20px);
-            opacity: 0;
-            animation: fall 0.3s forwards;
-        }
-
-        .speed-block.active {
-            background: #00ffff;
-            box-shadow: 0 0 3px #00ffff;
-        }
-
-        .speed-value {
-            font-size: 14px;
-            font-weight: bold;
-            letter-spacing: 1px;
-        }
-
-        /* === NITRO PANEL === */
-        .nitro {
-            top: 60px;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 280px;
-            border: 2px solid #ff4444;
-            border-radius: 4px;
-            padding: 8px;
-            background: rgba(0, 0, 0, 0.7);
-        }
-
-        .nitro-header {
-            display: flex;
-            justify-content: space-between;
-            font-size: 10px;
-            margin-bottom: 4px;
-            color: #fff;
-        }
-
-        .nitro-header .active {
-            font-weight: bold;
-            color: #44ff44;
-        }
-
-        .nitro-bar-bg {
-            width: 100%;
-            height: 14px;
-            background: rgba(255, 255, 255, 0.1);
-            border-radius: 2px;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .nitro-bar {
-            width: 100%;
-            height: 100%;
-            display: flex;
-        }
-
-        .nitro-block {
-            width: 20%;
-            height: 100%;
-            transform: translateY(-20px);
-            opacity: 0;
-            animation: fall 0.25s forwards;
-
-            &.active {
-                background: linear-gradient(90deg, #ff4444, #ff8844);
+        @keyframes energonMovingAnim {
+            0% {
+                bottom: 13.125rem;
+            }
+            100% {
+                top: 1,875rem;
+                right: 2.5rem;
             }
         }
-
-        /* === LANES === */
-        .lane-indicator {
-            bottom: 30px;
-            left: 20px;
-            display: flex;
-            gap: 6px;
-            padding: 6px;
-            border: 2px solid #00ffff;
-            border-radius: 4px;
-            background: rgba(0, 0, 0, 0.7);
+        .bullet_mooving {
+            animation: bulletMovingAnim 0.5s cubic-bezier(0.42, 0, 1, 1) forwards;
         }
-
-        .lane-dot {
-            width: 16px;
-            height: 16px;
-            background: rgba(0, 255, 255, 0.2);
-            border: 2px solid rgba(0, 255, 255, 0.5);
-            transition: .2s;
+        @keyframes bulletMovingAnim {
+            0% {
+                bottom: 13.125rem;
+            }
+            100% {
+                bottom: 0.3125rem;
+                left: 52.5rem;
+            }
         }
-
-        .lane-dot.active {
-            background: #00ffff;
-            box-shadow: 0 0 5px #00ffff;
-            transform: scale(1.2);
+        .armor_mooving {
+            animation: armorMovingAnim 0.5s cubic-bezier(0.42, 0, 1, 1) forwards;
         }
-
-        /* === WARNING === */
-        .warning-message {
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            font-size: 36px;
-            font-weight: bold;
-            text-shadow: 0 0 10px red;
-            pointer-events: none;
+        @keyframes armorMovingAnim {
+            0% {
+                bottom: 13.125rem;
+            }
+            100% {
+                bottom: 0.3125rem;
+            }
         }
-
-        /* === ANIMATIONS === */
-        @keyframes fall {
-            to {
-                transform: translateY(0);
-                opacity: 1;
+        .nitro_mooving {
+            animation: nitroMovingAnim 0.5s cubic-bezier(0.42, 0, 1, 1) forwards;
+        }
+        @keyframes nitroMovingAnim {
+            0% {
+                bottom: 13.125rem;
+            }
+            100% {
+                bottom: 0.3125rem;
+                left: 66.25rem;
             }
         }
     // #endregion

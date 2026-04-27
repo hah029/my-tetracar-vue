@@ -129,6 +129,7 @@ export function GameLoop(
             if (coins.diamond > 0) {
                 progressStore.addEnergon(coins.diamond)
                 soundManager.play("sfx_add_energon");
+                playerStore.makeEventHappened('addEnergon');
             };
         };
 
@@ -139,6 +140,7 @@ export function GameLoop(
                 soundManager.play("sfx_add_patron");
                 playerStore.addAmmo();
                 playerStore.addNewMsg('ammoRefilled');
+                playerStore.makeEventHappened('addBullet');
             } else if (playerStore.ammo == playerStore.maxAmmo) {
                 playerStore.addNewMsg('maxAmmo');
             };
@@ -151,6 +153,7 @@ export function GameLoop(
                 playerStore.enableNitro();
                 CarManager.getInstance().enableNitro();
                 playerStore.addNewMsg('nitroActivated');
+                playerStore.makeEventHappened('addNitro');
 
             } else if (boostCollisions.subject === "shield") {
 
@@ -161,6 +164,7 @@ export function GameLoop(
                         CarManager.getInstance().enableShield();
                     };
                     playerStore.addNewMsg('armorEquipped');
+                    playerStore.makeEventHappened('addArmor');
                 } else {
                     playerStore.addNewMsg('maxArmor');
                 };
