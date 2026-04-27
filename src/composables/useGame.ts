@@ -233,14 +233,14 @@ export function useGame() {
   function movePlayerLeft(dt: number) {
     if (useGameState().currentState != GameStates.Play) return;
     carManager.getCar().moveLeft();
-    soundManager.play("sfx_click");
+    soundManager.play("sfx_moving");
     updatePlayer(dt);
   }
 
   function movePlayerRight(dt: number) {
     if (useGameState().currentState != GameStates.Play) return;
     carManager.getCar().moveRight();
-    soundManager.play("sfx_click");
+    soundManager.play("sfx_moving");
     updatePlayer(dt);
   }
 

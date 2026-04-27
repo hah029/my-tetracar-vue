@@ -72,7 +72,7 @@ function toggleSound() {
 function updateVolume() {
     soundManager.setMasterVolume(volume.value);
     localStorage.setItem("masterVolume", volume.value.toString());
-    soundManager.play("sfx_click");
+    soundManager.play("sfx_jump");
 };
 
 const props = defineProps<{

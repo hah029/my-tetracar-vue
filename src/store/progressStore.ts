@@ -2,6 +2,7 @@
 import { usePlayerStore } from "@/store/playerStore";
 import { defineStore } from "pinia";
 import { ref } from "vue";
+import { SoundManager } from "@/game/sound/SoundManager";
 
 
 export const useProgressStore = defineStore("progressStore", () => {
@@ -23,6 +24,9 @@ export const useProgressStore = defineStore("progressStore", () => {
     const ENERGON_MLT = 50;             // поимке Энергона
     const OBSTACLE_CRUSHED_MLT = 50;    // разрушении препятствия (выстрелом или броней)
     const JUMP_MLT = 35;                // прыжке на трамплине
+
+    let soundManager: SoundManager;
+    soundManager = SoundManager.getInstance();
 
     // #region - очки прогресса
     function calcScore(type_: string, amount_: number) {
@@ -49,6 +53,7 @@ export const useProgressStore = defineStore("progressStore", () => {
                 if (!isNewRecord.value) {
                     isNewRecord.value = true;
                     playerStore.addNewMsg('newRecord');
+                    soundManager.play("sfx_new_record");
                     oldHighScore.value = highScore.value;   // запоминаем предыдущий рекорд
                 };
                 highScore.value = score.value;

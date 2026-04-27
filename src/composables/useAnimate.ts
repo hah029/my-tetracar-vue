@@ -80,6 +80,7 @@ export function GameLoop(
             if (collisionResult.jump) {
                 game.jumpPlayer(deltaTime);
                 progressStore.calcScore('jump', 1);
+                soundManager.play("sfx_jump");
 
             } else if (collisionResult.obstacle) {
                 // отнимаем у игрока броню
@@ -116,14 +117,19 @@ export function GameLoop(
         // ловим Голдены и Энергоны
         const coins = game.checkCoinCollision();
         if (coins.total > 0) {
-            soundManager.play("sfx_add_patron");
-
+            
             if (playerStore.isNitroEnabled) {
                 coins.gold *= playerStore.goldNitroMultiplier;
                 coins.diamond *= playerStore.diamondNitroMultiplier;
             }
-            if (coins.gold > 0) progressStore.addGolden(coins.gold);
-            if (coins.diamond > 0) progressStore.addEnergon(coins.diamond);
+            if (coins.gold > 0) {
+                progressStore.addGolden(coins.gold)
+                soundManager.play("sfx_add_golden");
+            };
+            if (coins.diamond > 0) {
+                progressStore.addEnergon(coins.diamond)
+                soundManager.play("sfx_add_energon");
+            };
         };
 
         // ловим Патроны
