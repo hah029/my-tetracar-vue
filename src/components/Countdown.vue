@@ -1,6 +1,7 @@
 <template>
+    <TrainingScreen v-if="showTraining" />
     <Transition name="countdown_anim">
-        <span class="countdown" :class="{ 'msgGo': count === 0 }" :key="count">
+        <span v-if="!showTraining" class="countdown" :class="{ 'msgGo': count === 0 }" :key="count">
             {{ displayText }}
         </span>
     </Transition>
@@ -8,17 +9,20 @@
 
 
 <script setup lang="ts">
-    import { ref, onMounted, computed } from "vue";
+    import { ref, onMounted, computed, watch } from "vue";
     import { useGameState } from "@/store/gameState";
     import { SoundManager } from "@/game/sound/SoundManager";
     import { GameStates } from "@/game/core/GameState";
     import { createNewText } from '@/helpers/functions';
+    import TrainingScreen from "@/components/TrainingScreen.vue";
 
     const gameStore = useGameState();
     const soundManager = SoundManager.getInstance();
     const count = ref(3);
     const foo = createNewText();
     const goMessage = computed(() => foo.makeText("gamePlay.goMessage"));
+    const showTraining = ref(true);
+    // const masterEnabled = ref(localStorage.getItem("masterEnabled") !== "0");
 
     const displayText = computed(() => {
         if (count.value === 0) {
@@ -44,8 +48,26 @@
         }, 650);
     };
 
+    watch(
+        () => gameStore.activeOverlay,
+        (newState) => {
+            if (newState == null) {
+                showTraining.value = false;
+                // gameStore.isPreloaderShown = true;
+                playNext();
+            };
+        },
+    );
+
     onMounted(() => {
-        playNext();
+        gameStore.activeOverlay = 'trainingScreen';
+        // localStorage.setItem('lang', code);
+        // if (gameStore.isFirstGame == true) {
+        //     showTraining.value = true;
+        //     // gameStore.activeOverlay = 'trainingScreen';
+        // } else {
+        //     playNext();
+        // };
     });
 </script>
 

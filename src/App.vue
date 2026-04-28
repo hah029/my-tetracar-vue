@@ -33,7 +33,7 @@
     import { SoundManager } from "./game/sound/SoundManager";
     import { DebugColliderVisualizer } from "./helpers/debug/DebugColliderVisualizer";
     import { GameStates } from "./game/core/GameState";
-    import { useProgressStore } from "./store/progressStore";
+    // import { useProgressStore } from "./store/progressStore";
 
     const threeRoot = ref<HTMLDivElement | null>(null);
     const { getScene, getCamera, getComposer } = useThree(threeRoot);

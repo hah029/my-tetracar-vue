@@ -59,7 +59,7 @@ export function useControls(game: ReturnType<typeof useGame>) {
     function processEnter() {
         switch (gameStore.currentState) {
             case GameStates.Preloader:
-                gameStore.isFirstGame = false;
+                gameStore.isPreloaderShown = false;
                 gameStore.goToMenu();
                 break;
         };

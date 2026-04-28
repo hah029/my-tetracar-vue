@@ -11,6 +11,31 @@
         "settings": "settings",
         "leaderboards": "leaderboards"
     },
+    "trainingScreen": {
+        "earn": {
+            "title": "earn",
+            "text": [
+                "score progress points",
+                "and leave rivals behind!"
+            ]
+        },
+        "collect": {
+            "title": "collect",
+            "text": [
+                "goldens",
+                "energons"
+            ]
+        },
+        "use": {
+            "title": "use",
+            "text": [
+                "ammo",
+                "armor",
+                "nitro"
+            ]
+        },
+        "startButton": "let's go!"
+    },
     "gamePlay": {
         "progress": "progress",
         "maxProgress": "max",

@@ -7,12 +7,13 @@ import { useProgressStore } from "./progressStore";
 import { GameStates } from "@/game/core/GameState";
 import { SoundManager } from "@/game/sound/SoundManager";
 
-type UIOverlay = null | "settings" | "quitConfirm" | "leaderBoards";
+type UIOverlay = null | "settings" | "quitConfirm" | "leaderBoards" | "trainingScreen";
 
 export const useGameState = defineStore("gameState", () => {
   // ===== STATE =====
   const currentState = ref<GameStates>(GameStates.Preloader);
   const isDebug = ref(false);
+  const isPreloaderShown = ref(true);
   const isFirstGame = ref(true);
   const activeOverlay = ref<UIOverlay>(null);
   const previousState = ref<GameStates>(GameStates.Preloader); // Запоминаем предыдущее состояние
@@ -195,6 +196,7 @@ export const useGameState = defineStore("gameState", () => {
   return {
     currentState,
     isDebug,
+    isPreloaderShown,
     isFirstGame,
     activeOverlay,
 

@@ -111,18 +111,18 @@
 
     // определяем местоположение логотипа (относ. верхн. границы экрана)
     const logoStyle = computed(() => {
-        let myPos = gameState.isFirstGame ? 18.47 : 13.04;
+        let myPos = gameState.isPreloaderShown ? 18.47 : 13.04;
         return { top: `${myPos}%` };
     });
 
     // активируем анимацию мерцания ламп логотипа в зависимости от сценария
     const neonClass = computed(() => {
-        return gameState.isFirstGame ? "neon_glow" : "";
+        return gameState.isPreloaderShown ? "neon_glow" : "";
     });
 
     // динамические стили темного фона на заднем плане (фон поднимается вверх)
     const backgroundClass = computed(() => {
-        return gameState.isFirstGame
+        return gameState.isPreloaderShown
             ? "fading_background"
             : "background_second_state";
     });

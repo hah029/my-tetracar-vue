@@ -28,6 +28,16 @@ export function createNewText() {
 
         // получаем случайный элемент из входящего массива 
         //      (если на вход поступает не строка, а целый массив строк)
+        getElementFromArray: (val_: any, num_: any): any => {
+            const array = t(val_, { returnObjects: true }) as any[];
+            
+            if (!Array.isArray(array) || array.length === 0) {
+                console.warn(`Invalid array for val_: ${val_}`);
+                return '';
+            };
+            
+            return array[num_];
+        },
         getRandomFromArray: (val_: any): any => {
             const array = t(val_, { returnObjects: true }) as any[];
             

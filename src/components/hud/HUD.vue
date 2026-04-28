@@ -24,8 +24,8 @@
                         </div>
                     </div>
                 </div>
-                <div class="yellow_divider"></div>
-                <div class="multiply_block color_yellow">
+                <div v-if="currentMultiplier>1" class="yellow_divider"></div>
+                <div v-if="currentMultiplier>1" class="multiply_block color_yellow">
                     <div class="x_sign">x</div>
                     <div class="x_number">{{ currentMultiplier }}</div>
                 </div>
@@ -328,30 +328,6 @@
             text-transform: uppercase;
             line-height: 1;
             letter-spacing: 0.06rem;
-        }
-        .color_yellow {
-            color: #FFD95C;
-        }
-        .color_yellow_light {
-            color: #FFF5AD;
-        }
-        .color_blue {
-            color: #72B3EE;
-        }
-        .color_blue_light {
-            color: #D7FBFF;
-        }
-        .color_red_light {
-            color: #FFC3C5;
-        }
-        .color_green_light {
-            color: #BFFF8E;
-        }
-        .color_white {
-            color: white;
-        }
-        .color_gray {
-            color: rgba(255, 255, 255, 0.5);
         }
         .font_adaptation {
             min-width: 3ch;

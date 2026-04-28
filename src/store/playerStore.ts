@@ -59,14 +59,14 @@ export const usePlayerStore = defineStore("playerStore", () => {
         // включаем нитро
         function enableNitro() {
             isNitroEnabled.value = true;
-            progressStore.riseCurrentMultiplier(2);
-        };
+            if (!isNitroEnabled.value) progressStore.riseMultiplier(2, 'multiply');
+        };``
 
         // отключаем нитро
         function disableNitro() {
             isNitroEnabled.value = false;
             nitroTimer.value = BASE_NITRO_TIMER;
-            if (progressStore.currentMultiplier != 1) progressStore.reduceCurrentMultiplier(2);
+            if (progressStore.currentMultiplier != 1) progressStore.reduceMultiplier(2);
         };
     // #endregion
 
