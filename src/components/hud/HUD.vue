@@ -78,6 +78,7 @@
                 <div class="currency_subblock">
                     <div :class="setBoosterTextColor('bullet')">{{ bulletsCount }}</div>
                     <div class="boosters_image_container">
+                        <!-- <img v-if="cubeIlluminations == 'addBullet'" class='icon with_illumination' src="@/assets/images/hud/cube_luminous.svg" /> -->
                         <img v-if="bulletsCount > 0" class='icon with_shadow' src="@/assets/images/hud/cube_bullet.svg" />
                         <img v-else class='icon with_white_glow' src="@/assets/images/hud/cube_booster_empty.svg" />
                     </div>
@@ -141,7 +142,7 @@
     const score = computed(() => Math.floor(progressStore.score));
     const highScore = computed(() => Math.floor(progressStore.highScore));
     const newNotification = computed(() => playerStore.notificationMsg);
-    const eventType = computed(() => playerStore.eventType);
+    const eventCounter = computed(() => playerStore.eventCounter);
     const currentMultiplier = computed(() => progressStore.currentMultiplier);
 
     // #region - работаем с уведомлениями
@@ -206,33 +207,43 @@
         // массив активных эффектов
         let effectsList = ref<EffectItem[]>([]);
         let effectNextId = ref(0);
+        // let cubeIlluminations = ref('');
 
         // следим за событием
         watch(
-            () => eventType.value,
-            (newEvent) => {
-                if (newEvent != '') {
+            () => eventCounter.value,
+            () => {
+                const currentEvent = playerStore.eventType;
+                if (currentEvent != '') {
+                    
                     const newEffectItem: EffectItem = {
                         id: effectNextId.value++,
-                        type: newEvent
+                        type: currentEvent
                     };
                     
                     effectsList.value.push(newEffectItem);
+
+                    // // подсвечиваем спрайт кубика на время
+                    // if (currentEvent == 'addBullet') {
+                    //     setTimeout(() => {
+                    //         cubeIlluminations.value = 'addBullet';
+                    //     }, 1000);
+                    //     setTimeout(() => {
+                    //         cubeIlluminations.value = '';
+                    //     }, 1500);
+                    // }
                     
-                    // Сбрасываем событие в сторе
-                    // setTimeout(() => {
-                    //     playerStore.clearEventType();
-                    // }, 100);
-                    
-                    // Удаляем эффект через 0.5с (длительность анимации)
+                    // удаляем эффект
+                    let animDuration = currentEvent == 'addEnergon' ? 4000 : 1000;
                     setTimeout(() => {
                         const index = effectsList.value.findIndex(e => e.id === newEffectItem.id);
                         if (index !== -1) {
                             effectsList.value.splice(index, 1);
-                        }
-                    }, 1000);
-                }
-            }
+                        };
+                    }, animDuration);
+
+                };
+            },
         );
 
         // назначаем тип анимации при поимке бустера / энергона
@@ -568,6 +579,9 @@
         .with_shadow {
             filter: drop-shadow(0 2px 15px rgba(0, 0, 0, 0.35));
         }
+        .with_illumination {
+            filter: drop-shadow(0 0px 20px rgba(255, 255, 255, 1));
+        }
         .with_white_glow {
             filter: drop-shadow(0 0px 10px rgba(255, 255, 255, 0.2));
         }
@@ -589,19 +603,19 @@
         }
 
         .energon_mooving {
-            animation: energonMovingAnim 0.5s cubic-bezier(0.42, 0, 1, 1) forwards;
+            animation: energonMovingAnim 2.1s cubic-bezier(0.41, 0, 0.04, 0.99) forwards;
         }
         @keyframes energonMovingAnim {
             0% {
                 bottom: 13.125rem;
             }
             100% {
-                top: 1,875rem;
-                right: 2.5rem;
+                bottom: 53.125rem;
+                left: 115rem;
             }
         }
         .bullet_mooving {
-            animation: bulletMovingAnim 0.5s cubic-bezier(0.42, 0, 1, 1) forwards;
+            animation: bulletMovingAnim 0.6s cubic-bezier(0.42, 0, 1, 1) forwards;
         }
         @keyframes bulletMovingAnim {
             0% {
@@ -613,7 +627,7 @@
             }
         }
         .armor_mooving {
-            animation: armorMovingAnim 0.5s cubic-bezier(0.42, 0, 1, 1) forwards;
+            animation: armorMovingAnim 0.6s cubic-bezier(0.42, 0, 1, 1) forwards;
         }
         @keyframes armorMovingAnim {
             0% {
@@ -624,7 +638,7 @@
             }
         }
         .nitro_mooving {
-            animation: nitroMovingAnim 0.5s cubic-bezier(0.42, 0, 1, 1) forwards;
+            animation: nitroMovingAnim 0.6s cubic-bezier(0.42, 0, 1, 1) forwards;
         }
         @keyframes nitroMovingAnim {
             0% {

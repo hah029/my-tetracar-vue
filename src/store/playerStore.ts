@@ -42,6 +42,7 @@ export const usePlayerStore = defineStore("playerStore", () => {
         // быстрые сообщения
         const notificationMsg = ref('');
         const eventType = ref('');
+        const eventCounter = ref(0);
     // #endregion
 
     // сбрасываем все бустеры игрока при поражении / выходе из игры
@@ -155,9 +156,10 @@ export const usePlayerStore = defineStore("playerStore", () => {
         // ловим тип события (поймал патрон, броню, нитро или энергон)
         function makeEventHappened(type_) {
             eventType.value = type_;
+            eventCounter.value++;
             setTimeout(() => {
                 eventType.value = '';
-            }, 3000);
+            }, 1000);
         };
 
         // сохраняем новое сообщение в Store
@@ -190,6 +192,7 @@ export const usePlayerStore = defineStore("playerStore", () => {
         diamondNitroMultiplier,
         notificationMsg,
         eventType,
+        eventCounter,
 
         // methods
         resetPlayerAchievements,
