@@ -95,6 +95,9 @@ export class CityLayerInstanced {
 
   private readonly LOOP_THRESHOLD = 10;
 
+  private frameSkip = 0;
+  private readonly SKIP_FRAMES = 2; // каждый 2-й кадр
+
   // Приватный конструктор — используйте статический фабричный метод create
   private constructor(
     scene: THREE.Scene,
@@ -190,33 +193,51 @@ export class CityLayerInstanced {
 
   public update(deltaTime: number, baseSpeed: number) {
     if (this.meshes.length === 0) return;
-
+  
     const move = deltaTime * baseSpeed * this.config.speedFactor;
     const cycleLength = this.config.zEnd - this.config.zStart;
-
+    const LOOP_BOUNDARY = this.LOOP_THRESHOLD;
+  
+    // ========== 1. ВСЕГДА обновляем позиции в данных ==========
     for (let m = 0; m < this.meshes.length; m++) {
-      const mesh = this.meshes[m]!;
-      const positions = this.positionsPerMesh[m]!;
-      const scales = this.scalesPerMesh[m]!;
-
+      const positions = this.positionsPerMesh[m];
+      if (!positions) continue;
+  
       for (let i = 0; i < positions.length; i++) {
-        const pos = positions[i]!;
+        const pos = positions[i];
+        if (!pos) continue;
+  
         pos.z += move;
-
-        // Зацикливание
-        if (pos.z > this.LOOP_THRESHOLD) {
+  
+        if (pos.z > LOOP_BOUNDARY) {
           pos.z -= cycleLength;
+        };
+      };
+    };
+  
+    // ========== 2. ОБНОВЛЯЕМ МАТРИЦЫ только каждый N-й кадр ==========
+    this.frameSkip++;
+    const shouldUpdateMatrices = this.frameSkip >= this.SKIP_FRAMES;
+  
+    if (shouldUpdateMatrices) {
+      this.frameSkip = 0;
+  
+      for (let m = 0; m < this.meshes.length; m++) {
+        const mesh = this.meshes[m];
+        const positions = this.positionsPerMesh[m];
+        const scales = this.scalesPerMesh[m];
+        if (!mesh || !positions || !scales) continue;
+  
+        for (let i = 0; i < positions.length; i++) {
+          this.dummy.position.copy(positions[i]!);
+          this.dummy.scale.copy(scales[i]!);
+          this.dummy.updateMatrix();
+          mesh.setMatrixAt(i, this.dummy.matrix);
         }
-
-        this.dummy.position.copy(pos);
-        this.dummy.scale.copy(scales[i]!);
-        this.dummy.updateMatrix();
-        mesh.setMatrixAt(i, this.dummy.matrix);
-      }
-
-      mesh.instanceMatrix.needsUpdate = true;
-    }
-  }
+        mesh.instanceMatrix.needsUpdate = true;
+      };
+    };
+  };
 
   public dispose() {
     for (const mesh of this.meshes) {
@@ -231,5 +252,5 @@ export class CityLayerInstanced {
     this.meshes = [];
     this.positionsPerMesh = [];
     this.scalesPerMesh = [];
-  }
+  };
 }

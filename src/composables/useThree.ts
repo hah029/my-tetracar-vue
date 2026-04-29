@@ -48,26 +48,30 @@ export function useThree(container: Ref<HTMLElement | null>) {
       // powerPreference: "high-performance",
     });
     renderer.setSize(container.value.clientWidth, container.value.clientHeight);
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1));
+
+    // renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1));
+    const pixelRatio = Math.min(window.devicePixelRatio, 0.8);
+    renderer.setPixelRatio(pixelRatio);
+
     renderer.toneMappingExposure = 1.5;
     renderer.shadowMap.enabled = false;
     // renderer.shadowMap.type = THREE.PCFSoftShadowMap;
-    const bloomPass = new UnrealBloomPass(
-      new THREE.Vector2(
-        container.value.clientWidth,
-        container.value.clientHeight,
-      ),
-      0.3, // strength
-      0.8, // radius
-      0.85, // threshold
-    );
+    // const bloomPass = new UnrealBloomPass(
+    //   new THREE.Vector2(
+    //     container.value.clientWidth,
+    //     container.value.clientHeight,
+    //   ),
+    //   0.3, // strength
+    //   0.8, // radius
+    //   0.85, // threshold
+    // );
     const fxaaPass = new ShaderPass(FXAAShader);
     fxaaPass.material.uniforms.resolution!.value.set(1 / container.value.clientWidth, 1 / container.value.clientHeight);
 
     composer = new EffectComposer(renderer);
     composer.addPass(new RenderPass(scene, camera));
 
-    composer.addPass(bloomPass);
+    // composer.addPass(bloomPass);
     // composer.addPass(fxaaPass);
 
     // afterimagePass = new AfterimagePass(1); // оригинальное значение damp

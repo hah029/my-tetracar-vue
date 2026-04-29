@@ -234,7 +234,7 @@
                     // }
                     
                     // удаляем эффект
-                    let animDuration = currentEvent == 'addEnergon' ? 4000 : 1000;
+                    let animDuration = currentEvent == 'addEnergon' ? 1800 : 600;
                     setTimeout(() => {
                         const index = effectsList.value.findIndex(e => e.id === newEffectItem.id);
                         if (index !== -1) {

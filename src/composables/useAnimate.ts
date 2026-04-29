@@ -194,6 +194,7 @@ export function GameLoop(
 
     // --- Основной цикл анимации ---
     function animate(time: number) {
+        // const startTime = performance.now();
         rafId = requestAnimationFrame(animate);
 
         if (lastTime === 0) {
@@ -274,6 +275,11 @@ export function GameLoop(
 
         composer.render();
         stats.end();
+
+        // const frameTime = performance.now() - startTime;
+        // if (frameTime > 25) { // 25ms = 40 FPS
+        //     console.warn(`🐌 Долгий кадр: ${frameTime.toFixed(2)}ms`);
+        // };
     };
 
     function start() {
