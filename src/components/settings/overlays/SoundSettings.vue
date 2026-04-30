@@ -2,8 +2,8 @@
     <TransitionGroup name="buttons_group_showing" tag="div" class="settings_sub_container addit_font">
         <div v-if="rowView[0]" class="settings_row">
             <span>{{ foo.makeText("settings.vfxAndMusic.vfxEnabled", "empty") }}</span>
-            <button class="toggle_btn" :class="{ 'toggle_btn--active': vfxTempStore }" @click="toggleVfx">
-                {{ vfxTempStore ?
+            <button class="toggle_btn" :class="{ 'toggle_btn--active': graphicsStore.vfxEnabled }" @click="toggleVfx">
+                {{ graphicsStore.vfxEnabled ?
                     foo.makeText("settings.toggleOn", "empty") :
                     foo.makeText("settings.toggleOff", "empty")
                 }}
@@ -40,98 +40,97 @@
 
 
 <script setup lang="ts">
-import { onMounted, watch, ref } from "vue";
-import { useAudioStore } from "@/store/audioStore";
-import { SoundManager } from "@/game/sound/SoundManager";
-import { createNewText } from '@/helpers/functions';
+    import { onMounted, watch, ref } from "vue";
+    import { useAudioStore } from "@/store/audioStore";
+    import { SoundManager } from "@/game/sound/SoundManager";
+    import { createNewText } from '@/helpers/functions';
+    import { useGraphicsStore } from "@/store/graphicsStore";
 
-const audioStore = useAudioStore();
-const soundManager = SoundManager.getInstance();
-const volume = ref(Number(localStorage.getItem("masterVolume") ?? 0.6));
-const rowView = ref([false, false, false, false]);
-const vfxTempStore = ref(false);
+    const audioStore = useAudioStore();
+    const graphicsStore = useGraphicsStore();
+    const soundManager = SoundManager.getInstance();
+    const volume = ref(Number(localStorage.getItem("masterVolume") ?? 0.6));
+    const rowView = ref([false, false, false, false]);
 
-const foo = createNewText();
+    const foo = createNewText();
 
-function toggleVfx() {
-    console.log('Включаем / выключаем графические эффекты...');
-    vfxTempStore.value = !vfxTempStore.value;
-    // audioStore.toggleMusic();
-    // if (audioStore.vfxEnabled) soundManager.play("music_background");
-};
-
-function toggleMusic() {
-    audioStore.toggleMusic();
-    if (audioStore.musicEnabled) soundManager.play("music_background");
-};
-
-function toggleSound() {
-    audioStore.toggleSFX();
-};
-
-function updateVolume() {
-    soundManager.setMasterVolume(volume.value);
-    localStorage.setItem("masterVolume", volume.value.toString());
-    soundManager.play("sfx_jump");
-};
-
-const props = defineProps<{
-    backStatus: boolean;
-}>();
-
-watch(() => props.backStatus, (newVal) => {
-    if (newVal) {
-        rowView.value[0] = false;
-        setTimeout(() => {
-            rowView.value[1] = false;
-        }, 100);
-        setTimeout(() => {
-            rowView.value[2] = false;
-        }, 200);
-        setTimeout(() => {
-            rowView.value[3] = false;
-        }, 300);
+    function toggleVfx() {
+        graphicsStore.toggleVfx();
+        console.log('🎮 Графические эффекты:', graphicsStore.vfxEnabled ? 'включены' : 'выключены');
     };
-});
 
-onMounted(() => {
-    setTimeout(() => {
-        rowView.value[0] = true;
+    function toggleMusic() {
+        audioStore.toggleMusic();
+        if (audioStore.musicEnabled) soundManager.play("music_background");
+    };
+
+    function toggleSound() {
+        audioStore.toggleSFX();
+    };
+
+    function updateVolume() {
+        soundManager.setMasterVolume(volume.value);
+        localStorage.setItem("masterVolume", volume.value.toString());
+        soundManager.play("sfx_jump");
+    };
+
+    const props = defineProps<{
+        backStatus: boolean;
+    }>();
+
+    watch(() => props.backStatus, (newVal) => {
+        if (newVal) {
+            rowView.value[0] = false;
+            setTimeout(() => {
+                rowView.value[1] = false;
+            }, 100);
+            setTimeout(() => {
+                rowView.value[2] = false;
+            }, 200);
+            setTimeout(() => {
+                rowView.value[3] = false;
+            }, 300);
+        };
+    });
+
+    onMounted(() => {
         setTimeout(() => {
-            rowView.value[1] = true;
-        }, 100);
-        setTimeout(() => {
-            rowView.value[2] = true;
-        }, 200);
-        setTimeout(() => {
-            rowView.value[3] = true;
-        }, 300);
-    }, 400);
-});
+            rowView.value[0] = true;
+            setTimeout(() => {
+                rowView.value[1] = true;
+            }, 100);
+            setTimeout(() => {
+                rowView.value[2] = true;
+            }, 200);
+            setTimeout(() => {
+                rowView.value[3] = true;
+            }, 300);
+        }, 400);
+    });
 </script>
 
 
 <style scoped lang="scss">
-@use "@/styles/menu.scss";
-@use "@/styles/settings.scss";
-@use "@/styles/animations.scss";
+    @use "@/styles/menu.scss";
+    @use "@/styles/settings.scss";
+    @use "@/styles/animations.scss";
 
-// стили трека
-.custom_slider {
-    appearance: none; // сброс дефолтных стилей бегунка
-    width: 7.5rem;
-    height: 0.125rem;
-    background-color: #72B3EE;
-    border-radius: 2px;
-
-    &::-webkit-slider-thumb {
-        -webkit-appearance: none;
-        width: 1.125rem;
-        height: 1.125rem;
+    // стили трека
+    .custom_slider {
+        appearance: none; // сброс дефолтных стилей бегунка
+        width: 7.5rem;
+        height: 0.125rem;
         background-color: #72B3EE;
-        border: none;
-        border-radius: 50%;
-        position: relative;
+        border-radius: 2px;
+
+        &::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 1.125rem;
+            height: 1.125rem;
+            background-color: #72B3EE;
+            border: none;
+            border-radius: 50%;
+            position: relative;
+        }
     }
-}
 </style>

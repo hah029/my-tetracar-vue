@@ -1,10 +1,12 @@
 <template>
-    <TrainingScreen v-if="showTraining" />
-    <Transition name="countdown_anim">
-        <span v-if="!showTraining" class="countdown" :class="{ 'msgGo': count === 0 }" :key="count">
-            {{ displayText }}
-        </span>
-    </Transition>
+    <div class="countdown_root">
+        <TrainingScreen v-if="showTraining" />
+        <Transition name="countdown_anim">
+            <span v-if="!showTraining" class="countdown" :class="{ 'msgGo': count === 0 }" :key="count">
+                {{ displayText }}
+            </span>
+        </Transition>
+    </div>
 </template>
 
 
@@ -73,6 +75,12 @@
 
 
 <style lang="scss" scoped>
+    .countdown_root {
+        position: relative;
+        width: 100%;
+        height: 100%;
+    }
+    
     .countdown {
         position: fixed;
         inset: 0;

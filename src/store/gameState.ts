@@ -142,8 +142,6 @@ export const useGameState = defineStore("gameState", () => {
   }
 
   function endGame() {
-    console.log('gameState 147');
-    
     playerStore.resetPlayerAchievements();
     setState(GameStates.Gameover);
   }

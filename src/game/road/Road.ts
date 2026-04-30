@@ -1,90 +1,89 @@
 import * as THREE from "three";
 import type { RoadConfig } from "./types";
-import {
-  DEFAULT_ROAD_CONFIG,
-  calculateRoadWidth,
-  getEdgePositions,
-} from "./config";
+import { DEFAULT_ROAD_CONFIG, calculateRoadWidth, getEdgePositions } from "./config";
 import { loadTexture } from "@/helpers/loaders";
 
+
 export class Road extends THREE.Mesh {
-  public readonly lanes: number[];
-  public readonly width: number;
-  public readonly length: number;
+    public readonly lanes: number[];
+    public readonly width: number;
+    public readonly length: number;
 
-  constructor(config?: RoadConfig) {
-    const tmpConfig = { ...DEFAULT_ROAD_CONFIG, ...config };
-    if (!tmpConfig.lanes || tmpConfig.lanes.length === 0) {
-      throw new Error("Road must have at least one lane");
-    }
-    const width = calculateRoadWidth(tmpConfig.lanes);
+    constructor(config?: RoadConfig) {
+        const tmpConfig = { ...DEFAULT_ROAD_CONFIG, ...config };
+        if (!tmpConfig.lanes || tmpConfig.lanes.length === 0) {
+            throw new Error("Road must have at least one lane");
+        };
 
-    const geometry = new THREE.PlaneGeometry(width, tmpConfig.length!);
-    let material: THREE.Material;
+        const width = calculateRoadWidth(tmpConfig.lanes);
+        const geometry = new THREE.PlaneGeometry(width, tmpConfig.length!);
+        let material: THREE.Material;
 
-    if (tmpConfig.textureUrl) {
-      const texture = loadTexture(tmpConfig.textureUrl!);
+        if (tmpConfig.textureUrl) {
+            const texture = loadTexture(tmpConfig.textureUrl!);
 
-      // Настраиваем повторение
-      texture.wrapS = THREE.RepeatWrapping;
-      texture.wrapT = THREE.RepeatWrapping;
+            // Настраиваем повторение
+            texture.wrapS = THREE.RepeatWrapping;
+            texture.wrapT = THREE.RepeatWrapping;
 
-      const tileSize = 0.6;
-      texture.repeat.set(width / tileSize, tmpConfig.length! / tileSize);
+            const tileSize = 0.6;
+            texture.repeat.set(width / tileSize, tmpConfig.length! / tileSize);
 
-      material = new THREE.MeshStandardMaterial({
-        map: texture,
-        emissive: 0xffffff,
-        emissiveIntensity: 0.8,
-        transparent: true,
-        opacity: 0.15,
-      });
-    } else {
-      material = new THREE.MeshStandardMaterial({
-        color: 0xffffff,
-        emissiveIntensity: 0.8,
-        transparent: true,
-        opacity: 0.2,
-        // side: THREE.DoubleSide,
-      });
-    }
+            material = new THREE.MeshStandardMaterial({
+                map: texture,
+                emissive: 0xffffff,
+                // emissiveIntensity: 0.8,  // пока отключил - из-за нее не рисовалась текстура
+                emissiveIntensity: 0,
+                transparent: true,
+                opacity: 0.45,
+            });
 
-    super(geometry, material);
+        } else {
+            material = new THREE.MeshStandardMaterial({
+                color: 0xffffff,
+                emissiveIntensity: 0.8,
+                transparent: true,
+                opacity: 0.2,
+                // side: THREE.DoubleSide,
+            });
+        };
 
-    this.lanes = [...tmpConfig.lanes];
-    this.width = width;
-    this.length = tmpConfig.length!;
+        super(geometry, material);
 
-    this.rotation.x = -Math.PI / 2;
-    this.position.z = 0;
-    this.position.y = tmpConfig.yPosition!;
-    this.receiveShadow = false;
-  }
+        this.lanes = [...tmpConfig.lanes];
+        this.width = width;
+        this.length = tmpConfig.length!;
 
-  // Получить позицию полосы по индексу
-  public getLanePosition(index: number): number {
-    if (
-      index < 0 ||
-      index >= this.lanes.length ||
-      this.lanes[index] === undefined
-    ) {
-      throw new Error(`Lane index ${index} out of range`);
-    }
-    return this.lanes[index];
-  }
+        this.rotation.x = -Math.PI / 2;
+        this.position.z = 0;
+        this.position.y = tmpConfig.yPosition!;
+        this.receiveShadow = false;
+    };
 
-  // Получить количество полос
-  public getLanesCount(): number {
-    return this.lanes.length;
-  }
+    // получаем позицию полосы по индексу
+    public getLanePosition(index: number): number {
+        if (index < 0 || index >= this.lanes.length) {
+          throw new Error(`Lane index ${index} out of range (0-${this.lanes.length - 1})`);
+        };
 
-  // Получить все позиции полос
-  public getLanePositions(): number[] {
-    return [...this.lanes];
-  }
+        const lane = this.lanes[index];
+        if (lane === undefined) throw new Error(`Lane at index ${index} is undefined`);
 
-  // Получить позиции границ дороги
-  public getEdgePositions(): { left: number; right: number } {
-    return getEdgePositions(this.lanes);
-  }
-}
+        return lane;
+    };
+
+    // получаем количество полос
+    public getLanesCount(): number {
+        return this.lanes.length;
+    };
+
+    // получаем все позиции полос
+    public getLanePositions(): number[] {
+        return [...this.lanes];
+    };
+
+    // получаем позиции границ дороги
+    public getEdgePositions(): { left: number; right: number } {
+        return getEdgePositions(this.lanes);
+    };
+};
