@@ -14,6 +14,7 @@ import { SoundManager } from "@/game/sound/SoundManager";
 import { BulletSystem } from "@/game/combat/BulletSystem";
 import { BulletItemManager } from "@/game/interactive/items/bullet/BulletItemManager";
 import { DestructionManager } from "@/game/interactive/DestructionManager";
+import { FlashEffectManager, type FlashType } from "@/game/effects/FlashEffectManager";
 // enums
 import { DEFAULT_LANES } from "@/game/road/config/RoadConfig";
 import { UpdateMode } from "@/game/core/UpdateMode";
@@ -119,6 +120,7 @@ export function useGame() {
   let boosterManager: BoosterManager;
   let bulletItemManager: BulletItemManager;
   let soundManager: SoundManager;
+  let flashEffectManager: FlashEffectManager;
 
   function init(scene: THREE.Scene) {
     sceneRef = scene;
@@ -159,6 +161,9 @@ export function useGame() {
     carManager = CarManager.getInstance();
     carManager.initialize(scene);
 
+    flashEffectManager = FlashEffectManager.getInstance();
+    flashEffectManager.initialize(scene);
+
     BulletSystem.getInstance().initialize(scene);
 
     // инициализация происходит на уровне App.vue
@@ -173,6 +178,11 @@ export function useGame() {
     car.value.cubes = [];
     carManager.buildCar(true);
   }
+
+  // метод для вызова вспышки
+  function spawnFlash(type: FlashType, position: THREE.Vector3) {
+    flashEffectManager.spawnFlash(type, position);
+  };
 
   // === Обновление позиции и состояния машины (вызывать каждый кадр) ===
   function updatePlayer(dt: number) {
@@ -449,6 +459,11 @@ export function useGame() {
     jumpPlayer,
     shoot,
 
+    updateEffects: () => {
+        flashEffectManager?.update();
+    },
+    
+
     addObstacle: (obstacle: THREE.Mesh) => {
       if (sceneRef) sceneRef.add(obstacle);
     },
@@ -466,5 +481,6 @@ export function useGame() {
     checkBulletItemCollision,
     getDangerLevel,
     reset,
+    spawnFlash,
   };
 }

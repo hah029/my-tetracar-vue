@@ -74,6 +74,8 @@ export function GameLoop(
         game.updateDestructionItems(deltaTime, currentSpeed);
         BulletSystem.getInstance().update(deltaTime);
 
+        game.updateEffects();
+
         // обрабатываем коллизии машинки с игровыми предметами
         const collisionResult = game.checkCollision(performance.now());
         if (collisionResult.collision) {
@@ -125,11 +127,15 @@ export function GameLoop(
             if (coins.gold > 0) {
                 progressStore.addGolden(coins.gold)
                 soundManager.play("sfx_add_golden");
+                const carPos = game.car.value.mesh.position;
+                game.spawnFlash('gold', carPos);
             };
             if (coins.diamond > 0) {
                 progressStore.addEnergon(coins.diamond)
                 soundManager.play("sfx_add_energon");
                 playerStore.makeEventHappened('addEnergon');
+                const carPos = game.car.value.mesh.position;
+                game.spawnFlash('diamond', carPos);
             };
         };
 
@@ -141,6 +147,8 @@ export function GameLoop(
                 playerStore.addAmmo();
                 playerStore.addNewMsg('ammoRefilled');
                 playerStore.makeEventHappened('addBullet');
+                const carPos = game.car.value.mesh.position;
+                game.spawnFlash('bullet', carPos);
             } else if (playerStore.ammo == playerStore.maxAmmo) {
                 playerStore.addNewMsg('maxAmmo');
             };
@@ -149,12 +157,15 @@ export function GameLoop(
         // ловим Нитро и Броню
         const boostCollisions = game.checkBoosterCollision();
         if (boostCollisions.collision) {
+            const carPos = game.car.value.mesh.position;
+
             if (boostCollisions.subject === "nitro") {
                 soundManager.play("sfx_add_nitro");
                 playerStore.enableNitro();
                 CarManager.getInstance().enableNitro();
                 playerStore.addNewMsg('nitroActivated');
                 playerStore.makeEventHappened('addNitro');
+                game.spawnFlash('nitro', carPos);
 
             } else if (boostCollisions.subject === "shield") {
 
@@ -167,6 +178,7 @@ export function GameLoop(
                     };
                     playerStore.addNewMsg('armorEquipped');
                     playerStore.makeEventHappened('addArmor');
+                    game.spawnFlash('shield', carPos);
                 } else {
                     playerStore.addNewMsg('maxArmor');
                 };
