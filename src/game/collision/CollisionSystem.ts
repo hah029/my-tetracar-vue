@@ -4,97 +4,101 @@ import type { BaseObstacle } from "@/game/interactive/obstacle/BaseObstacle";
 import type { Car } from "../car";
 
 const DANGER_DISTANCE = 30;
-const COLLISION_COOLDOWN_MS = 1000;
+const COLLISION_COOLDOWN_MS = 2000;
 
 type CollisionResult = {
-  collision: boolean;
-  impactPoint?: THREE.Vector3;
-  jump?: boolean;
-  obstacle?: BaseObstacle;
+    collision: boolean;
+    impactPoint?: THREE.Vector3;
+    jump?: boolean;
+    obstacle?: BaseObstacle;
 };
 
 class CollisionSystemClass {
-  private lastCollisionTime = 0;
+    private lastCollisionTime = 0;
 
-  reset() {
-    this.lastCollisionTime = 0;
-  }
+    reset() {
+        this.lastCollisionTime = 0;
+    };
 
-  checkCollision(
-    car: Car,
-    jumps: Jump[] = [],
-    obstacles: BaseObstacle[] = [],
-    now?: number, // текущее время в миллисекундах (опционально)
-  ): CollisionResult {
-    if (car.isDestroyed()) return { collision: false };
+    checkCollision(
+        car: Car,
+        jumps: Jump[] = [],
+        obstacles: BaseObstacle[] = [],
+        now?: number, // текущее время в миллисекундах (опционально)
+    ): CollisionResult {
+        if (car.isDestroyed()) return { collision: false };
 
-    const currentTime = now ?? performance.now();
-    if (currentTime - this.lastCollisionTime < COLLISION_COOLDOWN_MS) {
-      return { collision: false };
-    }
+        const currentTime = now ?? performance.now();
 
-    // Проверка препятствий из кубиков
-    for (const obstacle of obstacles) {
-      const collides = car.checkObstacleCollision(obstacle);
-      if (collides) {
-        this.lastCollisionTime = currentTime;
-        car.startShieldCooldown(COLLISION_COOLDOWN_MS / 1000);
-        return {
-          collision: true,
-          obstacle: obstacle,
-          impactPoint: obstacle.position.clone(),
+        // проверяем трамплины ВСЕГДА, даже если на кулдауне
+        for (const jump of jumps) {
+            if (jump.userData.activated) continue;
+
+            if (car.checkJumpCollision(jump)) {
+                jump.userData.activated = true;
+                this.lastCollisionTime = currentTime;
+                return {
+                    collision: true,
+                    impactPoint: jump.position.clone(),
+                    jump: true,
+                };
+            };
         };
-      }
-    }
 
-    // Проверка трамплинов
-    for (const jump of jumps) {
-      if (jump.userData.activated) continue;
-      if (car.checkJumpCollision(jump)) {
-        jump.userData.activated = true;
-        this.lastCollisionTime = currentTime;
-        return {
-          collision: true,
-          impactPoint: jump.position.clone(),
-          jump: true,
+        // если на кулдауне — проверяем только трамплины, препятствия не трогаем
+        if (currentTime - this.lastCollisionTime < COLLISION_COOLDOWN_MS) {
+            return { collision: false };
         };
-      }
-    }
 
-    return { collision: false };
-  }
+        // проверка препятствий (только если кулдаун прошёл)
+        for (const obstacle of obstacles) {
+            const collides = car.checkObstacleCollision(obstacle);
 
-  getDangerLevel(
-    car: {
-      position: THREE.Vector3;
-      isDestroyed(): boolean;
-    },
-    obstacles: { position: THREE.Vector3 }[],
-  ): number {
-    if (car.isDestroyed()) return 0;
+            if (collides) {
+                this.lastCollisionTime = currentTime;
+                car.startShieldCooldown(COLLISION_COOLDOWN_MS / 1000);
+                return {
+                    collision: true,
+                    obstacle: obstacle,
+                    impactPoint: obstacle.position.clone(),
+                };
+            };
+        };
 
-    const carPos = car.position.clone();
-    let maxDanger = 0;
+        return { collision: false };
+    };
 
-    for (const obstacle of obstacles) {
-      const obstaclePos = obstacle.position.clone();
+    getDangerLevel(
+        car: {
+            position: THREE.Vector3;
+            isDestroyed(): boolean;
+        },
+        obstacles: { position: THREE.Vector3 }[],
+    ): number {
+        if (car.isDestroyed()) return 0;
 
-      if (obstaclePos.z >= carPos.z) continue;
+        const carPos = car.position.clone();
+        let maxDanger = 0;
 
-      const zDiff = Math.abs(obstaclePos.z - carPos.z);
-      const xDiff = Math.abs(obstaclePos.x - carPos.x);
+        for (const obstacle of obstacles) {
+            const obstaclePos = obstacle.position.clone();
 
-      if (zDiff > DANGER_DISTANCE * 2 || xDiff > 1.0) continue;
+            if (obstaclePos.z >= carPos.z) continue;
 
-      const dangerByZ = Math.max(0, 1 - zDiff / DANGER_DISTANCE);
-      const dangerByX = Math.max(0, 1 - xDiff / 1.0);
+            const zDiff = Math.abs(obstaclePos.z - carPos.z);
+            const xDiff = Math.abs(obstaclePos.x - carPos.x);
 
-      const danger = dangerByZ * 0.7 + dangerByX * 0.3;
-      maxDanger = Math.max(maxDanger, danger);
-    }
+            if (zDiff > DANGER_DISTANCE * 2 || xDiff > 1.0) continue;
 
-    return maxDanger;
-  }
-}
+            const dangerByZ = Math.max(0, 1 - zDiff / DANGER_DISTANCE);
+            const dangerByX = Math.max(0, 1 - xDiff / 1.0);
+
+            const danger = dangerByZ * 0.7 + dangerByX * 0.3;
+            maxDanger = Math.max(maxDanger, danger);
+        };
+
+        return maxDanger;
+    };
+};
 
 export const CollisionSystem = new CollisionSystemClass();
