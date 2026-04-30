@@ -10,6 +10,8 @@ import sound_start from "@/assets/sounds/sfx/start.m4a";
 import sound_add_golden from "@/assets/sounds/sfx/add_golden.m4a";
 import sound_add_energon from "@/assets/sounds/sfx/add_energon.m4a";
 import sound_add_patron from "@/assets/sounds/sfx/add_patron.m4a";
+import sound_add_armor from "@/assets/sounds/sfx/add_armor.m4a";
+import sound_add_nitro from "@/assets/sounds/sfx/add_nitro.m4a";
 import sound_new_record from "@/assets/sounds/sfx/new_record.m4a";
 import sound_jump from "@/assets/sounds/sfx/jump.m4a";
 import sound_destroy_bot from "@/assets/sounds/sfx/destroy_bot.ogg";
@@ -31,6 +33,8 @@ export const SOUNDS_CONFIG: AudioConfig = {
   sfx_add_golden: sound_add_golden,
   sfx_add_energon: sound_add_energon,
   sfx_add_patron: sound_add_patron,
+  sfx_add_armor: sound_add_armor,
+  sfx_add_nitro: sound_add_nitro,
   sfx_new_record: sound_new_record,
   sfx_jump: sound_jump,
   sfx_destroy_bot: sound_destroy_bot,

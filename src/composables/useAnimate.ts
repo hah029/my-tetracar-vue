@@ -150,6 +150,7 @@ export function GameLoop(
         const boostCollisions = game.checkBoosterCollision();
         if (boostCollisions.collision) {
             if (boostCollisions.subject === "nitro") {
+                soundManager.play("sfx_add_nitro");
                 playerStore.enableNitro();
                 CarManager.getInstance().enableNitro();
                 playerStore.addNewMsg('nitroActivated');
@@ -158,6 +159,7 @@ export function GameLoop(
             } else if (boostCollisions.subject === "shield") {
 
                 if (playerStore.armor < playerStore.maxArmor) {
+                    soundManager.play("sfx_add_armor");
                     playerStore.addArmor();
                     if (!playerStore.isShieldEnabled) { 
                         playerStore.enableShield();

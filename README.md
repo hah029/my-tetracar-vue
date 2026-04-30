@@ -43,4 +43,5 @@ src/
 - sfx_destroy_bot - уничтожение бота (другой машинки) или препятствия
 - sfx_shot - звук выстрела
 - sfx_add_patron - поимка патрона
+- sfx_add_armor - поимка брони
 - sfx_new_record - достижение рекорда
