@@ -7,18 +7,18 @@ export class SegmentGenerator {
   private static history: Segment[] = [];
   private static historySize = 3;
 
-  static getSegment(): Segment {
+  static getSegment(difficulty: number): Segment {
     // 1️⃣ фильтр по сложности
-    // const available = SEGMENTS.filter((s) => s.difficulty <= difficulty);
+    const available = SEGMENTS.filter((s) => s.difficulty <= difficulty);
 
     // 2️⃣ оставляем только playable сегменты
-    let pool = SEGMENTS.filter((s) =>
+    let pool = available.filter((s) =>
       SegmentGenerator.isSegmentPlayable(s.pattern),
     );
 
-    // if (pool.length === 0) {
-    //   pool = available;
-    // }
+    if (pool.length === 0) {
+      pool = available;
+    }
 
     // const last = this.history[this.history.length - 1];
 
