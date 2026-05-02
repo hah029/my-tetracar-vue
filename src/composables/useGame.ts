@@ -14,7 +14,10 @@ import { SoundManager } from "@/game/sound/SoundManager";
 import { BulletSystem } from "@/game/combat/BulletSystem";
 import { BulletItemManager } from "@/game/interactive/items/bullet/BulletItemManager";
 import { DestructionManager } from "@/game/interactive/DestructionManager";
-import { FlashEffectManager, type FlashType } from "@/game/effects/FlashEffectManager";
+import {
+  FlashEffectManager,
+  type FlashType,
+} from "@/game/effects/FlashEffectManager";
 // enums
 import { DEFAULT_LANES } from "@/game/road/config/RoadConfig";
 import { UpdateMode } from "@/game/core/UpdateMode";
@@ -182,7 +185,7 @@ export function useGame() {
   // метод для вызова вспышки
   function spawnFlash(type: FlashType, position: THREE.Vector3) {
     flashEffectManager.spawnFlash(type, position);
-  };
+  }
 
   // === Обновление позиции и состояния машины (вызывать каждый кадр) ===
   function updatePlayer(dt: number) {
@@ -335,12 +338,13 @@ export function useGame() {
   }
 
   function checkCoinCollision() {
-    if (!carManager || !coinManager) return { gold: 0, diamond: 0, total: 0 };
+    if (!carManager || !coinManager) return { golden: 0, energon: 0, total: 0 };
     return coinManager.checkCarCollision(carManager.getCar());
   }
 
   function checkBoosterCollision() {
-    if (!carManager || !boosterManager) return { collision: false, subject: "" };
+    if (!carManager || !boosterManager)
+      return { collision: false, subject: "" };
     return boosterManager.checkCarCollision(carManager.getCar());
   }
 
@@ -359,8 +363,12 @@ export function useGame() {
   function findRootTaggedObject(obj: THREE.Object3D): THREE.Object3D {
     let current: THREE.Object3D | null = obj;
 
-//    while (current.parent && !current.parent.isScene) {
-    while (current.parent && (!('isScene' in current.parent) || !current.parent.isScene)) {  // а то компилятор ругался
+    //    while (current.parent && !current.parent.isScene) {
+    while (
+      current.parent &&
+      (!("isScene" in current.parent) || !current.parent.isScene)
+    ) {
+      // а то компилятор ругался
       current = current.parent;
     }
 
@@ -429,21 +437,21 @@ export function useGame() {
     useProgressStore().resetDistance();
 
     CameraSystem.reset(car.value.mesh.position);
-  };
+  }
 
   function shoot() {
     if (useGameState().currentState != GameStates.Play) return;
     const playerStore = usePlayerStore();
 
     if (!playerStore.canShoot()) {
-      playerStore.addNewMsg('outOfAmmo');
+      playerStore.addNewMsg("outOfAmmo");
       return;
-    };
+    }
 
     BulletSystem.getInstance().spawnBullet(CarManager.getInstance().getCar());
     playerStore.consumeAmmo();
     soundManager.play("sfx_shot");
-  };
+  }
 
   return {
     car,
@@ -460,9 +468,8 @@ export function useGame() {
     shoot,
 
     updateEffects: () => {
-        flashEffectManager?.update();
+      flashEffectManager?.update();
     },
-    
 
     addObstacle: (obstacle: THREE.Mesh) => {
       if (sceneRef) sceneRef.add(obstacle);

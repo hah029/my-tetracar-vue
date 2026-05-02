@@ -8,8 +8,8 @@ import {
 import { RoadEdge } from "@/game/road/edges";
 import { loadTexture } from "@/helpers/loaders";
 
-import cube_gold from "@/assets/textures/cube_gold.svg";
-import cube_diamond from "@/assets/textures/cube_diamond.svg";
+import cube_golden from "@/assets/textures/cube_gold.svg";
+import cube_energon from "@/assets/textures/cube_energon.svg";
 import cube_nitro from "@/assets/textures/cube_nitro.svg";
 import cube_armor from "@/assets/textures/cube_armor.svg";
 import cube_bullet from "@/assets/textures/cube_bullet.svg";
@@ -29,15 +29,16 @@ export class DestructionManager {
 
   private transformMapping: {
     [K in
-      | "gold_coin"
-      | "diamond_coin"
+      | "golden_coin"
+      | "energon_coin"
       | "nitro_booster"
       | "shield_booster"
       | "bullet"]: (lane: number, z: number) => void;
   } = {
-    gold_coin: (lane, z) => this.interactiveItemsManager.spawnGoldCoin(lane, z),
-    diamond_coin: (lane, z) =>
-      this.interactiveItemsManager.spawnDiamondCoin(lane, z),
+    golden_coin: (lane, z) =>
+      this.interactiveItemsManager.spawnGoldenCoin(lane, z),
+    energon_coin: (lane, z) =>
+      this.interactiveItemsManager.spawnEnergonCoin(lane, z),
     nitro_booster: (lane, z) =>
       this.interactiveItemsManager.spawnNitroBooster(lane, z),
     shield_booster: (lane, z) =>
@@ -47,14 +48,14 @@ export class DestructionManager {
 
   private textureMapping: {
     [K in
-      | "gold_coin"
-      | "diamond_coin"
+      | "golden_coin"
+      | "energon_coin"
       | "nitro_booster"
       | "shield_booster"
       | "bullet"]: string;
   } = {
-    gold_coin: cube_gold,
-    diamond_coin: cube_diamond,
+    golden_coin: cube_golden,
+    energon_coin: cube_energon,
     nitro_booster: cube_nitro,
     shield_booster: cube_armor,
     bullet: cube_bullet,
@@ -207,10 +208,7 @@ export class DestructionManager {
     const dropTypes = Object.keys(
       this.transformMapping,
     ) as (keyof typeof this.transformMapping)[];
-    const choices: (keyof typeof this.transformMapping)[] = [
-      ...dropTypes,
-      
-    ];
+    const choices: (keyof typeof this.transformMapping)[] = [...dropTypes];
     const weights = [...dropTypes.map(() => 1), 1]; // пример: все веса = 1
 
     let totalWeight = 0;

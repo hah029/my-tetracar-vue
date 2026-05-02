@@ -1,6 +1,6 @@
 import * as THREE from "three";
-import { GoldCoin } from "./Gold";
-import { DiamondCoin } from "./Diamond";
+import { Golden } from "./Golden";
+import { Energon } from "./Energon";
 import { Car } from "@/game/car/Car";
 import type { BaseItem } from "../BaseItem";
 import type { CoinType } from "./types";
@@ -26,24 +26,24 @@ export class CoinManager {
      SPAWN
      ======================= */
 
-  public spawnGold(
+  public spawnGolden(
     laneIndex: number,
     zPos: number,
     yPos: number = 0.2,
     value: number = 1,
   ): void {
-    const coin = new GoldCoin(laneIndex, zPos, yPos, value);
+    const coin = new Golden(laneIndex, zPos, yPos, value);
     this.coins.push(coin);
     this.scene.add(coin);
   }
 
-  public spawnDiamond(
+  public spawnEnergon(
     laneIndex: number,
     zPos: number,
     yPos: number = 0.2,
     value: number = 1,
   ): void {
-    const coin = new DiamondCoin(laneIndex, zPos, yPos, value);
+    const coin = new Energon(laneIndex, zPos, yPos, value);
     this.coins.push(coin);
     this.scene.add(coin);
   }
@@ -74,8 +74,8 @@ export class CoinManager {
    */
   public checkCarCollision(car: Car) {
     let collected = {
-      gold: 0,
-      diamond: 0,
+      golden: 0,
+      energon: 0,
       total: 0,
     };
     const carCollider = car.getCollider();

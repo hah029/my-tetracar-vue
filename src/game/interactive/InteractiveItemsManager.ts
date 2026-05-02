@@ -28,7 +28,7 @@ export class InteractiveItemsManager {
   private boosterEnabledInterval = 5000;
   private difficultyStep = 150;
 
-  private DIAMOND_SPAWN_PROBABILITY = 0.005;
+  private ENERGON_SPAWN_PROBABILITY = 0.005;
   private NITRO_SPAWN_PROBABILITY = 0.5;
 
   public static getInstance(): InteractiveItemsManager {
@@ -172,24 +172,24 @@ export class InteractiveItemsManager {
   }
 
   public spawnSingleCoin(lane: number, baseZ: number) {
-    if (Math.random() < this.DIAMOND_SPAWN_PROBABILITY) {
-      this.coinManager.spawnDiamond(lane, baseZ);
+    if (Math.random() < this.ENERGON_SPAWN_PROBABILITY) {
+      this.coinManager.spawnEnergon(lane, baseZ);
     } else {
-      this.coinManager.spawnGold(lane, baseZ);
+      this.coinManager.spawnGolden(lane, baseZ);
     }
   }
 
-  public spawnDiamondCoin(lane: number, baseZ: number) {
-    this.coinManager.spawnDiamond(lane, baseZ);
+  public spawnEnergonCoin(lane: number, baseZ: number) {
+    this.coinManager.spawnEnergon(lane, baseZ);
   }
 
-  public spawnGoldCoin(lane: number, baseZ: number) {
-    this.coinManager.spawnGold(lane, baseZ);
+  public spawnGoldenCoin(lane: number, baseZ: number) {
+    this.coinManager.spawnGolden(lane, baseZ);
   }
 
   public spawnCoinLine(lane: number, baseZ: number) {
     for (let i = 0; i < 5; i++) {
-      this.coinManager.spawnGold(lane, baseZ - i * 4);
+      this.coinManager.spawnGolden(lane, baseZ - i * 4);
     }
   }
 
@@ -235,7 +235,7 @@ export class InteractiveItemsManager {
       const point = trajectory[i];
       if (point === undefined) continue;
       const coinZ = jumpZ + point.zOffset + 1;
-      this.coinManager.spawnGold(lane, coinZ, point.y);
+      this.coinManager.spawnGolden(lane, coinZ, point.y);
     }
   }
 
