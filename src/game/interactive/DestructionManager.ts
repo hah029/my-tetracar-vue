@@ -8,11 +8,17 @@ import {
 import { RoadEdge } from "@/game/road/edges";
 import { loadTexture } from "@/helpers/loaders";
 
-import cube_golden from "@/assets/textures/cube_gold.svg";
-import cube_energon from "@/assets/textures/cube_energon.svg";
-import cube_nitro from "@/assets/textures/cube_nitro.svg";
-import cube_armor from "@/assets/textures/cube_armor.svg";
-import cube_bullet from "@/assets/textures/cube_bullet.svg";
+import { useCommonStore } from "@/store/commonStore";
+import type { MaterialConfig } from "../cube/types";
+import {
+  ENERGON_MATERIAL_CONFIG,
+  GOLDEN_MATERIAL_CONFIG,
+} from "./items/coin/config";
+import {
+  NITRO_MATERIAL_CONFIG,
+  SHIELD_MATERIAL_CONFIG,
+} from "./items/booster/config";
+import { MATERIAL_CONFIG as BULLET_MATERIAL_CONFIG } from "./items/bullet/config/BulletConfig";
 
 export class DestructionManager {
   private static instance: DestructionManager | null = null;
@@ -20,11 +26,11 @@ export class DestructionManager {
   private scene!: THREE.Scene;
   private interactiveItemsManager!: InteractiveItemsManager;
   private physicsConfig: CubePhysicsConfig = {
-    bounceFactor: 0.4,
-    collisionFactor: 0.2,
-    friction: 0.7,
-    gravity: 0.005,
-    removalHeight: -10,
+    gravity: useCommonStore().GRAVITY,
+    friction: useCommonStore().FRICTION,
+    bounceFactor: useCommonStore().BOUNCE_FACTOR,
+    collisionFactor: useCommonStore().COLLISION_FACTOR,
+    removalHeight: useCommonStore().REMOVAL_HEIGHT,
   };
 
   private transformMapping: {
@@ -52,14 +58,23 @@ export class DestructionManager {
       | "energon_coin"
       | "nitro_booster"
       | "shield_booster"
-      | "bullet"]: string;
+      | "bullet"]: MaterialConfig;
   } = {
-    golden_coin: cube_golden,
-    energon_coin: cube_energon,
-    nitro_booster: cube_nitro,
-    shield_booster: cube_armor,
-    bullet: cube_bullet,
+    golden_coin: GOLDEN_MATERIAL_CONFIG,
+    energon_coin: ENERGON_MATERIAL_CONFIG,
+    nitro_booster: NITRO_MATERIAL_CONFIG,
+    shield_booster: SHIELD_MATERIAL_CONFIG,
+    bullet: BULLET_MATERIAL_CONFIG,
   };
+
+  private weightsMapping: {
+    [K in
+      | "golden_coin"
+      | "energon_coin"
+      | "nitro_booster"
+      | "shield_booster"
+      | "bullet"]: number;
+  } = useCommonStore().DESTROYED_ROLLDROP_WEIGHTS;
 
   public static getInstance(): DestructionManager {
     if (!DestructionManager.instance) {
@@ -80,14 +95,25 @@ export class DestructionManager {
     cubes.forEach((cube) => {
       const drop = transformRequired ? this.rollDrop() : null;
       if (drop) {
-        const texture = loadTexture(this.textureMapping[drop]);
-        texture.flipY = false;
+        const materialConfig = this.textureMapping[drop];
+
+        let tmp = {
+          color: materialConfig.color ?? 0xffffff,
+          emissive: materialConfig.emissive ?? 0x000000,
+          emissiveIntensity: materialConfig.emissiveIntensity ?? 1,
+          transparent: true,
+        };
+
+        if (materialConfig.textureUrl) {
+          const texture = loadTexture(materialConfig.textureUrl!);
+          texture.flipY = false;
+          tmp["map"] = texture;
+        }
+
         cube.traverse((child) => {
           if ((child as THREE.Mesh).isMesh) {
             const mesh = child as THREE.Mesh;
-            mesh.material = new THREE.MeshStandardMaterial({
-              map: texture,
-            });
+            mesh.material = new THREE.MeshStandardMaterial(tmp);
           }
         });
       }
@@ -108,9 +134,15 @@ export class DestructionManager {
 
     const flyingCubes = this.cubes.filter((c) => c.userData.state === "flying");
 
-    CubePhysics.updateCubes(flyingCubes, this.physicsConfig, edges, (cube) => {
-      removed.push(cube);
-    });
+    CubePhysics.updateCubes(
+      flyingCubes,
+      this.physicsConfig,
+      edges,
+      (cube) => {
+        removed.push(cube);
+      },
+      dt,
+    );
 
     // удаляем только после физики
     for (const cube of removed) {
@@ -126,7 +158,7 @@ export class DestructionManager {
 
       cube.position.z += speed * dt;
 
-      if (cube.position.z > 10) {
+      if (cube.position.z > useCommonStore().ITEMS_REMOVING_ZPOS) {
         this.scene.remove(cube);
         this.cubes.splice(i, 1);
         continue;
@@ -147,11 +179,10 @@ export class DestructionManager {
       return;
     }
 
-    const slowEnough = v.lengthSq() < 0.5;
-    const nearGround = cube.position.y <= 0.2;
+    const slowEnough = v.lengthSq() < 0.2;
+    const nearGround = cube.position.y <= useCommonStore().BASE_ITEM_YPOS * 1.1;
 
     if (!slowEnough || !nearGround) return;
-
     ud.state = "landed";
 
     const road = RoadManager.getInstance();
@@ -204,15 +235,16 @@ export class DestructionManager {
     return false;
   }
 
-  private rollDrop(): keyof typeof this.transformMapping | null {
+  private rollDrop(): keyof typeof this.transformMapping {
     const dropTypes = Object.keys(
-      this.transformMapping,
+      this.weightsMapping,
     ) as (keyof typeof this.transformMapping)[];
     const choices: (keyof typeof this.transformMapping)[] = [...dropTypes];
-    const weights = [...dropTypes.map(() => 1), 1]; // пример: все веса = 1
 
     let totalWeight = 0;
-    const cumulativeWeights = weights.map((w) => (totalWeight += w));
+    const cumulativeWeights = Object.values(this.weightsMapping).map(
+      (w) => (totalWeight += w),
+    );
     const random = Math.random() * totalWeight;
     const index = cumulativeWeights.findIndex((cw) => cw > random);
     return choices[index]!;

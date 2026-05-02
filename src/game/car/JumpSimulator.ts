@@ -48,6 +48,7 @@ export class JumpSimulator {
       console.warn("JumpSimulator.step: invalid dt", dt);
       return state;
     }
+
     let y = state.y + state.velocity * dt;
     let velocity = state.velocity - this.gravity * dt;
     let isJumping = true;

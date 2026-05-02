@@ -1,6 +1,7 @@
 // src/game/Jump.ts
 import * as THREE from "three";
 import { RoadManager } from "@/game/road/RoadManager";
+import { useCommonStore } from "@/store/commonStore";
 
 export interface JumpConfig {
   lane: number;
@@ -106,7 +107,7 @@ export class Jump extends THREE.Mesh {
     }
 
     // удаляем, если вышел за предел сцены
-    return this.position.z > 10;
+    return this.position.z > useCommonStore().ITEMS_REMOVING_ZPOS;
   }
 
   public getBoundingBox(): THREE.Box3 {

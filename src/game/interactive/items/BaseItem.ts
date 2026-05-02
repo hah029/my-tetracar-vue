@@ -5,18 +5,19 @@ import { RoadManager } from "@/game/road/RoadManager";
 import { CubeBuilder } from "@/game/cube/Cube";
 import type { MaterialConfig } from "@/game/cube/types";
 import { ITEM_GEOMETRY_CONFIG } from "./BaseConfig";
+import { useCommonStore } from "@/store/commonStore";
 
 export class BaseItem extends THREE.Group {
   public collider: THREE.Sphere;
   public itemType!: string;
   protected cube: THREE.Object3D = new THREE.Object3D();
-  protected rotationYDiff = 0.05;
+  protected rotationYDiff = useCommonStore().BASE_ITEM_ROTATION;
   protected initialPosition: THREE.Vector3;
 
   constructor(
     laneIndex: number,
     zPos: number,
-    yPos: number = 0.2,
+    yPos: number = useCommonStore().BASE_ITEM_YPOS,
     material: MaterialConfig | null = null,
   ) {
     super();
@@ -52,6 +53,6 @@ export class BaseItem extends THREE.Group {
     this.cube.position.z += deltaTime * speed;
     this.cube.rotation.y += this.rotationYDiff;
     this.collider.center.copy(this.cube.position);
-    return this.cube.position.z > 10;
+    return this.cube.position.z > useCommonStore().ITEMS_REMOVING_ZPOS;
   }
 }

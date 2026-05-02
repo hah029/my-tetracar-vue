@@ -3,6 +3,7 @@ import type { MaterialConfig } from "@/game/cube/types";
 import { CoinItem } from "./CoinItem";
 import { CubeBuilder } from "@/game/cube/Cube";
 import { ENERGON_GEOMETRY_CONFIG } from "../BaseConfig";
+import { useCommonStore } from "@/store/commonStore";
 
 const ENERGON_CONFIG = {
   useGLB: true,
@@ -15,8 +16,8 @@ export class Energon extends CoinItem {
   constructor(
     laneIndex: number,
     zPos: number,
-    yPos: number = 0.2,
-    value: number = 1,
+    yPos?: number,
+    value: number = useCommonStore().BASE_COIN_VALUE,
   ) {
     super(laneIndex, zPos, yPos);
     this.value = value;

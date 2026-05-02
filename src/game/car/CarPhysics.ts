@@ -8,28 +8,25 @@ import { RoadEdge } from "../road/edges/RoadEdge";
 import { JumpSimulator, type JumpState } from "./JumpSimulator";
 import { CubePhysics } from "@/game/physics/CubePhysics";
 import type { PhysicsConfig } from "../physics/types";
+import { useCommonStore } from "@/store/commonStore";
 
 export class CarPhysics {
   private config: Required<CarConfig>;
   private jumpSimulator: JumpSimulator;
   private jumpState: JumpState;
   private physicsConfig: Required<PhysicsConfig> = {
-    gravity: 0.01,
-    bounceFactor: 0.4,
-    friction: 0.85,
-    collisionFactor: 0.2,
-    removalHeight: -10,
-    explosionForce: 0.2,
-    explosionUpward: 0.8,
-    cubeRotationSpeed: 0.05,
+    ...useCommonStore().getBasePhysics(),
   };
 
   constructor(config: Partial<CarConfig> = {}) {
-    this.config = { ...DEFAULT_CAR_CONFIG, ...config };
+    this.config = {
+      ...DEFAULT_CAR_CONFIG,
+      ...config,
+    };
     this.jumpSimulator = new JumpSimulator({
-      gravity: this.config.gravity,
       jumpHeight: this.config.jumpHeight,
-      groundY: 0.8,
+      gravity: useCommonStore().GRAVITY,
+      groundY: useCommonStore().BASE_ITEM_YPOS + 0.6,
     });
 
     this.jumpState = this.jumpSimulator.createInitialState();
@@ -112,22 +109,22 @@ export class CarPhysics {
       cube.quaternion.copy(worldRot);
 
       const velocity = new THREE.Vector3(
-        (Math.random() - 0.5) * this.config.explosionForce,
-        Math.random() * this.config.explosionUpward + 0.1,
-        (Math.random() - 0.5) * this.config.explosionForce,
+        (Math.random() - 0.5) * this.physicsConfig.explosionForce,
+        Math.random() * this.physicsConfig.explosionUpward + 2,
+        (Math.random() - 0.5) * this.physicsConfig.explosionForce,
       );
 
       if (impactPoint) {
         const dir = cube.position.clone().sub(impactPoint).normalize();
-        velocity.copy(dir.multiplyScalar(this.config.explosionForce));
+        velocity.copy(dir.multiplyScalar(this.physicsConfig.explosionForce));
       }
 
       const userData = cube.userData as any;
       userData.velocity = velocity;
       userData.rotationSpeed = new THREE.Vector3(
-        (Math.random() - 0.5) * this.config.cubeRotationSpeed,
-        (Math.random() - 0.5) * this.config.cubeRotationSpeed,
-        (Math.random() - 0.5) * this.config.cubeRotationSpeed,
+        (Math.random() - 0.5) * this.physicsConfig.cubeRotationSpeed,
+        (Math.random() - 0.5) * this.physicsConfig.cubeRotationSpeed,
+        (Math.random() - 0.5) * this.physicsConfig.cubeRotationSpeed,
       );
     });
   }
@@ -135,15 +132,22 @@ export class CarPhysics {
   public updateDestroyedCubes(
     cubes: THREE.Object3D[],
     scene: THREE.Scene,
+    dt: number = 0.016,
   ): void {
     const edges = RoadManager.getInstance()
       .getEdges()
       .filter((e) => e instanceof RoadEdge) as RoadEdge[];
 
-    CubePhysics.updateCubes(cubes, this.physicsConfig, edges, (cube) => {
-      // удаляем куб из сцены
-      scene.remove(cube);
-    });
+    CubePhysics.updateCubes(
+      cubes,
+      this.physicsConfig,
+      edges,
+      (cube) => {
+        // удаляем куб из сцены
+        scene.remove(cube);
+      },
+      dt,
+    );
   }
 
   public reset(): void {

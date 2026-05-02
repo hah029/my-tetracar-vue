@@ -1,6 +1,5 @@
 import * as THREE from "three";
 
-
 export interface CarState {
   isJumping: boolean;
   jumpVelocity: number;
@@ -28,14 +27,14 @@ export interface CarConfig {
   // Прыжки
   jumpHeight?: number;
   jumpDuration?: number;
-  gravity?: number;
+  // gravity?: number;
 
-  // Разрушение
-  explosionForce?: number;
-  explosionUpward?: number;
-  cubeRotationSpeed?: number;
-  cubeGravity?: number;
-  removalHeight?: number;
+  // // Разрушение
+  // explosionForce?: number;
+  // explosionUpward?: number;
+  // cubeRotationSpeed?: number;
+  // cubeGravity?: number;
+  // removalHeight?: number;
 }
 
 export interface CarStats {

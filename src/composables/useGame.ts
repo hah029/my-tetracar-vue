@@ -224,7 +224,6 @@ export function useGame() {
         o.destroy(impactPoint, transformRequired);
       });
     }
-    // Не нужно обновлять obstacles.value здесь, т.к. следующий кадр updateInteractiveItems сделает это
   }
 
   function destroyCar(impactPoint?: THREE.Vector3) {

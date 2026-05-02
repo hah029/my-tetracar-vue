@@ -1,6 +1,7 @@
 // src/game/physics/CubePhysics.ts
 import * as THREE from "three";
 import { RoadEdge } from "@/game/road/edges";
+import { useCommonStore } from "@/store/commonStore";
 
 export interface CubePhysicsConfig {
   bounceFactor: number;
@@ -16,15 +17,19 @@ export class CubePhysics {
     config: CubePhysicsConfig,
     edges: RoadEdge[],
     onRemove?: (cube: THREE.Object3D) => void,
+    dt: number = 0.016, // дефолтное значение ~60 FPS
   ) {
-    const groundY = 0.15;
+    const groundY = useCommonStore().BASE_ITEM_YPOS;
+    let dtSeconds = dt / 1000;
 
     for (let i = 0; i < cubes.length; i++) {
       const cube = cubes[i];
       if (!cube) continue;
       const ud = cube.userData as any;
 
-      const nextPos = cube.position.clone().add(ud.velocity);
+      // velocity в единицах/сек, умножаем на dt для смещения
+      const velocityStep = ud.velocity.clone().multiplyScalar(dtSeconds);
+      const nextPos = cube.position.clone().add(velocityStep);
 
       // Коллизии с бортиками
       edges.forEach((edge) => {
@@ -48,10 +53,10 @@ export class CubePhysics {
       if (nextPos.y < groundY) {
         nextPos.y = groundY;
         ud.velocity.y *= -config.bounceFactor;
-        ud.velocity.x *= config.friction;
-        ud.velocity.z *= config.friction;
+        ud.velocity.x /= config.friction;
+        ud.velocity.z /= config.friction;
       } else {
-        ud.velocity.y -= config.gravity;
+        ud.velocity.y -= config.gravity * dtSeconds;
       }
 
       // Столкновения между кубиками
@@ -78,11 +83,15 @@ export class CubePhysics {
       }
 
       cube.position.copy(nextPos);
-      cube.rotation.x += ud.rotationSpeed.x;
-      cube.rotation.y += ud.rotationSpeed.y;
-      cube.rotation.z += ud.rotationSpeed.z;
 
-      if (cube.position.y < config.removalHeight) {
+      cube.rotation.x += ud.rotationSpeed.x * dtSeconds;
+      cube.rotation.y += ud.rotationSpeed.y * dtSeconds;
+      cube.rotation.z += ud.rotationSpeed.z * dtSeconds;
+
+      if (
+        cube.position.y < -1 * config.removalHeight ||
+        cube.position.y > config.removalHeight
+      ) {
         if (onRemove) onRemove(cube);
       }
     }

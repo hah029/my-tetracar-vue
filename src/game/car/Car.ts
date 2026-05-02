@@ -29,7 +29,10 @@ export class Car extends THREE.Group {
     super();
     this.scene = scene;
 
-    this.config = { ...DEFAULT_CAR_CONFIG, ...config };
+    this.config = {
+      ...DEFAULT_CAR_CONFIG,
+      ...config,
+    };
     this.currentLane = this.config.startLane;
 
     this.state = {
@@ -46,7 +49,6 @@ export class Car extends THREE.Group {
       yOffset: this.config.colliderYOffset,
       heightFactor: this.config.colliderHeightFactor,
     });
-    // this.collider.createDebugCollider(scene);
 
     this.builder = new CarCubesBuilder();
     this.physics = new CarPhysics(this.config);
@@ -99,7 +101,7 @@ export class Car extends THREE.Group {
   // Обновление
   public update(dt: number): void {
     if (this.state.isDestroyed) {
-      this.physics.updateDestroyedCubes(this.cubes, this.scene);
+      this.physics.updateDestroyedCubes(this.cubes, this.scene, dt);
       return;
     }
 
@@ -128,7 +130,7 @@ export class Car extends THREE.Group {
     const jumpResult = this.physics.updateJump(this.position.y, dt);
     this.position.y = jumpResult.newY;
     this.state.isJumping = jumpResult.isJumping;
-    this.rotation.x += (jumpResult.pitch - this.rotation.x) * 0.2;
+    this.rotation.x += (jumpResult.pitch - this.rotation.x) * 0.05;
 
     // Обновляем коллайдер
     this.collider.updateFromObject(this);

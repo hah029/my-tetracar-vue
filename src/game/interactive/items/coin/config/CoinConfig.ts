@@ -18,6 +18,6 @@ export const GOLDEN_MATERIAL_CONFIG: MaterialConfig = {
 
 export const ENERGON_MATERIAL_CONFIG: MaterialConfig = {
   emissive: 0x82c8e5,
-  emissiveIntensity: 0.6,
+  emissiveIntensity: 2.6,
   metalness: 0,
 };

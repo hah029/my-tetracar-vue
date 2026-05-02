@@ -10,6 +10,7 @@ import nitro_texture from "@/assets/textures/cube_nitro.svg";
 import shield_texture from "@/assets/textures/cube_armor.svg";
 import damage_texture from "@/assets/textures/cube_bullet.svg";
 import type { TextureMap } from "../CarVisualState";
+import { useCommonStore } from "@/store/commonStore";
 
 const COLS: [number, number, number] = [-XZ_SCALING * 2, 0, XZ_SCALING * 2];
 const ROWS: [number, number, number, number] = [
@@ -109,15 +110,15 @@ export const DEFAULT_CAR_CONFIG: Required<CarConfig> = {
   maxTilt: 0.1,
   tiltSmoothing: 0.2,
 
+  // Разрушение
   // Прыжки
   jumpHeight: 2.0,
   jumpDuration: 0.4,
-  gravity: 10.0,
 
-  // Разрушение
-  explosionForce: 0.2,
-  explosionUpward: 0.2,
-  cubeRotationSpeed: 0.05,
-  cubeGravity: 0.005,
-  removalHeight: 0,
+  // gravity: useCommonStore().GRAVITY * 1000.0, // получаем 10 как было
+  // explosionForce: useCommonStore().EXPLOSION_FORCE,
+  // explosionUpward: useCommonStore().EXPLOSION_UPWARD,
+  // cubeRotationSpeed: useCommonStore().BASE_ITEM_ROTATION,
+  // cubeGravity: useCommonStore().GRAVITY,
+  // removalHeight: useCommonStore().REMOVAL_HEIGHT,
 };

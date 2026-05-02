@@ -6,6 +6,7 @@ import {
   SIDE_OBJECT_GEOMETRY_CONFIG,
   SIDE_OBJECT_MATERIAL_CONFIG,
 } from "./config/SideObjectConfig";
+import { useCommonStore } from "@/store/commonStore";
 
 export class SideObjectsInstanced {
   private mesh!: THREE.InstancedMesh;
@@ -97,7 +98,7 @@ export class SideObjectsInstanced {
 
       pos.z += move;
 
-      if (pos.z > 10) {
+      if (pos.z > useCommonStore().ITEMS_REMOVING_ZPOS) {
         pos.z -= this.count * this.spacing;
       }
 

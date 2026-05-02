@@ -35,7 +35,6 @@ export function simulateJumpTrajectory(params: {
   const points: JumpPoint[] = [];
 
   // deltaTime в миллисекундах, преобразуем в секунды
-  // const dtSeconds = deltaTime / 1000;
   for (let i = 0; i < maxSteps; i++) {
     state = simulator.step(state, deltaTime / 1000);
     z -= deltaTime * forwardSpeed;

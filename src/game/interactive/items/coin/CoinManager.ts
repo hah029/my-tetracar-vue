@@ -5,6 +5,7 @@ import { Car } from "@/game/car/Car";
 import type { BaseItem } from "../BaseItem";
 import type { CoinType } from "./types";
 import type { CoinItem } from "./CoinItem";
+import { useCommonStore } from "@/store/commonStore";
 
 export class CoinManager {
   private static instance: CoinManager | null = null;
@@ -29,8 +30,8 @@ export class CoinManager {
   public spawnGolden(
     laneIndex: number,
     zPos: number,
-    yPos: number = 0.2,
-    value: number = 1,
+    yPos?: number,
+    value?: number,
   ): void {
     const coin = new Golden(laneIndex, zPos, yPos, value);
     this.coins.push(coin);
@@ -40,8 +41,8 @@ export class CoinManager {
   public spawnEnergon(
     laneIndex: number,
     zPos: number,
-    yPos: number = 0.2,
-    value: number = 1,
+    yPos?: number,
+    value?: number,
   ): void {
     const coin = new Energon(laneIndex, zPos, yPos, value);
     this.coins.push(coin);

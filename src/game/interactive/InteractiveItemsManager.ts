@@ -15,6 +15,7 @@ import { SEGMENT_ROW_LENGTH } from "./segments/SegmentLibrary";
 // stores
 import { usePlayerStore } from "@/store/playerStore";
 import { useProgressStore } from "@/store/progressStore";
+import { useCommonStore } from "@/store/commonStore";
 
 export class InteractiveItemsManager {
   private static instance: InteractiveItemsManager | null = null;
@@ -23,13 +24,10 @@ export class InteractiveItemsManager {
   private boosterManager!: BoosterManager;
   private bulletItemManager!: BulletItemManager;
   private segmentQueue!: SegmentQueue;
-  private worldFrontZ = -60;
+  private worldFrontZ = useCommonStore().BASE_SEGMENTS_ZPOS;
   private boosterEnabledTimer = 0;
-  private boosterEnabledInterval = 5000;
-  private difficultyStep = 150;
-
-  private ENERGON_SPAWN_PROBABILITY = 0.005;
-  private NITRO_SPAWN_PROBABILITY = 0.5;
+  private boosterEnabledInterval = useCommonStore().NITRO_DURATION_MS;
+  private difficultyStep = useCommonStore().BASE_SEGMENT_DIFFICULTY_STEP;
 
   public static getInstance(): InteractiveItemsManager {
     if (!InteractiveItemsManager.instance) {
@@ -82,7 +80,7 @@ export class InteractiveItemsManager {
     const MAX_SPAWNS_PER_FRAME = 2;
     let spawned = 0;
 
-    const minZ = -90;
+    const minZ = useCommonStore().BASE_SEGMENTS_ZPOS * 1.2;
 
     this.worldFrontZ += speed * deltaTime;
 
@@ -172,7 +170,7 @@ export class InteractiveItemsManager {
   }
 
   public spawnSingleCoin(lane: number, baseZ: number) {
-    if (Math.random() < this.ENERGON_SPAWN_PROBABILITY) {
+    if (Math.random() < useCommonStore().ENERGON_SPAWN_PROBABILITY) {
       this.coinManager.spawnEnergon(lane, baseZ);
     } else {
       this.coinManager.spawnGolden(lane, baseZ);
@@ -194,7 +192,7 @@ export class InteractiveItemsManager {
   }
 
   public spawnBooster(lane: number, baseZ: number) {
-    if (Math.random() < this.NITRO_SPAWN_PROBABILITY) {
+    if (Math.random() < useCommonStore().NITRO_SPAWN_PROBABILITY) {
       this.boosterManager.spawnNitro(lane, baseZ);
     } else {
       this.boosterManager.spawnShield(lane, baseZ);
@@ -225,7 +223,7 @@ export class InteractiveItemsManager {
     const trajectory = simulateJumpTrajectory({
       startY: 0.5, // высота машины при прыжке
       jumpHeight: DEFAULT_CAR_CONFIG.jumpHeight,
-      gravity: DEFAULT_CAR_CONFIG.gravity,
+      gravity: useCommonStore().GRAVITY,
       deltaTime: deltaTime,
       forwardSpeed: speed,
     });
@@ -279,8 +277,7 @@ export class InteractiveItemsManager {
     this.boosterManager.reset();
     this.bulletItemManager.reset();
     this.segmentQueue.reset();
-    // this.nextSegmentZ = -60;
-    this.worldFrontZ = -60;
+    this.worldFrontZ = useCommonStore().BASE_SEGMENTS_ZPOS;
     this.boosterEnabledTimer = 0;
   }
 }

@@ -7,6 +7,7 @@ import { CubeBuilder } from "@/game/cube/Cube";
 import { RoadManager } from "@/game/road/RoadManager";
 import { CAR_MATERIAL_CONFIG } from "@/game/car";
 import { DestructionManager } from "../DestructionManager";
+import { useCommonStore } from "@/store/commonStore";
 
 export class CubeObstacle extends BaseObstacle {
   protected cubes: THREE.Object3D[] = [];
@@ -27,14 +28,7 @@ export class CubeObstacle extends BaseObstacle {
     this.userData.isObstacle = true;
     this.scene = scene;
     this.physicsConfig = {
-      gravity: 0.01,
-      bounceFactor: 0.4,
-      friction: 0.85,
-      collisionFactor: 0.2,
-      removalHeight: -10,
-      explosionForce: 0.3,
-      explosionUpward: 0.1,
-      cubeRotationSpeed: 1,
+      ...useCommonStore().getBasePhysics(),
       ...customConfig,
     };
 
@@ -48,7 +42,7 @@ export class CubeObstacle extends BaseObstacle {
   public update(dt: number, speed: number): boolean {
     if (!this.isDestroyed) {
       this.updateNormalCubes(dt, speed);
-      return this.position.z > 10;
+      return this.position.z > useCommonStore().ITEMS_REMOVING_ZPOS;
     }
     return false;
   }
@@ -83,7 +77,7 @@ export class CubeObstacle extends BaseObstacle {
 
     const dm = DestructionManager.getInstance();
 
-    this.cubes.forEach((cube) => {
+    this.cubes.forEach((cube, idx) => {
       // Получаем мировые координаты
       const worldPos = cube.getWorldPosition(new THREE.Vector3());
       const worldRot = cube.getWorldQuaternion(new THREE.Quaternion());
