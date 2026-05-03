@@ -25,6 +25,11 @@ export const usePlayerStore = defineStore("playerStore", () => {
   const goldenNitroMultiplier = ref(2);
   const energonNitroMultiplier = ref(2);
 
+  const isMagnetEnabled = ref(true);
+  const magnetRadius = ref(10);
+  const magnetForce = ref(20);
+  const magnetMaxTargets = ref(8);
+
   // armor
   const isShieldEnabled = ref(false);
   const armor = ref(0);
@@ -193,6 +198,10 @@ export const usePlayerStore = defineStore("playerStore", () => {
     notificationMsg,
     eventType,
     eventCounter,
+    isMagnetEnabled,
+    magnetRadius,
+    magnetForce,
+    magnetMaxTargets,
 
     // methods
     resetPlayerAchievements,

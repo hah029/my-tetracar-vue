@@ -44,3 +44,12 @@ export interface CarStats {
   isJumping: boolean;
   cubesCount: number;
 }
+
+// Интерфейс для реактивной ссылки car
+export interface CarRef {
+  mesh: THREE.Group;
+  targetX: number;
+  isDestroyed: boolean;
+  isJumping: boolean;
+  cubes: THREE.Object3D[];
+}

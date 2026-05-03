@@ -24,8 +24,9 @@ export class BaseItem extends THREE.Group {
     this.userData = { isInteractiveItem: true };
     const x = RoadManager.getInstance().getLanePosition(laneIndex);
     this.initialPosition = new THREE.Vector3(x, yPos, zPos);
-    this.cube.position.copy(this.initialPosition);
-    this.collider = new THREE.Sphere(this.initialPosition.clone(), 0.45);
+    this.position.copy(this.initialPosition);
+    this.cube.position.set(0, 0, 0);
+    this.collider = new THREE.Sphere(this.position.clone(), 0.45);
     this.build(material).catch((err) => {
       console.error("[Coin] build failed:", err);
     });
@@ -41,7 +42,7 @@ export class BaseItem extends THREE.Group {
 
     try {
       this.cube = await CubeBuilder.build(config);
-      this.cube.position.copy(this.initialPosition);
+      this.cube.position.set(0, 0, 0);
       this.add(this.cube);
     } catch (error) {
       console.error("[Coin] build error:", error);
@@ -50,9 +51,9 @@ export class BaseItem extends THREE.Group {
   }
 
   update(deltaTime: number, speed: number): boolean {
-    this.cube.position.z += deltaTime * speed;
+    this.position.z += deltaTime * speed;
     this.cube.rotation.y += this.rotationYDiff;
-    this.collider.center.copy(this.cube.position);
-    return this.cube.position.z > useCommonStore().ITEMS_REMOVING_ZPOS;
+    this.collider.center.copy(this.position);
+    return this.position.z > useCommonStore().ITEMS_REMOVING_ZPOS;
   }
 }

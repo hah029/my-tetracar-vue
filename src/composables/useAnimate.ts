@@ -66,6 +66,7 @@ export function GameLoop(
     progressStore.addDistance(deltaTime * currentSpeed);
 
     game.updateInteractiveItems(deltaTime, currentSpeed, UpdateMode.Gameplay);
+    game.updateMagnet(deltaTime);
     game.updateRoad(deltaTime, currentSpeed);
     game.updateCity(deltaTime, currentSpeed);
     game.updateDestructionItems(deltaTime, currentSpeed);
@@ -104,7 +105,6 @@ export function GameLoop(
           soundManager.play("sfx_destroy_bot");
           const strength = Math.min(currentSpeed / playerStore.maxSpeed, 1);
           CameraSystem.triggerImpactShake(strength);
-          // motionBlur.damp = 0.82;
           gameState.endGame();
           return false;
         }

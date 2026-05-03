@@ -6,4 +6,3 @@ export * from "./CarManager";
 export * from "./CarCollider";
 export * from "./CarCubesBuilder";
 export * from "./CarPhysics";
-// export * from "./CarTrajectory";
