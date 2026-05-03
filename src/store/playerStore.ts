@@ -25,7 +25,7 @@ export const usePlayerStore = defineStore("playerStore", () => {
   const goldenNitroMultiplier = ref(2);
   const energonNitroMultiplier = ref(2);
 
-  const isMagnetEnabled = ref(true);
+  const isMagnetEnabled = ref(false);
   const magnetRadius = ref(10);
   const magnetForce = ref(20);
   const magnetMaxTargets = ref(8);

@@ -30,6 +30,7 @@
     "sass-loader": "^16.0.7",
     "typescript": "~6.0.3",
     "vite": "^8.0.10",
+    "vite-plugin-glsl": "^1.6.0",
     "vue-tsc": "^3.2.7",
     "webpack": "^5.106.2"
   }

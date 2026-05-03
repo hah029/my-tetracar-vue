@@ -313,4 +313,18 @@ export class Car extends THREE.Group {
       this.visualState?.disable("damage" as CarVisualEffect);
     }, 400);
   }
+
+  public getShieldSourceMeshes(): THREE.Mesh[] {
+    const meshes: THREE.Mesh[] = [];
+
+    for (const cube of this.cubes) {
+      cube.traverse((obj) => {
+        if (obj instanceof THREE.Mesh) {
+          meshes.push(obj);
+        }
+      });
+    }
+
+    return meshes;
+  }
 }

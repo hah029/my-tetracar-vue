@@ -7,6 +7,11 @@ import type { CoinType } from "./types";
 import type { CoinItem } from "./CoinItem";
 import { usePlayerStore } from "@/store/playerStore";
 
+import magnetLineVertex from "@/game/shaders/magnet/line/vertex.glsl";
+import magnetLineFragment from "@/game/shaders/magnet/line/fragment.glsl";
+import magnetFieldVertex from "@/game/shaders/magnet/field/vertex.glsl";
+import magnetFieldFragment from "@/game/shaders/magnet/field/fragment.glsl";
+
 export class CoinManager {
   private static instance: CoinManager | null = null;
   private coins: CoinItem[] = [];
@@ -95,34 +100,6 @@ export class CoinManager {
     }
   }
 
-  // private updateMagnetBeam(
-  //   coin: CoinItem,
-  //   carPos: THREE.Vector3,
-  //   time: number,
-  // ) {
-  //   const line = coin.userData.magnetLine as THREE.Line;
-  //   if (!line) return;
-
-  //   const arr = (line.geometry as THREE.BufferGeometry).attributes.position
-  //     .array as Float32Array;
-
-  //   // старт луча (машина)
-  //   arr[0] = carPos.x;
-  //   arr[1] = carPos.y + 0.45;
-  //   arr[2] = carPos.z + 0.9;
-
-  //   // конец луча (монета)
-  //   arr[3] = coin.position.x;
-  //   arr[4] = coin.position.y;
-  //   arr[5] = coin.position.z;
-
-  //   line.geometry.attributes.position.needsUpdate = true;
-
-  //   // Пульсация прозрачности
-  //   const mat = line.material as THREE.LineBasicMaterial;
-  //   mat.opacity = 0.55 + Math.sin(time * 0.012 + coin.id) * 0.25;
-  // }
-
   private updateMagnetBeam(
     coin: CoinItem,
     carPos: THREE.Vector3,
@@ -184,13 +161,6 @@ export class CoinManager {
       if (coin === undefined) continue;
 
       if (carCollider.intersectsSphere(coin.collider)) {
-        console.log(
-          "coin hit",
-          coin.position,
-          coin.collider.center,
-          coin.collider.radius,
-        );
-
         const itemType = coin.itemType as CoinType;
         collected[itemType] += coin.getValue();
         collected["total"] += coin.getValue();
@@ -302,50 +272,45 @@ export class CoinManager {
         color: { value: new THREE.Color("#00eaff") },
       },
 
-      vertexShader: `
-      varying vec2 vUv;
-      uniform float time;
+      vertexShader: magnetLineVertex,
 
-      void main() {
-        vUv = uv;
-
-        vec3 pos = position;
-
-        // лёгкая волна
-        pos.x += sin(uv.y * 12.0 - time * 8.0) * 0.03;
-
-        gl_Position =
-          projectionMatrix *
-          modelViewMatrix *
-          vec4(pos, 1.0);
-      }
-    `,
-
-      fragmentShader: `
-      varying vec2 vUv;
-      uniform float time;
-      uniform vec3 color;
-
-      void main() {
-
-        // центр луча
-        float center = abs(vUv.x - 0.5);
-
-        // мягкие края
-        float beam = smoothstep(0.48, 0.08, center);
-
-        // поток энергии
-        float flow =
-          sin(vUv.y * 18.0 - time * 12.0) * 0.5 + 0.5;
-
-        // яркость
-        float alpha = beam * (0.45 + flow * 0.7);
-
-        gl_FragColor = vec4(color, alpha);
-      }
-    `,
+      fragmentShader: magnetLineFragment,
     });
 
     return new THREE.Mesh(geometry, material);
+  }
+
+  public createMagnetField(): THREE.Mesh {
+    const geometry = new THREE.SphereGeometry(2, 32, 32);
+
+    const material = new THREE.ShaderMaterial({
+      side: THREE.BackSide,
+      transparent: true,
+      depthWrite: false,
+      blending: THREE.AdditiveBlending,
+
+      uniforms: {
+        time: { value: 0 },
+        intensity: { value: 0.1 },
+        color: { value: new THREE.Color("#00eaff") },
+      },
+      vertexShader: magnetFieldVertex,
+      fragmentShader: magnetFieldFragment,
+    });
+
+    return new THREE.Mesh(geometry, material);
+  }
+
+  public updateMagnetField(car: Car, time: number, enabled: boolean) {
+    const field = car.userData.magnetField as THREE.Mesh;
+    if (!field) return;
+
+    field.position.copy(car.position);
+    field.position.y += 0.4;
+
+    const mat = field.material as THREE.ShaderMaterial;
+    mat.uniforms.time.value = time * 0.001;
+
+    field.visible = enabled;
   }
 }

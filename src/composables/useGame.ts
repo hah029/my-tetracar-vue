@@ -262,7 +262,12 @@ export function useGame() {
   }
 
   function updateMagnet(deltaTime: number) {
-    coinManager.applyMagnet(carManager.getCar(), deltaTime);
+    const car = carManager.getCar();
+
+    const enabled = usePlayerStore().isMagnetEnabled;
+
+    coinManager.applyMagnet(car, deltaTime);
+    coinManager.updateMagnetField(car, performance.now(), enabled);
   }
 
   function resetJumps() {
