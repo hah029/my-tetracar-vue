@@ -214,6 +214,10 @@ class CameraSystemClass {
       .set(Math.random() * 2 - 1, Math.random() * 2 - 1, Math.random() * 2 - 1)
       .multiplyScalar(this.impactAmplitude * decay);
   }
+
+  getCamera() {
+    return this.camera;
+  }
 }
 
 export const CameraSystem = new CameraSystemClass();

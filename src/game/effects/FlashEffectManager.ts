@@ -1,20 +1,10 @@
 import * as THREE from "three";
-import { loadTexture } from "@/helpers/loaders";
-
+import { CameraSystem } from "../camera/CameraSystem";
 // Типы эффектов
 export type FlashType = "golden" | "energon" | "nitro" | "shield" | "bullet";
 
-// Конфигурация текстур для разных типов
-const FLASH_TEXTURES: Record<FlashType, string> = {
-  golden: "/src/assets/textures/flash_gold.svg",
-  energon: "/src/assets/textures/flash_energon.svg",
-  nitro: "/src/assets/textures/flash_nitro.svg",
-  shield: "/src/assets/textures/flash_shield.svg",
-  bullet: "/src/assets/textures/flash_bullet.svg",
-};
-
 interface FlashEffect {
-  sprite: THREE.Sprite;
+  mesh: THREE.Mesh;
   createdAt: number;
   duration: number;
 }
@@ -23,9 +13,6 @@ export class FlashEffectManager {
   private static instance: FlashEffectManager | null = null;
   private effects: FlashEffect[] = [];
   private scene: THREE.Scene | null = null;
-  private textureCache: Map<string, THREE.Texture> = new Map();
-
-  private constructor() {}
 
   public static getInstance(): FlashEffectManager {
     if (!FlashEffectManager.instance) {
@@ -34,94 +21,137 @@ export class FlashEffectManager {
     return FlashEffectManager.instance;
   }
 
+  private getColor(type: FlashType) {
+    switch (type) {
+      case "golden":
+        return new THREE.Color("#ffd54a");
+
+      case "energon":
+        return new THREE.Color("#00e5ff");
+
+      case "nitro":
+        return new THREE.Color("#66ff66");
+
+      case "shield":
+        return new THREE.Color("#dcdcdc");
+
+      case "bullet":
+        return new THREE.Color("#ff5533");
+    }
+  }
+
   public initialize(scene: THREE.Scene) {
     this.scene = scene;
   }
 
-  private async getTexture(type: FlashType): Promise<THREE.Texture> {
-    const url = FLASH_TEXTURES[type];
-
-    if (this.textureCache.has(url)) {
-      const cached = this.textureCache.get(url);
-      if (cached) {
-        return cached.clone();
-      }
-    }
-
-    const texture = loadTexture(url);
-    this.textureCache.set(url, texture);
-    return texture.clone();
-  }
-
-  public async spawnFlash(
+  spawnFlash(
     type: FlashType,
     position: THREE.Vector3,
-    duration: number = 300,
-    size: number = 1.5,
-  ): Promise<void> {
-    if (!this.scene) {
-      console.warn("FlashEffectManager not initialized");
-      return;
-    }
+    duration = 100,
+    size = 6,
+  ) {
+    if (!this.scene) return;
 
-    const texture = await this.getTexture(type);
-
-    const material = new THREE.SpriteMaterial({
-      map: texture,
+    const material = new THREE.ShaderMaterial({
       transparent: true,
-      opacity: 1,
+      depthWrite: false,
       blending: THREE.AdditiveBlending,
+
+      uniforms: {
+        uTime: { value: 0 },
+        uColor: { value: this.getColor(type) },
+      },
+
+      vertexShader: `
+        varying vec2 vUv;
+
+        void main() {
+          vUv = uv;
+
+          vec4 mvPosition = modelViewMatrix * vec4(position,1.0);
+          gl_Position = projectionMatrix * mvPosition;
+        }
+      `,
+
+      fragmentShader: `
+        uniform float uTime;
+        uniform vec3 uColor;
+
+        varying vec2 vUv;
+
+        void main() {
+
+          vec2 uv = vUv - 0.5;
+          float dist = length(uv);
+
+          float core = smoothstep(0.25, 0.0, dist);
+
+          float ring = smoothstep(0.42,0.38,dist)
+                     - smoothstep(0.52,0.48,dist);
+
+          float pulse = sin(uTime * 12.0) * 0.15;
+
+          float alpha =
+              core
+            + ring * (1.0 + pulse);
+
+          alpha *= (1.0 - uTime);
+
+          gl_FragColor = vec4(uColor, alpha);
+        }
+      `,
     });
 
-    const sprite = new THREE.Sprite(material);
-    sprite.position.copy(position);
-    sprite.position.y += 0.5;
-    sprite.scale.set(size, size, 1);
+    const mesh = new THREE.Mesh(new THREE.PlaneGeometry(size, size), material);
 
-    this.scene.add(sprite);
+    mesh.position.copy(position);
+    mesh.position.y += 0.5;
+
+    this.scene.add(mesh);
 
     this.effects.push({
-      sprite,
+      mesh,
       createdAt: performance.now(),
       duration,
     });
   }
 
-  public update(currentTime: number = performance.now()): void {
-    // ✅ Исправлено: проходим по индексам, чтобы безопасно удалять
+  update(now = performance.now()) {
     for (let i = this.effects.length - 1; i >= 0; i--) {
-      const effect = this.effects[i];
-      if (!effect) continue; // защита от undefined
+      const fx = this.effects[i];
 
-      const elapsed = currentTime - effect.createdAt;
-      const progress = elapsed / effect.duration;
+      const progress = (now - fx.createdAt) / fx.duration;
 
       if (progress >= 1) {
-        // Эффект закончился — удаляем
-        if (this.scene) {
-          this.scene.remove(effect.sprite);
-        }
-        effect.sprite.material.dispose();
+        this.destroyEffect(fx);
         this.effects.splice(i, 1);
-      } else {
-        // Плавное затухание
-        const opacity = 1 - progress;
-        (effect.sprite.material as THREE.SpriteMaterial).opacity = opacity;
-
-        // Небольшое увеличение размера при затухании
-        const scale = 1.5 + progress * 0.5;
-        effect.sprite.scale.set(scale, scale, 1);
+        continue;
       }
+
+      fx.mesh.lookAt(CameraSystem.getCamera()!.position);
+
+      const mat = fx.mesh.material as THREE.ShaderMaterial;
+      mat.uniforms.uTime.value = progress;
+
+      const scale = 1 + progress * 0.7;
+      fx.mesh.scale.set(scale, scale, 1);
     }
   }
 
-  public clear(): void {
-    for (const effect of this.effects) {
-      if (this.scene) {
-        this.scene.remove(effect.sprite);
-      }
-      effect.sprite.material.dispose();
+  private destroyEffect(effect: FlashEffect) {
+    this.scene?.remove(effect.mesh);
+
+    effect.mesh.geometry.dispose();
+
+    const mat = effect.mesh.material;
+    Array.isArray(mat) ? mat.forEach((m) => m.dispose()) : mat.dispose();
+  }
+
+  public clear() {
+    for (const fx of this.effects) {
+      this.destroyEffect(fx);
     }
-    this.effects = [];
+
+    this.effects.length = 0;
   }
 }
