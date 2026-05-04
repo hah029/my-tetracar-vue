@@ -16,11 +16,14 @@ const savedLang = localStorage.getItem("lang") || "auto";
 let initialLang = savedLang === "auto" ? resolveAutoLanguage() : savedLang;
 
 
-let platform: IGamePlatform | null = null;
+//let platform: IGamePlatform | null = null;
 
 async function init() {
 
-	platform = PlatformFactory.getPlatform();
+	const platform = PlatformFactory.getPlatform();
+	
+	window.platform = platform; 
+	
 
 	//let lang = 'en';
     	
@@ -83,7 +86,22 @@ console.log('playerStats (все ключи) = ' + (playerStats === null ? 'null
     	const playerData = await platform.getPlayerData();
 console.log('playerData = ' + (playerData === null ? 'null' : JSON.stringify(playerData)));
 
-		
+
+		const shopCatalog = await platform.getShopCatalog();
+console.log('shopCatalog = ' + (shopCatalog === null ? 'null' : JSON.stringify(shopCatalog)));
+
+		// дозавершаем зависшие покупки (обязательно делаем это при старте игры!)
+		platform.consumePrevPurchases((purchase) => {
+					console.log('дозавершаем покупку, purchase = ' + (purchase ? JSON.stringify(purchase) : 'null'));
+					
+// дозавершаем покупку, purchase = {"productID":"bulletPack1","purchaseToken":"0a240251-a16e-4b5a-8d73-d8bbf318bf2b"}
+
+			// здесь совершаем начисление товара purchase.productID игроку
+			
+			 
+					
+					
+		});
 		
 		// показываем платформе, что игра готова к геймплею
     	platform.gameReady();  // правильно это запускать после загрузки и инициализации ассетов, но в игре мало ассетов, поэтому разница непринципиальна 	
@@ -110,6 +128,26 @@ console.log('playerData = ' + (playerData === null ? 'null' : JSON.stringify(pla
 	
 	
 	
+		const p = document.getElementsByClassName('team_logo_group');
+		if (p !== null) {
+			p[0].addEventListener('click', () => {
+				
+				console.log('debug buy, window.platform = ' + window.platform);
+				
+				window.platform.buyShopItem('bulletPack1', (purchase) => {
+					
+					console.log('купили, purchase = ' + (purchase ? JSON.stringify(purchase) : 'null'));
+			
+// купили, purchase = {"productID":"bulletPack1","purchaseToken":"b4032de6-8255-42f8-a2cd-a13bef97d6b4"}			
+
+
+					// здесь совершаем начисление товара purchase.productID игроку
+					
+					
+				});
+				
+			});
+		}
 	
 	
 	

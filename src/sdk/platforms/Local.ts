@@ -189,6 +189,17 @@ export class LocalStoragePlatform implements IGamePlatform {
     };
   }
 
+  consumePrevPurchases(consumePurchase: Function) {
+  }
+
+  async buyShopItem(productId: string, consumePurchase: Function) {
+  }
+  
+  async getShopCatalog() {
+    return null;
+  }
+
+
   getLocale() {
     return this.storage?.getItem(this.LANG_KEY) || "ru";
   }

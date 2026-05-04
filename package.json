@@ -3,11 +3,11 @@
   "appName": "TetroCar",
   "teamName": "Wicked Team",
   "private": true,
-  "version": "0.0.5",
+  "version": "0.0.11",
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "npm version patch --no-git-tag-version && node scripts/generate-version.js && vue-tsc -b && vite build",
+    "build": "npm version patch --no-git-tag-version && node scripts/generate-version.js && vite build",
     "preview": "vite preview"
   },
   "dependencies": {

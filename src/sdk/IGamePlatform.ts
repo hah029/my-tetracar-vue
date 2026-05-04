@@ -27,4 +27,7 @@ export interface IGamePlatform {
     includeUser: boolean,
     quantityAround: number,
   ): any | null;
+  consumePrevPurchases(consumePurchase: Function); // дозавершаем подвисшие предыдущие покупки (начисляем игроку купленные игровые предметы)
+  getShopCatalog(): any | null;  // получаем список товаров магазина
+  buyShopItem(productId: string, consumePurchase: Function);  // запускаем процесс покупки
 }
