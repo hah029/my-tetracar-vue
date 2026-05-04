@@ -114,6 +114,12 @@
             "en": "english"
         },
         "controls": {
+            "mobileLabels": {
+                "pause": "пауза",
+                "fire": "выстрел",
+                "swipe": "свайп",
+                "switcher": "левша / правша"
+            },
             "labels": {
                 "left": "влево",
                 "right": "вправо",

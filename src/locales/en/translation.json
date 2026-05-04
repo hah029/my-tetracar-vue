@@ -114,6 +114,12 @@
             "en": "english"
         },
         "controls": {
+            "mobileLabels": {
+                "pause": "pause",
+                "fire": "fire",
+                "swipe": "swipe",
+                "switcher": "left / right handed"
+            },
             "labels": {
                 "left": "left",
                 "right": "right",
