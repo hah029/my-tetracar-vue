@@ -16,7 +16,11 @@ export class Jump extends THREE.Mesh {
   public userData: JumpConfig;
   private collider: THREE.Box3;
 
-  constructor(laneIndex: number, scene: THREE.Scene, zPos: number = -60) {
+  constructor(
+    laneIndex: number,
+    scene: THREE.Scene,
+    zPos: number = useCommonStore().BASE_SEGMENTS_ZPOS,
+  ) {
     // Геометрия трамплина
     const width = 2;
     const height = 0.15;

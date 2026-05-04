@@ -11,7 +11,11 @@ import { DEFAULT_CAR_CONFIG } from "@/game/car/config";
 import { UpdateMode } from "@/game/core/UpdateMode";
 import { LanePattern } from "@/game/interactive/types/LanePattern";
 import { SegmentQueue } from "./segments/SegmentQueue";
-import { SEGMENT_ROW_LENGTH } from "./segments/SegmentLibrary";
+import {
+  // SEGMENT_ROW_LENGTH,
+  SEGMENT_ROW_BODY_LENGTH,
+  SEGMENT_ROW_SPACING_LENGTH,
+} from "./segments/SegmentLibrary";
 // stores
 import { usePlayerStore } from "@/store/playerStore";
 import { useProgressStore } from "@/store/progressStore";
@@ -108,9 +112,11 @@ export class InteractiveItemsManager {
     const isReversed = segment.canReversed ? Math.random() < 0.5 : false;
 
     // console.log("baseZ", baseZ);
+    const segmentRowLength =
+      SEGMENT_ROW_BODY_LENGTH + SEGMENT_ROW_SPACING_LENGTH * 1.1;
 
     segment.pattern.forEach((row, rowIndex) => {
-      const z = baseZ - rowIndex * SEGMENT_ROW_LENGTH;
+      const z = baseZ - rowIndex * segmentRowLength;
       let row_ = [...row];
 
       if (isReversed) {
@@ -193,7 +199,7 @@ export class InteractiveItemsManager {
       });
     });
 
-    return segment.pattern.length * SEGMENT_ROW_LENGTH;
+    return segment.pattern.length * segmentRowLength;
   }
 
   public spawnSingleCoin(lane: number, baseZ: number) {
