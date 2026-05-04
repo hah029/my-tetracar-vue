@@ -10,7 +10,6 @@ export const usePlayerStore = defineStore("playerStore", () => {
   const MAX_SPEED = 0.5; // м/с - максимальная скорость машинки
   const NITRO_MULTIPLIER = 1.5;
   const ACCELERATION = 0.0000005; // - темп ускорения машинки
-  const BASE_NITRO_TIMER = 5000;
 
   // speed
   const speed = ref(BASE_SPEED);
@@ -20,12 +19,15 @@ export const usePlayerStore = defineStore("playerStore", () => {
   const accelerationType = ref<"exponential" | "logarithmic">("logarithmic");
 
   // nitro
+  const BASE_NITRO_TIMER = 5000;
   const isNitroEnabled = ref(false);
   const nitroTimer = ref(BASE_NITRO_TIMER);
   const goldenNitroMultiplier = ref(2);
   const energonNitroMultiplier = ref(2);
-
+  // magnet
+  const BASE_MAGNET_TIMER = 10000;
   const isMagnetEnabled = ref(false);
+  const magnetTimer = ref(BASE_MAGNET_TIMER);
   const magnetRadius = ref(10);
   const magnetForce = ref(20);
   const magnetMaxTargets = ref(8);
@@ -56,6 +58,7 @@ export const usePlayerStore = defineStore("playerStore", () => {
     armor.value = 0;
     disableShield();
     disableNitro();
+    disableMagnet();
     console.log("all boosters reseted");
   }
 
@@ -65,13 +68,23 @@ export const usePlayerStore = defineStore("playerStore", () => {
     isNitroEnabled.value = true;
     if (!isNitroEnabled.value) progressStore.riseMultiplier(2, "multiply");
   }
-  ``;
-
   // отключаем нитро
   function disableNitro() {
     isNitroEnabled.value = false;
     nitroTimer.value = BASE_NITRO_TIMER;
     if (progressStore.currentMultiplier != 1) progressStore.reduceMultiplier(2);
+  }
+  // #endregion
+
+  // #region - работаем с нитро
+  // включаем нитро
+  function enableMagnet() {
+    isMagnetEnabled.value = true;
+  }
+  // отключаем нитро
+  function disableMagnet() {
+    isMagnetEnabled.value = false;
+    magnetTimer.value = BASE_MAGNET_TIMER;
   }
   // #endregion
 
@@ -177,6 +190,7 @@ export const usePlayerStore = defineStore("playerStore", () => {
     // states
     NITRO_MULTIPLIER,
     BASE_NITRO_TIMER,
+    BASE_MAGNET_TIMER,
     BASE_SPEED,
     speed,
     baseSpeed,
@@ -199,6 +213,7 @@ export const usePlayerStore = defineStore("playerStore", () => {
     eventType,
     eventCounter,
     isMagnetEnabled,
+    magnetTimer,
     magnetRadius,
     magnetForce,
     magnetMaxTargets,
@@ -210,6 +225,9 @@ export const usePlayerStore = defineStore("playerStore", () => {
 
     enableShield,
     disableShield,
+
+    enableMagnet,
+    disableMagnet,
 
     resetGameData,
     getCurrentSpeed,

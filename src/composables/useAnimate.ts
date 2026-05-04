@@ -174,6 +174,12 @@ export function GameLoop(
         } else {
           playerStore.addNewMsg("maxArmor");
         }
+      } else if (boostCollisions.subject === "magnet") {
+        soundManager.play("sfx_add_nitro");
+        playerStore.enableMagnet();
+        playerStore.addNewMsg("magnetActivated");
+        playerStore.makeEventHappened("addMagnet");
+        game.spawnFlash("magnet", carPos);
       } else {
         console.error(
           "Undefined booster collision subject:",

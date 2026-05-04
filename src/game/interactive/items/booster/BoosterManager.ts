@@ -1,6 +1,7 @@
 import * as THREE from "three";
 import { Nitro } from "./Nitro";
 import { Shield } from "./Shield";
+import { Magnet } from "./Magnet";
 import { Car } from "@/game/car/Car";
 import type { BaseItem } from "../BaseItem";
 
@@ -8,6 +9,12 @@ export class BoosterManager {
   private static instance: BoosterManager | null = null;
   private boosters: BaseItem[] = [];
   private scene!: THREE.Scene;
+
+  public readonly spawnProbabilities = {
+    nitro: 1,
+    shield: 1,
+    magnet: 1,
+  };
 
   public static getInstance(): BoosterManager {
     if (!BoosterManager.instance) {
@@ -24,18 +31,25 @@ export class BoosterManager {
      SPAWN
      ======================= */
 
-  public spawnNitro(laneIndex: number, zPos: number, yPos: number = 0.2): void {
+  public spawnNitro(laneIndex: number, zPos: number, yPos?: number): void {
+    console.log("spawnNitro", this);
     const booster = new Nitro(laneIndex, zPos, yPos);
+
     this.boosters.push(booster);
     this.scene.add(booster);
   }
 
-  public spawnShield(
-    laneIndex: number,
-    zPos: number,
-    yPos: number = 0.2,
-  ): void {
+  public spawnMagnet(laneIndex: number, zPos: number, yPos?: number): void {
+    console.log("spawnMagnet", this);
+    const booster = new Magnet(laneIndex, zPos, yPos);
+    this.boosters.push(booster);
+    this.scene.add(booster);
+  }
+
+  public spawnShield(laneIndex: number, zPos: number, yPos?: number): void {
+    console.log("spawnShield", this);
     const booster = new Shield(laneIndex, zPos, yPos);
+
     this.boosters.push(booster);
     this.scene.add(booster);
   }

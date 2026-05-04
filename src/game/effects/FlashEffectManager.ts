@@ -4,7 +4,13 @@ import flashVertexShader from "@/game/shaders/flash/vertex.glsl";
 import flashFragmentShader from "@/game/shaders/flash/fragment.glsl";
 
 // Типы эффектов
-export type FlashType = "golden" | "energon" | "nitro" | "shield" | "bullet";
+export type FlashType =
+  | "golden"
+  | "energon"
+  | "nitro"
+  | "shield"
+  | "magnet"
+  | "bullet";
 
 interface FlashEffect {
   mesh: THREE.Mesh;
@@ -37,6 +43,9 @@ export class FlashEffectManager {
 
       case "shield":
         return new THREE.Color("#dcdcdc");
+
+      case "magnet":
+        return new THREE.Color("#0008ff");
 
       case "bullet":
         return new THREE.Color("#ff5533");

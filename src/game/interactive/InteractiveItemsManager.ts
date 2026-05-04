@@ -16,6 +16,7 @@ import { SEGMENT_ROW_LENGTH } from "./segments/SegmentLibrary";
 import { usePlayerStore } from "@/store/playerStore";
 import { useProgressStore } from "@/store/progressStore";
 import { useCommonStore } from "@/store/commonStore";
+import { makeWeightedChoice } from "@/helpers/functions";
 
 export class InteractiveItemsManager {
   private static instance: InteractiveItemsManager | null = null;
@@ -25,9 +26,9 @@ export class InteractiveItemsManager {
   private bulletItemManager!: BulletItemManager;
   private segmentQueue!: SegmentQueue;
   private worldFrontZ = useCommonStore().BASE_SEGMENTS_ZPOS;
-  private boosterEnabledTimer = 0;
-  private boosterEnabledInterval = useCommonStore().NITRO_DURATION_MS;
   private difficultyStep = useCommonStore().BASE_SEGMENT_DIFFICULTY_STEP;
+  private nitroEnabledTimer = 0;
+  private magnetEnabledTimer = 0;
 
   public static getInstance(): InteractiveItemsManager {
     if (!InteractiveItemsManager.instance) {
@@ -64,14 +65,24 @@ export class InteractiveItemsManager {
 
     const playerStore = usePlayerStore();
     if (playerStore.isNitroEnabled) {
-      this.boosterEnabledTimer += deltaTime;
+      this.nitroEnabledTimer += deltaTime;
       playerStore.nitroTimer -= deltaTime;
-    }
 
-    if (this.boosterEnabledTimer >= this.boosterEnabledInterval) {
-      CarManager.getInstance().disableNitro();
-      playerStore.disableNitro();
-      this.boosterEnabledTimer = 0;
+      if (this.nitroEnabledTimer >= usePlayerStore().BASE_NITRO_TIMER) {
+        CarManager.getInstance().disableNitro();
+        playerStore.disableNitro();
+        this.nitroEnabledTimer = 0;
+      }
+    }
+    if (playerStore.isMagnetEnabled) {
+      this.magnetEnabledTimer += deltaTime;
+      playerStore.magnetTimer -= deltaTime;
+
+      if (this.magnetEnabledTimer >= usePlayerStore().BASE_MAGNET_TIMER) {
+        // CarManager.getInstance().dis();
+        playerStore.disableMagnet();
+        this.magnetEnabledTimer = 0;
+      }
     }
   }
 
@@ -111,6 +122,15 @@ export class InteractiveItemsManager {
           case LanePattern.Obstacle:
             this.obstacleManager.spawnStaticObstacle(lane, z, 2);
             break;
+          case LanePattern.Obstacle1:
+            this.obstacleManager.spawnStaticObstacle(lane, z, 0);
+            break;
+          case LanePattern.Obstacle2:
+            this.obstacleManager.spawnStaticObstacle(lane, z, 1);
+            break;
+          case LanePattern.Obstacle3:
+            this.obstacleManager.spawnStaticObstacle(lane, z, 2);
+            break;
 
           case LanePattern.Jump:
             this.spawnJump(lane, dt, speed, z);
@@ -134,6 +154,9 @@ export class InteractiveItemsManager {
           case LanePattern.Coin:
             this.spawnSingleCoin(lane, z);
             break;
+          case LanePattern.Energon:
+            this.spawnEnergonCoin(lane, z);
+            break;
 
           case LanePattern.CoinLine:
             this.spawnCoinLine(lane, z);
@@ -149,6 +172,10 @@ export class InteractiveItemsManager {
 
           case LanePattern.Shield:
             this.spawnShieldBooster(lane, z);
+            break;
+
+          case LanePattern.Magnet:
+            this.spawnMagnetBooster(lane, z);
             break;
 
           case LanePattern.BulletItem:
@@ -192,15 +219,29 @@ export class InteractiveItemsManager {
   }
 
   public spawnBooster(lane: number, baseZ: number) {
-    if (Math.random() < useCommonStore().NITRO_SPAWN_PROBABILITY) {
-      this.boosterManager.spawnNitro(lane, baseZ);
-    } else {
-      this.boosterManager.spawnShield(lane, baseZ);
+    const choice = makeWeightedChoice(this.boosterManager.spawnProbabilities);
+    switch (choice) {
+      case "nitro":
+        this.boosterManager.spawnNitro(lane, baseZ);
+        break;
+      case "shield":
+        this.boosterManager.spawnShield(lane, baseZ);
+        break;
+      case "magnet":
+        this.boosterManager.spawnMagnet(lane, baseZ);
+        break;
+      default:
+        // fallback, если choice неизвестен
+        this.boosterManager.spawnShield(lane, baseZ);
     }
   }
 
   public spawnNitroBooster(lane: number, baseZ: number) {
     this.boosterManager.spawnNitro(lane, baseZ);
+  }
+
+  public spawnMagnetBooster(lane: number, baseZ: number) {
+    this.boosterManager.spawnMagnet(lane, baseZ);
   }
 
   public spawnShieldBooster(lane: number, baseZ: number) {
@@ -278,6 +319,7 @@ export class InteractiveItemsManager {
     this.bulletItemManager.reset();
     this.segmentQueue.reset();
     this.worldFrontZ = useCommonStore().BASE_SEGMENTS_ZPOS;
-    this.boosterEnabledTimer = 0;
+    this.nitroEnabledTimer = 0;
+    this.magnetEnabledTimer = 0;
   }
 }
