@@ -72,6 +72,8 @@ export class CoinManager {
   }
 
   private updateMagnetCoins(car: Car, deltaTime: number): void {
+    if (this.magnetCoins.length == 0) return;
+
     const playerStore = usePlayerStore();
 
     const force = playerStore.magnetForce ?? 8;
@@ -210,52 +212,33 @@ export class CoinManager {
   public applyMagnet(car: Car, deltaTime: number): void {
     const playerStore = usePlayerStore();
 
-    if (!playerStore.isMagnetEnabled) return;
+    if (playerStore.isMagnetEnabled) {
+      const radius = playerStore.magnetRadius ?? 4.5;
+      const radiusSq = radius * radius;
 
-    const radius = playerStore.magnetRadius ?? 4.5;
-    const radiusSq = radius * radius;
+      const carPos = car.position;
 
-    const carPos = car.position;
+      // 1. переносим обычные монеты в магнитные
+      for (let i = this.coins.length - 1; i >= 0; i--) {
+        const coin = this.coins[i];
+        if (!coin) continue;
 
-    // 1. переносим обычные монеты в магнитные
-    for (let i = this.coins.length - 1; i >= 0; i--) {
-      const coin = this.coins[i];
-      if (!coin) continue;
+        const distSq = coin.position.distanceToSquared(carPos);
 
-      const distSq = coin.position.distanceToSquared(carPos);
-
-      if (distSq <= radiusSq) {
-        this.magnetCoins.push(coin);
-        coin.userData.magnetized = true;
-        const line = this.createMagnetLine();
-        this.scene.add(line);
-        coin.userData.magnetLine = line;
-        this.coins.splice(i, 1);
+        if (distSq <= radiusSq) {
+          this.magnetCoins.push(coin);
+          coin.userData.magnetized = true;
+          const line = this.createMagnetLine();
+          this.scene.add(line);
+          coin.userData.magnetLine = line;
+          this.coins.splice(i, 1);
+        }
       }
     }
 
     // 2. обновляем магнитные
     this.updateMagnetCoins(car, deltaTime);
   }
-
-  // private createMagnetLine(): THREE.Line {
-  //   const geometry = new THREE.BufferGeometry();
-
-  //   const points = new Float32Array(6); // 2 точки * xyz
-  //   geometry.setAttribute("position", new THREE.BufferAttribute(points, 3));
-
-  //   const material = new THREE.LineBasicMaterial({
-  //     transparent: true,
-  //     opacity: 0.85,
-  //     blending: THREE.AdditiveBlending,
-  //     depthWrite: false,
-  //     toneMapped: false,
-  //   });
-
-  //   const line = new THREE.Line(geometry, material);
-
-  //   return line;
-  // }
 
   private createMagnetLine(): THREE.Mesh {
     const geometry = new THREE.PlaneGeometry(0.18, 1, 1, 20);
@@ -273,7 +256,6 @@ export class CoinManager {
       },
 
       vertexShader: magnetLineVertex,
-
       fragmentShader: magnetLineFragment,
     });
 
@@ -301,16 +283,16 @@ export class CoinManager {
     return new THREE.Mesh(geometry, material);
   }
 
-  public updateMagnetField(car: Car, time: number, enabled: boolean) {
-    const field = car.userData.magnetField as THREE.Mesh;
-    if (!field) return;
+  // public updateMagnetField(car: Car, time: number, enabled: boolean) {
+  //   const field = car.userData.magnetField as THREE.Mesh;
+  //   if (!field) return;
 
-    field.position.copy(car.position);
-    field.position.y += 0.4;
+  //   field.position.copy(car.position);
+  //   field.position.y += 0.4;
 
-    const mat = field.material as THREE.ShaderMaterial;
-    mat.uniforms.time.value = time * 0.001;
+  //   const mat = field.material as THREE.ShaderMaterial;
+  //   mat.uniforms.time.value = time * 0.001;
 
-    field.visible = enabled;
-  }
+  //   field.visible = enabled;
+  // }
 }

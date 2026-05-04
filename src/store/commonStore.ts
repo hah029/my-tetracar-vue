@@ -18,12 +18,6 @@ export const useCommonStore = defineStore("common", () => {
   // вероятность спавна энергона
   // работает в пределах 0...1 (0 - не выпадает вообще, 1 - выпадает только энергон)
   const ENERGON_SPAWN_PROBABILITY = 0.005;
-  // вероятность спавна нитро (в противовес щиту)
-  // если значение 0.5 для нитро, то это значит, что 1:1 выпадает нитро и щит
-  const NITRO_SPAWN_PROBABILITY = 0.5;
-
-  // время работы нитро в милисекундах
-  const NITRO_DURATION_MS = 5000;
 
   // глобальная физика
   // const GRAVITY = 0.01;
@@ -51,10 +45,10 @@ export const useCommonStore = defineStore("common", () => {
   }
 
   const DESTROYED_ROLLDROP_WEIGHTS = {
-    golden_coin: 100,
+    golden_coin: 20,
     bullet: 20,
     shield_booster: 10,
-    energon_coin: 1,
+    energon_coin: 20,
     nitro_booster: 1,
   };
 
@@ -66,8 +60,6 @@ export const useCommonStore = defineStore("common", () => {
     BASE_SEGMENT_DIFFICULTY_STEP,
     BASE_COIN_VALUE,
     ENERGON_SPAWN_PROBABILITY,
-    NITRO_SPAWN_PROBABILITY,
-    NITRO_DURATION_MS,
     //
     GRAVITY,
     FRICTION,

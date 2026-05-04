@@ -2,11 +2,11 @@ import type { Segment } from "./Segment";
 import { LanePattern as L } from "../types/LanePattern";
 import { SegmentTypes as T } from "../types/SegmentType";
 
-export const SEGMENT_ROW_BODY_LENGHT = 0.9;
-export const SEGMENT_ROW_SPACING_LENGHT = 1.8;
+export const SEGMENT_ROW_BODY_LENGTH = 0.9;
+export const SEGMENT_ROW_SPACING_LENGTH = 2.2;
 
 export const SEGMENT_ROW_LENGTH =
-  SEGMENT_ROW_BODY_LENGHT + SEGMENT_ROW_SPACING_LENGHT;
+  SEGMENT_ROW_BODY_LENGTH + SEGMENT_ROW_SPACING_LENGTH;
 
 export const SEGMENTS: Segment[] = [
   {

@@ -19,6 +19,7 @@ import {
   SHIELD_MATERIAL_CONFIG,
 } from "./items/booster/config";
 import { MATERIAL_CONFIG as BULLET_MATERIAL_CONFIG } from "./items/bullet/config/BulletConfig";
+import { makeWeightedChoice } from "@/helpers/functions";
 
 export class DestructionManager {
   private static instance: DestructionManager | null = null;
@@ -236,18 +237,9 @@ export class DestructionManager {
   }
 
   private rollDrop(): keyof typeof this.transformMapping {
-    const dropTypes = Object.keys(
+    return makeWeightedChoice(
       this.weightsMapping,
-    ) as (keyof typeof this.transformMapping)[];
-    const choices: (keyof typeof this.transformMapping)[] = [...dropTypes];
-
-    let totalWeight = 0;
-    const cumulativeWeights = Object.values(this.weightsMapping).map(
-      (w) => (totalWeight += w),
-    );
-    const random = Math.random() * totalWeight;
-    const index = cumulativeWeights.findIndex((cw) => cw > random);
-    return choices[index]!;
+    ) as keyof typeof this.transformMapping;
   }
 
   public reset() {

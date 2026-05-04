@@ -92,43 +92,43 @@ export class CarManager {
     this.car.add(this.nitroRight);
   }
 
-  private createShieldEffect(): void {
-    if (!this.car) return;
+  // private createShieldEffect(): void {
+  //   if (!this.car) return;
 
-    const meshes = this.car.getShieldSourceMeshes();
-    const group = new THREE.Group();
+  //   const meshes = this.car.getShieldSourceMeshes();
+  //   const group = new THREE.Group();
 
-    this.shieldMaterial = new THREE.ShaderMaterial({
-      uniforms: {
-        time: { value: 0 },
-        color: { value: new THREE.Color("#ff0000") },
-      },
+  //   this.shieldMaterial = new THREE.ShaderMaterial({
+  //     uniforms: {
+  //       time: { value: 0 },
+  //       color: { value: new THREE.Color("#ff0000") },
+  //     },
 
-      vertexShader: shieldVertexShader,
-      fragmentShader: shieldFragmentShader,
-      transparent: true,
-      depthWrite: false,
-      wireframe: true,
-      blending: THREE.AdditiveBlending,
-    });
+  //     vertexShader: shieldVertexShader,
+  //     fragmentShader: shieldFragmentShader,
+  //     transparent: true,
+  //     depthWrite: false,
+  //     wireframe: true,
+  //     blending: THREE.AdditiveBlending,
+  //   });
 
-    // this.shieldMesh = new THREE.Mesh(geometry, this.shieldMaterial);
-    meshes.forEach((mesh) => {
-      const clone = new THREE.Mesh(mesh.geometry, this.shieldMaterial!);
+  //   // this.shieldMesh = new THREE.Mesh(geometry, this.shieldMaterial);
+  //   meshes.forEach((mesh) => {
+  //     const clone = new THREE.Mesh(mesh.geometry, this.shieldMaterial!);
 
-      clone.position.copy(mesh.position);
-      clone.rotation.copy(mesh.rotation);
-      clone.scale.copy(mesh.scale);
+  //     clone.position.copy(mesh.position);
+  //     clone.rotation.copy(mesh.rotation);
+  //     clone.scale.copy(mesh.scale);
 
-      group.add(clone);
-    });
+  //     group.add(clone);
+  //   });
 
-    group.scale.setScalar(1.1);
-    group.visible = true;
+  //   group.scale.setScalar(1.1);
+  //   group.visible = true;
 
-    this.shieldMesh = group as any;
-    this.car.add(group);
-  }
+  //   this.shieldMesh = group as any;
+  //   this.car.add(group);
+  // }
 
   public update(dt: number): void {
     if (!this.car) return;

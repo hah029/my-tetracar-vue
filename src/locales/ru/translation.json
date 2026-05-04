@@ -114,19 +114,25 @@
             "en": "english"
         },
         "controls": {
+            "mobileLabels": {
+                "pause": "пауза",
+                "fire": "выстрел",
+                "swipe": "свайп",
+                "switcher": "левша / правша"
+            },
             "labels": {
                 "left": "влево",
                 "right": "вправо",
+                "drop": "крутое пике",
                 "fire": "выстрел",
-                "pause": "пауза",
-                "shop": "магазин"
+                "pause": "пауза"
             },
             "keys": {
                 "left": "a",
                 "right": "d",
+                "drop": "s",
                 "fire": "пробел",
-                "pause": "esc",
-                "shop": "b"
+                "pause": "esc"
             }
         },
         "about": {

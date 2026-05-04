@@ -122,7 +122,7 @@ export function GameLoop(
         progressStore.addGolden(coins.golden);
         soundManager.play("sfx_add_golden");
         const carPos = game.car.value.mesh.position;
-        game.spawnFlash("golden", carPos);
+        game.spawnFlash("golden", carPos, 4);
       }
       if (coins.energon > 0) {
         progressStore.addEnergon(coins.energon);
@@ -174,6 +174,12 @@ export function GameLoop(
         } else {
           playerStore.addNewMsg("maxArmor");
         }
+      } else if (boostCollisions.subject === "magnet") {
+        soundManager.play("sfx_add_nitro");
+        playerStore.enableMagnet();
+        playerStore.addNewMsg("magnetActivated");
+        playerStore.makeEventHappened("addMagnet");
+        game.spawnFlash("magnet", carPos);
       } else {
         console.error(
           "Undefined booster collision subject:",

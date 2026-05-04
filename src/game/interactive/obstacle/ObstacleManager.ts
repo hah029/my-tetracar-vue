@@ -8,6 +8,7 @@ import { MovingObstacle } from "./MovingObstacle";
 import { StaticObstacle } from "./StaticObstacle";
 import { EnemyCar } from "./EnemyCar";
 import { Jump } from "./Jump";
+import { useCommonStore } from "@/store/commonStore";
 
 export class ObstacleManager {
   private static instance: ObstacleManager | null = null;
@@ -30,7 +31,7 @@ export class ObstacleManager {
 
   public spawnStaticObstacle(
     lane: number,
-    z = -60,
+    z = useCommonStore().BASE_SEGMENTS_ZPOS,
     formIndex?: number,
   ): StaticObstacle | null {
     const index =
@@ -51,7 +52,7 @@ export class ObstacleManager {
 
   public spawnMovingObstacle(
     startLane: number,
-    z = -60,
+    z = useCommonStore().BASE_SEGMENTS_ZPOS,
     width = 1,
     formIndex?: number,
   ) {
@@ -78,14 +79,17 @@ export class ObstacleManager {
     this.obstacles.push(obstacle);
   }
 
-  public spawnEnemyCar(lane: number, z = -60) {
+  public spawnEnemyCar(lane: number, z = useCommonStore().BASE_SEGMENTS_ZPOS) {
     const form = CAR_CUBES_CONFIG;
     const obstacle = new EnemyCar(lane, z, form, this.scene, true);
     this.scene.add(obstacle);
     this.obstacles.push(obstacle);
   }
 
-  public spawnJump(lane: number, z = -60): Jump | null {
+  public spawnJump(
+    lane: number,
+    z = useCommonStore().BASE_SEGMENTS_ZPOS,
+  ): Jump | null {
     const jump = new Jump(lane, this.scene, z);
     this.jumps.push(jump);
     return jump;

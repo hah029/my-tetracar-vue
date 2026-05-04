@@ -11,11 +11,16 @@ import { DEFAULT_CAR_CONFIG } from "@/game/car/config";
 import { UpdateMode } from "@/game/core/UpdateMode";
 import { LanePattern } from "@/game/interactive/types/LanePattern";
 import { SegmentQueue } from "./segments/SegmentQueue";
-import { SEGMENT_ROW_LENGTH } from "./segments/SegmentLibrary";
+import {
+  // SEGMENT_ROW_LENGTH,
+  SEGMENT_ROW_BODY_LENGTH,
+  SEGMENT_ROW_SPACING_LENGTH,
+} from "./segments/SegmentLibrary";
 // stores
 import { usePlayerStore } from "@/store/playerStore";
 import { useProgressStore } from "@/store/progressStore";
 import { useCommonStore } from "@/store/commonStore";
+import { makeWeightedChoice } from "@/helpers/functions";
 
 export class InteractiveItemsManager {
   private static instance: InteractiveItemsManager | null = null;
@@ -25,9 +30,9 @@ export class InteractiveItemsManager {
   private bulletItemManager!: BulletItemManager;
   private segmentQueue!: SegmentQueue;
   private worldFrontZ = useCommonStore().BASE_SEGMENTS_ZPOS;
-  private boosterEnabledTimer = 0;
-  private boosterEnabledInterval = useCommonStore().NITRO_DURATION_MS;
   private difficultyStep = useCommonStore().BASE_SEGMENT_DIFFICULTY_STEP;
+  private nitroEnabledTimer = 0;
+  private magnetEnabledTimer = 0;
 
   public static getInstance(): InteractiveItemsManager {
     if (!InteractiveItemsManager.instance) {
@@ -64,14 +69,24 @@ export class InteractiveItemsManager {
 
     const playerStore = usePlayerStore();
     if (playerStore.isNitroEnabled) {
-      this.boosterEnabledTimer += deltaTime;
+      this.nitroEnabledTimer += deltaTime;
       playerStore.nitroTimer -= deltaTime;
-    }
 
-    if (this.boosterEnabledTimer >= this.boosterEnabledInterval) {
-      CarManager.getInstance().disableNitro();
-      playerStore.disableNitro();
-      this.boosterEnabledTimer = 0;
+      if (this.nitroEnabledTimer >= usePlayerStore().BASE_NITRO_TIMER) {
+        CarManager.getInstance().disableNitro();
+        playerStore.disableNitro();
+        this.nitroEnabledTimer = 0;
+      }
+    }
+    if (playerStore.isMagnetEnabled) {
+      this.magnetEnabledTimer += deltaTime;
+      playerStore.magnetTimer -= deltaTime;
+
+      if (this.magnetEnabledTimer >= usePlayerStore().BASE_MAGNET_TIMER) {
+        // CarManager.getInstance().dis();
+        playerStore.disableMagnet();
+        this.magnetEnabledTimer = 0;
+      }
     }
   }
 
@@ -97,9 +112,11 @@ export class InteractiveItemsManager {
     const isReversed = segment.canReversed ? Math.random() < 0.5 : false;
 
     // console.log("baseZ", baseZ);
+    const segmentRowLength =
+      SEGMENT_ROW_BODY_LENGTH + SEGMENT_ROW_SPACING_LENGTH * 1.1;
 
     segment.pattern.forEach((row, rowIndex) => {
-      const z = baseZ - rowIndex * SEGMENT_ROW_LENGTH;
+      const z = baseZ - rowIndex * segmentRowLength;
       let row_ = [...row];
 
       if (isReversed) {
@@ -109,6 +126,15 @@ export class InteractiveItemsManager {
       row_.forEach((value, lane) => {
         switch (value) {
           case LanePattern.Obstacle:
+            this.obstacleManager.spawnStaticObstacle(lane, z, 2);
+            break;
+          case LanePattern.Obstacle1:
+            this.obstacleManager.spawnStaticObstacle(lane, z, 0);
+            break;
+          case LanePattern.Obstacle2:
+            this.obstacleManager.spawnStaticObstacle(lane, z, 1);
+            break;
+          case LanePattern.Obstacle3:
             this.obstacleManager.spawnStaticObstacle(lane, z, 2);
             break;
 
@@ -134,6 +160,9 @@ export class InteractiveItemsManager {
           case LanePattern.Coin:
             this.spawnSingleCoin(lane, z);
             break;
+          case LanePattern.Energon:
+            this.spawnEnergonCoin(lane, z);
+            break;
 
           case LanePattern.CoinLine:
             this.spawnCoinLine(lane, z);
@@ -151,6 +180,10 @@ export class InteractiveItemsManager {
             this.spawnShieldBooster(lane, z);
             break;
 
+          case LanePattern.Magnet:
+            this.spawnMagnetBooster(lane, z);
+            break;
+
           case LanePattern.BulletItem:
             this.spawnBulletItem(lane, z);
             break;
@@ -166,7 +199,7 @@ export class InteractiveItemsManager {
       });
     });
 
-    return segment.pattern.length * SEGMENT_ROW_LENGTH;
+    return segment.pattern.length * segmentRowLength;
   }
 
   public spawnSingleCoin(lane: number, baseZ: number) {
@@ -192,15 +225,29 @@ export class InteractiveItemsManager {
   }
 
   public spawnBooster(lane: number, baseZ: number) {
-    if (Math.random() < useCommonStore().NITRO_SPAWN_PROBABILITY) {
-      this.boosterManager.spawnNitro(lane, baseZ);
-    } else {
-      this.boosterManager.spawnShield(lane, baseZ);
+    const choice = makeWeightedChoice(this.boosterManager.spawnProbabilities);
+    switch (choice) {
+      case "nitro":
+        this.boosterManager.spawnNitro(lane, baseZ);
+        break;
+      case "shield":
+        this.boosterManager.spawnShield(lane, baseZ);
+        break;
+      case "magnet":
+        this.boosterManager.spawnMagnet(lane, baseZ);
+        break;
+      default:
+        // fallback, если choice неизвестен
+        this.boosterManager.spawnShield(lane, baseZ);
     }
   }
 
   public spawnNitroBooster(lane: number, baseZ: number) {
     this.boosterManager.spawnNitro(lane, baseZ);
+  }
+
+  public spawnMagnetBooster(lane: number, baseZ: number) {
+    this.boosterManager.spawnMagnet(lane, baseZ);
   }
 
   public spawnShieldBooster(lane: number, baseZ: number) {
@@ -278,6 +325,7 @@ export class InteractiveItemsManager {
     this.bulletItemManager.reset();
     this.segmentQueue.reset();
     this.worldFrontZ = useCommonStore().BASE_SEGMENTS_ZPOS;
-    this.boosterEnabledTimer = 0;
+    this.nitroEnabledTimer = 0;
+    this.magnetEnabledTimer = 0;
   }
 }

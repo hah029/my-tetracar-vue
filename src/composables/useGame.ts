@@ -127,8 +127,13 @@ export function useGame() {
   }
 
   // метод для вызова вспышки
-  function spawnFlash(type: FlashType, position: THREE.Vector3) {
-    flashEffectManager.spawnFlash(type, position);
+  function spawnFlash(
+    type: FlashType,
+    position: THREE.Vector3,
+    size?: number,
+    duration?: number,
+  ) {
+    flashEffectManager.spawnFlash(type, position, size, duration);
   }
 
   // === Обновление позиции и состояния машины (вызывать каждый кадр) ===
@@ -264,10 +269,10 @@ export function useGame() {
   function updateMagnet(deltaTime: number) {
     const car = carManager.getCar();
 
-    const enabled = usePlayerStore().isMagnetEnabled;
+    // const enabled = usePlayerStore().isMagnetEnabled;
 
     coinManager.applyMagnet(car, deltaTime);
-    coinManager.updateMagnetField(car, performance.now(), enabled);
+    // coinManager.updateMagnetField(car, performance.now(), enabled);
   }
 
   function resetJumps() {
@@ -312,6 +317,7 @@ export function useGame() {
       ...obstacleManager.getObstacles(),
     ]);
   }
+
   function findRootTaggedObject(obj: THREE.Object3D): THREE.Object3D {
     let current: THREE.Object3D | null = obj;
 
@@ -326,6 +332,7 @@ export function useGame() {
 
     return current;
   }
+
   function reset() {
     if (!carManager || !obstacleManager || !roadManager || !sceneRef) {
       console.warn("[useGame.reset] missing managers:", {
@@ -384,6 +391,7 @@ export function useGame() {
     // updateInteractiveItems(0, 0, UpdateMode.Destruction); // синхронизация
 
     playerStore.disableNitro();
+    playerStore.disableMagnet();
     playerStore.resetGameData();
     useProgressStore().resetScore();
     useProgressStore().resetDistance();

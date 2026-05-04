@@ -38,20 +38,18 @@ export const useProgressStore = defineStore("progressStore", () => {
   function calcScore(type_: string, amount_: number) {
     let points = 0;
 
-    if (type_ == "distance") {
-      points = amount_ * DISTANCE_MLT;
-    } else if (type_ == "golden") {
-      points = amount_ * GOLDEN_MLT;
-    } else if (type_ == "energon") {
-      points = amount_ * ENERGON_MLT;
-    } else if (type_ == "jump") {
-      points = amount_ * JUMP_MLT;
-    } else if (type_ == "consumeArmor") {
-      points = amount_ * OBSTACLE_CRUSHED_MLT;
-    } else if (type_ == "bulletHit") {
-      points = amount_ * OBSTACLE_CRUSHED_MLT;
+    const pointsMapper = {
+        distance: DISTANCE_MLT,
+        golden: GOLDEN_MLT,
+        energon: ENERGON_MLT,
+        jump: JUMP_MLT,
+        consumeArmor: OBSTACLE_CRUSHED_MLT,
+        bulletHit: OBSTACLE_CRUSHED_MLT,
     }
 
+    points = amount_ * pointsMapper[type_]
+
+    currentMultiplier.value = getScoreMultiplier();
     score.value += points * currentMultiplier.value;
 
     if (highScore.value != 0) {
@@ -65,6 +63,15 @@ export const useProgressStore = defineStore("progressStore", () => {
         highScore.value = score.value;
       }
     }
+  }
+
+  function getScoreMultiplier() {
+    let mplr = MULTI_BASE;
+    
+    if (playerStore.isNitroEnabled) mplr *= MULTI_GROW_NITRO;
+    // if (playerStore.isNitroEnabled) mplr *= 2;
+
+    return mplr;
   }
 
   function resetScore() {
