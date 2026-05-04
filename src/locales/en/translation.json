@@ -117,16 +117,16 @@
             "labels": {
                 "left": "left",
                 "right": "right",
+                "drop": "drop down",
                 "fire": "fire",
-                "pause": "pause",
-                "shop": "shop"
+                "pause": "pause"
             },
             "keys": {
                 "left": "a",
                 "right": "d",
+                "drop": "s",
                 "fire": "space",
-                "pause": "esc",
-                "shop": "b"
+                "pause": "esc"
             }
         },
         "about": {

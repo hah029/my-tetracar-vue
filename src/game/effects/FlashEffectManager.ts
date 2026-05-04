@@ -1,5 +1,8 @@
 import * as THREE from "three";
 import { CameraSystem } from "../camera/CameraSystem";
+import flashVertexShader from "@/game/shaders/flash/vertex.glsl";
+import flashFragmentShader from "@/game/shaders/flash/fragment.glsl";
+
 // Типы эффектов
 export type FlashType = "golden" | "energon" | "nitro" | "shield" | "bullet";
 
@@ -47,8 +50,8 @@ export class FlashEffectManager {
   spawnFlash(
     type: FlashType,
     position: THREE.Vector3,
-    duration = 100,
     size = 6,
+    duration = 100,
   ) {
     if (!this.scene) return;
 
@@ -62,44 +65,8 @@ export class FlashEffectManager {
         uColor: { value: this.getColor(type) },
       },
 
-      vertexShader: `
-        varying vec2 vUv;
-
-        void main() {
-          vUv = uv;
-
-          vec4 mvPosition = modelViewMatrix * vec4(position,1.0);
-          gl_Position = projectionMatrix * mvPosition;
-        }
-      `,
-
-      fragmentShader: `
-        uniform float uTime;
-        uniform vec3 uColor;
-
-        varying vec2 vUv;
-
-        void main() {
-
-          vec2 uv = vUv - 0.5;
-          float dist = length(uv);
-
-          float core = smoothstep(0.25, 0.0, dist);
-
-          float ring = smoothstep(0.42,0.38,dist)
-                     - smoothstep(0.52,0.48,dist);
-
-          float pulse = sin(uTime * 12.0) * 0.15;
-
-          float alpha =
-              core
-            + ring * (1.0 + pulse);
-
-          alpha *= (1.0 - uTime);
-
-          gl_FragColor = vec4(uColor, alpha);
-        }
-      `,
+      vertexShader: flashVertexShader,
+      fragmentShader: flashFragmentShader,
     });
 
     const mesh = new THREE.Mesh(new THREE.PlaneGeometry(size, size), material);

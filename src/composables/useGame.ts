@@ -127,8 +127,8 @@ export function useGame() {
   }
 
   // метод для вызова вспышки
-  function spawnFlash(type: FlashType, position: THREE.Vector3) {
-    flashEffectManager.spawnFlash(type, position);
+  function spawnFlash(type: FlashType, position: THREE.Vector3, size?: number, duration?: number) {
+    flashEffectManager.spawnFlash(type, position, size, duration);
   }
 
   // === Обновление позиции и состояния машины (вызывать каждый кадр) ===

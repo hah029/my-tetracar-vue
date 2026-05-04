@@ -51,10 +51,10 @@ export const useCommonStore = defineStore("common", () => {
   }
 
   const DESTROYED_ROLLDROP_WEIGHTS = {
-    golden_coin: 100,
+    golden_coin: 20,
     bullet: 20,
     shield_booster: 10,
-    energon_coin: 1,
+    energon_coin: 20,
     nitro_booster: 1,
   };
 
