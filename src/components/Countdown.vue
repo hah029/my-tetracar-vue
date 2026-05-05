@@ -23,8 +23,23 @@
     const count = ref(3);
     const foo = createNewText();
     const goMessage = computed(() => foo.makeText("gamePlay.goMessage"));
-    const showTraining = ref(true);
-    // const masterEnabled = ref(localStorage.getItem("masterEnabled") !== "0");
+
+    const showTraining = ref<boolean>(false); // начальное значение
+
+    // Запускаем запрос один раз при инициализации
+    window.platform.getPlayerDataByKey("isFirstEnter")
+    .then((value) => {
+        showTraining.value = value == null || value == true;
+    });
+
+    // Если нужно отслеживать изменения ключа, добавляем watch
+    watch(
+    () => window.platform.getPlayerDataByKey("isFirstEnter"),
+    (value) => {
+        showTraining.value = value == null || value == true;
+    }
+    );
+
 
     const displayText = computed(() => {
         if (count.value === 0) {
@@ -62,8 +77,12 @@
     );
 
     onMounted(() => {
-        gameStore.activeOverlay = 'trainingScreen';
-        // localStorage.setItem('lang', code);
+        if (showTraining.value === true) {
+            gameStore.activeOverlay = 'trainingScreen';
+        } else {
+            playNext();
+        }
+        // localStorage.setItem('alang', code);
         // if (gameStore.isFirstGame == true) {
         //     showTraining.value = true;
         //     // gameStore.activeOverlay = 'trainingScreen';

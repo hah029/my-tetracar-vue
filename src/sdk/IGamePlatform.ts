@@ -16,6 +16,8 @@ export interface IGamePlatform {
   getPlayerName(): any | null;
   getPlayerData(): any | null;
   setPlayerData(data: any): any | null;
+  getPlayerDataByKey(key: string): any | null;
+  setPlayerDataByKey(key: string, value: any): any | null;
   getPlayerStats(keys: Array<string> | null): any | null;
   setPlayerStats(stats: any | null): any | null;
   setLeaderboardScore(leaderboardName: string, score: number): Promise<void>;

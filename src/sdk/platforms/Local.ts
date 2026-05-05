@@ -99,6 +99,10 @@ export class LocalStoragePlatform implements IGamePlatform {
     return this.getPlayer().name;
   }
 
+  async getPlayerDataByKey(key: string) {
+    return key in this.getPlayer().data ? this.getPlayer().data[key] : null;
+  }
+
   async getPlayerData() {
     return this.getPlayer().data;
   }
@@ -108,6 +112,14 @@ export class LocalStoragePlatform implements IGamePlatform {
     player.data = data;
     this.savePlayer(player);
     return data;
+  }
+
+  async setPlayerDataByKey(key: string, value: any) {
+    const player = this.getPlayer();
+    player.data[key] = value;
+    this.savePlayer(player);
+
+    return player.data;
   }
 
   async getPlayerStats(keys: string[] | null) {

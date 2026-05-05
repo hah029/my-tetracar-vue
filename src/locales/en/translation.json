@@ -15,8 +15,8 @@
         "earn": {
             "title": "earn",
             "text": [
-                "score progress points",
-                "and leave rivals behind!"
+                "progress points -",
+                "reach the top!"
             ]
         },
         "collect": {
@@ -31,7 +31,8 @@
             "text": [
                 "ammo",
                 "armor",
-                "nitro"
+                "nitro",
+                "magnet"
             ]
         },
         "startButton": "let's go!"
@@ -49,6 +50,7 @@
             "armorEquipped": "armor equipped!",
             "maxArmor": "max armor reached!",
             "nitroActivated": "nitro activated!",
+            "magnetActivated": "magnet activated!",
             "ammoRefilled": "ammo refilled!",
             "maxAmmo": "max ammo reached!",
             "outOfAmmo": "out of ammo!",

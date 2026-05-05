@@ -128,6 +128,24 @@ export class YandexPlatform implements IGamePlatform {
     return data;
   }
 
+  async getPlayerDataByKey(key: string) {
+    if (!this.sdk) {
+        return null;
+      }
+    
+      const player = await this.sdk.getPlayer();
+
+      const dataPromise = player.getData();
+
+    if (!dataPromise) {
+      return null;
+    }
+
+    const data = await dataPromise;
+
+    return key in data ? data[key] : null;
+  }
+
   async setPlayerData(data: any) {
     if (!this.sdk) {
       return null;
@@ -145,6 +163,37 @@ export class YandexPlatform implements IGamePlatform {
 
     return result;
   }
+
+  async setPlayerDataByKey(key: string, value: any) {
+    if (!this.sdk) {
+        return null;
+      }
+    
+      const player = await this.sdk.getPlayer();
+
+      const dataPromiseReader = player.getData();
+
+    if (!dataPromiseReader) {
+      return null;
+    }
+
+    let data = await dataPromiseReader;
+    data[key] = value;
+
+    const dataPromiseWriter = player.setData(data);
+
+    if (!dataPromiseWriter) {
+        return null;
+    }
+      const result = await dataPromiseWriter;
+      return result;
+  }
+
+//   async setPlayerDataByKey(key: string, value: any) {
+//     const player = this.getPlayer();
+//     player.data[key] = value;
+//     this.savePlayer(player);
+//   }
 
   async getLeaderboardEntries(
     leaderboardName: string,
