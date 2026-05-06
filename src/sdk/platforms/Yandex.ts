@@ -42,6 +42,7 @@ export class YandexPlatform implements IGamePlatform {
     callbackObject: any,
     openCallbackMethod: Function,
     rewardCallbackMethod: Function,
+    closeCallbackMethod: Function,
   ): Promise<void> {
     if (!this.sdk) throw new Error("SDK not initialized");
 
@@ -55,7 +56,11 @@ export class YandexPlatform implements IGamePlatform {
         },
         onClose: () => console.log("Rewarded Ad closed"),
         onRewarded: () => rewardCallbackMethod(callbackObject),
-        onError: () => console.log("Rewarded Ad error"),
+        onError: () => {
+          console.log('Rewarded Ad error');
+          if (closeCallbackMethod !== null) {
+            closeCallbackMethod(callbackObject);
+          }},
       },
     });
   }

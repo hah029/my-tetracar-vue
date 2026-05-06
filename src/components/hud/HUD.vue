@@ -1,4 +1,11 @@
 <template>
+    <div class="controls-container">
+        <div class="buttons-zone">
+            <button id="btnAction1" class="action-btn" @click="handleShoot" @touchstart.prevent="handleShoot">💥 Стрельба</button>
+        </div>
+        <div ref="swipeZoneRef" class="swipe-zone"></div>
+    </div>
+
     <div class="game_hud">
 
         <div class="top_panel">
@@ -137,11 +144,47 @@
 
 
 <script setup lang="ts">
-    import { computed, watch, ref } from "vue";
+    import { computed, watch, ref, onMounted, onUnmounted, inject } from "vue";
     import { useGameState } from "@/store/gameState";
     import { usePlayerStore } from "@/store/playerStore";
     import { useProgressStore } from "@/store/progressStore";
     import { createNewText } from '@/helpers/functions';
+
+
+
+    // Получаем игровой экземпляр через inject (нужно настроить в родительском компоненте)
+    // Если game не предоставлен через provide, используем другой способ
+    const game = inject<any>('game');
+    
+    // Реф для зоны свайпов
+    const swipeZoneRef = ref<HTMLElement | null>(null);
+    
+    // Функция для обработки выстрела
+    const handleShoot = () => {
+        if (game && typeof game.shoot === 'function') {
+            game.shoot();
+        }
+    };
+    
+    // Регистрируем зону свайпов если доступен controls composable
+    // Этот блок нужно будет адаптировать под вашу архитектуру
+    onMounted(() => {
+        // Если game имеет controls и registerSwipeZone
+        if (game && game.controls && typeof game.controls.registerSwipeZone === 'function') {
+            game.controls.registerSwipeZone(swipeZoneRef.value);
+        }
+    });
+    
+    onUnmounted(() => {
+        if (game && game.controls && typeof game.controls.cleanup === 'function') {
+            game.controls.cleanup();
+        }
+    });
+
+
+
+
+
 
     const gameStore = useGameState();
     const playerStore = usePlayerStore();
@@ -707,4 +750,61 @@
             }
         }
     // #endregion
+
+
+
+    /* ПРИНЦИП РАЗДЕЛЕНИЯ ЗОН: Левая область для свайпов, Правая для кнопок */
+    .controls-container {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        display: flex;
+        z-index: 10;
+        pointer-events: auto; /* Важно: разрешаем взаимодействие с контролами */
+    }
+
+    /* Левая половина экрана (свайпы) */
+    .swipe-zone {
+        flex: 2;
+        background: rgba(0, 255, 255, 0.05); /* Едва заметная подсветка для понимания зоны (можно убрать) */
+        touch-action: none; /* Говорим браузеру: всю обработку жестов здесь отдаем JS */
+    }
+
+    /* Правая половина экрана (кнопки) */
+    .buttons-zone {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        gap: 30px;
+        background: rgba(255, 255, 255, 0.02);
+        touch-action: manipulation; /* Кнопкам мешать не будем */
+    }
+
+    /* Стили кнопок */
+    .action-btn {
+        width: 120px;
+        padding: 18px 0;
+        font-size: 1.8rem;
+        font-weight: bold;
+        border: none;
+        border-radius: 60px;
+        background: rgba(255, 255, 255, 0.2);
+        backdrop-filter: blur(12px);
+        color: white;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+        transition: transform 0.1s ease, background 0.2s;
+        cursor: pointer;
+        touch-action: manipulation;
+        font-family: monospace;
+        letter-spacing: 2px;
+    }
+
+    .action-btn:active {
+        transform: scale(0.94);
+        background: rgba(255, 255, 255, 0.5);
+    }
 </style>

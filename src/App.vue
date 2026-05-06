@@ -33,6 +33,7 @@
     import { SoundManager } from "./game/sound/SoundManager";
     import { DebugColliderVisualizer } from "./helpers/debug/DebugColliderVisualizer";
     import { GameStates } from "./game/core/GameState";
+    import { provide } from 'vue';
     // import { useProgressStore } from "./store/progressStore";
 
     const threeRoot = ref<HTMLDivElement | null>(null);
@@ -47,7 +48,19 @@
     //     handleParam.value = val_;
     // }    
 
-    useControls(game);
+    const controls = useControls(game);
+
+    // Добавляем controls в объект game для доступа из HUD
+    const gameWithControls = {
+        ...game,
+        controls
+    };
+
+    // Предоставляем game для дочерних компонентов
+    provide('game', gameWithControls);
+
+
+
 
     const getUIComponent = computed(() => {
         switch (gameState.currentState) {

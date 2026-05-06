@@ -13,6 +13,7 @@ export interface IGamePlatform {
         object: any,
         openCallbackMethod: Function,
         rewardCallback: Function,
+        closeCallback: Function,
     ): Promise<void>;
     // #endregion
 
