@@ -26,21 +26,20 @@
 
     const showTraining = ref<boolean>(false); // начальное значение
 
-    // Запускаем запрос один раз при инициализации
-    window.platform.getPlayerDataByKey("isFirstEnter")
-    .then((value) => {
+    // запускаем запрос один раз при инициализации
+    window.platform.getPlayerDataByKey("isFirstEnter").then((value) => {
         showTraining.value = value == null || value == true;
     });
 
-    // Если нужно отслеживать изменения ключа, добавляем watch
-    watch(
-    () => window.platform.getPlayerDataByKey("isFirstEnter"),
-    (value) => {
-        showTraining.value = value == null || value == true;
-    }
-    );
+    // если нужно отслеживать изменения ключа, добавляем watch
+    // watch(
+    //     () => window.platform.getPlayerDataByKey("isFirstEnter"),
+    //     (value) => {
+    //         showTraining.value = value == null || value == true;
+    //     }
+    // );
 
-
+    // #region - генерируем текст таймера
     const displayText = computed(() => {
         if (count.value === 0) {
             return goMessage.value;
@@ -64,7 +63,9 @@
             playNext();
         }, 650);
     };
+    // #endregion
 
+    // следим за оверлеем и запускаем таймер в случае его изменения
     watch(
         () => gameStore.activeOverlay,
         (newState) => {
@@ -77,11 +78,13 @@
     );
 
     onMounted(() => {
+        // gameStore.activeOverlay = 'trainingScreen';
         if (showTraining.value === true) {
             gameStore.activeOverlay = 'trainingScreen';
         } else {
             playNext();
-        }
+        };
+
         // localStorage.setItem('alang', code);
         // if (gameStore.isFirstGame == true) {
         //     showTraining.value = true;
