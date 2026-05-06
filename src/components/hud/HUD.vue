@@ -1,10 +1,10 @@
 <template>
-    <div class="controls-container">
+    <!-- <div class="controls-container">
         <div class="buttons-zone">
             <button id="btnAction1" class="action-btn" @click="handleShoot" @touchstart.prevent="handleShoot">💥 Стрельба</button>
         </div>
         <div ref="swipeZoneRef" class="swipe-zone"></div>
-    </div>
+    </div> -->
 
     <div class="game_hud">
 

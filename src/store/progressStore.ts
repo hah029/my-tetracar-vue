@@ -6,7 +6,7 @@ import { SoundManager } from "@/game/sound/SoundManager";
 import { Platform } from "@/sdk/Platform";
 
 export const useProgressStore = defineStore("progressStore", () => {
-const platform = Platform.getInstance();
+  const platform = Platform.getInstance();
   const playerStore = usePlayerStore();
   const currentDistance = ref(0);
   const score = ref(0);

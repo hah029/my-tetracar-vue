@@ -76,16 +76,11 @@
 
 
 <script setup lang="ts">
-    import { ref, onMounted, computed } from "vue";
+    import { computed } from "vue";
     import { useGameState } from "@/store/gameState";
-    import { SoundManager } from "@/game/sound/SoundManager";
-    import { GameStates } from "@/game/core/GameState";
     import { Platform } from "@/sdk/Platform";
     import { createNewText } from '@/helpers/functions';
     
-    // const gameStore = useGameState();
-    // const soundManager = SoundManager.getInstance();
-    // const count = ref(3);
     const foo = createNewText();
     const goMessage = computed(() => foo.makeText("trainingScreen.startButton"));
     const gameStore = useGameState();
@@ -105,46 +100,11 @@
     const text3_3 = computed(() => foo.getElementFromArray('trainingScreen.use.text', 2));
     const text3_4 = computed(() => foo.getElementFromArray('trainingScreen.use.text', 3));
 
-    // const displayText = computed(() => {
-    //     if (count.value === 0) {
-    //         return goMessage.value;
-    //     }
-    //     return count.value.toString();
-    // });
-
-    // const playNext = () => {
-    //     if (count.value === 0) {
-    //         soundManager.playOneShot("sfx_start");
-    //         setTimeout(() => {
-    //             gameStore.setState(GameStates.Play);
-    //         }, 650);
-    //         return;
-    //     };
-        
-    //     soundManager.playOneShot(`sfx_${count.value}`);
-        
-    //     setTimeout(() => {
-    //         count.value--;
-    //         playNext();
-    //     }, 650);
-    // };
-
-    // onMounted(() => {
-    //     playNext();
-    // });
-    
-
     async function goMessageAction() {
         await Platform.getInstance().setPlayerDataByKey("isFirstEnter", false);
+        gameStore.setFirstGameIndicator(false);
         gameStore.activeOverlay = null;
-    }
-
-    // const showTraining = computed(() => {
-    //     let isFirstEnter: any;
-    //     window.platform.getPlayerDataByKey("isFirstEnter").then((value: any) => isFirstEnter = value);
-    //     return isFirstEnter == null || isFirstEnter == true
-    // });
-
+    };
 </script>
 
 

@@ -38,10 +38,10 @@ async function init() {
 		if (playerIsAuthorized) {
 			const score = await platform.getPlayerDataByKey("highScore");
             console.log('подтянули очки', score);
-            if (score) {
-                await platform.setLeaderboardScore('debugLeaderboard1', score);
-                console.log('перезаписали очки');
-            }
+            // if (score) {
+            // }
+            await platform.setLeaderboardScore('debugLeaderboard1', score);
+            console.log('перезаписали очки');
 
 		} else {
 			console.log('ты не авторизован, нельзя тебе в лидерборд');			
