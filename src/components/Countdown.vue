@@ -16,6 +16,7 @@
     import { SoundManager } from "@/game/sound/SoundManager";
     import { GameStates } from "@/game/core/GameState";
     import { createNewText } from '@/helpers/functions';
+    import { Platform } from "@/sdk/Platform";
     import TrainingScreen from "@/components/TrainingScreen.vue";
 
     const gameStore = useGameState();
@@ -27,7 +28,7 @@
     const showTraining = ref<boolean>(false); // начальное значение
 
     // запускаем запрос один раз при инициализации
-    window.platform.getPlayerDataByKey("isFirstEnter").then((value) => {
+    Platform.getInstance()!.getPlayerDataByKey("isFirstEnter").then((value: any) => {
         showTraining.value = value == null || value == true;
     });
 
@@ -78,12 +79,12 @@
     );
 
     onMounted(() => {
-        // gameStore.activeOverlay = 'trainingScreen';
-        if (showTraining.value === true) {
-            gameStore.activeOverlay = 'trainingScreen';
-        } else {
-            playNext();
-        };
+        gameStore.activeOverlay = 'trainingScreen';
+        // if (showTraining.value === true) {
+        //     gameStore.activeOverlay = 'trainingScreen';
+        // } else {
+        //     playNext();
+        // };
 
         // localStorage.setItem('alang', code);
         // if (gameStore.isFirstGame == true) {

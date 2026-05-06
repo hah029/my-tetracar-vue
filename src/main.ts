@@ -6,10 +6,7 @@ import I18NextVue from "i18next-vue";
 import App from "./App.vue";
 import { locales } from "./locales";
 import { resolveAutoLanguage } from "./helpers/i18n";
-import { PlatformFactory } from './sdk/PlatformFactory';
-// import type { IGamePlatform } from './sdk/IGamePlatform';
-
-// let platform: IGamePlatform | null = null;
+import { Platform, type IGamePlatform } from './sdk/Platform';
 
 // что выбрал пользователь
 const savedLang = localStorage.getItem("lang") || "auto";
@@ -19,8 +16,7 @@ let initialLang = savedLang === "auto" ? resolveAutoLanguage() : savedLang;
 
 
 async function init() {
-	const platform = PlatformFactory.getPlatform();
-	window.platform = platform; 
+	const platform = Platform.getInstance();
     	
     if (platform !== null) {
 	   	await platform.init();
@@ -40,9 +36,13 @@ async function init() {
 
 		// пишем в лидерборд очки
 		if (playerIsAuthorized) {
-			const score = Math.floor(Math.random() * 10000000);
-			await platform.setLeaderboardScore('debugLeaderboard1', score);
-			console.log('перезаписали очки');
+			const score = await platform.getPlayerDataByKey("highScore");
+            console.log('подтянули очки', score);
+            if (score) {
+                await platform.setLeaderboardScore('debugLeaderboard1', score);
+                console.log('перезаписали очки');
+            }
+
 		} else {
 			console.log('ты не авторизован, нельзя тебе в лидерборд');			
 		};
@@ -95,9 +95,9 @@ async function init() {
 
 	if (p !== null) {
 		p[0].addEventListener('click', () => {
-			console.log('debug buy, window.platform = ' + window.platform);
+			console.log('debug buy, platform = ' + platform);
 
-			window.platform.buyShopItem('bulletPack1', (purchase) => {
+			platform!.buyShopItem('bulletPack1', (purchase) => {
 				console.log('купили, purchase = ' + (purchase ? JSON.stringify(purchase) : 'null'));
 				// купили, purchase = {"productID":"bulletPack1","purchaseToken":"b4032de6-8255-42f8-a2cd-a13bef97d6b4"}			
 				// здесь совершаем начисление товара purchase.productID игроку

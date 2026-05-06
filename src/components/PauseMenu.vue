@@ -145,7 +145,7 @@
         showHideAllPauseElements(false, true);
         setTimeout(() => {
             // возвращаем назад старое значение рекорда, если игрок не доиграл до конца (заблаговременно вышел)
-            progressStore.returnBackOldHighScore();
+            progressStore.restoreProgress();
             gameStore.setState(GameStates.Menu);
         }, 400);
         setTimeout(() => {

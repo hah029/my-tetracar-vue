@@ -68,7 +68,8 @@ export const useGameState = defineStore("gameState", () => {
         break;
 
       case GameStates.Gameover:
-        progress.saveHighScore();
+        // progress.saveHighScore();
+        progress.saveProgress();
         sound.playMusic("music_gameover");
         break;
 
@@ -142,6 +143,7 @@ export const useGameState = defineStore("gameState", () => {
   }
 
   function endGame() {
+    playerStore.resetPlayerAchievements();
     playerStore.resetPlayerAchievements();
     setState(GameStates.Gameover);
   }

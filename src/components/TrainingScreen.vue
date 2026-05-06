@@ -80,6 +80,7 @@
     import { useGameState } from "@/store/gameState";
     import { SoundManager } from "@/game/sound/SoundManager";
     import { GameStates } from "@/game/core/GameState";
+    import { Platform } from "@/sdk/Platform";
     import { createNewText } from '@/helpers/functions';
     
     // const gameStore = useGameState();
@@ -131,9 +132,10 @@
     // onMounted(() => {
     //     playNext();
     // });
+    
 
     async function goMessageAction() {
-        await window.platform.setPlayerDataByKey("isFirstEnter", false);
+        await Platform.getInstance().setPlayerDataByKey("isFirstEnter", false);
         gameStore.activeOverlay = null;
     }
 
