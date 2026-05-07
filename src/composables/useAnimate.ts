@@ -6,7 +6,6 @@ import { EffectComposer } from "three/examples/jsm/postprocessing/EffectComposer
 // composables
 import { useGameState } from "@/store/gameState";
 import { usePlayerStore } from "@/store/playerStore";
-import { useProgressStore } from "@/store/progressStore";
 import { useGame } from "./useGame";
 // managers
 import { CameraSystem } from "@/game/camera/CameraSystem";

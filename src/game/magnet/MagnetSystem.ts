@@ -61,6 +61,9 @@ export class MagnetSystem {
 
         item.position.addScaledVector(dir, force * dt);
         item.collider.center.copy(item.position);
+      } else {
+        // Если предмет уже очень близко к машине, считаем, что он подобран
+        // Коллизия обработается в checkItemsCollision
       }
 
       this.updateMagnetBeam(item, carPos, now);
@@ -106,7 +109,9 @@ export class MagnetSystem {
       for (let i = items.length - 1; i >= 0; i--) {
         const item = items[i];
         if (!item) continue;
-        if (types.every((T) => !(item instanceof T))) continue;
+        // Проверяем, что item является экземпляром хотя бы одного из переданных типов
+        const isAllowedType = types.some((T) => item instanceof T);
+        if (!isAllowedType) continue;
 
         const distSq = item.position.distanceToSquared(carPos);
 

@@ -138,7 +138,7 @@ export class CarPhysics {
       .getEdges()
       .filter((e) => e instanceof RoadEdge) as RoadEdge[];
 
-    CubePhysics.updateCubes(
+    CubePhysics.update(
       cubes,
       this.physicsConfig,
       edges,

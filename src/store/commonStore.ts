@@ -10,7 +10,7 @@ export const useCommonStore = defineStore("common", () => {
   const BASE_SEGMENTS_ZPOS = -60;
   const ITEMS_REMOVING_ZPOS = 10;
   // шаг дистанции по нарастанию сложности (влияет на выборку доступных сегментов)
-  const BASE_SEGMENT_DIFFICULTY_STEP = 150;
+  const BASE_SEGMENT_DIFFICULTY_STEP = 50;
 
   // базовая "стоимость" любой монеты
   const BASE_COIN_VALUE = 1;

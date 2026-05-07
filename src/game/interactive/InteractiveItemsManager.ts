@@ -56,9 +56,11 @@ export class InteractiveItemsManager {
     this.coinManager = CoinManager.getInstance();
     this.boosterManager = BoosterManager.getInstance();
     this.destructionManager = DestructionManager.getInstance();
+    this.magnetSystem.initialize(scene);
 
     this.segmentQueue = new SegmentQueue(() => {
       const distance = useProgressStore().getDistance();
+      console.log(distance);
       return Math.floor(distance / this.difficultyStep) + 1;
     });
   }

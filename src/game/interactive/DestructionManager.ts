@@ -49,7 +49,9 @@ export class DestructionManager {
 
     CubePhysics.update(flyingItems, this.physicsConfig, edges, deltaTime);
 
+    // Обновляем коллайдеры летящих айтемов после физики
     for (let item of flyingItems) {
+      item.collider.center.copy(item.position);
       this.tryLand(item);
     }
   }
