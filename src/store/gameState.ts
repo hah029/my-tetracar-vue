@@ -7,12 +7,17 @@ import { useProgressStore } from "./progressStore";
 import { GameStates } from "@/game/core/GameState";
 import { SoundManager } from "@/game/sound/SoundManager";
 
-type UIOverlay = null | "settings" | "quitConfirm" | "leaderBoards" | "trainingScreen";
+type UIOverlay =
+  | null
+  | "settings"
+  | "quitConfirm"
+  | "leaderBoards"
+  | "trainingScreen";
 
 export const useGameState = defineStore("gameState", () => {
   // ===== STATE =====
   const currentState = ref<GameStates>(GameStates.Preloader);
-  const isDebug = ref(false);
+  const isDebug = ref(true);
   const isPreloaderShown = ref(true);
   const isFirstGame = ref(false);
   const activeOverlay = ref<UIOverlay>(null);
@@ -24,18 +29,17 @@ export const useGameState = defineStore("gameState", () => {
   // ===== FSM: allowed transitions =====
   const transitions: Record<GameStates, GameStates[]> = {
     [GameStates.Preloader]: [GameStates.Menu],
-
     [GameStates.Menu]: [GameStates.Countdown],
-
     [GameStates.Countdown]: [GameStates.Play],
-
     [GameStates.Play]: [GameStates.Pause, GameStates.Gameover],
-
     [GameStates.Pause]: [GameStates.Play, GameStates.Menu],
-
     [GameStates.Gameover]: [GameStates.Menu, GameStates.Countdown],
-
-    [GameStates.QuitConfirm]: [GameStates.Menu, GameStates.Play, GameStates.Pause, GameStates.Gameover],
+    [GameStates.QuitConfirm]: [
+      GameStates.Menu,
+      GameStates.Play,
+      GameStates.Pause,
+      GameStates.Gameover,
+    ],
   };
 
   // ===== HOOKS =====
@@ -126,7 +130,7 @@ export const useGameState = defineStore("gameState", () => {
 
   function setFirstGameIndicator(value_: boolean) {
     isFirstGame.value = value_;
-  };
+  }
 
   // ===== PUBLIC API =====
 

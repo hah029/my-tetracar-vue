@@ -253,19 +253,6 @@ export function useGame() {
     }));
   }
 
-  // function updateMagnet(deltaTime: number) {
-  //   const car = carManager.getCar();
-  //   magnetSystem.updateMagnetedItems(
-  //     car,
-  //     magnetSystem.applyMagnet(car, interactiveManager.getItems(), [
-  //       CoinItem,
-  //       BoosterItem,
-  //     ]),
-  //     deltaTime,
-  //     performance.now(),
-  //   );
-  // }
-
   function resetJumps() {
     if (!obstacleManager) return;
     obstacleManager.getJumps().forEach((jump) => {

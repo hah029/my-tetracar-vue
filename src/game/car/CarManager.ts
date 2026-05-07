@@ -19,8 +19,8 @@ export class CarManager {
   private nitroLeft: THREE.Mesh | null = null;
   private nitroRight: THREE.Mesh | null = null;
   private nitroMaterial: THREE.ShaderMaterial | null = null;
-  private shieldMesh: THREE.Mesh | null = null;
-  private shieldMaterial: THREE.ShaderMaterial | null = null;
+  // private shieldMesh: THREE.Mesh | null = null;
+  // private shieldMaterial: THREE.ShaderMaterial | null = null;
 
   private constructor() {}
 
@@ -228,12 +228,12 @@ export class CarManager {
   public enableShield(): void {
     this.car?.enableShield();
 
-    if (this.shieldMesh) this.shieldMesh.visible = true;
+    // if (this.shieldMesh) this.shieldMesh.visible = true;
   }
 
   public disableShield(): void {
     this.car?.disableShield();
 
-    if (this.shieldMesh) this.shieldMesh.visible = false;
+    // if (this.shieldMesh) this.shieldMesh.visible = false;
   }
 }

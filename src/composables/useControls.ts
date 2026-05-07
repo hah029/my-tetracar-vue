@@ -179,14 +179,17 @@ export function useControls(game: ReturnType<typeof useGame>) {
   function handleKeyUp(e: KeyboardEvent) {
     // Убираем клавишу из множества обработанных при отпускании
     processedKeys.delete(e.code);
+    if (e.key !== controlKeys.ESCAPE) e.preventDefault();
 
-    if (e.code === controlKeys.NITRO) {
-      e.preventDefault();
-      playerStore.disableNitro();
-    }
-    if (e.code === controlKeys.DOWN || e.code === controlKeys.DOWN_ALT) {
-      e.preventDefault();
-      playerStore.forceJump = false;
+    switch (e.code) {
+      case controlKeys.NITRO:
+        playerStore.disableNitro();
+        CarManager.getInstance().disableNitro();
+        break;
+      case controlKeys.DOWN:
+      case controlKeys.DOWN_ALT:
+        playerStore.forceJump = false;
+        break;
     }
   }
 

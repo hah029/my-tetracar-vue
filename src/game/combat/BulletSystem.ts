@@ -4,6 +4,7 @@ import { Car } from "../car";
 import { ObstacleManager } from "../interactive/obstacle";
 import { useProgressStore } from "@/store/progressStore";
 import { useCommonStore } from "@/store/commonStore";
+import { FlashEffectManager } from "../effects/FlashEffectManager";
 
 export class BulletSystem {
   private static instance: BulletSystem | null = null;
@@ -70,6 +71,10 @@ export class BulletSystem {
           this.bullets.splice(i, 1);
 
           removed = true;
+          FlashEffectManager.getInstance().spawnExplosion(
+            "bullet",
+            bullet.position,
+          );
           break;
         }
       }

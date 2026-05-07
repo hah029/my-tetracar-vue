@@ -141,8 +141,6 @@ export class InteractiveItemsManager {
       const length = this.spawnSegment(deltaTime, speed, this.worldFrontZ);
       this.worldFrontZ = this.worldFrontZ - length;
       spawned++;
-
-      console.log("spawned", spawned, this.worldFrontZ);
     }
   }
 

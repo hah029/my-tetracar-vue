@@ -19,15 +19,23 @@ export class CarCollider {
     this.config = config;
   }
 
-  public updateFromObject(obj: THREE.Object3D): void {
-    // Принудительно обновляем мировые матрицы всех дочерних объектов
-    obj.updateWorldMatrix(false, true);
+  public updateFromCubes(cubes: THREE.Object3D[]): void {
+    if (cubes.length === 0) return;
 
-    this.boundingBox.setFromObject(obj);
+    // Принудительно обновляем мировые матрицы всех кубиков
+    cubes.forEach((cube) => cube.updateWorldMatrix(false, true));
+
+    // Создаём временный Box3, расширяя его по каждому кубику
+    const tempBox = new THREE.Box3();
+    this.boundingBox.makeEmpty();
+
+    cubes.forEach((cube) => {
+      tempBox.setFromObject(cube);
+      this.boundingBox.union(tempBox);
+    });
 
     const size = new THREE.Vector3();
     const center = new THREE.Vector3();
-
     this.boundingBox.getSize(size);
     this.boundingBox.getCenter(center);
 
@@ -47,16 +55,51 @@ export class CarCollider {
     this.collider.min.copy(colliderCenter.clone().sub(halfSize));
     this.collider.max.copy(colliderCenter.clone().add(halfSize));
 
-    // Обновляем отладочный меш, если он есть
+    // Обновляем отладочный меш
     if (this.debugMesh) {
-      const currentSize = new THREE.Vector3();
-      const currentCenter = new THREE.Vector3();
-      this.collider.getSize(currentSize);
-      this.collider.getCenter(currentCenter);
-      this.debugMesh.scale.copy(currentSize);
-      this.debugMesh.position.copy(currentCenter);
+      this.debugMesh.scale.copy(colliderSize);
+      this.debugMesh.position.copy(colliderCenter);
     }
   }
+
+  // public updateFromObject(obj: THREE.Object3D): void {
+  //   // Принудительно обновляем мировые матрицы всех дочерних объектов
+  //   obj.updateWorldMatrix(false, true);
+
+  //   this.boundingBox.setFromObject(obj);
+
+  //   const size = new THREE.Vector3();
+  //   const center = new THREE.Vector3();
+
+  //   this.boundingBox.getSize(size);
+  //   this.boundingBox.getCenter(center);
+
+  //   const colliderSize = new THREE.Vector3(
+  //     size.x * this.config.shrinkX,
+  //     size.y * this.config.heightFactor,
+  //     size.z * this.config.shrinkZ,
+  //   );
+
+  //   const colliderCenter = new THREE.Vector3(
+  //     center.x,
+  //     center.y - this.config.yOffset,
+  //     center.z,
+  //   );
+
+  //   const halfSize = colliderSize.clone().multiplyScalar(0.4);
+  //   this.collider.min.copy(colliderCenter.clone().sub(halfSize));
+  //   this.collider.max.copy(colliderCenter.clone().add(halfSize));
+
+  //   // Обновляем отладочный меш, если он есть
+  //   if (this.debugMesh) {
+  //     const currentSize = new THREE.Vector3();
+  //     const currentCenter = new THREE.Vector3();
+  //     this.collider.getSize(currentSize);
+  //     this.collider.getCenter(currentCenter);
+  //     this.debugMesh.scale.copy(currentSize);
+  //     this.debugMesh.position.copy(currentCenter);
+  //   }
+  // }
 
   public getCollider(): THREE.Box3 {
     return this.collider;
@@ -64,6 +107,9 @@ export class CarCollider {
 
   public checkObstacleCollision(obstacle: THREE.Object3D): boolean {
     // Логируем только для EnemyCar
+
+    console.log("checkObstacleCollision", obstacle);
+
     const isEnemyCar = obstacle.constructor.name === "EnemyCar";
 
     // Попробуем получить коллайдер через getCollider, если он есть
@@ -90,6 +136,10 @@ export class CarCollider {
     }
 
     const intersects = this.collider.intersectsBox(obstacleBox);
+
+    if (intersects) {
+      console.log(intersects);
+    }
     return intersects;
   }
 

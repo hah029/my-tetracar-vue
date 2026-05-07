@@ -3,6 +3,9 @@ import { CameraSystem } from "../camera/CameraSystem";
 import flashVertexShader from "@/game/shaders/flash/vertex.glsl";
 import flashFragmentShader from "@/game/shaders/flash/fragment.glsl";
 
+import explosionVertexShader from "@/game/shaders/explosion/vertex.glsl";
+import explosionFragmentShader from "@/game/shaders/explosion/fragment.glsl";
+
 // Типы эффектов
 export type FlashType =
   | "golden"
@@ -78,7 +81,43 @@ export class FlashEffectManager {
       fragmentShader: flashFragmentShader,
     });
 
-    const mesh = new THREE.Mesh(new THREE.PlaneGeometry(size, size), material);
+    const mesh = new THREE.Mesh(new THREE.CircleGeometry(size), material);
+
+    mesh.position.copy(position);
+    mesh.position.y += 0.5;
+
+    this.scene.add(mesh);
+
+    this.effects.push({
+      mesh,
+      createdAt: performance.now(),
+      duration,
+    });
+  }
+
+  spawnExplosion(
+    type: FlashType,
+    position: THREE.Vector3,
+    size = 6,
+    duration = 500,
+  ) {
+    if (!this.scene) return;
+
+    const material = new THREE.ShaderMaterial({
+      transparent: true,
+      depthWrite: false,
+      blending: THREE.AdditiveBlending,
+
+      uniforms: {
+        uTime: { value: 0 },
+        uColor: { value: this.getColor(type) },
+      },
+
+      vertexShader: explosionVertexShader,
+      fragmentShader: explosionFragmentShader,
+    });
+
+    const mesh = new THREE.Mesh(new THREE.CircleGeometry(size), material);
 
     mesh.position.copy(position);
     mesh.position.y += 0.5;
