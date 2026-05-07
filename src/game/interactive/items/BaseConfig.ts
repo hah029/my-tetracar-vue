@@ -12,5 +12,6 @@ export const ITEM_GEOMETRY_CONFIG: GeometryConfig = {
 
 export const ENERGON_GEOMETRY_CONFIG: GeometryConfig = {
   scale: [SIZE, SIZE, SIZE],
-  modelUrl: energonUrl,
+  // modelUrl: energonUrl,
+  modelUrl: cubeUrl,
 };

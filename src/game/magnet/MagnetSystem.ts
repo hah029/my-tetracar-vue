@@ -122,7 +122,6 @@ export class MagnetSystem {
             this.scene.add(line);
             item.userData.magnetLine = line;
           }
-          // items.splice(i, 1);
         }
       }
     }

@@ -60,7 +60,6 @@ export class InteractiveItemsManager {
 
     this.segmentQueue = new SegmentQueue(() => {
       const distance = useProgressStore().getDistance();
-      console.log(distance);
       return Math.floor(distance / this.difficultyStep) + 1;
     });
   }
@@ -83,7 +82,7 @@ export class InteractiveItemsManager {
     const items = this.getItems();
 
     // update magnet
-    this.magnetSystem.applyMagnet(car, items, [CoinItem, BoosterItem]);
+    this.magnetSystem.applyMagnet(car, items, usePlayerStore().magnetTypes);
     this.magnetSystem.updateMagnetedItems(
       car,
       items.filter((item) => item.userData.status === "magnetized"),
@@ -131,7 +130,7 @@ export class InteractiveItemsManager {
 
   private ensureWorldFilled(deltaTime: number, speed: number) {
     // 🚫 защита от спама за кадр
-    const MAX_SPAWNS_PER_FRAME = 2;
+    const MAX_SPAWNS_PER_FRAME = 1;
     let spawned = 0;
 
     const minZ = useCommonStore().BASE_SEGMENTS_ZPOS * 1.2;
@@ -142,6 +141,8 @@ export class InteractiveItemsManager {
       const length = this.spawnSegment(deltaTime, speed, this.worldFrontZ);
       this.worldFrontZ = this.worldFrontZ - length;
       spawned++;
+
+      console.log("spawned", spawned, this.worldFrontZ);
     }
   }
 
@@ -388,7 +389,11 @@ export class InteractiveItemsManager {
   public reset() {
     this.obstacleManager.reset();
 
-    this.items.forEach((item) => this.scene.remove(item));
+    this.items.forEach((item) => {
+      if (item.userData.magnetLine) this.scene.remove(item.userData.magnetLine);
+
+      this.scene.remove(item);
+    });
     this.items = [];
 
     this.segmentQueue.reset();

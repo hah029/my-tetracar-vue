@@ -331,6 +331,7 @@ export function useGame() {
     roadManager.clear();
     collisionSystem.reset();
     bulletSystem.reset();
+    flashEffectManager.clear();
 
     // Дополнительная очистка: удаляем оставшиеся объекты по тегам
     if (sceneRef) {
@@ -442,7 +443,7 @@ export function useGame() {
       coins *= playerStore.isNitroEnabled
         ? playerStore.energonNitroMultiplier
         : 1;
-      progressStore.addGolden(coins);
+      progressStore.addEnergon(coins);
       playerStore.makeEventHappened("addEnergon");
 
       soundManager.play("sfx_add_energon");
@@ -504,13 +505,7 @@ export function useGame() {
     }
 
     if (collision.impactSubject instanceof MagnetItem) {
-      playerStore.enableMagnet();
-
-      if (!playerStore.isShieldEnabled) {
-        playerStore.enableShield();
-        CarManager.getInstance().enableShield();
-      }
-
+      playerStore.enableMagnet(collision.impactSubject.userData.magnetTypes!);
       playerStore.addNewMsg("magnetActivated");
       playerStore.makeEventHappened("addMagnet");
       spawnFlash("magnet", carPos);

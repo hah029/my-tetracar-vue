@@ -3,6 +3,7 @@ import { Bullet } from "./Bullet";
 import { Car } from "../car";
 import { ObstacleManager } from "../interactive/obstacle";
 import { useProgressStore } from "@/store/progressStore";
+import { useCommonStore } from "@/store/commonStore";
 
 export class BulletSystem {
   private static instance: BulletSystem | null = null;
@@ -32,7 +33,7 @@ export class BulletSystem {
     const bullet = new Bullet(lane);
 
     bullet.position.copy(car.position);
-    bullet.position.y = 0.15;
+    bullet.position.y = car.position.y + useCommonStore().BASE_ITEM_YPOS;
     bullet.position.z -= 1;
 
     this.scene.add(bullet);
@@ -51,7 +52,7 @@ export class BulletSystem {
 
       // дополнительно увеличиваем бокс коллайдера в два раза
       // (чтобы уменьшить шанс пролета пули сквозь препятствие)
-      this.bulletBox.expandByScalar(2);
+      this.bulletBox.expandByScalar(1.1);
 
       let removed = false;
       for (const obstacle of obstacles) {
@@ -62,8 +63,8 @@ export class BulletSystem {
         this.obstacleBox.setFromObject(obstacle);
 
         if (this.bulletBox.intersectsBox(this.obstacleBox)) {
-            obstacle.destroy(bullet.position.clone(), true);  // а то компилятор ругался
-            progressStore.calcScore('bulletHit', 1);
+          obstacle.destroy(bullet.position.clone(), true); // а то компилятор ругался
+          progressStore.calcScore("bulletHit", 1);
 
           this.scene.remove(bullet);
           this.bullets.splice(i, 1);

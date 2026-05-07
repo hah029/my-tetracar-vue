@@ -31,6 +31,7 @@ export const usePlayerStore = defineStore("playerStore", () => {
   const magnetRadius = ref(10);
   const magnetForce = ref(20);
   const magnetMaxTargets = ref(8);
+  const magnetTypes = ref([] as any[]);
 
   // armor
   const isShieldEnabled = ref(false);
@@ -78,13 +79,15 @@ export const usePlayerStore = defineStore("playerStore", () => {
 
   // #region - работаем с нитро
   // включаем нитро
-  function enableMagnet() {
+  function enableMagnet(types: any[]) {
     isMagnetEnabled.value = true;
+    magnetTypes.value = types;
   }
   // отключаем нитро
   function disableMagnet() {
     isMagnetEnabled.value = false;
     magnetTimer.value = BASE_MAGNET_TIMER;
+    magnetTypes.value = [];
   }
   // #endregion
 
@@ -217,6 +220,7 @@ export const usePlayerStore = defineStore("playerStore", () => {
     magnetRadius,
     magnetForce,
     magnetMaxTargets,
+    magnetTypes,
 
     // methods
     resetPlayerAchievements,

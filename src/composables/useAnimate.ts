@@ -6,6 +6,7 @@ import { EffectComposer } from "three/examples/jsm/postprocessing/EffectComposer
 // composables
 import { useGameState } from "@/store/gameState";
 import { usePlayerStore } from "@/store/playerStore";
+import { useProgressStore } from "@/store/progressStore";
 import { useGame } from "./useGame";
 // managers
 import { CameraSystem } from "@/game/camera/CameraSystem";
@@ -29,7 +30,7 @@ export function GameLoop(
 ) {
   const gameState = useGameState();
   const playerStore = usePlayerStore();
-  // const progressStore = useProgressStore();
+  const progressStore = useProgressStore();
 
   // ----------------------------
   // показываем / скрываем FPS-панель через Ctrl+Q
@@ -108,6 +109,7 @@ export function GameLoop(
       if (isGameOver) {
         updateDestruction(deltaTime, 0);
       } else {
+        progressStore.addDistance(deltaTime * currentSpeed);
         game.updateInteractiveItems(
           deltaTime,
           currentSpeed,

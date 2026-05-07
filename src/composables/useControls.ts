@@ -7,6 +7,7 @@ import { CarManager } from "@/game/car";
 import { GameStates } from "@/game/core/GameState";
 
 import Hammer from "hammerjs";
+import { BaseItem } from "@/game/interactive/items/BaseItem";
 
 export function useControls(game: ReturnType<typeof useGame>) {
   const gameStore = useGameState();
@@ -155,7 +156,7 @@ export function useControls(game: ReturnType<typeof useGame>) {
         break;
 
       case controlKeys.MAGNET:
-        usePlayerStore().enableMagnet();
+        usePlayerStore().enableMagnet([BaseItem]);
         break;
 
       case controlKeys.ESCAPE:

@@ -24,20 +24,20 @@ export class Energon extends CoinItem {
     this.value = value;
   }
 
-  async build(material: MaterialConfig | null = null): Promise<void> {
-    const config = {
-      ...ENERGON_CONFIG,
-      useTexture: material != null,
-      materialConfig: material != null ? material : undefined,
-    };
+  // async build(material: MaterialConfig | null = null): Promise<void> {
+  //   const config = {
+  //     ...ENERGON_CONFIG,
+  //     useTexture: material != null,
+  //     materialConfig: material != null ? material : undefined,
+  //   };
 
-    try {
-      this.cube = await CubeBuilder.build(config);
-      this.cube.position.copy(this.initialPosition);
-      this.add(this.cube);
-    } catch (error) {
-      console.error("[Energon] build error:", error);
-      throw error;
-    }
-  }
+  //   try {
+  //     this.cube = await CubeBuilder.build(config);
+  //     this.cube.position.copy(this.initialPosition);
+  //     this.add(this.cube);
+  //   } catch (error) {
+  //     console.error("[Energon] build error:", error);
+  //     throw error;
+  //   }
+  // }
 }
