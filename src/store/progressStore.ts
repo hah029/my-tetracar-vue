@@ -3,13 +3,14 @@ import { usePlayerStore } from "@/store/playerStore";
 import { defineStore } from "pinia";
 import { ref } from "vue";
 import { SoundManager } from "@/game/sound/SoundManager";
+import { Platform } from "@/sdk/Platform";
 
 export const useProgressStore = defineStore("progressStore", () => {
+  const platform = Platform.getInstance();
   const playerStore = usePlayerStore();
   const currentDistance = ref(0);
   const score = ref(0);
   const highScore = ref(0);
-  const oldHighScore = ref(0);
   const goldens = ref(0);
   const energons = ref(0);
   const currentMultiplier = ref(1);
@@ -58,7 +59,7 @@ export const useProgressStore = defineStore("progressStore", () => {
           isNewRecord.value = true;
           playerStore.addNewMsg("newRecord");
           soundManager.play("sfx_new_record");
-          oldHighScore.value = highScore.value; // запоминаем предыдущий рекорд
+        //   oldHighScore.value = highScore.value; // запоминаем предыдущий рекорд
         }
         highScore.value = score.value;
       }
@@ -78,8 +79,10 @@ export const useProgressStore = defineStore("progressStore", () => {
     score.value = 0;
   }
 
-  function returnBackOldHighScore() {
-    highScore.value = oldHighScore.value;
+  function restoreHighScore() {
+    platform.getPlayerDataByKey("highScore").then((value) => {
+        if (value) highScore.value = value;
+    });
     resetNewRecord();
   }
 
@@ -87,6 +90,7 @@ export const useProgressStore = defineStore("progressStore", () => {
     isNewRecord.value = false;
     if (score.value > highScore.value) {
       highScore.value = score.value;
+      platform.setPlayerDataByKey("highScore", highScore.value)
     }
   }
 
@@ -126,6 +130,20 @@ export const useProgressStore = defineStore("progressStore", () => {
     energons.value += amount;
     calcScore("energon", amount);
   }
+
+  function saveCoins(): void {
+      platform.setPlayerDataByKey("goldens", goldens.value);
+      platform.setPlayerDataByKey("energons", energons.value);
+  }
+
+  function restoreCoins() {
+    platform.getPlayerDataByKey("goldens").then((value) => {
+        if (value) goldens.value = value;
+    });
+    platform.getPlayerDataByKey("energons").then((value) => {
+        if (value) energons.value = value;
+    });
+  }
   // #endregion
 
   // #region - дистанция
@@ -156,6 +174,20 @@ export const useProgressStore = defineStore("progressStore", () => {
   function getDistanceInCubes(): number {
     return Math.floor(currentDistance.value);
   }
+
+  function saveProgress(): void {
+    saveCoins();
+    saveHighScore();
+
+    // save to leaderboad
+  }
+  
+  function restoreProgress(): void {
+    restoreHighScore();
+    restoreCoins();
+
+    // restore local leaderboad
+  }
   // #endregion
 
   return {
@@ -169,7 +201,6 @@ export const useProgressStore = defineStore("progressStore", () => {
 
     calcScore,
     resetScore,
-    returnBackOldHighScore,
     saveHighScore,
     resetNewRecord,
     riseMultiplier,
@@ -184,5 +215,8 @@ export const useProgressStore = defineStore("progressStore", () => {
     addDistance,
     getDistance,
     getDistanceInCubes,
+
+    restoreProgress,
+    saveProgress,
   };
 });

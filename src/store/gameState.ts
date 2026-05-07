@@ -14,7 +14,7 @@ export const useGameState = defineStore("gameState", () => {
   const currentState = ref<GameStates>(GameStates.Preloader);
   const isDebug = ref(false);
   const isPreloaderShown = ref(true);
-  const isFirstGame = ref(true);
+  const isFirstGame = ref(false);
   const activeOverlay = ref<UIOverlay>(null);
   const previousState = ref<GameStates>(GameStates.Preloader); // Запоминаем предыдущее состояние
   const playerStore = usePlayerStore();
@@ -68,7 +68,8 @@ export const useGameState = defineStore("gameState", () => {
         break;
 
       case GameStates.Gameover:
-        progress.saveHighScore();
+        // progress.saveHighScore();
+        progress.saveProgress();
         sound.playMusic("music_gameover");
         break;
 
@@ -123,6 +124,10 @@ export const useGameState = defineStore("gameState", () => {
     onEnter(to, from);
   }
 
+  function setFirstGameIndicator(value_: boolean) {
+    isFirstGame.value = value_;
+  };
+
   // ===== PUBLIC API =====
 
   function startGame() {
@@ -142,6 +147,7 @@ export const useGameState = defineStore("gameState", () => {
   }
 
   function endGame() {
+    playerStore.resetPlayerAchievements();
     playerStore.resetPlayerAchievements();
     setState(GameStates.Gameover);
   }
@@ -200,6 +206,7 @@ export const useGameState = defineStore("gameState", () => {
 
     // FSM
     setState,
+    setFirstGameIndicator,
 
     // API
     startGame,

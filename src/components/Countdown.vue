@@ -2,7 +2,7 @@
     <div class="countdown_root">
         <TrainingScreen v-if="showTraining" />
         <Transition name="countdown_anim">
-            <span v-if="!showTraining" class="countdown" :class="{ 'msgGo': count === 0 }" :key="count">
+            <span v-if="showCountdown" class="countdown" :class="{ 'msgGo': count === 0 }" :key="count">
                 {{ displayText }}
             </span>
         </Transition>
@@ -11,11 +11,12 @@
 
 
 <script setup lang="ts">
-    import { ref, onMounted, computed, watch } from "vue";
+    import { ref, computed, watch } from "vue";
     import { useGameState } from "@/store/gameState";
     import { SoundManager } from "@/game/sound/SoundManager";
     import { GameStates } from "@/game/core/GameState";
     import { createNewText } from '@/helpers/functions';
+    import { Platform } from "@/sdk/Platform";
     import TrainingScreen from "@/components/TrainingScreen.vue";
 
     const gameStore = useGameState();
@@ -23,54 +24,75 @@
     const count = ref(3);
     const foo = createNewText();
     const goMessage = computed(() => foo.makeText("gamePlay.goMessage"));
-    const showTraining = ref(true);
-    // const masterEnabled = ref(localStorage.getItem("masterEnabled") !== "0");
 
-    const displayText = computed(() => {
-        if (count.value === 0) {
-            return goMessage.value;
-        }
-        return count.value.toString();
-    });
+    const showTraining = ref<boolean>(false);
+    const showCountdown = ref<boolean>(false);
 
-    const playNext = () => {
-        if (count.value === 0) {
-            soundManager.playOneShot("sfx_start");
-            setTimeout(() => {
-                gameStore.setState(GameStates.Play);
-            }, 650);
-            return;
-        };
-        
-        soundManager.playOneShot(`sfx_${count.value}`);
-        
-        setTimeout(() => {
-            count.value--;
-            playNext();
-        }, 650);
-    };
-
-    watch(
-        () => gameStore.activeOverlay,
-        (newState) => {
-            if (newState == null) {
-                showTraining.value = false;
-                // gameStore.isPreloaderShown = true;
-                playNext();
+    // #region - функции работы с полями сторов и стораджей
+        // запускаем запрос на проверку самого первого входа игрока при инициализации компоненты
+        const platform = Platform.getInstance();
+        platform!.getPlayerDataByKey("isFirstEnter").then((value: any) => {
+            if (value == null) {
+                showTraining.value = true;
+                gameStore.activeOverlay = 'trainingScreen';
+            } else {
+                showTraining.value = value;
+                startCountdown();
             };
-        },
-    );
+            setFirstEnterVal(showTraining.value);
+            gameStore.setFirstGameIndicator(showTraining.value);
+        });
+        
+        // устанавливаем значение полю isFirstEnter в зависимости от условий
+        async function setFirstEnterVal(value_: boolean) {
+            await platform.setPlayerDataByKey("isFirstEnter", value_);
+        };
+    // #endregion
 
-    onMounted(() => {
-        gameStore.activeOverlay = 'trainingScreen';
-        // localStorage.setItem('lang', code);
-        // if (gameStore.isFirstGame == true) {
-        //     showTraining.value = true;
-        //     // gameStore.activeOverlay = 'trainingScreen';
-        // } else {
-        //     playNext();
-        // };
-    });
+    // #region - функции работы с таймером
+        // запускаем таймер обратного отсчёта
+        function startCountdown() {
+            showCountdown.value = true;
+            playNext();
+        };    
+    
+        // генерируем текст таймера (или цифры или текст в конце)
+        const displayText = computed(() => {
+            if (count.value === 0) {
+                return goMessage.value;
+            }
+            return count.value.toString();
+        });
+
+        // сама функция-цикл работы таймера
+        const playNext = () => {
+            if (count.value === 0) {
+                soundManager.playOneShot("sfx_start");
+                setTimeout(() => {
+                    gameStore.setState(GameStates.Play);
+                }, 650);
+                return;
+            };
+            
+            soundManager.playOneShot(`sfx_${count.value}`);
+            
+            setTimeout(() => {
+                count.value--;
+                playNext();
+            }, 650);
+        };
+
+        // следим за оверлеем и запускаем таймер в случае его изменения
+        watch(
+            () => gameStore.activeOverlay,
+            (newState) => {
+                if (newState == null) {
+                    showTraining.value = false;
+                    startCountdown();
+                };
+            },
+        );
+    // #endregion
 </script>
 
 

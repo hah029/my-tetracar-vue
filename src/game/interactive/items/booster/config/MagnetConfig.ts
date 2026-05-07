@@ -1,4 +1,4 @@
-import base_texture from "@/assets/textures/cube_base.svg";
+import base_texture from "@/assets/textures/cube_magnet.svg";
 
 import type { MaterialConfig } from "@/game/cube/types";
 

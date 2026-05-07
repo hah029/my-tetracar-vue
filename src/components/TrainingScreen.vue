@@ -1,13 +1,22 @@
 <template>
     <div class="training_screen">
         <div class="info_container">
+            
+            <!-- Блок "Набирай" -->
             <div class="info_block">
                 <span class="title">{{ title1 }}</span>
-                <div class="text_block">
-                    <span class="text color_blue">{{ text1_1 }}</span>
-                    <span class="text color_blue">{{ text1_2 }}</span>
+                <div class="highscore_table">
+                    <div class="highscore_image_container">
+                        <img class='icon' src="@/assets/images/hud/highscore_table.svg" />
+                    </div>
+                    <div class="text_block">
+                        <span class="text color_yellow_super_light">{{ text1_1 }}</span>
+                        <span class="text color_yellow_super_light">{{ text1_2 }}</span>
+                    </div>
                 </div>
             </div>
+
+            <!-- Блок "Собирай" -->
             <div class="info_block">
                 <span class="title">{{ title2 }}</span>
                 <div class="composition_block">
@@ -27,6 +36,8 @@
                     </div>
                 </div>
             </div>
+
+            <!-- Блок "Используй" -->
             <div class="info_block">
                 <span class="title">{{ title3 }}</span>
                 <div class="composition_block">
@@ -48,26 +59,28 @@
                         </div>
                         <span class="text color_green_light">{{ text3_3 }}</span>
                     </div>
+                    <div class="composition">
+                        <div class="image_container">
+                            <img class='icon' src="@/assets/images/hud/cube_magnet.svg" />
+                        </div>
+                        <span class="text color_ultramarine">{{ text3_4 }}</span>
+                    </div>
                 </div>
             </div>
         </div>
         <div class="btn_container">
-            <div class="menu_btn btn_correction" @click="gameStore.activeOverlay=null">{{ goMessage }}</div>
+            <div class="menu_btn btn_correction" @click="goMessageAction">{{ goMessage }}</div>
         </div>
     </div>
 </template>
 
 
 <script setup lang="ts">
-    import { ref, onMounted, computed } from "vue";
+    import { computed } from "vue";
     import { useGameState } from "@/store/gameState";
-    import { SoundManager } from "@/game/sound/SoundManager";
-    import { GameStates } from "@/game/core/GameState";
+    import { Platform } from "@/sdk/Platform";
     import { createNewText } from '@/helpers/functions';
     
-    // const gameStore = useGameState();
-    // const soundManager = SoundManager.getInstance();
-    // const count = ref(3);
     const foo = createNewText();
     const goMessage = computed(() => foo.makeText("trainingScreen.startButton"));
     const gameStore = useGameState();
@@ -85,34 +98,13 @@
     const text3_1 = computed(() => foo.getElementFromArray('trainingScreen.use.text', 0));
     const text3_2 = computed(() => foo.getElementFromArray('trainingScreen.use.text', 1));
     const text3_3 = computed(() => foo.getElementFromArray('trainingScreen.use.text', 2));
+    const text3_4 = computed(() => foo.getElementFromArray('trainingScreen.use.text', 3));
 
-    // const displayText = computed(() => {
-    //     if (count.value === 0) {
-    //         return goMessage.value;
-    //     }
-    //     return count.value.toString();
-    // });
-
-    // const playNext = () => {
-    //     if (count.value === 0) {
-    //         soundManager.playOneShot("sfx_start");
-    //         setTimeout(() => {
-    //             gameStore.setState(GameStates.Play);
-    //         }, 650);
-    //         return;
-    //     };
-        
-    //     soundManager.playOneShot(`sfx_${count.value}`);
-        
-    //     setTimeout(() => {
-    //         count.value--;
-    //         playNext();
-    //     }, 650);
-    // };
-
-    // onMounted(() => {
-    //     playNext();
-    // });
+    async function goMessageAction() {
+        await Platform.getInstance().setPlayerDataByKey("isFirstEnter", false);
+        gameStore.setFirstGameIndicator(false);
+        gameStore.activeOverlay = null;
+    };
 </script>
 
 
@@ -140,7 +132,7 @@
         display: flex;
         justify-content: center;
         align-items: flex-start;
-        gap: 16.875rem;
+        gap: 11.4375rem;
     }
     .info_block {
         display: flex;
@@ -156,19 +148,29 @@
     .text {
         font-size: 1.5625rem;
     }
+    .highscore_table {
+        display: flex;
+        align-items: center;
+        justify-content: flex-start;
+        gap: 1.25rem;
+    }
+    .highscore_image_container {
+        width: 8.5rem;
+        height: 5.1875rem;
+    }
     .text_block {
         display: flex;
         flex-direction: column;
-        justify-content: flex-start;
-        align-items: center;
-        gap: 0.625rem;
+        justify-content: center;
+        align-items: flex-start;
+        gap: 0.3125rem;
     }
 
     .composition_block {
         display: flex;
         justify-content: center;
         align-items: flex-start;
-        gap: 4.375rem;
+        gap: 3.75rem;
     }
     .composition {
         display: flex;
