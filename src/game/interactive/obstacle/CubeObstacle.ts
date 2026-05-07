@@ -149,85 +149,118 @@ export class CubeObstacle extends BaseObstacle {
       const worldPos = cube.getWorldPosition(new THREE.Vector3());
       const worldQuat = cube.getWorldQuaternion(new THREE.Quaternion());
 
-      // Создаём соответствующий предмет (монету или бустер)
-      let item: BaseItem | null = null;
-      switch (dropType) {
-        case "golden_coin":
-          item = this.interactiveItemsManager.spawnGoldenCoin(
-            worldPos.z,
-            undefined,
-            worldPos.x,
-          );
-          break;
-        case "energon_coin":
-          item = this.interactiveItemsManager.spawnEnergonCoin(
-            worldPos.z,
-            undefined,
-            worldPos.x,
-          );
-          break;
-        case "bullet":
-          item = this.interactiveItemsManager.spawnBulletItem(
-            worldPos.z,
-            undefined,
-            worldPos.x,
-          );
-          break;
-        case "shield_booster":
-          item = this.interactiveItemsManager.spawnShieldBooster(
-            worldPos.z,
-            undefined,
-            worldPos.x,
-          );
-          break;
-        case "nitro_booster":
-          item = this.interactiveItemsManager.spawnNitroBooster(
-            worldPos.z,
-            undefined,
-            worldPos.x,
-          );
-          break;
-        case "magnet_booster":
-          item = this.interactiveItemsManager.spawnMagnetBooster(
-            worldPos.z,
-            undefined,
-            worldPos.x,
-          );
-          break;
-        default:
-          // Если дроп не выпал – не создаём ничего (или можно создать базовую монету)
-          continue;
+      if (dropType) {
+        // Создаём соответствующий предмет (монету или бустер)
+        let item: BaseItem | null = null;
+        switch (dropType) {
+          case "golden_coin":
+            item = this.interactiveItemsManager.spawnGoldenCoin(
+              worldPos.z,
+              undefined,
+              worldPos.x,
+            );
+            break;
+          case "energon_coin":
+            item = this.interactiveItemsManager.spawnEnergonCoin(
+              worldPos.z,
+              undefined,
+              worldPos.x,
+            );
+            break;
+          case "bullet":
+            item = this.interactiveItemsManager.spawnBulletItem(
+              worldPos.z,
+              undefined,
+              worldPos.x,
+            );
+            break;
+          case "shield_booster":
+            item = this.interactiveItemsManager.spawnShieldBooster(
+              worldPos.z,
+              undefined,
+              worldPos.x,
+            );
+            break;
+          case "nitro_booster":
+            item = this.interactiveItemsManager.spawnNitroBooster(
+              worldPos.z,
+              undefined,
+              worldPos.x,
+            );
+            break;
+          case "magnet_booster":
+            item = this.interactiveItemsManager.spawnMagnetBooster(
+              worldPos.z,
+              undefined,
+              worldPos.x,
+            );
+            break;
+          default:
+            // Если дроп не выпал – не создаём ничего (или можно создать базовую монету)
+            continue;
+        }
+
+        if (!item) continue;
+
+        // Устанавливаем flying-статус и физические параметры, скопированные от куба
+        item.userData.status = "flying";
+        item.userData.velocity = new THREE.Vector3(
+          (Math.random() - 0.5) * this.physicsConfig.explosionForce,
+          Math.random() * this.physicsConfig.explosionUpward + 0.1,
+          (Math.random() - 0.5) * this.physicsConfig.explosionForce,
+        );
+        if (impactPoint) {
+          const dir = worldPos.clone().sub(impactPoint).normalize();
+          dir.multiplyScalar(this.physicsConfig.explosionForce);
+          item.userData.velocity.add(dir);
+        }
+
+        item.userData.rotationSpeed = new THREE.Vector3(
+          (Math.random() - 0.5) * this.physicsConfig.cubeRotationSpeed,
+          (Math.random() - 0.5) * this.physicsConfig.cubeRotationSpeed,
+          (Math.random() - 0.5) * this.physicsConfig.cubeRotationSpeed,
+        );
+
+        // Синхронизируем позицию и вращение (предмет может быть уже в нужном месте, но для верности)
+        item.position.copy(worldPos);
+        item.quaternion.copy(worldQuat);
+
+        // Добавляем в сцену и в менеджер (уже сделано внутри spawn-методов, но проверим)
+        // Удаляем исходный куб из группы и сцены
+        this.remove(cube);
+        this.scene.remove(cube);
+      } else {
+        // Если дроп не выпал (transformRequired = false) – разбрасываем кубики как в старом методе
+        // Отсоединяем от группы и добавляем в сцену
+        this.remove(cube);
+        this.scene.add(cube);
+        cube.position.copy(worldPos);
+        cube.quaternion.copy(worldQuat);
+
+        const ud = cube.userData as any;
+        // --- Вектор скорости с комбинированным разбросом ---
+        const baseVel = new THREE.Vector3(
+          (Math.random() - 0.5) * this.physicsConfig.explosionForce,
+          Math.random() * this.physicsConfig.explosionUpward + 0.1,
+          (Math.random() - 0.5) * this.physicsConfig.explosionForce,
+        );
+
+        if (impactPoint) {
+          const dir = cube.position.clone().sub(impactPoint).normalize();
+          dir.multiplyScalar(this.physicsConfig.explosionForce);
+          baseVel.add(dir); // суммируем случайный и направленный вектор
+        }
+
+        ud.velocity = baseVel;
+        ud.rotationSpeed = new THREE.Vector3(
+          (Math.random() - 0.5) * this.physicsConfig.cubeRotationSpeed,
+          (Math.random() - 0.5) * this.physicsConfig.cubeRotationSpeed,
+          (Math.random() - 0.5) * this.physicsConfig.cubeRotationSpeed,
+        );
+        // Дополнительные данные для DestructionManager
+        ud.gravity = this.physicsConfig.gravity;
+        ud.life = 0;
       }
-
-      if (!item) continue;
-
-      // Устанавливаем flying-статус и физические параметры, скопированные от куба
-      item.userData.status = "flying";
-      item.userData.velocity = new THREE.Vector3(
-        (Math.random() - 0.5) * this.physicsConfig.explosionForce,
-        Math.random() * this.physicsConfig.explosionUpward + 0.1,
-        (Math.random() - 0.5) * this.physicsConfig.explosionForce,
-      );
-      if (impactPoint) {
-        const dir = worldPos.clone().sub(impactPoint).normalize();
-        dir.multiplyScalar(this.physicsConfig.explosionForce);
-        item.userData.velocity.add(dir);
-      }
-
-      item.userData.rotationSpeed = new THREE.Vector3(
-        (Math.random() - 0.5) * this.physicsConfig.cubeRotationSpeed,
-        (Math.random() - 0.5) * this.physicsConfig.cubeRotationSpeed,
-        (Math.random() - 0.5) * this.physicsConfig.cubeRotationSpeed,
-      );
-
-      // Синхронизируем позицию и вращение (предмет может быть уже в нужном месте, но для верности)
-      item.position.copy(worldPos);
-      item.quaternion.copy(worldQuat);
-
-      // Добавляем в сцену и в менеджер (уже сделано внутри spawn-методов, но проверим)
-      // Удаляем исходный куб из группы и сцены
-      this.remove(cube);
-      this.scene.remove(cube);
     }
 
     // Очищаем массив кубов, чтобы они больше не участвовали в коллизиях

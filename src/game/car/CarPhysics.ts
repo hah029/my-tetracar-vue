@@ -118,19 +118,27 @@ export class CarPhysics {
       cube.position.copy(worldPos);
       cube.quaternion.copy(worldRot);
 
-      const velocity = new THREE.Vector3(
-        (Math.random() - 0.5) * this.physicsConfig.explosionForce,
-        Math.random() * this.physicsConfig.explosionUpward + 2,
-        (Math.random() - 0.5) * this.physicsConfig.explosionForce,
+      // Уменьшенная сила разлёта для машины (коэффициент 0.7)
+      const forceMultiplier = 0.7;
+      const baseVel = new THREE.Vector3(
+        (Math.random() - 0.5) *
+          this.physicsConfig.explosionForce *
+          forceMultiplier,
+        Math.random() * this.physicsConfig.explosionUpward * forceMultiplier +
+          0.1,
+        (Math.random() - 0.5) *
+          this.physicsConfig.explosionForce *
+          forceMultiplier,
       );
 
       if (impactPoint) {
         const dir = cube.position.clone().sub(impactPoint).normalize();
-        velocity.copy(dir.multiplyScalar(this.physicsConfig.explosionForce));
+        dir.multiplyScalar(this.physicsConfig.explosionForce * forceMultiplier);
+        baseVel.add(dir); // суммируем случайный и направленный вектор
       }
 
       const userData = cube.userData as any;
-      userData.velocity = velocity;
+      userData.velocity = baseVel;
       userData.rotationSpeed = new THREE.Vector3(
         (Math.random() - 0.5) * this.physicsConfig.cubeRotationSpeed,
         (Math.random() - 0.5) * this.physicsConfig.cubeRotationSpeed,
@@ -148,16 +156,10 @@ export class CarPhysics {
       .getEdges()
       .filter((e) => e instanceof RoadEdge) as RoadEdge[];
 
-    CubePhysics.update(
-      cubes,
-      this.physicsConfig,
-      edges,
-      (cube) => {
-        // удаляем куб из сцены
-        scene.remove(cube);
-      },
-      dt,
-    );
+    CubePhysics.update(cubes, this.physicsConfig, edges, dt, (cube) => {
+      // удаляем куб из сцены
+      scene.remove(cube);
+    });
   }
 
   public reset(): void {

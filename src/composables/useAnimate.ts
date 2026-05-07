@@ -1,5 +1,5 @@
 // src/composables/useAnimate.ts
-// import * as THREE from "three";
+import * as THREE from "three";
 import Stats from "three/examples/jsm/libs/stats.module.js";
 import { EffectComposer } from "three/examples/jsm/postprocessing/EffectComposer.js";
 // import { AfterimagePass } from "three/examples/jsm/postprocessing/AfterimagePass.js";
@@ -55,8 +55,12 @@ export function GameLoop(
   }
 
   // --- Вспомогательные функции (без изменений) ---
-  function updateDestruction(deltaTime: number, speed: number) {
-    CameraSystem.updateDestroyed(game.car.value.cubes, deltaTime);
+  function updateDestruction(
+    deltaTime: number,
+    speed: number,
+    carPosition?: THREE.Vector3,
+  ) {
+    CameraSystem.updateDestroyed(game.car.value.cubes, deltaTime, carPosition);
     game.updateInteractiveItems(deltaTime, speed, UpdateMode.Destruction);
   }
 
@@ -107,7 +111,18 @@ export function GameLoop(
       game.updatePlayer(deltaTime);
 
       if (isGameOver) {
-        updateDestruction(deltaTime, 0);
+        const isValidVector = (v: THREE.Vector3) =>
+          v &&
+          !isNaN(v.x) &&
+          !isNaN(v.y) &&
+          !isNaN(v.z) &&
+          isFinite(v.x) &&
+          isFinite(v.y) &&
+          isFinite(v.z);
+        const carPos = realCar?.position;
+        const safePosition =
+          carPos && isValidVector(carPos) ? carPos : undefined;
+        updateDestruction(deltaTime, 0, safePosition);
       } else {
         progressStore.addDistance(deltaTime * currentSpeed);
         game.updateInteractiveItems(

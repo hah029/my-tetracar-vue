@@ -97,30 +97,109 @@ class CameraSystemClass {
     this.camera.lookAt(lookAtPos);
   }
 
-  updateDestroyed(cubes: THREE.Object3D[], deltaTime: number) {
+  updateDestroyed(
+    cubes: THREE.Object3D[],
+    deltaTime: number,
+    fallbackPosition?: THREE.Vector3,
+  ) {
     if (!this.camera) return;
-    if (cubes.length === 0) return;
 
     const cameraStore = useCameraStore();
-    const center = new THREE.Vector3();
-    cubes.forEach((cube) => center.add(cube.position));
-    center.divideScalar(cubes.length);
+    let targetCamPos: THREE.Vector3;
 
-    const targetCamPos = center
-      .clone()
-      .add(
-        new THREE.Vector3(
-          cameraStore.DESTROYED_CAMERA_OFFSET_X,
-          cameraStore.DESTROYED_CAMERA_OFFSET_Y,
-          cameraStore.DESTROYED_CAMERA_OFFSET_Z,
-        ),
+    // Проверка валидности вектора
+    const isValidVector = (v: THREE.Vector3) =>
+      !isNaN(v.x) &&
+      !isNaN(v.y) &&
+      !isNaN(v.z) &&
+      isFinite(v.x) &&
+      isFinite(v.y) &&
+      isFinite(v.z);
+
+    if (cubes.length > 0) {
+      const center = new THREE.Vector3();
+      let validCount = 0;
+      cubes.forEach((cube) => {
+        if (isValidVector(cube.position)) {
+          center.add(cube.position);
+          validCount++;
+        }
+      });
+      if (validCount > 0) {
+        center.divideScalar(validCount);
+        targetCamPos = center
+          .clone()
+          .add(
+            new THREE.Vector3(
+              cameraStore.DESTROYED_CAMERA_OFFSET_X,
+              cameraStore.DESTROYED_CAMERA_OFFSET_Y,
+              cameraStore.DESTROYED_CAMERA_OFFSET_Z,
+            ),
+          );
+      } else {
+        // Все кубы имеют невалидные позиции, используем fallback
+        targetCamPos = this.getSafeFallbackPosition(
+          fallbackPosition,
+          cameraStore,
+        );
+      }
+    } else {
+      // Используем fallback-позицию (например, последнюю позицию машины)
+      targetCamPos = this.getSafeFallbackPosition(
+        fallbackPosition,
+        cameraStore,
       );
+    }
+
+    // Гарантируем, что targetCamPos валиден
+    if (!isValidVector(targetCamPos)) {
+      targetCamPos = new THREE.Vector3(
+        0,
+        cameraStore.DESTROYED_CAMERA_OFFSET_Y,
+        cameraStore.DESTROYED_CAMERA_OFFSET_Z,
+      );
+    }
+
+    // Отключаем тряску при разрушении, чтобы камера не "заваливалась"
+    this.impactAmplitude = 0;
+    this.impactOffset.set(0, 0, 0);
+
     this.camera.position.lerp(targetCamPos, cameraStore.DESTROYED_LERP_FACTOR);
 
-    this.applyImpactShake(deltaTime);
-    this.camera.position.add(this.impactOffset);
+    // Сброс наклона камеры и FOV
+    this.camera.rotation.z = 0;
+    this.camera.rotation.x = 0;
+    this.camera.fov = cameraStore.FOV_MIN;
+    this.camera.updateProjectionMatrix();
 
-    this.camera.lookAt(center);
+    // LookAt точка: чуть ниже и ближе, чтобы камера смотрела слегка вниз, но не заваливалась
+    const lookAtPos = new THREE.Vector3(
+      targetCamPos.x,
+      targetCamPos.y - 1,
+      targetCamPos.z - cameraStore.CAMERA_LOOKAHEAD,
+    );
+    this.camera.lookAt(lookAtPos);
+  }
+
+  private getSafeFallbackPosition(
+    fallbackPosition: THREE.Vector3 | undefined,
+    cameraStore: ReturnType<typeof useCameraStore>,
+  ): THREE.Vector3 {
+    const isValidVector = (v: THREE.Vector3) =>
+      !isNaN(v.x) &&
+      !isNaN(v.y) &&
+      !isNaN(v.z) &&
+      isFinite(v.x) &&
+      isFinite(v.y) &&
+      isFinite(v.z);
+    if (fallbackPosition && isValidVector(fallbackPosition)) {
+      return fallbackPosition.clone();
+    }
+    return new THREE.Vector3(
+      0,
+      cameraStore.DESTROYED_CAMERA_OFFSET_Y,
+      cameraStore.DESTROYED_CAMERA_OFFSET_Z,
+    );
   }
 
   reset(carPosition: THREE.Vector3) {
