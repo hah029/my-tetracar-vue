@@ -30,7 +30,7 @@ export function GameLoop(
 ) {
   const gameState = useGameState();
   const playerStore = usePlayerStore();
-  const progressStore = useProgressStore();
+  // const progressStore = useProgressStore();
 
   // ----------------------------
   // показываем / скрываем FPS-панель через Ctrl+Q
@@ -160,6 +160,7 @@ export function GameLoop(
           );
         }
 
+        game.updateEffects();
         debugCollider?.update();
       }
     } else {

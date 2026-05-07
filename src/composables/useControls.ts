@@ -144,10 +144,6 @@ export function useControls(game: ReturnType<typeof useGame>) {
       case controlKeys.RIGHT_ALT:
         game.movePlayerRight(60 / 1000);
         break;
-      case controlKeys.RIGHT:
-      case controlKeys.RIGHT_ALT:
-        game.movePlayerRight(60 / 1000);
-        break;
 
       case controlKeys.SPACE:
         game.shoot();
@@ -202,6 +198,11 @@ export function useControls(game: ReturnType<typeof useGame>) {
       delete (swipeZoneRef.value as any)._preventScrollHandler;
     }
   }
+
+  onMounted(() => {
+    window.addEventListener("keydown", handleKeyDown);
+    window.addEventListener("keyup", handleKeyUp);
+  });
 
   onUnmounted(() => {
     window.removeEventListener("keydown", handleKeyDown);
