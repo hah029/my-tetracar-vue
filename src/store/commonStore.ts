@@ -50,6 +50,7 @@ export const useCommonStore = defineStore("common", () => {
     shield_booster: 10,
     energon_coin: 20,
     nitro_booster: 1,
+    magnet_booster: 1,
   };
 
   return {

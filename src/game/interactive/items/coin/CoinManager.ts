@@ -22,8 +22,9 @@ export class CoinManager {
      ======================= */
 
   public spawnRandom(
-    laneIndex: number,
-    zPos: number,
+    baseZ: number,
+    laneIndex?: number,
+    xPos?: number,
     yPos?: number,
     value?: number,
   ) {
@@ -31,29 +32,31 @@ export class CoinManager {
 
     switch (choice) {
       case "energon":
-        return this.spawnEnergon(laneIndex, zPos, yPos, value);
+        return this.spawnEnergon(baseZ, laneIndex, xPos, yPos, value);
       case "golden":
-        return this.spawnGolden(laneIndex, zPos, yPos, value);
+        return this.spawnGolden(baseZ, laneIndex, xPos, yPos, value);
       default:
-        return this.spawnGolden(laneIndex, zPos, yPos, value);
+        return this.spawnGolden(baseZ, laneIndex, xPos, yPos, value);
     }
   }
 
   public spawnGolden(
-    laneIndex: number,
-    zPos: number,
+    baseZ: number,
+    laneIndex?: number,
+    xPos?: number,
     yPos?: number,
     value?: number,
   ) {
-    return new Golden(laneIndex, zPos, yPos, value);
+    return new Golden(baseZ, laneIndex, xPos, yPos, value);
   }
 
   public spawnEnergon(
-    laneIndex: number,
-    zPos: number,
+    baseZ: number,
+    laneIndex?: number,
+    xPos?: number,
     yPos?: number,
     value?: number,
   ) {
-    return new Energon(laneIndex, zPos, yPos, value);
+    return new Energon(baseZ, laneIndex, xPos, yPos, value);
   }
 }

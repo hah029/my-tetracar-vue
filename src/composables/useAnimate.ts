@@ -64,17 +64,15 @@ export function GameLoop(
   function updateDestruction(deltaTime: number, speed: number) {
     CameraSystem.updateDestroyed(game.car.value.cubes, deltaTime);
     game.updateInteractiveItems(deltaTime, speed, UpdateMode.Destruction);
-    game.updateDestructionItems(deltaTime, speed);
   }
 
   function updateGame(deltaTime: number, currentSpeed: number) {
     progressStore.addDistance(deltaTime * currentSpeed);
 
     game.updateInteractiveItems(deltaTime, currentSpeed, UpdateMode.Gameplay);
-    game.updateMagnet(deltaTime);
     game.updateRoad(deltaTime, currentSpeed);
     game.updateCity(deltaTime, currentSpeed);
-    game.updateDestructionItems(deltaTime, currentSpeed);
+
     BulletSystem.getInstance().update(deltaTime);
 
     game.updateEffects();

@@ -25,36 +25,61 @@ export class BoosterManager {
      SPAWN
      ======================= */
 
-  public spawnRandom(laneIndex: number, zPos: number, yPos?: number) {
+  public spawnRandom(
+    zPos: number,
+    laneIndex?: number,
+    xPos?: number,
+    yPos?: number,
+  ) {
     let choice = makeWeightedChoice(this.spawnProbabilities);
 
     switch (choice) {
       case "nitro":
-        return this.spawnNitro(laneIndex, zPos, yPos);
+        return this.spawnNitro(zPos, laneIndex, xPos, yPos);
       case "shield":
-        return this.spawnShield(laneIndex, zPos, yPos);
+        return this.spawnShield(zPos, laneIndex, xPos, yPos);
       case "magnet":
-        return this.spawnMagnet(laneIndex, zPos, yPos);
+        return this.spawnMagnet(zPos, laneIndex, xPos, yPos);
       case "bullet":
-        return this.spawnBullet(laneIndex, zPos, yPos);
+        return this.spawnBullet(zPos, laneIndex, xPos, yPos);
       default:
-        return this.spawnShield(laneIndex, zPos, yPos);
+        return this.spawnShield(zPos, laneIndex, xPos, yPos);
     }
   }
 
-  public spawnNitro(laneIndex: number, zPos: number, yPos?: number) {
-    return new NitroItem(laneIndex, zPos, yPos);
+  public spawnNitro(
+    zPos: number,
+    laneIndex?: number,
+    xPos?: number,
+    yPos?: number,
+  ) {
+    return new NitroItem(zPos, laneIndex, xPos, yPos);
   }
 
-  public spawnMagnet(laneIndex: number, zPos: number, yPos?: number) {
-    return new MagnetItem(laneIndex, zPos, yPos);
+  public spawnMagnet(
+    zPos: number,
+    laneIndex?: number,
+    xPos?: number,
+    yPos?: number,
+  ) {
+    return new MagnetItem(zPos, laneIndex, xPos, yPos);
   }
 
-  public spawnShield(laneIndex: number, zPos: number, yPos?: number) {
-    return new ShieldItem(laneIndex, zPos, yPos);
+  public spawnShield(
+    zPos: number,
+    laneIndex?: number,
+    xPos?: number,
+    yPos?: number,
+  ) {
+    return new ShieldItem(zPos, laneIndex, xPos, yPos);
   }
 
-  public spawnBullet(laneIndex: number, zPos: number, yPos?: number) {
-    return new BulletItem(laneIndex, zPos, yPos);
+  public spawnBullet(
+    zPos: number,
+    laneIndex?: number,
+    xPos?: number,
+    yPos?: number,
+  ) {
+    return new BulletItem(zPos, laneIndex, xPos, yPos);
   }
 }

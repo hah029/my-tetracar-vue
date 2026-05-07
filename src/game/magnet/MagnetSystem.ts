@@ -12,7 +12,7 @@ import magnetLineFragment from "@/game/shaders/magnet/line/fragment.glsl";
 // import magnetFieldVertex from "@/game/shaders/magnet/field/vertex.glsl";
 // import magnetFieldFragment from "@/game/shaders/magnet/field/fragment.glsl";
 // import { makeWeightedChoice } from "@/helpers/functions";
-import type { ItemType } from "../interactive/items/types";
+// import type { ItemType } from "../interactive/items/types";
 
 export class MagnetSystem {
   private static instance: MagnetSystem | null = null;
@@ -33,12 +33,13 @@ export class MagnetSystem {
      SPAWN
      ======================= */
 
-  private updateMagnetedItems(
+  public updateMagnetedItems(
     car: Car,
+    magnetedItems: BaseItem[],
     deltaTime: number,
-    items: BaseItem[],
+    now: number,
   ): void {
-    if (items.length == 0) return;
+    if (magnetedItems.length == 0) return;
 
     const playerStore = usePlayerStore();
 
@@ -48,10 +49,8 @@ export class MagnetSystem {
     const carPos = car.position;
     const dir = new THREE.Vector3();
 
-    const t = performance.now();
-
-    for (let i = items.length - 1; i >= 0; i--) {
-      const item = items[i];
+    for (let i = magnetedItems.length - 1; i >= 0; i--) {
+      const item = magnetedItems[i];
 
       dir.subVectors(carPos, item.position);
 
@@ -64,7 +63,7 @@ export class MagnetSystem {
         item.collider.center.copy(item.position);
       }
 
-      this.updateMagnetBeam(item, carPos, t);
+      this.updateMagnetBeam(item, carPos, now);
     }
   }
 
@@ -98,42 +97,30 @@ export class MagnetSystem {
     mat.uniforms.time.value = time * 0.001;
   }
 
-  public applyMagnet(
-    car: Car,
-    deltaTime: number,
-    items: BaseItem[],
-    types: ItemType[],
-  ): void {
+  public applyMagnet(car: Car, items: BaseItem[], types: (typeof BaseItem)[]) {
     const playerStore = usePlayerStore();
+    if (playerStore.isMagnetEnabled) {
+      const radius = playerStore.magnetRadius ?? 4.5;
+      const radiusSq = radius * radius;
+      const carPos = car.position;
+      for (let i = items.length - 1; i >= 0; i--) {
+        const item = items[i];
+        if (!item) continue;
+        if (types.every((T) => !(item instanceof T))) continue;
 
-    if (!playerStore.isMagnetEnabled) {
-      return;
-    }
-    const radius = playerStore.magnetRadius ?? 4.5;
-    const radiusSq = radius * radius;
+        const distSq = item.position.distanceToSquared(carPos);
 
-    const carPos = car.position;
-
-    // 1. переносим обычные монеты в магнитные
-    let magnetedItems: BaseItem[] = [];
-    for (let i = items.length - 1; i >= 0; i--) {
-      const item = items[i];
-      if (!item) continue;
-
-      const distSq = item.position.distanceToSquared(carPos);
-
-      if (distSq <= radiusSq) {
-        magnetedItems.push(item);
-        item.userData.magnetized = true;
-        const line = this.createMagnetLine();
-        this.scene.add(line);
-        item.userData.magnetLine = line;
-        items.splice(i, 1);
+        if (distSq <= radiusSq) {
+          if (item.userData.magnetLine == undefined) {
+            item.userData.status = "magnetized";
+            const line = this.createMagnetLine();
+            this.scene.add(line);
+            item.userData.magnetLine = line;
+          }
+          // items.splice(i, 1);
+        }
       }
     }
-
-    // 2. обновляем магнитные
-    this.updateMagnetedItems(car, deltaTime, magnetedItems);
   }
 
   private createMagnetLine(): THREE.Mesh {

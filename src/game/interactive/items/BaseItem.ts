@@ -16,14 +16,29 @@ export class BaseItem extends THREE.Group {
   protected initialPosition: THREE.Vector3;
 
   constructor(
-    laneIndex: number,
     zPos: number,
+    laneIndex?: number,
+    xPos?: number,
     yPos: number = useCommonStore().BASE_ITEM_YPOS,
     material: MaterialConfig | null = null,
   ) {
     super();
-    this.userData = { isInteractiveItem: true };
-    const x = RoadManager.getInstance().getLanePosition(laneIndex);
+    this.userData = {
+      isInteractiveItem: true,
+      status: "landed",
+      velocity: new THREE.Vector3(),
+      rotationSpeed: new THREE.Vector3(),
+    };
+
+    let x: number;
+    if (xPos !== undefined) {
+      x = xPos;
+    } else if (laneIndex !== undefined) {
+      x = RoadManager.getInstance().getLanePosition(laneIndex);
+    } else {
+      throw new Error("Either laneIndex or xPos must be provided");
+    }
+
     this.initialPosition = new THREE.Vector3(x, yPos, zPos);
     this.position.copy(this.initialPosition);
     this.cube.position.set(0, 0, 0);

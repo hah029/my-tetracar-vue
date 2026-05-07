@@ -4,7 +4,7 @@ import * as THREE from "three";
 import { ObstacleManager } from "./obstacle/ObstacleManager";
 import { CoinManager } from "./items/coin/CoinManager";
 import { BoosterManager } from "./items/booster/BoosterManager";
-import { CarManager } from "../car";
+import { Car, CarManager } from "../car";
 // other
 import { simulateJumpTrajectory } from "@/game/car/CarTrajectory";
 import { DEFAULT_CAR_CONFIG } from "@/game/car/config";
@@ -21,6 +21,10 @@ import { useProgressStore } from "@/store/progressStore";
 import { useCommonStore } from "@/store/commonStore";
 import type { BaseItem } from "./items/BaseItem";
 import type { BaseObstacle } from "./obstacle/BaseObstacle";
+import { MagnetSystem } from "../magnet/MagnetSystem";
+import { CoinItem } from "./items/coin/CoinItem";
+import { BoosterItem } from "./items/booster/BoosterItem";
+import { DestructionManager } from "./DestructionManager";
 
 export class InteractiveItemsManager {
   private static instance: InteractiveItemsManager | null = null;
@@ -35,6 +39,8 @@ export class InteractiveItemsManager {
   private difficultyStep = useCommonStore().BASE_SEGMENT_DIFFICULTY_STEP;
   private nitroEnabledTimer = 0;
   private magnetEnabledTimer = 0;
+  private magnetSystem = MagnetSystem.getInstance();
+  private destructionManager = DestructionManager.getInstance();
 
   public static getInstance(): InteractiveItemsManager {
     if (!InteractiveItemsManager.instance) {
@@ -49,6 +55,7 @@ export class InteractiveItemsManager {
 
     this.coinManager = CoinManager.getInstance();
     this.boosterManager = BoosterManager.getInstance();
+    this.destructionManager = DestructionManager.getInstance();
 
     this.segmentQueue = new SegmentQueue(() => {
       const distance = useProgressStore().getDistance();
@@ -56,9 +63,9 @@ export class InteractiveItemsManager {
     });
   }
 
-  public update(deltaTime: number, speed: number, mode: UpdateMode) {
+  public update(car: Car, deltaTime: number, speed: number, mode: UpdateMode) {
     this.prePhysics(deltaTime, speed);
-    this.updatePhysics(deltaTime, speed);
+    this.updatePhysics(car, deltaTime, speed);
 
     if (mode === UpdateMode.Destruction) return;
 
@@ -69,9 +76,32 @@ export class InteractiveItemsManager {
     this.ensureWorldFilled(deltaTime, speed);
   }
 
-  private updatePhysics(deltaTime: number, speed: number) {
+  private updatePhysics(car: Car, deltaTime: number, speed: number) {
     this.obstacleManager.update(deltaTime, speed);
-    this.updateItems(deltaTime, speed);
+    const items = this.getItems();
+
+    // update magnet
+    this.magnetSystem.applyMagnet(car, items, [CoinItem, BoosterItem]);
+    this.magnetSystem.updateMagnetedItems(
+      car,
+      items.filter((item) => item.userData.status === "magnetized"),
+      deltaTime,
+      performance.now(),
+    );
+
+    // update destroyed
+    this.destructionManager.update(
+      items.filter((item) => item.userData.status === "flying"),
+      deltaTime,
+      speed,
+    );
+
+    // base physics
+    this.updateItems(
+      items.filter((item) => item.userData.status === "landed"),
+      deltaTime,
+      speed,
+    );
   }
 
   private updatePlayerEffects(deltaTime: number) {
@@ -161,28 +191,28 @@ export class InteractiveItemsManager {
             this.spawnJumpWithCoins(lane, dt, speed, z);
             break;
           case LanePattern.Coin:
-            this.spawnSingleCoin(lane, z);
+            this.spawnSingleCoin(z, lane);
             break;
           case LanePattern.Energon:
-            this.spawnEnergonCoin(lane, z);
+            this.spawnEnergonCoin(z, lane);
             break;
           case LanePattern.CoinLine:
-            this.spawnCoinLine(lane, z);
+            this.spawnCoinLine(z, lane);
             break;
           case LanePattern.Booster:
-            this.spawnBooster(lane, z);
+            this.spawnBooster(z, lane);
             break;
           case LanePattern.Nitro:
-            this.spawnNitroBooster(lane, z);
+            this.spawnNitroBooster(z, lane);
             break;
           case LanePattern.Shield:
-            this.spawnShieldBooster(lane, z);
+            this.spawnShieldBooster(z, lane);
             break;
           case LanePattern.Magnet:
-            this.spawnMagnetBooster(lane, z);
+            this.spawnMagnetBooster(z, lane);
             break;
           case LanePattern.BulletItem:
-            this.spawnBulletItem(lane, z);
+            this.spawnBulletItem(z, lane);
             break;
           case LanePattern.MovingObstacle:
             this.obstacleManager.spawnMovingObstacle(lane, z, 1, 0);
@@ -198,59 +228,105 @@ export class InteractiveItemsManager {
   }
 
   // спавн объектов
-  public spawnSingleCoin(lane: number, baseZ: number) {
-    const item = this.coinManager.spawnRandom(lane, baseZ) as BaseItem;
-    if (item) this.addItem(item);
+  public spawnSingleCoin(baseZ: number, laneIndex?: number, posX?: number) {
+    const item = this.coinManager.spawnRandom(
+      baseZ,
+      laneIndex,
+      posX,
+    ) as BaseItem;
+    if (item) {
+      this.addItem(item);
+      return item;
+    }
+    return null;
   }
 
-  public spawnEnergonCoin(lane: number, baseZ: number) {
-    const item = this.coinManager.spawnEnergon(lane, baseZ) as BaseItem;
-    if (item) this.addItem(item);
+  public spawnEnergonCoin(baseZ: number, laneIndex?: number, xPos?: number) {
+    const item = this.coinManager.spawnEnergon(
+      baseZ,
+      laneIndex,
+      xPos,
+    ) as BaseItem;
+    if (item) {
+      this.addItem(item);
+      return item;
+    }
+    return null;
   }
 
-  public spawnGoldenCoin(lane: number, baseZ: number) {
-    const item = this.coinManager.spawnGolden(lane, baseZ) as BaseItem;
-    if (item) this.addItem(item);
+  public spawnGoldenCoin(baseZ: number, laneIndex?: number, xPos?: number) {
+    const item = this.coinManager.spawnGolden(
+      baseZ,
+      laneIndex,
+      xPos,
+    ) as BaseItem;
+    if (item) {
+      this.addItem(item);
+      return item;
+    }
+    return null;
   }
 
   public spawnCoinLine(
-    lane: number,
     baseZ: number,
+    laneIndex: number,
     count: number = 5,
     spacing: number = 4,
   ) {
     for (let i = 0; i < count; i++) {
       const item = this.coinManager.spawnGolden(
-        lane,
         baseZ - i * spacing,
+        laneIndex,
       ) as BaseItem;
-      if (item) this.addItem(item);
+      if (item) {
+        this.addItem(item);
+      }
     }
   }
 
-  public spawnBooster(lane: number, baseZ: number) {
-    const item = this.boosterManager.spawnRandom(lane, baseZ);
-    if (item) this.addItem(item);
+  public spawnBooster(baseZ: number, laneIndex?: number, xPos?: number) {
+    const item = this.boosterManager.spawnRandom(baseZ, laneIndex, xPos);
+    if (item) {
+      this.addItem(item);
+      return item;
+    }
+    return null;
   }
 
-  public spawnNitroBooster(lane: number, baseZ: number) {
-    const item = this.boosterManager.spawnNitro(lane, baseZ);
-    if (item) this.addItem(item);
+  public spawnNitroBooster(baseZ: number, laneIndex?: number, xPos?: number) {
+    const item = this.boosterManager.spawnNitro(baseZ, laneIndex, xPos);
+    if (item) {
+      this.addItem(item);
+      return item;
+    }
+    return null;
   }
 
-  public spawnMagnetBooster(lane: number, baseZ: number) {
-    const item = this.boosterManager.spawnMagnet(lane, baseZ);
-    if (item) this.addItem(item);
+  public spawnMagnetBooster(baseZ: number, laneIndex?: number, xPos?: number) {
+    const item = this.boosterManager.spawnMagnet(baseZ, laneIndex, xPos);
+    if (item) {
+      this.addItem(item);
+      return item;
+    }
+    return null;
   }
 
-  public spawnShieldBooster(lane: number, baseZ: number) {
-    const item = this.boosterManager.spawnShield(lane, baseZ);
-    if (item) this.addItem(item);
+  public spawnShieldBooster(baseZ: number, laneIndex?: number, xPos?: number) {
+    const item = this.boosterManager.spawnShield(baseZ, laneIndex, xPos);
+    if (item) {
+      this.addItem(item);
+      return item;
+    }
+    return null;
   }
 
-  public spawnBulletItem(lane: number, baseZ: number) {
-    const item = this.boosterManager.spawnBullet(lane, baseZ);
-    if (item) this.addItem(item);
+  public spawnBulletItem(baseZ: number, laneIndex?: number, xPos?: number) {
+    const item = this.boosterManager.spawnBullet(baseZ, laneIndex, xPos);
+    if (item) {
+      this.addItem(item);
+      return item;
+    }
+    return null;
   }
 
   public spawnJumpWithCoins(
@@ -331,23 +407,17 @@ export class InteractiveItemsManager {
       this.items.splice(index, 1);
     }
 
+    const line = item.userData.magnetLine;
+    if (line) this.scene.remove(line);
+
     this.scene.remove(item);
   }
 
-  public updateItems(deltaTime: number, speed: number) {
-    for (let i = this.items.length - 1; i >= 0; i--) {
-      const item = this.items[i];
-
-      if (!item.parent) {
-        this.items.splice(i, 1);
-        continue;
-      }
-
-      const shouldRemove = item.update(deltaTime, speed);
-
-      if (shouldRemove) {
-        item.parent?.remove(item);
-        this.items.splice(i, 1);
+  public updateItems(items: BaseItem[], deltaTime: number, speed: number) {
+    for (let i = items.length - 1; i >= 0; i--) {
+      const item = items[i];
+      if (item.update(deltaTime, speed)) {
+        this.removeItem(item);
       }
     }
   }

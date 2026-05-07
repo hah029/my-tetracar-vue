@@ -14,12 +14,13 @@ const ENERGON_CONFIG = {
 
 export class Energon extends CoinItem {
   constructor(
-    laneIndex: number,
     zPos: number,
+    laneIndex?: number,
+    xPos?: number,
     yPos?: number,
     value: number = useCommonStore().BASE_COIN_VALUE,
   ) {
-    super(laneIndex, zPos, yPos);
+    super(zPos, laneIndex, xPos, yPos);
     this.value = value;
   }
 

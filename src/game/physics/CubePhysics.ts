@@ -12,12 +12,12 @@ export interface CubePhysicsConfig {
 }
 
 export class CubePhysics {
-  static updateCubes(
+  static update(
     cubes: THREE.Object3D[],
     config: CubePhysicsConfig,
     edges: RoadEdge[],
-    onRemove?: (cube: THREE.Object3D) => void,
     dt: number = 0.016, // дефолтное значение ~60 FPS
+    onRemove?: (cube: THREE.Object3D) => void,
   ) {
     const groundY = useCommonStore().BASE_ITEM_YPOS;
     let dtSeconds = dt / 1000;
