@@ -9,6 +9,7 @@ import { JumpSimulator, type JumpState } from "./JumpSimulator";
 import { CubePhysics } from "@/game/physics/CubePhysics";
 import type { PhysicsConfig } from "../physics/types";
 import { useCommonStore } from "@/store/commonStore";
+import { usePlayerStore } from "@/store/playerStore";
 
 export class CarPhysics {
   private config: Required<CarConfig>;
@@ -63,8 +64,17 @@ export class CarPhysics {
     const dtSeconds = deltaTime / 1000;
     // Активная фаза прыжка – используем симуляцию
     const prevVelocity = this.jumpState.velocity;
-    this.jumpState = this.jumpSimulator.step(this.jumpState, dtSeconds);
-    const pitch = prevVelocity > 0 ? 0.2 : -0.1;
+
+    const simMultiplier = usePlayerStore().forceJump
+      ? usePlayerStore().FORCED_JUMP_MULTIPLIER
+      : 1;
+    this.jumpState = this.jumpSimulator.step(
+      this.jumpState,
+      dtSeconds * simMultiplier,
+    );
+
+    let pitch = prevVelocity > 0 ? 0.2 : -0.1;
+    if (usePlayerStore().forceJump) pitch = -0.3;
     return {
       newY: this.jumpState.y,
       isJumping: this.jumpState.isJumping,

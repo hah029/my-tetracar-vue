@@ -10,6 +10,7 @@ export const usePlayerStore = defineStore("playerStore", () => {
   const MAX_SPEED = 0.5; // м/с - максимальная скорость машинки
   const NITRO_MULTIPLIER = 1.5;
   const ACCELERATION = 0.0000005; // - темп ускорения машинки
+  const FORCED_JUMP_MULTIPLIER = 4;
 
   // speed
   const speed = ref(BASE_SPEED);
@@ -17,6 +18,7 @@ export const usePlayerStore = defineStore("playerStore", () => {
   const maxSpeed = ref(MAX_SPEED);
   const acceleration = ref(ACCELERATION);
   const accelerationType = ref<"exponential" | "logarithmic">("logarithmic");
+  const forceJump = ref(false);
 
   // nitro
   const BASE_NITRO_TIMER = 5000;
@@ -195,6 +197,7 @@ export const usePlayerStore = defineStore("playerStore", () => {
     BASE_NITRO_TIMER,
     BASE_MAGNET_TIMER,
     BASE_SPEED,
+    FORCED_JUMP_MULTIPLIER,
     speed,
     baseSpeed,
     isNitroEnabled,
@@ -221,6 +224,7 @@ export const usePlayerStore = defineStore("playerStore", () => {
     magnetForce,
     magnetMaxTargets,
     magnetTypes,
+    forceJump,
 
     // methods
     resetPlayerAchievements,

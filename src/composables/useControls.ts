@@ -23,9 +23,10 @@ export function useControls(game: ReturnType<typeof useGame>) {
   enum controlKeys {
     LEFT = "ArrowLeft",
     LEFT_ALT = "KeyA",
-
     RIGHT = "ArrowRight",
     RIGHT_ALT = "KeyD",
+    DOWN = "ArrowDown",
+    DOWN_ALT = "KeyS",
 
     SPACE = "Space",
     NITRO = "KeyN",
@@ -146,6 +147,11 @@ export function useControls(game: ReturnType<typeof useGame>) {
         game.movePlayerRight(60 / 1000);
         break;
 
+      case controlKeys.DOWN:
+      case controlKeys.DOWN_ALT:
+        playerStore.forceJump = true;
+        break;
+
       case controlKeys.SPACE:
         game.shoot();
         break;
@@ -176,8 +182,11 @@ export function useControls(game: ReturnType<typeof useGame>) {
 
     if (e.code === controlKeys.NITRO) {
       e.preventDefault();
-      usePlayerStore().disableNitro();
-      CarManager.getInstance().disableNitro();
+      playerStore.disableNitro();
+    }
+    if (e.code === controlKeys.DOWN || e.code === controlKeys.DOWN_ALT) {
+      e.preventDefault();
+      playerStore.forceJump = false;
     }
   }
 
