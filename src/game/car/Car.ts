@@ -133,7 +133,6 @@ export class Car extends THREE.Group {
     this.rotation.x += (jumpResult.pitch - this.rotation.x) * 0.05;
 
     // Обновляем коллайдер
-    // this.collider.updateFromObject(this);
     if (this.cubes.length > 0) {
       this.collider.updateFromCubes(this.cubes);
     }
@@ -184,7 +183,6 @@ export class Car extends THREE.Group {
     this.add(cameraTarget);
 
     // Обновляем коллайдер
-    // this.collider.updateFromObject(this);
     if (this.cubes.length > 0) {
       this.collider.updateFromCubes(this.cubes);
     }

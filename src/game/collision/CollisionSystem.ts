@@ -3,12 +3,6 @@ import type { Jump } from "@/game/interactive/obstacle/Jump";
 import type { BaseObstacle } from "@/game/interactive/obstacle/BaseObstacle";
 import type { Car } from "../car";
 import type { BaseItem } from "../interactive/items/BaseItem";
-// import { Golden } from "../interactive/items/coin/Golden";
-// import { Energon } from "../interactive/items/coin/Energon";
-// import { Nitro } from "../interactive/items/booster/Nitro";
-// import { Shield } from "../interactive/items/booster/Shield";
-// import { Magnet } from "../interactive/items/booster/Magnet";
-// import { Bullet } from "../combat/Bullet";
 
 const DANGER_DISTANCE = 30;
 const COLLISION_COOLDOWN_MS = 2000;
@@ -49,7 +43,7 @@ export class CollisionSystem {
 
       if (car.checkJumpCollision(jump)) {
         jump.userData.activated = true;
-        this.lastCollisionTime = currentTime;
+        // this.lastCollisionTime = currentTime;
         return {
           impactPoint: jump.position.clone(),
           impactSubject: jump,
@@ -98,22 +92,6 @@ export class CollisionSystem {
 
     return null;
   }
-
-  //   private removeItem(items: BaseItem[], index: number): void {
-  //     const item = items[index];
-  //     if (!item) return;
-
-  //     const line = item.userData.magnetLine as THREE.Mesh;
-
-  //     if (line) {
-  //       this.scene.remove(line);
-  //       line.geometry.dispose();
-  //       (line.material as THREE.Material).dispose();
-  //     }
-
-  //     this.scene.remove(item);
-  //     items.splice(index, 1);
-  //   }
 
   getDangerLevel(
     car: {
