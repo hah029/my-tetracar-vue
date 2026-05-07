@@ -21,9 +21,6 @@ export class Energon extends CoinItem {
   ) {
     super(laneIndex, zPos, yPos);
     this.value = value;
-    this.itemType = "energon";
-    this.userData.isCoin = true;
-    this.userData.coinType = "energon";
   }
 
   async build(material: MaterialConfig | null = null): Promise<void> {

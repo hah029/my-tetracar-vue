@@ -1,22 +1,14 @@
-import * as THREE from "three";
 import { Golden } from "./Golden";
 import { Energon } from "./Energon";
-import { Car } from "@/game/car/Car";
-import type { BaseItem } from "../BaseItem";
-import type { CoinType } from "./types";
-import type { CoinItem } from "./CoinItem";
-import { usePlayerStore } from "@/store/playerStore";
-
-import magnetLineVertex from "@/game/shaders/magnet/line/vertex.glsl";
-import magnetLineFragment from "@/game/shaders/magnet/line/fragment.glsl";
-import magnetFieldVertex from "@/game/shaders/magnet/field/vertex.glsl";
-import magnetFieldFragment from "@/game/shaders/magnet/field/fragment.glsl";
+import { makeWeightedChoice } from "@/helpers/functions";
 
 export class CoinManager {
   private static instance: CoinManager | null = null;
-  private coins: CoinItem[] = [];
-  private magnetCoins: CoinItem[] = [];
-  private scene!: THREE.Scene;
+
+  public readonly spawnProbabilities = {
+    energon: 5,
+    golden: 1000,
+  };
 
   public static getInstance(): CoinManager {
     if (!CoinManager.instance) {
@@ -25,23 +17,35 @@ export class CoinManager {
     return CoinManager.instance;
   }
 
-  public initialize(scene: THREE.Scene) {
-    this.scene = scene;
-  }
-
   /* =======================
      SPAWN
      ======================= */
+
+  public spawnRandom(
+    laneIndex: number,
+    zPos: number,
+    yPos?: number,
+    value?: number,
+  ) {
+    let choice = makeWeightedChoice(this.spawnProbabilities);
+
+    switch (choice) {
+      case "energon":
+        return this.spawnEnergon(laneIndex, zPos, yPos, value);
+      case "golden":
+        return this.spawnGolden(laneIndex, zPos, yPos, value);
+      default:
+        return this.spawnGolden(laneIndex, zPos, yPos, value);
+    }
+  }
 
   public spawnGolden(
     laneIndex: number,
     zPos: number,
     yPos?: number,
     value?: number,
-  ): void {
-    const coin = new Golden(laneIndex, zPos, yPos, value);
-    this.coins.push(coin);
-    this.scene.add(coin);
+  ) {
+    return new Golden(laneIndex, zPos, yPos, value);
   }
 
   public spawnEnergon(
@@ -49,250 +53,7 @@ export class CoinManager {
     zPos: number,
     yPos?: number,
     value?: number,
-  ): void {
-    const coin = new Energon(laneIndex, zPos, yPos, value);
-    this.coins.push(coin);
-    this.scene.add(coin);
-  }
-
-  /* =======================
-     UPDATE
-     ======================= */
-
-  public update(deltaTime: number, speed: number): void {
-    for (let i = this.coins.length - 1; i >= 0; i--) {
-      const coin = this.coins[i];
-      if (coin === undefined) continue;
-      const shouldRemove = coin.update(deltaTime, speed);
-
-      if (shouldRemove) {
-        this.removeCoin(i);
-      }
-    }
-  }
-
-  private updateMagnetCoins(car: Car, deltaTime: number): void {
-    if (this.magnetCoins.length == 0) return;
-
-    const playerStore = usePlayerStore();
-
-    const force = playerStore.magnetForce ?? 8;
-    const dt = deltaTime / 1000;
-
-    const carPos = car.position;
-    const dir = new THREE.Vector3();
-
-    const t = performance.now();
-
-    for (let i = this.magnetCoins.length - 1; i >= 0; i--) {
-      const coin = this.magnetCoins[i];
-
-      dir.subVectors(carPos, coin.position);
-
-      const dist = dir.length();
-
-      if (dist > 0.01) {
-        dir.normalize();
-
-        coin.position.addScaledVector(dir, force * dt);
-        coin.collider.center.copy(coin.position);
-      }
-
-      this.updateMagnetBeam(coin, carPos, t);
-    }
-  }
-
-  private updateMagnetBeam(
-    coin: CoinItem,
-    carPos: THREE.Vector3,
-    time: number,
   ) {
-    const beam = coin.userData.magnetLine as THREE.Mesh;
-    if (!beam) return;
-
-    const target = coin.position.clone();
-
-    // середина между машиной и монетой
-    const mid = new THREE.Vector3()
-      .addVectors(carPos, target)
-      .multiplyScalar(0.5);
-
-    beam.position.copy(mid);
-
-    // направление
-    const dir = new THREE.Vector3().subVectors(target, carPos);
-
-    const length = dir.length();
-
-    beam.scale.z = length;
-
-    beam.lookAt(target);
-
-    const mat = beam.material as THREE.ShaderMaterial;
-    mat.uniforms.time.value = time * 0.001;
+    return new Energon(laneIndex, zPos, yPos, value);
   }
-
-  /* =======================
-     COLLISION
-     ======================= */
-
-  /**
-   * Проверка подбора монеток машиной
-   * @returns сумма очков, собранных за этот кадр
-   */
-  public checkCarCollision(car: Car) {
-    let collected = {
-      golden: 0,
-      energon: 0,
-      total: 0,
-    };
-    const carCollider = car.getCollider();
-    for (let i = this.coins.length - 1; i >= 0; i--) {
-      const coin = this.coins[i];
-      if (coin === undefined) continue;
-
-      if (carCollider.intersectsSphere(coin.collider)) {
-        const itemType = coin.itemType as CoinType;
-        collected[itemType] += coin.getValue();
-        collected["total"] += coin.getValue();
-        this.removeCoin(i);
-      }
-    }
-    for (let i = this.magnetCoins.length - 1; i >= 0; i--) {
-      const coin = this.magnetCoins[i];
-      if (coin === undefined) continue;
-
-      if (carCollider.intersectsSphere(coin.collider)) {
-        const itemType = coin.itemType as CoinType;
-        collected[itemType] += coin.getValue();
-        collected["total"] += coin.getValue();
-        this.removeCoin(i, true);
-      }
-    }
-    return collected;
-  }
-
-  /* =======================
-     HELPERS
-     ======================= */
-
-  private removeCoin(index: number, magnet = false): void {
-    const list = magnet ? this.magnetCoins : this.coins;
-
-    const coin = list[index];
-    if (!coin) return;
-
-    const line = coin.userData.magnetLine as THREE.Mesh;
-
-    if (line) {
-      this.scene.remove(line);
-      line.geometry.dispose();
-      (line.material as THREE.Material).dispose();
-    }
-
-    this.scene.remove(coin);
-    list.splice(index, 1);
-  }
-
-  /* =======================
-     RESET / GETTERS
-     ======================= */
-
-  public reset(): void {
-    [...this.coins, ...this.magnetCoins].forEach((c) => this.scene.remove(c));
-
-    this.coins = [];
-    this.magnetCoins = [];
-  }
-
-  public getCoins(): BaseItem[] {
-    return this.coins;
-  }
-
-  public applyMagnet(car: Car, deltaTime: number): void {
-    const playerStore = usePlayerStore();
-
-    if (playerStore.isMagnetEnabled) {
-      const radius = playerStore.magnetRadius ?? 4.5;
-      const radiusSq = radius * radius;
-
-      const carPos = car.position;
-
-      // 1. переносим обычные монеты в магнитные
-      for (let i = this.coins.length - 1; i >= 0; i--) {
-        const coin = this.coins[i];
-        if (!coin) continue;
-
-        const distSq = coin.position.distanceToSquared(carPos);
-
-        if (distSq <= radiusSq) {
-          this.magnetCoins.push(coin);
-          coin.userData.magnetized = true;
-          const line = this.createMagnetLine();
-          this.scene.add(line);
-          coin.userData.magnetLine = line;
-          this.coins.splice(i, 1);
-        }
-      }
-    }
-
-    // 2. обновляем магнитные
-    this.updateMagnetCoins(car, deltaTime);
-  }
-
-  private createMagnetLine(): THREE.Mesh {
-    const geometry = new THREE.PlaneGeometry(0.18, 1, 1, 20);
-    geometry.rotateX(Math.PI / 2);
-
-    const material = new THREE.ShaderMaterial({
-      transparent: true,
-      depthWrite: false,
-      blending: THREE.AdditiveBlending,
-      side: THREE.DoubleSide,
-
-      uniforms: {
-        time: { value: 0 },
-        color: { value: new THREE.Color("#00eaff") },
-      },
-
-      vertexShader: magnetLineVertex,
-      fragmentShader: magnetLineFragment,
-    });
-
-    return new THREE.Mesh(geometry, material);
-  }
-
-  public createMagnetField(): THREE.Mesh {
-    const geometry = new THREE.SphereGeometry(2, 32, 32);
-
-    const material = new THREE.ShaderMaterial({
-      side: THREE.BackSide,
-      transparent: true,
-      depthWrite: false,
-      blending: THREE.AdditiveBlending,
-
-      uniforms: {
-        time: { value: 0 },
-        intensity: { value: 0.1 },
-        color: { value: new THREE.Color("#00eaff") },
-      },
-      vertexShader: magnetFieldVertex,
-      fragmentShader: magnetFieldFragment,
-    });
-
-    return new THREE.Mesh(geometry, material);
-  }
-
-  // public updateMagnetField(car: Car, time: number, enabled: boolean) {
-  //   const field = car.userData.magnetField as THREE.Mesh;
-  //   if (!field) return;
-
-  //   field.position.copy(car.position);
-  //   field.position.y += 0.4;
-
-  //   const mat = field.material as THREE.ShaderMaterial;
-  //   mat.uniforms.time.value = time * 0.001;
-
-  //   field.visible = enabled;
-  // }
 }

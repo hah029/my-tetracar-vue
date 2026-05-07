@@ -8,8 +8,9 @@ import { CoinManager } from "../interactive/items/coin/CoinManager";
 
 import nitroFragmentShader from "@/game/shaders/nitro/fragment.glsl";
 import nitroVertexShader from "@/game/shaders/nitro/vertex.glsl";
-import shieldFragmentShader from "@/game/shaders/shield/fragment.glsl";
-import shieldVertexShader from "@/game/shaders/shield/vertex.glsl";
+import { MagnetSystem } from "../magnet/MagnetSystem";
+// import shieldFragmentShader from "@/game/shaders/shield/fragment.glsl";
+// import shieldVertexShader from "@/game/shaders/shield/vertex.glsl";
 
 export class CarManager {
   private static instance: CarManager | null = null;
@@ -47,11 +48,11 @@ export class CarManager {
 
     this.car = new Car(this.scene, config);
 
-    const field = CoinManager.getInstance().createMagnetField();
+    // const field = MagnetSystem.getInstance().createMagnetField();
 
-    this.scene.add(field);
-    this.car.userData.magnetField = field;
-    field.visible = false;
+    // this.scene.add(field);
+    // this.car.userData.magnetField = field;
+    // field.visible = false;
 
     this.createNitroEffect();
 
@@ -171,8 +172,8 @@ export class CarManager {
     if (this.scene) {
       this.scene.remove(this.car);
 
-      const field = this.car.userData.magnetField;
-      if (field) this.scene.remove(field);
+      // const field = this.car.userData.magnetField;
+      // if (field) this.scene.remove(field);
     }
 
     this.nitroLeft?.geometry.dispose();

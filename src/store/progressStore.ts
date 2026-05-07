@@ -39,15 +39,15 @@ export const useProgressStore = defineStore("progressStore", () => {
     let points = 0;
 
     const pointsMapper = {
-        distance: DISTANCE_MLT,
-        golden: GOLDEN_MLT,
-        energon: ENERGON_MLT,
-        jump: JUMP_MLT,
-        consumeArmor: OBSTACLE_CRUSHED_MLT,
-        bulletHit: OBSTACLE_CRUSHED_MLT,
-    }
+      distance: DISTANCE_MLT,
+      golden: GOLDEN_MLT,
+      energon: ENERGON_MLT,
+      jump: JUMP_MLT,
+      reduceShield: OBSTACLE_CRUSHED_MLT,
+      bulletHit: OBSTACLE_CRUSHED_MLT,
+    };
 
-    points = amount_ * pointsMapper[type_]
+    points = amount_ * pointsMapper[type_];
 
     currentMultiplier.value = getScoreMultiplier();
     score.value += points * currentMultiplier.value;
@@ -67,7 +67,7 @@ export const useProgressStore = defineStore("progressStore", () => {
 
   function getScoreMultiplier() {
     let mplr = MULTI_BASE;
-    
+
     if (playerStore.isNitroEnabled) mplr *= MULTI_GROW_NITRO;
     // if (playerStore.isNitroEnabled) mplr *= 2;
 

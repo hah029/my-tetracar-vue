@@ -10,12 +10,17 @@ import { useProgressStore } from "@/store/progressStore";
 import { useGame } from "./useGame";
 // managers
 import { CameraSystem } from "@/game/camera/CameraSystem";
-import { SoundManager } from "@/game/sound/SoundManager";
+// import { SoundManager } from "@/game/sound/SoundManager";
 import { DebugColliderVisualizer } from "@/helpers/debug/DebugColliderVisualizer";
 import { UpdateMode } from "@/game/core/UpdateMode";
-import { CarManager } from "@/game/car";
+// import { CarManager } from "@/game/car";
 import { BulletSystem } from "@/game/combat/BulletSystem";
 import { GameStates } from "@/game/core/GameState";
+import { Jump } from "@/game/interactive/obstacle";
+import { BaseObstacle } from "@/game/interactive/obstacle/BaseObstacle";
+import { CoinItem } from "@/game/interactive/items/coin/CoinItem";
+import { BoosterItem } from "@/game/interactive/items/booster/BoosterItem";
+import type { BaseItem } from "@/game/interactive/items/BaseItem";
 
 export function GameLoop(
   game: ReturnType<typeof useGame>,
@@ -27,7 +32,7 @@ export function GameLoop(
   const playerStore = usePlayerStore();
   const progressStore = useProgressStore();
 
-  const soundManager = SoundManager.getInstance();
+  // const soundManager = SoundManager.getInstance();
 
   // ----------------------------
   // показываем / скрываем FPS-панель через Ctrl+Q
@@ -75,117 +80,30 @@ export function GameLoop(
     game.updateEffects();
 
     // обрабатываем коллизии машинки с игровыми предметами
-    const collisionResult = game.checkCollision(performance.now());
-    if (collisionResult.collision) {
-      if (collisionResult.jump) {
-        game.jumpPlayer(deltaTime);
-        progressStore.calcScore("jump", 1);
-        soundManager.play("sfx_jump");
-      } else if (collisionResult.obstacle) {
-        // отнимаем у игрока броню
-        if (playerStore.isShieldEnabled) {
-          game.destroyObstacles(collisionResult.impactPoint!, [
-            collisionResult.obstacle,
-          ]);
+    let obstacleCollision = game.checkObstaclesCollision(performance.now());
 
-          playerStore.consumeArmor();
-          if (playerStore.armor == 0) {
-            CarManager.getInstance().disableShield();
-            playerStore.disableShield();
-          }
-
-          progressStore.calcScore("consumeArmor", 1);
-        } else {
-          game.destroyCar(collisionResult.impactPoint);
-          game.destroyObstacles(
-            collisionResult.impactPoint!,
-            [collisionResult.obstacle],
-            false,
-          );
-          soundManager.play("sfx_destroy_bot");
-          const strength = Math.min(currentSpeed / playerStore.maxSpeed, 1);
-          CameraSystem.triggerImpactShake(strength);
+    // если произошло столкновение с любым препятствием -> обрабатываем его
+    if (obstacleCollision != null) {
+      // обработка Jump
+      if (obstacleCollision.impactSubject instanceof Jump) {
+        game.handleJumpCollision(deltaTime);
+        // обработка BaseObstacle
+      } else if (obstacleCollision.impactSubject instanceof BaseObstacle) {
+        // handleBaseObstacleCollision возвращает флаг уничтожения машины
+        if (game.handleBaseObstacleCollision(obstacleCollision, currentSpeed))
           gameState.endGame();
-          return false;
-        }
       }
     }
 
-    // ловим Голдены и Энергоны
-    const coins = game.checkCoinCollision();
-    if (coins.total > 0) {
-      if (playerStore.isNitroEnabled) {
-        coins.golden *= playerStore.goldenNitroMultiplier;
-        coins.energon *= playerStore.energonNitroMultiplier;
+    const itemCollision = game.checkItemsCollision();
+    if (itemCollision != null) {
+      if (itemCollision.impactSubject instanceof CoinItem) {
+        // обработка Coin
+        game.handleCoinCollision(itemCollision);
+      } else if (itemCollision.impactSubject instanceof BoosterItem) {
+        game.handleBoosterCollision(itemCollision);
       }
-      if (coins.golden > 0) {
-        progressStore.addGolden(coins.golden);
-        soundManager.play("sfx_add_golden");
-        const carPos = game.car.value.mesh.position;
-        game.spawnFlash("golden", carPos, 4);
-      }
-      if (coins.energon > 0) {
-        progressStore.addEnergon(coins.energon);
-        soundManager.play("sfx_add_energon");
-        playerStore.makeEventHappened("addEnergon");
-        const carPos = game.car.value.mesh.position;
-        game.spawnFlash("energon", carPos);
-      }
-    }
-
-    // ловим Патроны
-    const bulletItems = game.checkBulletItemCollision();
-    if (bulletItems > 0) {
-      if (playerStore.ammo < playerStore.maxAmmo) {
-        soundManager.play("sfx_add_patron");
-        playerStore.addAmmo();
-        playerStore.addNewMsg("ammoRefilled");
-        playerStore.makeEventHappened("addBullet");
-        const carPos = game.car.value.mesh.position;
-        game.spawnFlash("bullet", carPos);
-      } else if (playerStore.ammo == playerStore.maxAmmo) {
-        playerStore.addNewMsg("maxAmmo");
-      }
-    }
-
-    // ловим Нитро и Броню
-    const boostCollisions = game.checkBoosterCollision();
-    if (boostCollisions.collision) {
-      const carPos = game.car.value.mesh.position;
-
-      if (boostCollisions.subject === "nitro") {
-        soundManager.play("sfx_add_nitro");
-        playerStore.enableNitro();
-        CarManager.getInstance().enableNitro();
-        playerStore.addNewMsg("nitroActivated");
-        playerStore.makeEventHappened("addNitro");
-        game.spawnFlash("nitro", carPos);
-      } else if (boostCollisions.subject === "shield") {
-        if (playerStore.armor < playerStore.maxArmor) {
-          soundManager.play("sfx_add_armor");
-          playerStore.addArmor();
-          if (!playerStore.isShieldEnabled) {
-            playerStore.enableShield();
-            CarManager.getInstance().enableShield();
-          }
-          playerStore.addNewMsg("armorEquipped");
-          playerStore.makeEventHappened("addArmor");
-          game.spawnFlash("shield", carPos);
-        } else {
-          playerStore.addNewMsg("maxArmor");
-        }
-      } else if (boostCollisions.subject === "magnet") {
-        soundManager.play("sfx_add_nitro");
-        playerStore.enableMagnet();
-        playerStore.addNewMsg("magnetActivated");
-        playerStore.makeEventHappened("addMagnet");
-        game.spawnFlash("magnet", carPos);
-      } else {
-        console.error(
-          "Undefined booster collision subject:",
-          boostCollisions.subject,
-        );
-      }
+      game.removeItem(itemCollision.impactSubject as BaseItem);
     }
 
     const realCar = game.car.value.mesh;

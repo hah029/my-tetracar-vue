@@ -13,8 +13,5 @@ export class Golden extends CoinItem {
   ) {
     super(laneIndex, zPos, yPos, { ...GOLDEN_MATERIAL_CONFIG });
     this.value = value;
-    this.itemType = "golden";
-    this.userData.isCoin = true;
-    this.userData.coinType = "golden";
   }
 }

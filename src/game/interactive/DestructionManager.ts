@@ -18,7 +18,7 @@ import {
   NITRO_MATERIAL_CONFIG,
   SHIELD_MATERIAL_CONFIG,
 } from "./items/booster/config";
-import { MATERIAL_CONFIG as BULLET_MATERIAL_CONFIG } from "./items/bullet/config/BulletConfig";
+import { MATERIAL_CONFIG as BULLET_MATERIAL_CONFIG } from "./items/booster/config/BulletConfig";
 import { makeWeightedChoice } from "@/helpers/functions";
 
 export class DestructionManager {

@@ -1,12 +1,9 @@
 // /nitro/Nitro.ts
-import { BaseItem } from "../BaseItem";
+import { BoosterItem } from "./BoosterItem";
 import { NITRO_MATERIAL_CONFIG } from "./config/NitroConfig";
 
-export class Nitro extends BaseItem {
+export class NitroItem extends BoosterItem {
   constructor(laneIndex: number, zPos: number, yPos?: number) {
     super(laneIndex, zPos, yPos, NITRO_MATERIAL_CONFIG);
-    this.itemType = "nitro";
-    this.userData.isBooster = true;
-    this.userData.boosterType = "nitro";
   }
 }

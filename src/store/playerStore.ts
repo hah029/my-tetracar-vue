@@ -95,7 +95,7 @@ export const usePlayerStore = defineStore("playerStore", () => {
   }
 
   // уменьшаем кол-во брони (после выстрела)
-  function consumeArmor() {
+  function reduceShield() {
     if (armor.value > 0) armor.value -= 1;
   }
 
@@ -238,7 +238,7 @@ export const usePlayerStore = defineStore("playerStore", () => {
     addAmmo,
     consumeAmmo,
     addArmor,
-    consumeArmor,
+    reduceShield,
     canShoot,
     makeEventHappened,
     addNewMsg,

@@ -2,14 +2,15 @@
 import * as THREE from "three";
 import { RoadManager } from "@/game/road/RoadManager";
 
-import { CubeBuilder } from "@/game/cube/Cube";
+import type { ItemType } from "./types";
 import type { MaterialConfig } from "@/game/cube/types";
+import { CubeBuilder } from "@/game/cube/Cube";
 import { ITEM_GEOMETRY_CONFIG } from "./BaseConfig";
 import { useCommonStore } from "@/store/commonStore";
 
 export class BaseItem extends THREE.Group {
   public collider: THREE.Sphere;
-  public itemType!: string;
+  public itemType!: ItemType;
   protected cube: THREE.Object3D = new THREE.Object3D();
   protected rotationYDiff = useCommonStore().BASE_ITEM_ROTATION;
   protected initialPosition: THREE.Vector3;
