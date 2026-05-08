@@ -7,6 +7,7 @@
     <component :is="getUIComponent" class="ui_components_root"/>
     <RightsPanel />
     <TeamLogo />
+    <DebugPanel />
 </template>
 
 
@@ -34,6 +35,7 @@
     import { DebugColliderVisualizer } from "./helpers/debug/DebugColliderVisualizer";
     import { GameStates } from "./game/core/GameState";
     import { provide } from 'vue';
+    import DebugPanel from '@/components/hud/panels/DebugPanel.vue';
     // import { useProgressStore } from "./store/progressStore";
 
     const threeRoot = ref<HTMLDivElement | null>(null);
@@ -86,6 +88,26 @@
         const scene = getScene();
         const camera = getCamera();
         const composer = getComposer();
+
+        console.log('🔍 App: Got scene:', !!scene);
+        console.log('🔍 App: Got composer:', !!composer);
+        console.log('🔍 App: Got renderer:', !!composer?.renderer);
+
+        // регистрация ThreeJS объектов для дебаг панели
+        if (scene && composer?.renderer) {
+            (window as any).__THREE_DEBUG__ = {
+                scene: scene,
+                renderer: composer.renderer
+            };
+            console.log('✅ ThreeJS debug panel registered');
+            
+            // Проверка - есть ли объекты в сцене
+            let objectCount = 0;
+            scene.traverse(() => objectCount++);
+            console.log(`📊 Scene has ${objectCount} objects`);
+        } else {
+            console.error('❌ Failed to register debug panel');
+        };
 
         // game init
         game.init(scene);

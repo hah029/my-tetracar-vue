@@ -2,6 +2,7 @@ import { createApp } from "vue";
 import { createPinia } from "pinia";
 import i18next from "i18next";
 import I18NextVue from "i18next-vue";
+import * as THREE from "three";
 
 import App from "./App.vue";
 import { locales } from "./locales";
@@ -14,6 +15,15 @@ const savedLang = localStorage.getItem("lang") || "auto";
 // итоговый язык
 let initialLang = savedLang === "auto" ? resolveAutoLanguage() : savedLang;
 
+let threeScene: THREE.Scene | null = null;
+let threeRenderer: THREE.WebGLRenderer | null = null;
+
+export function registerThreeDebug(scene: THREE.Scene, renderer: THREE.WebGLRenderer) {
+    threeScene = scene;
+    threeRenderer = renderer;
+    (window as any).__THREE_DEBUG__ = { scene: threeScene, renderer: threeRenderer };
+    console.log('✅ ThreeJS debug panel registered');
+};
 
 async function init() {
 	const platform = Platform.getInstance();
