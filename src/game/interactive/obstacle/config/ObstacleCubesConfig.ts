@@ -1,6 +1,9 @@
 import type { GeometryConfig } from "@/game/cube/types";
 // assets
 import cubeGLB from "@/assets/models/cube.glb";
+import obstacle1x3 from "@/assets/models/cube_obstacle_1x3.glb";
+import obstacle2x3 from "@/assets/models/cube_obstacle_2x3.glb";
+import obstacle3x3 from "@/assets/models/cube_obstacle_3x3.glb";
 import { XZ_SCALING as XZSC } from "@/game/cube/config";
 
 const YPOS = 0.15;
@@ -8,7 +11,31 @@ const ZPOS = 0;
 const LXPS = -2 * XZSC;
 const RXPS = 2 * XZSC;
 
-export const OBSTACLE_FORMS: GeometryConfig[][] = [
+export const OPTIMIZED_OBSTACLE_FORMS: GeometryConfig[][] = [
+  [
+    {
+      pos: [0, YPOS, ZPOS],
+      scale: [XZSC, XZSC, XZSC],
+      modelUrl: obstacle1x3,
+    },
+  ],
+  [
+    {
+      pos: [0, YPOS, ZPOS],
+      scale: [XZSC, XZSC, XZSC],
+      modelUrl: obstacle2x3,
+    },
+  ],
+  [
+    {
+      pos: [0, YPOS, ZPOS],
+      scale: [XZSC, XZSC, XZSC],
+      modelUrl: obstacle3x3,
+    },
+  ],
+];
+
+export const FULL_OBSTACLE_FORMS: GeometryConfig[][] = [
   // Стена из трёх кубиков в ряд
   [
     // нижний ряд

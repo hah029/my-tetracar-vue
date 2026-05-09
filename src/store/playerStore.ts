@@ -31,7 +31,7 @@ export const usePlayerStore = defineStore("playerStore", () => {
   const isMagnetEnabled = ref(false);
   const magnetTimer = ref(BASE_MAGNET_TIMER);
   const magnetRadius = ref(10);
-  const magnetForce = ref(20);
+  const magnetForce = ref(10);
   const magnetMaxTargets = ref(8);
   const magnetTypes = ref([] as any[]);
 

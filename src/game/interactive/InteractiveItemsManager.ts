@@ -22,8 +22,8 @@ import { useCommonStore } from "@/store/commonStore";
 import type { BaseItem } from "./items/BaseItem";
 import type { BaseObstacle } from "./obstacle/BaseObstacle";
 import { MagnetSystem } from "../magnet/MagnetSystem";
-import { CoinItem } from "./items/coin/CoinItem";
-import { BoosterItem } from "./items/booster/BoosterItem";
+// import { CoinItem } from "./items/coin/CoinItem";
+// import { BoosterItem } from "./items/booster/BoosterItem";
 import { DestructionManager } from "./DestructionManager";
 
 export class InteractiveItemsManager {
@@ -99,7 +99,8 @@ export class InteractiveItemsManager {
 
     // base physics
     this.updateItems(
-      items.filter((item) => item.userData.status === "landed"),
+      // items.filter((item) => item.userData.status === "landed"),
+      items,
       deltaTime,
       speed,
     );
@@ -401,7 +402,7 @@ export class InteractiveItemsManager {
     this.magnetEnabledTimer = 0;
   }
 
-  private addItem(item: BaseItem) {
+  public addItem(item: BaseItem) {
     this.items.push(item);
     this.scene.add(item);
   }

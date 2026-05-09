@@ -4,6 +4,7 @@ import type { GeometryConfig } from "@/game/cube/types";
 import { RoadManager } from "@/game/road/RoadManager";
 
 import { CubeObstacle } from "./CubeObstacle";
+import { FULL_OBSTACLE_FORMS } from "./config";
 
 export class MovingObstacle extends CubeObstacle {
   private speedX = 0.005;
@@ -21,7 +22,15 @@ export class MovingObstacle extends CubeObstacle {
     direction: 1 | -1 = 1,
     formConfig: GeometryConfig[],
   ) {
-    super(startLane, zPos, formConfig, scene, useGLB);
+    super(
+      startLane,
+      zPos,
+      formConfig,
+      scene,
+      useGLB,
+      undefined,
+      FULL_OBSTACLE_FORMS[0],
+    );
 
     const road = RoadManager.getInstance();
 

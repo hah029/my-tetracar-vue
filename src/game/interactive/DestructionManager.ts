@@ -6,6 +6,18 @@ import { useCommonStore } from "@/store/commonStore";
 import { CubePhysics } from "@/game/physics/CubePhysics";
 import { type CubePhysicsConfig } from "@/game/physics/CubePhysics";
 import { makeWeightedChoice } from "@/helpers/functions";
+import type { GeometryConfig } from "../cube/types";
+
+export type TransformationObject = {
+  dropType: string;
+  position: THREE.Vector3;
+};
+
+export type DestructionCell = {
+  localPosition: THREE.Vector3;
+  localQuaternion: THREE.Quaternion;
+  geomConfig: GeometryConfig;
+};
 
 export class DestructionManager {
   private static instance: DestructionManager | null = null;
@@ -27,15 +39,15 @@ export class DestructionManager {
   }
 
   public getTransformations(
-    cubes: THREE.Object3D[],
+    cells: DestructionCell[],
     transformRequired: boolean = true,
-  ) {
-    let items: object[] = [];
+  ): TransformationObject[] {
+    let items: TransformationObject[] = [];
 
-    cubes.forEach((cube) => {
+    cells.forEach((cell) => {
       const drop = transformRequired ? this.rollDrop() : null;
       if (drop) {
-        items.push({ position: cube.position, dropType: drop });
+        items.push({ position: cell.localPosition, dropType: drop });
       }
     });
 

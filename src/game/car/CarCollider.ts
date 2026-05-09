@@ -52,54 +52,16 @@ export class CarCollider {
     );
 
     const halfSize = colliderSize.clone().multiplyScalar(0.4);
+
     this.collider.min.copy(colliderCenter.clone().sub(halfSize));
     this.collider.max.copy(colliderCenter.clone().add(halfSize));
 
     // Обновляем отладочный меш
     if (this.debugMesh) {
-      this.debugMesh.scale.copy(colliderSize);
-      this.debugMesh.position.copy(colliderCenter);
+      this.collider.getSize(this.debugMesh.scale);
+      this.collider.getCenter(this.debugMesh.position);
     }
   }
-
-  // public updateFromObject(obj: THREE.Object3D): void {
-  //   // Принудительно обновляем мировые матрицы всех дочерних объектов
-  //   obj.updateWorldMatrix(false, true);
-
-  //   this.boundingBox.setFromObject(obj);
-
-  //   const size = new THREE.Vector3();
-  //   const center = new THREE.Vector3();
-
-  //   this.boundingBox.getSize(size);
-  //   this.boundingBox.getCenter(center);
-
-  //   const colliderSize = new THREE.Vector3(
-  //     size.x * this.config.shrinkX,
-  //     size.y * this.config.heightFactor,
-  //     size.z * this.config.shrinkZ,
-  //   );
-
-  //   const colliderCenter = new THREE.Vector3(
-  //     center.x,
-  //     center.y - this.config.yOffset,
-  //     center.z,
-  //   );
-
-  //   const halfSize = colliderSize.clone().multiplyScalar(0.4);
-  //   this.collider.min.copy(colliderCenter.clone().sub(halfSize));
-  //   this.collider.max.copy(colliderCenter.clone().add(halfSize));
-
-  //   // Обновляем отладочный меш, если он есть
-  //   if (this.debugMesh) {
-  //     const currentSize = new THREE.Vector3();
-  //     const currentCenter = new THREE.Vector3();
-  //     this.collider.getSize(currentSize);
-  //     this.collider.getCenter(currentCenter);
-  //     this.debugMesh.scale.copy(currentSize);
-  //     this.debugMesh.position.copy(currentCenter);
-  //   }
-  // }
 
   public getCollider(): THREE.Box3 {
     return this.collider;
@@ -108,7 +70,7 @@ export class CarCollider {
   public checkObstacleCollision(obstacle: THREE.Object3D): boolean {
     // Логируем только для EnemyCar
 
-    console.log("checkObstacleCollision", obstacle);
+    // console.log("checkObstacleCollision", obstacle);
 
     const isEnemyCar = obstacle.constructor.name === "EnemyCar";
 
@@ -148,10 +110,10 @@ export class CarCollider {
     carPosition: THREE.Vector3,
   ): boolean {
     const jumpBox = new THREE.Box3().setFromObject(jump);
-    const xDistance = Math.abs(carPosition.x - jump.position.x);
-    if (xDistance > 1.2) return false;
-    const zDistance = Math.abs(carPosition.z - jump.position.z);
-    if (zDistance > 1.5) return false;
+    // const xDistance = Math.abs(carPosition.x - jump.position.x);
+    // if (xDistance > 1.2) return false;
+    // const zDistance = Math.abs(carPosition.z - jump.position.z);
+    // if (zDistance > 1.5) return false;
 
     return this.collider.intersectsBox(jumpBox);
   }

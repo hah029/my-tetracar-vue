@@ -1,294 +1,360 @@
 import * as THREE from "three";
 
 import { BaseObstacle } from "./BaseObstacle";
+
 import type { GeometryConfig } from "@/game/cube/types";
 import type { PhysicsConfig } from "@/game/physics/types";
+
 import { CubeBuilder } from "@/game/cube/Cube";
+
 import { RoadManager } from "@/game/road/RoadManager";
+
 import { CAR_MATERIAL_CONFIG } from "@/game/car";
-import { DestructionManager } from "../DestructionManager";
-import { useCommonStore } from "@/store/commonStore";
+
+import {
+  DestructionManager,
+  type DestructionCell,
+  type TransformationObject,
+} from "../DestructionManager";
 import { InteractiveItemsManager } from "../InteractiveItemsManager";
-import type { BaseItem } from "../items/BaseItem";
+
+import { useCommonStore } from "@/store/commonStore";
+
+import { BaseItem } from "../items/BaseItem";
+
+type DropType =
+  | "golden_coin"
+  | "energon_coin"
+  | "bullet"
+  | "shield_booster"
+  | "nitro_booster"
+  | "magnet_booster";
 
 export class CubeObstacle extends BaseObstacle {
-  protected cubes: THREE.Object3D[] = [];
-  protected isDestroyed: boolean = false;
-  private physicsConfig: Required<PhysicsConfig>;
+  private visualMesh?: THREE.Object3D;
+
+  private destructionCells: DestructionCell[] = [];
+  private isDestroyed = false;
   private scene: THREE.Scene;
   private lane: number;
-
-  private interactiveItemsManager = InteractiveItemsManager.getInstance();
+  private collider = new THREE.Box3();
+  private physicsConfig: Required<PhysicsConfig>;
   private destructionManager = DestructionManager.getInstance();
+  private interactiveItemsManager = InteractiveItemsManager.getInstance();
 
   constructor(
     laneIndex: number,
     zPos: number,
-    formConfig: GeometryConfig[],
+
+    // lowpoly / lod visual
+    formBaseConfig: GeometryConfig[],
+
     scene: THREE.Scene,
+
     useGLB = false,
+
     customConfig?: Partial<PhysicsConfig>,
+
+    // detailed logical cubes
+    formDetailConfig?: GeometryConfig[],
   ) {
     super();
+
     this.userData.isObstacle = true;
+
     this.scene = scene;
+
+    this.lane = laneIndex;
+
     this.physicsConfig = {
       ...useCommonStore().getBasePhysics(),
       ...customConfig,
     };
 
     const x = RoadManager.getInstance().getLanePosition(laneIndex);
-    this.lane = laneIndex;
+
     this.position.set(x, 0, zPos);
 
-    this.build(formConfig, useGLB);
+    // IMPORTANT:
+    // if detail config exists -> use it for destruction
+    // otherwise fallback to base config
+    const destructionSource = formDetailConfig ?? formBaseConfig;
+
+    this.buildDestructionCells(destructionSource);
+
+    this.buildVisual(formBaseConfig, useGLB);
+
+    // this.buildCollider(destructionSource);
   }
 
-  public update(dt: number, speed: number): boolean {
-    if (!this.isDestroyed) {
-      this.updateNormalCubes(dt, speed);
-      return this.position.z > useCommonStore().ITEMS_REMOVING_ZPOS;
-    }
-    return false;
-  }
+  // =========================================================
+  // BUILD
+  // =========================================================
 
-  async build(formConfig: GeometryConfig[], useGLB: boolean): Promise<void> {
-    const cubes: THREE.Object3D[] = [];
+  private async buildVisual(formConfig: GeometryConfig[], useGLB: boolean) {
+    const group = new THREE.Group();
 
     for (let i = 0; i < formConfig.length; i++) {
       const config = formConfig[i];
-      if (config != undefined) {
-        const cube = await CubeBuilder.build({
-          index: i,
-          geomConfig: config,
-          useGLB: useGLB,
-          useTexture: true,
-          materialConfig: CAR_MATERIAL_CONFIG,
-        });
-        this.add(cube);
-        cubes.push(cube);
-      }
+
+      if (!config) continue;
+
+      // console.log({
+      //   index: i,
+      //   geomConfig: config,
+      //   useGLB,
+      //   useTexture: true,
+      //   materialConfig: CAR_MATERIAL_CONFIG,
+      // });
+
+      const mesh = await CubeBuilder.build({
+        index: i,
+        geomConfig: config,
+        useGLB,
+        useTexture: true,
+        materialConfig: CAR_MATERIAL_CONFIG,
+      });
+
+      group.add(mesh);
     }
 
-    this.cubes = cubes;
+    this.visualMesh = group;
+
+    this.add(group);
   }
 
-  // public destroy(
-  //   impactPoint: THREE.Vector3,
-  //   transformRequired: boolean = true,
-  // ) {
-  //   if (this.isDestroyed) return;
-  //   this.isDestroyed = true;
-
-  //   this.cubes.forEach((cube, idx) => {
-  //     // Получаем мировые координаты
-  //     const worldPos = cube.getWorldPosition(new THREE.Vector3());
-  //     const worldRot = cube.getWorldQuaternion(new THREE.Quaternion());
-
-  //     // Отсоединяем от группы и добавляем в сцену
-  //     this.remove(cube);
-  //     this.scene.add(cube);
-  //     cube.position.copy(worldPos);
-  //     cube.quaternion.copy(worldRot);
-
-  //     const ud = cube.userData as any;
-
-  //     // --- Вектор скорости с комбинированным разбросом ---
-  //     const baseVel = new THREE.Vector3(
-  //       (Math.random() - 0.5) * this.physicsConfig.explosionForce,
-  //       Math.random() * this.physicsConfig.explosionUpward + 0.1,
-  //       (Math.random() - 0.5) * this.physicsConfig.explosionForce,
-  //     );
-
-  //     if (impactPoint) {
-  //       const dir = cube.position.clone().sub(impactPoint).normalize();
-  //       dir.multiplyScalar(this.physicsConfig.explosionForce);
-  //       baseVel.add(dir); // суммируем случайный и направленный вектор
-  //     }
-
-  //     ud.velocity = baseVel;
-
-  //     // --- Вращение ---
-  //     ud.rotationSpeed = new THREE.Vector3(
-  //       (Math.random() - 0.5) * this.physicsConfig.cubeRotationSpeed,
-  //       (Math.random() - 0.5) * this.physicsConfig.cubeRotationSpeed,
-  //       (Math.random() - 0.5) * this.physicsConfig.cubeRotationSpeed,
-  //     );
-
-  //     // --- Дополнительные данные для DestructionManager ---
-  //     ud.gravity = this.physicsConfig.gravity; // можно использовать в update
-  //     ud.life = 0; // для задержки приземления, если нужно
-  //   });
-
-  //   // Регистрируем кубики в DestructionManager
-  //   let cubesTransformations = this.destructionManager.getTransformations(
-  //     this.cubes,
-  //     transformRequired,
-  //   );
-  //   this.interactiveItemsManager.transformDestroyedCubes(cubesTransformations);
-  // }
-  // CubeObstacle.destroy
-  public destroy(
-    impactPoint: THREE.Vector3,
-    transformRequired: boolean = true,
-  ) {
-    if (this.isDestroyed) return;
-    this.isDestroyed = true;
-
-    // Получаем для каждого куба, во что он превратится
-    const dropTypes: any[] = this.destructionManager.getTransformations(
-      this.cubes,
-      transformRequired,
-    );
-
-    for (let i = 0; i < this.cubes.length; i++) {
-      const cube = this.cubes[i];
-      const dropType = dropTypes[i]?.dropType;
-
-      // Получаем мировую позицию и вращение куба
-      const worldPos = cube.getWorldPosition(new THREE.Vector3());
-      const worldQuat = cube.getWorldQuaternion(new THREE.Quaternion());
-
-      if (dropType) {
-        // Создаём соответствующий предмет (монету или бустер)
-        let item: BaseItem | null = null;
-        switch (dropType) {
-          case "golden_coin":
-            item = this.interactiveItemsManager.spawnGoldenCoin(
-              worldPos.z,
-              undefined,
-              worldPos.x,
-            );
-            break;
-          case "energon_coin":
-            item = this.interactiveItemsManager.spawnEnergonCoin(
-              worldPos.z,
-              undefined,
-              worldPos.x,
-            );
-            break;
-          case "bullet":
-            item = this.interactiveItemsManager.spawnBulletItem(
-              worldPos.z,
-              undefined,
-              worldPos.x,
-            );
-            break;
-          case "shield_booster":
-            item = this.interactiveItemsManager.spawnShieldBooster(
-              worldPos.z,
-              undefined,
-              worldPos.x,
-            );
-            break;
-          case "nitro_booster":
-            item = this.interactiveItemsManager.spawnNitroBooster(
-              worldPos.z,
-              undefined,
-              worldPos.x,
-            );
-            break;
-          case "magnet_booster":
-            item = this.interactiveItemsManager.spawnMagnetBooster(
-              worldPos.z,
-              undefined,
-              worldPos.x,
-            );
-            break;
-          default:
-            // Если дроп не выпал – не создаём ничего (или можно создать базовую монету)
-            continue;
-        }
-
-        if (!item) continue;
-
-        // Устанавливаем flying-статус и физические параметры, скопированные от куба
-        item.userData.status = "flying";
-        item.userData.velocity = new THREE.Vector3(
-          (Math.random() - 0.5) * this.physicsConfig.explosionForce,
-          Math.random() * this.physicsConfig.explosionUpward + 0.1,
-          (Math.random() - 0.5) * this.physicsConfig.explosionForce,
-        );
-        if (impactPoint) {
-          const dir = worldPos.clone().sub(impactPoint).normalize();
-          dir.multiplyScalar(this.physicsConfig.explosionForce);
-          item.userData.velocity.add(dir);
-        }
-
-        item.userData.rotationSpeed = new THREE.Vector3(
-          (Math.random() - 0.5) * this.physicsConfig.cubeRotationSpeed,
-          (Math.random() - 0.5) * this.physicsConfig.cubeRotationSpeed,
-          (Math.random() - 0.5) * this.physicsConfig.cubeRotationSpeed,
-        );
-
-        // Синхронизируем позицию и вращение (предмет может быть уже в нужном месте, но для верности)
-        item.position.copy(worldPos);
-        item.quaternion.copy(worldQuat);
-
-        // Добавляем в сцену и в менеджер (уже сделано внутри spawn-методов, но проверим)
-        // Удаляем исходный куб из группы и сцены
-        this.remove(cube);
-        this.scene.remove(cube);
-      } else {
-        // Если дроп не выпал (transformRequired = false) – разбрасываем кубики как в старом методе
-        // Отсоединяем от группы и добавляем в сцену
-        this.remove(cube);
-        this.scene.add(cube);
-        cube.position.copy(worldPos);
-        cube.quaternion.copy(worldQuat);
-
-        const ud = cube.userData as any;
-        // --- Вектор скорости с комбинированным разбросом ---
-        const baseVel = new THREE.Vector3(
-          (Math.random() - 0.5) * this.physicsConfig.explosionForce,
-          Math.random() * this.physicsConfig.explosionUpward + 0.1,
-          (Math.random() - 0.5) * this.physicsConfig.explosionForce,
-        );
-
-        if (impactPoint) {
-          const dir = cube.position.clone().sub(impactPoint).normalize();
-          dir.multiplyScalar(this.physicsConfig.explosionForce);
-          baseVel.add(dir); // суммируем случайный и направленный вектор
-        }
-
-        ud.velocity = baseVel;
-        ud.rotationSpeed = new THREE.Vector3(
-          (Math.random() - 0.5) * this.physicsConfig.cubeRotationSpeed,
-          (Math.random() - 0.5) * this.physicsConfig.cubeRotationSpeed,
-          (Math.random() - 0.5) * this.physicsConfig.cubeRotationSpeed,
-        );
-        // Дополнительные данные для DestructionManager
-        ud.gravity = this.physicsConfig.gravity;
-        ud.life = 0;
-      }
-    }
-
-    // Очищаем массив кубов, чтобы они больше не участвовали в коллизиях
-    this.cubes = [];
-  }
-
-  protected updateNormalCubes(dt: number, speed: number) {
-    this.position.z += dt * speed;
+  private buildDestructionCells(configs: GeometryConfig[]) {
+    this.destructionCells = configs.map((cfg) => {
+      return {
+        localPosition: new THREE.Vector3(cfg.pos[0], cfg.pos[1], cfg.pos[2]),
+        localQuaternion: new THREE.Quaternion(),
+        geomConfig: cfg,
+      };
+    });
   }
 
   public getCollider(): THREE.Box3 | null {
-    if (this.isDestroyed) return null;
-    const box = new THREE.Box3();
-    for (const cube of this.cubes) {
-      box.expandByObject(cube);
+    if (this.isDestroyed) {
+      return null;
     }
-    return box;
+
+    this.worldCollider.min.set(
+      this.position.x - 0.8,
+      this.position.y,
+      this.position.z - 0.8,
+    );
+
+    this.worldCollider.max.set(
+      this.position.x + 0.8,
+      this.position.y + 0.5,
+      this.position.z + 0.8,
+    );
+
+    return this.worldCollider;
   }
 
-  public getCubes(): THREE.Object3D[] {
-    return this.cubes;
+  private worldCollider = new THREE.Box3();
+
+  public update(dt: number, speed: number): boolean {
+    if (this.isDestroyed) {
+      return false;
+    }
+
+    const dz = dt * speed;
+    this.position.z += dz;
+    return this.position.z > useCommonStore().ITEMS_REMOVING_ZPOS;
   }
+
+  // =========================================================
+  // DESTROY
+  // =========================================================
+
+  public async destroy(impactPoint: THREE.Vector3, transformRequired = true) {
+    if (this.isDestroyed) return;
+
+    this.isDestroyed = true;
+
+    // remove visual lod
+    if (this.visualMesh) {
+      this.remove(this.visualMesh);
+
+      this.visualMesh.traverse((obj) => {
+        const mesh = obj as THREE.Mesh;
+
+        if (mesh.geometry) {
+          mesh.geometry.dispose();
+        }
+
+        if (Array.isArray(mesh.material)) {
+          mesh.material.forEach((m) => m.dispose());
+        } else {
+          mesh.material?.dispose?.();
+        }
+      });
+
+      this.visualMesh = undefined;
+    }
+
+    // calculate drops
+    const transformations: TransformationObject[] =
+      this.destructionManager.getTransformations(
+        this.destructionCells,
+        transformRequired,
+      );
+
+    for (let i = 0; i < this.destructionCells.length; i++) {
+      const cell = this.destructionCells[i];
+      const transformation = transformations[i];
+      const dropType = transformation?.dropType as DropType | undefined;
+
+      // ============================================
+      // WORLD TRANSFORM
+      // ============================================
+
+      const worldPos = cell.localPosition.clone();
+      this.localToWorld(worldPos);
+      const worldQuat = new THREE.Quaternion()
+        .copy(this.quaternion)
+        .multiply(cell.localQuaternion);
+
+      // ============================================
+      // DROP
+      // ============================================
+
+      if (dropType) {
+        const item = this.spawnDrop(dropType, worldPos);
+        if (!item) continue;
+        this.applyPhysicsToObject(item, impactPoint, worldPos);
+        item.quaternion.copy(worldQuat);
+        continue;
+      }
+
+      // ============================================
+      // DEBRIS
+      // ============================================
+
+      // const debris = await CubeBuilder.build({
+      //   index: i,
+      //   geomConfig: cell.geomConfig,
+      //   useGLB: true,
+      //   useTexture: true,
+      //   materialConfig: CAR_MATERIAL_CONFIG,
+      // });
+      const debris = new BaseItem(
+        worldPos.z,
+        undefined,
+        worldPos.x,
+        worldPos.y,
+      );
+      this.interactiveItemsManager.addItem(debris);
+
+      this.scene.add(debris);
+      debris.position.copy(worldPos);
+      debris.quaternion.copy(worldQuat);
+      this.applyPhysicsToObject(debris, impactPoint, worldPos);
+      const ud = debris.userData as any;
+      ud.gravity = this.physicsConfig.gravity;
+      ud.life = 0;
+    }
+
+    this.destructionCells = [];
+  }
+
+  // =========================================================
+  // HELPERS
+  // =========================================================
+
+  private spawnDrop(
+    dropType: DropType,
+    worldPos: THREE.Vector3,
+  ): BaseItem | null {
+    switch (dropType) {
+      case "golden_coin":
+        return this.interactiveItemsManager.spawnGoldenCoin(
+          worldPos.z,
+          undefined,
+          worldPos.x,
+        );
+
+      case "energon_coin":
+        return this.interactiveItemsManager.spawnEnergonCoin(
+          worldPos.z,
+          undefined,
+          worldPos.x,
+        );
+
+      case "bullet":
+        return this.interactiveItemsManager.spawnBulletItem(
+          worldPos.z,
+          undefined,
+          worldPos.x,
+        );
+
+      case "shield_booster":
+        return this.interactiveItemsManager.spawnShieldBooster(
+          worldPos.z,
+          undefined,
+          worldPos.x,
+        );
+
+      case "nitro_booster":
+        return this.interactiveItemsManager.spawnNitroBooster(
+          worldPos.z,
+          undefined,
+          worldPos.x,
+        );
+
+      case "magnet_booster":
+        return this.interactiveItemsManager.spawnMagnetBooster(
+          worldPos.z,
+          undefined,
+          worldPos.x,
+        );
+
+      default:
+        return null;
+    }
+  }
+
+  private applyPhysicsToObject(
+    object: THREE.Object3D,
+    impactPoint: THREE.Vector3,
+    worldPos: THREE.Vector3,
+  ) {
+    const ud = object.userData as any;
+
+    ud.status = "flying";
+
+    const velocity = new THREE.Vector3(
+      (Math.random() - 0.5) * this.physicsConfig.explosionForce,
+      Math.random() * this.physicsConfig.explosionUpward + 0.1,
+      (Math.random() - 0.5) * this.physicsConfig.explosionForce,
+    );
+
+    if (impactPoint) {
+      const dir = worldPos.clone().sub(impactPoint).normalize();
+      dir.multiplyScalar(this.physicsConfig.explosionForce);
+      velocity.add(dir);
+    }
+
+    ud.velocity = velocity;
+
+    ud.rotationSpeed = new THREE.Vector3(
+      (Math.random() - 0.5) * this.physicsConfig.cubeRotationSpeed,
+      (Math.random() - 0.5) * this.physicsConfig.cubeRotationSpeed,
+      (Math.random() - 0.5) * this.physicsConfig.cubeRotationSpeed,
+    );
+  }
+
+  // =========================================================
+  // GETTERS
+  // =========================================================
 
   public getLane(): number {
     return this.lane;
   }
 
   public isFullyDestroyed(): boolean {
-    return this.isDestroyed && this.cubes.length === 0;
+    return this.isDestroyed && this.destructionCells.length === 0;
   }
 }

@@ -24,6 +24,9 @@ export class CubePhysics {
 
     for (let i = 0; i < cubes.length; i++) {
       const cube = cubes[i];
+
+      // console.log(cube);
+
       if (!cube) continue;
       const ud = cube.userData as any;
 

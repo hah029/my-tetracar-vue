@@ -2,7 +2,10 @@ import * as THREE from "three";
 import { CAR_CUBES_CONFIG } from "@/game/car";
 import { RoadManager } from "@/game/road/RoadManager";
 
-import { OBSTACLE_FORMS } from "./config/ObstacleCubesConfig";
+import {
+  OPTIMIZED_OBSTACLE_FORMS,
+  FULL_OBSTACLE_FORMS,
+} from "./config/ObstacleCubesConfig";
 import { BaseObstacle } from "./BaseObstacle";
 import { MovingObstacle } from "./MovingObstacle";
 import { StaticObstacle } from "./StaticObstacle";
@@ -36,18 +39,30 @@ export class ObstacleManager {
   ): StaticObstacle | null {
     const index =
       formIndex !== undefined ? formIndex : this.getRandomObstacleIndex();
-    const form = OBSTACLE_FORMS[index];
-    if (!form) {
+
+    let obstacle;
+
+    const formBase = OPTIMIZED_OBSTACLE_FORMS[index];
+    if (!formBase) {
       return null;
     }
-    const obstacle = new StaticObstacle(lane, z, form, this.scene, this.useGLB);
+    const formDetailed = FULL_OBSTACLE_FORMS[index];
+    obstacle = new StaticObstacle(
+      lane,
+      z,
+      formBase,
+      this.scene,
+      this.useGLB,
+      undefined,
+      formDetailed,
+    );
     this.obstacles.push(obstacle);
     this.scene.add(obstacle);
     return obstacle;
   }
 
   private getRandomObstacleIndex(): number {
-    return Math.floor(Math.random() * OBSTACLE_FORMS.length);
+    return Math.floor(Math.random() * OPTIMIZED_OBSTACLE_FORMS.length);
   }
 
   public spawnMovingObstacle(
@@ -59,7 +74,7 @@ export class ObstacleManager {
     const lanes = RoadManager.getInstance().getLanesCount();
     const index =
       formIndex !== undefined ? formIndex : this.getRandomObstacleIndex();
-    const form = OBSTACLE_FORMS[index];
+    const form = OPTIMIZED_OBSTACLE_FORMS[index];
     if (!form) {
       return;
     }

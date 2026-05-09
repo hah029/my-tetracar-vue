@@ -42,10 +42,7 @@ export function GameLoop(
 
   function handleKeyDown(event: KeyboardEvent) {
     switch (event.key) {
-      case "q":
-      case "Q":
-      case "й":
-      case "Й":
+      case "keyQ":
         if (event.ctrlKey) {
           isDevPanelVisible = !isDevPanelVisible;
           el.style.visibility = isDevPanelVisible ? "visible" : "hidden";

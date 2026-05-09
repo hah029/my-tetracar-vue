@@ -1,18 +1,10 @@
 import * as THREE from "three";
-// import { Golden } from "./Golden";
-// import { Energon } from "./Energon";
 import { Car } from "@/game/car/Car";
-import type { BaseItem } from "@/game/interactive/items/BaseItem";
-// import type { CoinType } from "./types";
-// import type { Coin } from "./CoinItem";
+import { BaseItem } from "@/game/interactive/items/BaseItem";
 import { usePlayerStore } from "@/store/playerStore";
 
 import magnetLineVertex from "@/game/shaders/magnet/line/vertex.glsl";
 import magnetLineFragment from "@/game/shaders/magnet/line/fragment.glsl";
-// import magnetFieldVertex from "@/game/shaders/magnet/field/vertex.glsl";
-// import magnetFieldFragment from "@/game/shaders/magnet/field/fragment.glsl";
-// import { makeWeightedChoice } from "@/helpers/functions";
-// import type { ItemType } from "../interactive/items/types";
 
 export class MagnetSystem {
   private static instance: MagnetSystem | null = null;
@@ -61,9 +53,6 @@ export class MagnetSystem {
 
         item.position.addScaledVector(dir, force * dt);
         item.collider.center.copy(item.position);
-      } else {
-        // Если предмет уже очень близко к машине, считаем, что он подобран
-        // Коллизия обработается в checkItemsCollision
       }
 
       this.updateMagnetBeam(item, carPos, now);

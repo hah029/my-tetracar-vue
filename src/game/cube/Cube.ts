@@ -4,6 +4,18 @@ import { loadCubeModel } from "./loadCube";
 import type { GeometryConfig, CubeUserData, MaterialConfig } from "./types";
 import { loadTexture } from "@/helpers/loaders";
 
+const BASE_MATERIAL_CONFIG = {
+  textureUrl: null,
+  color: 0xffffff,
+  emissive: 0x000000,
+  emissiveIntensity: 1,
+  ior: 1,
+  transmission: 1,
+  metalness: 1,
+  roughness: 1,
+  thickness: 1,
+};
+
 export class CubeBuilder {
   private static modelCache = new Map<string, THREE.Group>();
 
@@ -17,12 +29,17 @@ export class CubeBuilder {
     const { index, geomConfig, useGLB, materialConfig, useTexture } = params;
     let cube: THREE.Object3D;
 
+    let _materialConfig = {
+      ...BASE_MATERIAL_CONFIG,
+      ...materialConfig,
+    };
+
     if (useGLB && geomConfig.modelUrl) {
       const model = await CubeBuilder.loadModel(geomConfig.modelUrl);
       cube = CubeBuilder.createCubeFromGLB(model, geomConfig);
       // Применить текстуру если нужно
-      if (useTexture && materialConfig?.textureUrl) {
-        const texture = loadTexture(materialConfig.textureUrl);
+      if (useTexture && _materialConfig?.textureUrl) {
+        const texture = loadTexture(_materialConfig.textureUrl);
 
         texture.flipY = false;
 
@@ -31,9 +48,9 @@ export class CubeBuilder {
             const mesh = child as THREE.Mesh;
             mesh.material = new THREE.MeshStandardMaterial({
               map: texture,
-              color: materialConfig.color ?? 0xffffff,
-              emissive: materialConfig.emissive ?? 0x000000,
-              emissiveIntensity: materialConfig.emissiveIntensity ?? 1,
+              color: _materialConfig.color ?? 0xffffff,
+              emissive: _materialConfig.emissive ?? 0x000000,
+              emissiveIntensity: _materialConfig.emissiveIntensity ?? 1,
               transparent: true,
             });
           }
@@ -41,19 +58,19 @@ export class CubeBuilder {
       }
     } else {
       let material: THREE.Material;
-      if (useTexture && materialConfig?.textureUrl) {
-        const texture = loadTexture(materialConfig.textureUrl);
+      if (useTexture && _materialConfig?.textureUrl) {
+        const texture = loadTexture(_materialConfig.textureUrl);
         material = new THREE.MeshStandardMaterial({
           map: texture,
-          color: materialConfig.color,
-          emissive: materialConfig.emissive,
-          emissiveIntensity: materialConfig.emissiveIntensity,
+          color: _materialConfig.color,
+          emissive: _materialConfig.emissive,
+          emissiveIntensity: _materialConfig.emissiveIntensity,
         });
       } else {
         material = new THREE.MeshStandardMaterial({
-          color: materialConfig?.color ?? 0xffffff,
-          emissive: materialConfig?.emissive ?? 0x000000,
-          emissiveIntensity: materialConfig?.emissiveIntensity ?? 1,
+          color: _materialConfig?.color ?? 0xffffff,
+          emissive: _materialConfig?.emissive ?? 0x000000,
+          emissiveIntensity: _materialConfig?.emissiveIntensity ?? 1,
           transparent: true,
         });
       }

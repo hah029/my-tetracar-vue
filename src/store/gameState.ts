@@ -45,7 +45,6 @@ export const useGameState = defineStore("gameState", () => {
   // ===== HOOKS =====
   function onEnter(state: GameStates, prev: GameStates) {
     const progress = useProgressStore();
-    // const player = usePlayerStore();
     const sound = SoundManager.getInstance();
 
     switch (state) {
