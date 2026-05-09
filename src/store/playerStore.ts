@@ -6,11 +6,11 @@ export const usePlayerStore = defineStore("playerStore", () => {
   // #region - основные константы
   const progressStore = useProgressStore();
 
-  const BASE_SPEED = 0.017; // м/с - стартовая скорость машинки
-  const MAX_SPEED = 0.5; // м/с - максимальная скорость машинки
+  const BASE_SPEED = 0.05; // м/с - стартовая скорость машинки
+  const MAX_SPEED = 1.0; // м/с - максимальная скорость машинки
   const NITRO_MULTIPLIER = 1.5;
   const ACCELERATION = 0.0000005; // - темп ускорения машинки
-  const FORCED_JUMP_MULTIPLIER = 4;
+  const FORCED_JUMP_MULTIPLIER = 10;
 
   // speed
   const speed = ref(BASE_SPEED);

@@ -47,5 +47,5 @@ export function setupLights(scene: THREE.Scene) {
   // });
 
   // 6. Лёгкая дымка для глубины (не обязательно, но добавит атмосферы)
-  scene.fog = new THREE.FogExp2(0x000000, 0.02);
+  scene.fog = new THREE.FogExp2(0x000000, 0.01);
 }

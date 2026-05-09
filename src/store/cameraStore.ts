@@ -3,14 +3,14 @@ import { defineStore } from "pinia";
 
 export const useCameraStore = defineStore("camera", () => {
   // Основные параметры камеры
-  const CAMERA_HEIGHT = 5;
-  const CAMERA_DISTANCE = 8;
-  const CAMERA_LOOKAHEAD = 10;
+  const CAMERA_HEIGHT = 20;
+  const CAMERA_DISTANCE = 25;
+  const CAMERA_LOOKAHEAD = 20;
   const CAMERA_FOLLOW_SPEED = 2.0;
 
   const CAMERA_INIT_POSITION_X = 0;
-  const CAMERA_INIT_POSITION_Y = 4;
-  const CAMERA_INIT_POSITION_Z = 5;
+  const CAMERA_INIT_POSITION_Y = 15;
+  const CAMERA_INIT_POSITION_Z = 20;
   const CAMERA_INIT_LOOKAT_X = 0;
   const CAMERA_INIT_LOOKAT_Y = 1;
   const CAMERA_INIT_LOOKAT_Z = -10;
@@ -29,7 +29,7 @@ export const useCameraStore = defineStore("camera", () => {
   const DISTANCE_REDUCTION_FACTOR = 0.8;
 
   // Смещение lookAt по Y
-  const LOOKAT_Y_OFFSET = 1;
+  const LOOKAT_Y_OFFSET = 2;
 
   // Параметры тряски (shake)
   const SHAKE_BASE_AMPLITUDE = 0.000001;

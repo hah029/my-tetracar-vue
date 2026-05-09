@@ -2,12 +2,12 @@ import * as THREE from "three";
 
 export class Bullet extends THREE.Mesh {
   lane: number;
-  speed = 0.05;
+  speed = 0.15;
 
   collider = new THREE.Box3();
 
   constructor(lane: number) {
-    const geo = new THREE.BoxGeometry(0.2, 0.2, 0.6);
+    const geo = new THREE.BoxGeometry(1, 1, 1);
 
     const mat = new THREE.MeshStandardMaterial({
       color: 0xff0000,

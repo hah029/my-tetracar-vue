@@ -48,11 +48,8 @@ export class CubeObstacle extends BaseObstacle {
 
     // lowpoly / lod visual
     formBaseConfig: GeometryConfig[],
-
     scene: THREE.Scene,
-
     useGLB = false,
-
     customConfig?: Partial<PhysicsConfig>,
 
     // detailed logical cubes
@@ -61,11 +58,8 @@ export class CubeObstacle extends BaseObstacle {
     super();
 
     this.userData.isObstacle = true;
-
     this.scene = scene;
-
     this.lane = laneIndex;
-
     this.physicsConfig = {
       ...useCommonStore().getBasePhysics(),
       ...customConfig,
@@ -99,14 +93,6 @@ export class CubeObstacle extends BaseObstacle {
 
       if (!config) continue;
 
-      // console.log({
-      //   index: i,
-      //   geomConfig: config,
-      //   useGLB,
-      //   useTexture: true,
-      //   materialConfig: CAR_MATERIAL_CONFIG,
-      // });
-
       const mesh = await CubeBuilder.build({
         index: i,
         geomConfig: config,
@@ -120,13 +106,23 @@ export class CubeObstacle extends BaseObstacle {
 
     this.visualMesh = group;
 
+    const size = new THREE.Vector3();
+
+    // 2. Create a Box3 and compute it from your object
+    const box = new THREE.Box3().setFromObject(group);
+
+    // 3. Extract the dimensions into your 'size' vector
+    box.getSize(size);
+
+    console.log(`Width: ${size.x}, Height: ${size.y}, Depth: ${size.z}`);
+
     this.add(group);
   }
 
   private buildDestructionCells(configs: GeometryConfig[]) {
     this.destructionCells = configs.map((cfg) => {
       return {
-        localPosition: new THREE.Vector3(cfg.pos[0], cfg.pos[1], cfg.pos[2]),
+        localPosition: new THREE.Vector3(cfg.pos![0], cfg.pos![1], cfg.pos![2]),
         localQuaternion: new THREE.Quaternion(),
         geomConfig: cfg,
       };

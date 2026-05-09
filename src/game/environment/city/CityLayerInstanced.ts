@@ -149,7 +149,7 @@ export class CityLayerInstanced {
       const width = THREE.MathUtils.randFloat(minWidth, maxWidth);
 
       // Позиция по y = -height, чтобы низ здания был на уровне земли
-      const pos = new THREE.Vector3(x, -13, z);
+      const pos = new THREE.Vector3(x, -50, z);
       const scale = new THREE.Vector3(width, height, width);
       const modelIndex = Math.floor(Math.random() * this.modelUrls.length);
 
@@ -193,41 +193,41 @@ export class CityLayerInstanced {
 
   public update(deltaTime: number, baseSpeed: number) {
     if (this.meshes.length === 0) return;
-  
+
     const move = deltaTime * baseSpeed * this.config.speedFactor;
     const cycleLength = this.config.zEnd - this.config.zStart;
     const LOOP_BOUNDARY = this.LOOP_THRESHOLD;
-  
+
     // ========== 1. ВСЕГДА обновляем позиции в данных ==========
     for (let m = 0; m < this.meshes.length; m++) {
       const positions = this.positionsPerMesh[m];
       if (!positions) continue;
-  
+
       for (let i = 0; i < positions.length; i++) {
         const pos = positions[i];
         if (!pos) continue;
-  
+
         pos.z += move;
-  
+
         if (pos.z > LOOP_BOUNDARY) {
           pos.z -= cycleLength;
-        };
-      };
-    };
-  
+        }
+      }
+    }
+
     // ========== 2. ОБНОВЛЯЕМ МАТРИЦЫ только каждый N-й кадр ==========
     this.frameSkip++;
     const shouldUpdateMatrices = this.frameSkip >= this.SKIP_FRAMES;
-  
+
     if (shouldUpdateMatrices) {
       this.frameSkip = 0;
-  
+
       for (let m = 0; m < this.meshes.length; m++) {
         const mesh = this.meshes[m];
         const positions = this.positionsPerMesh[m];
         const scales = this.scalesPerMesh[m];
         if (!mesh || !positions || !scales) continue;
-  
+
         for (let i = 0; i < positions.length; i++) {
           this.dummy.position.copy(positions[i]!);
           this.dummy.scale.copy(scales[i]!);
@@ -235,9 +235,9 @@ export class CityLayerInstanced {
           mesh.setMatrixAt(i, this.dummy.matrix);
         }
         mesh.instanceMatrix.needsUpdate = true;
-      };
-    };
-  };
+      }
+    }
+  }
 
   public dispose() {
     for (const mesh of this.meshes) {
@@ -252,5 +252,5 @@ export class CityLayerInstanced {
     this.meshes = [];
     this.positionsPerMesh = [];
     this.scalesPerMesh = [];
-  };
+  }
 }

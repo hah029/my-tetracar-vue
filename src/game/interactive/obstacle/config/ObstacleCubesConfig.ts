@@ -6,7 +6,7 @@ import obstacle2x3 from "@/assets/models/cube_obstacle_2x3.glb";
 import obstacle3x3 from "@/assets/models/cube_obstacle_3x3.glb";
 import { XZ_SCALING as XZSC } from "@/game/cube/config";
 
-const YPOS = 0.15;
+const YPOS = 0.4;
 const ZPOS = 0;
 const LXPS = -2 * XZSC;
 const RXPS = 2 * XZSC;

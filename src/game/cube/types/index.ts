@@ -1,7 +1,7 @@
 import * as THREE from "three";
 
 export interface GeometryConfig {
-  pos: [number, number, number];
+  pos?: [number, number, number];
   scale: [number, number, number];
   name?: string;
   modelUrl?: string;

@@ -1,1 +1,1 @@
-export const XZ_SCALING = 0.3;
+export const XZ_SCALING = 1;

@@ -96,7 +96,7 @@ export const CAR_EMISSION_CONFIG_EXTRA = {
 // Конфигурация машины по умолчанию
 export const DEFAULT_CAR_CONFIG: Required<CarConfig> = {
   // Позиционирование
-  startPosition: new THREE.Vector3(0, 0, 0),
+  startPosition: new THREE.Vector3(0, 0.3, 0),
   startLane: 2,
 
   // Размеры и коллайдер
@@ -106,13 +106,13 @@ export const DEFAULT_CAR_CONFIG: Required<CarConfig> = {
   colliderHeightFactor: 0.8,
 
   // Управление
-  laneChangeSpeed: 0.2,
-  maxTilt: 0.1,
+  laneChangeSpeed: 0.3,
+  maxTilt: 0.08,
   tiltSmoothing: 0.2,
 
   // Разрушение
   // Прыжки
-  jumpHeight: 2.0,
+  jumpHeight: 4.0,
   jumpDuration: 0.4,
 
   // gravity: useCommonStore().GRAVITY * 1000.0, // получаем 10 как было

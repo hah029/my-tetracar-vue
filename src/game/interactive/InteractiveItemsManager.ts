@@ -22,8 +22,6 @@ import { useCommonStore } from "@/store/commonStore";
 import type { BaseItem } from "./items/BaseItem";
 import type { BaseObstacle } from "./obstacle/BaseObstacle";
 import { MagnetSystem } from "../magnet/MagnetSystem";
-// import { CoinItem } from "./items/coin/CoinItem";
-// import { BoosterItem } from "./items/booster/BoosterItem";
 import { DestructionManager } from "./DestructionManager";
 
 export class InteractiveItemsManager {
@@ -139,6 +137,7 @@ export class InteractiveItemsManager {
     this.worldFrontZ += speed * deltaTime;
 
     while (this.worldFrontZ > minZ && spawned < MAX_SPAWNS_PER_FRAME) {
+      console.log("this.worldFrontZ", this.worldFrontZ);
       const length = this.spawnSegment(deltaTime, speed, this.worldFrontZ);
       this.worldFrontZ = this.worldFrontZ - length;
       spawned++;
@@ -149,8 +148,15 @@ export class InteractiveItemsManager {
     const segment = this.segmentQueue.getNext();
     const isReversed = segment.canReversed ? Math.random() < 0.5 : false;
 
+    const baseMultiplier = 30;
+    // const baseMultiplier = 20;
+
     const segmentRowLength =
-      SEGMENT_ROW_BODY_LENGTH + SEGMENT_ROW_SPACING_LENGTH * 1.1;
+      SEGMENT_ROW_BODY_LENGTH +
+      SEGMENT_ROW_SPACING_LENGTH *
+        ((baseMultiplier * speed) / usePlayerStore().maxSpeed);
+
+    console.log("segmentRowLength", segmentRowLength);
 
     segment.pattern.forEach((row, rowIndex) => {
       const z = baseZ - rowIndex * segmentRowLength;
@@ -354,7 +360,13 @@ export class InteractiveItemsManager {
       const point = trajectory[i];
       if (point === undefined) continue;
       const coinZ = jumpZ + point.zOffset + 1;
-      item = this.coinManager.spawnGolden(lane, coinZ, point.y) as BaseItem;
+      item = this.coinManager.spawnGolden(
+        coinZ,
+        lane,
+        undefined,
+        point.y,
+      ) as BaseItem;
+
       if (item) this.addItem(item);
     }
   }

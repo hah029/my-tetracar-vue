@@ -1,16 +1,17 @@
 // src/store/cameraStore.ts
+import { XZ_SCALING } from "@/game/cube/config";
 import { defineStore } from "pinia";
 
 export const useCommonStore = defineStore("common", () => {
   // Основные параметры камеры
   const BASE_ITEM_ROTATION = 0.03; // скорость вращения айтемов (всех)
-  const BASE_ITEM_YPOS = 0.2; // базовая высота спавна айтемов
+  const BASE_ITEM_YPOS = XZ_SCALING / 4; // базовая высота спавна айтемов
 
   // Z-координата спавна всех сегментов (здесь нужно именно в минус уводить)
-  const BASE_SEGMENTS_ZPOS = -60;
-  const ITEMS_REMOVING_ZPOS = 10;
+  const BASE_SEGMENTS_ZPOS = -100;
+  const ITEMS_REMOVING_ZPOS = 30;
   // шаг дистанции по нарастанию сложности (влияет на выборку доступных сегментов)
-  const BASE_SEGMENT_DIFFICULTY_STEP = 50;
+  const BASE_SEGMENT_DIFFICULTY_STEP = 100;
 
   // базовая "стоимость" любой монеты
   const BASE_COIN_VALUE = 1;
@@ -20,16 +21,15 @@ export const useCommonStore = defineStore("common", () => {
   const ENERGON_SPAWN_PROBABILITY = 0.005;
 
   // глобальная физика
-  // const GRAVITY = 0.01;
-  const GRAVITY = 9.81;
+  const GRAVITY = 20;
   const FRICTION = 2.5;
   const BOUNCE_FACTOR = 0.4;
   //
   const COLLISION_FACTOR = 0.2;
-  const REMOVAL_HEIGHT = 10;
+  const REMOVAL_HEIGHT = 20;
   // физика взрыва
-  const EXPLOSION_FORCE = 15;
-  const EXPLOSION_UPWARD = 8;
+  const EXPLOSION_FORCE = 25;
+  const EXPLOSION_UPWARD = 20;
 
   function getBasePhysics() {
     return {

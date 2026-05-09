@@ -22,9 +22,9 @@ export class Jump extends THREE.Mesh {
     zPos: number = useCommonStore().BASE_SEGMENTS_ZPOS,
   ) {
     // Геометрия трамплина
-    const width = 2;
-    const height = 0.15;
-    const depth = 2;
+    const width = 5;
+    const height = 1;
+    const depth = 5;
     const geometry = new THREE.BoxGeometry(width, height, depth);
     geometry.rotateX(Math.PI / 12);
 

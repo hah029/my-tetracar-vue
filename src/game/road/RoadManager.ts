@@ -8,6 +8,8 @@ import { RoadEdge } from "./edges";
 import { DEFAULT_ROAD_CONFIG } from "./config";
 import { SideObjectsInstanced } from "./SideObjectsInstanced";
 import type { RoadConfig, RoadStats } from "./types";
+import { XZ_SCALING } from "../cube/config";
+import { useCommonStore } from "@/store/commonStore";
 
 export class RoadManager {
   private static instance: RoadManager | null = null;
@@ -15,7 +17,7 @@ export class RoadManager {
   private roadLines: RoadLine[] = [];
   private speedLines: SpeedLine[] = [];
   private edges: THREE.Mesh[] = [];
-  private sideObjectSpacing = 1.2;
+  private sideObjectSpacing = XZ_SCALING * 4;
   private leftSideObjects: SideObjectsInstanced | null = null;
   private rightSideObjects: SideObjectsInstanced | null = null;
 
@@ -57,13 +59,13 @@ export class RoadManager {
 
     const { left, right } = this.road.getEdgePositions();
 
-    const offset = 0.2;
+    const offset = 0.6;
 
     const leftX = left - offset;
     const rightX = right + offset;
 
-    const startZ = 10;
-    const endZ = this.config.length / 2;
+    const startZ = useCommonStore().ITEMS_REMOVING_ZPOS;
+    const endZ = this.config.length;
 
     this.leftSideObjects = new SideObjectsInstanced(
       this.scene,
@@ -105,30 +107,30 @@ export class RoadManager {
     this.edges.push(rightEdge);
   }
 
-  private addRoadLines(): void {
-    if (!this.road) return;
+  // private addRoadLines(): void {
+  //   if (!this.road) return;
 
-    const { length } = this.config;
-    if (!length) {
-      throw new Error();
-    }
-    const lanes = this.road.getLanePositions();
+  //   const { length } = this.config;
+  //   if (!length) {
+  //     throw new Error();
+  //   }
+  //   const lanes = this.road.getLanePositions();
 
-    for (let i = 0; i < lanes.length - 1; i++) {
-      const prev_ = lanes[i];
-      const next_ = lanes[i + 1];
-      if (prev_ == undefined || next_ == undefined) continue;
-      const x = (prev_ + next_) / 2;
+  //   for (let i = 0; i < lanes.length - 1; i++) {
+  //     const prev_ = lanes[i];
+  //     const next_ = lanes[i + 1];
+  //     if (prev_ == undefined || next_ == undefined) continue;
+  //     const x = (prev_ + next_) / 2;
 
-      const line = new RoadLine({
-        x,
-        z: -length / 2,
-        length,
-      });
-      this.roadLines.push(line);
-      this.scene.add(line);
-    }
-  }
+  //     const line = new RoadLine({
+  //       x,
+  //       z: -length / 2,
+  //       length,
+  //     });
+  //     this.roadLines.push(line);
+  //     this.scene.add(line);
+  //   }
+  // }
 
   public update(deltaTime: number, speed: number): void {
     this.leftSideObjects?.update(deltaTime, speed);

@@ -40,7 +40,7 @@ export class ObstacleManager {
     const index =
       formIndex !== undefined ? formIndex : this.getRandomObstacleIndex();
 
-    let obstacle;
+    let obstacle: StaticObstacle;
 
     const formBase = OPTIMIZED_OBSTACLE_FORMS[index];
     if (!formBase) {
@@ -56,6 +56,7 @@ export class ObstacleManager {
       undefined,
       formDetailed,
     );
+
     this.obstacles.push(obstacle);
     this.scene.add(obstacle);
     return obstacle;

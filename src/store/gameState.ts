@@ -17,7 +17,7 @@ type UIOverlay =
 export const useGameState = defineStore("gameState", () => {
   // ===== STATE =====
   const currentState = ref<GameStates>(GameStates.Preloader);
-  const isDebug = ref(true);
+  const isDebug = ref(false);
   const isPreloaderShown = ref(true);
   const isFirstGame = ref(false);
   const activeOverlay = ref<UIOverlay>(null);

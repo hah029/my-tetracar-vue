@@ -71,16 +71,12 @@ export class SideObjectsInstanced {
     for (let i = 0; i < this.count; i++) {
       const z = startZ - i * this.spacing;
 
-      const pos = new THREE.Vector3(this.x, 0.15, z);
+      const pos = new THREE.Vector3(this.x, 0.4, z);
       this.positions.push(pos);
-
       this.dummy.position.copy(pos);
-
       // применяем scale из GLB
       this.dummy.scale.copy(scale);
-
       this.dummy.updateMatrix();
-
       this.mesh.setMatrixAt(i, this.dummy.matrix);
     }
 

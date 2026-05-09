@@ -12,7 +12,7 @@ export class RoadEdge extends THREE.Mesh {
   constructor(
     x: number,
     height: number = 1,
-    depth: number = 200,
+    depth: number = 500,
     color: number = 0x00ffff,
   ) {
     // геометрия бортика

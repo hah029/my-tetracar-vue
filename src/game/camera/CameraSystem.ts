@@ -50,7 +50,8 @@ class CameraSystemClass {
 
     const carPos = car.position;
     const speedFactor = speed / MAX_SPEED;
-    const speedFactorNorm = Math.min(speedFactor, 1);
+    // const speedFactorNorm = Math.min(speedFactor, 1);
+    const speedFactorNorm = speedFactor;
 
     // 1. Позиция камеры
     const cameraStore = useCameraStore();
