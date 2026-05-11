@@ -1,6 +1,6 @@
 import * as THREE from "three";
 import { BaseObstacle } from "./BaseObstacle";
-import type { GeometryConfig } from "@/game/cube/types";
+import type { GeometryConfig, MaterialConfig } from "@/game/cube/types";
 import type { PhysicsConfig } from "@/game/physics/types";
 import { CubeBuilder } from "@/game/cube/Cube";
 import { RoadManager } from "@/game/road/RoadManager";
@@ -14,6 +14,7 @@ import { BaseItem } from "../items/BaseItem";
 import { InteractiveItemsManager } from "../InteractiveItemsManager";
 import { useCommonStore } from "@/store/commonStore";
 import { usePlayerStore } from "@/store/playerStore";
+import { TEXTURES } from "@/assets/textures";
 
 type DropType =
   | "golden_coin"
@@ -25,12 +26,10 @@ type DropType =
 
 export class CubeObstacle extends BaseObstacle {
   private visualMesh?: THREE.Object3D;
-
   private destructionCells: DestructionCell[] = [];
   private isDestroyed = false;
   private scene: THREE.Scene;
   private lane: number;
-  private collider = new THREE.Box3();
   private worldCollider = new THREE.Box3();
   private physicsConfig: Required<PhysicsConfig>;
   private destructionManager = DestructionManager.getInstance();
@@ -48,6 +47,7 @@ export class CubeObstacle extends BaseObstacle {
 
     // detailed logical cubes
     formDetailConfig?: GeometryConfig[],
+    materialConfig?: MaterialConfig,
   ) {
     super();
 
@@ -64,14 +64,18 @@ export class CubeObstacle extends BaseObstacle {
 
     const destructionSource = formDetailConfig ?? formBaseConfig;
     this.buildDestructionCells(destructionSource);
-    this.buildVisual(formBaseConfig, useGLB);
+    this.buildVisual(formBaseConfig, useGLB, materialConfig);
   }
 
   // =========================================================
   // BUILD
   // =========================================================
 
-  private async buildVisual(formConfig: GeometryConfig[], useGLB: boolean) {
+  private async buildVisual(
+    formConfig: GeometryConfig[],
+    useGLB: boolean,
+    materialConfig?: MaterialConfig,
+  ) {
     const group = new THREE.Group();
 
     for (let i = 0; i < formConfig.length; i++) {
@@ -84,7 +88,7 @@ export class CubeObstacle extends BaseObstacle {
         geomConfig: config,
         useGLB,
         useTexture: true,
-        materialConfig: usePlayerStore().CAR_MATERIAL_CONFIG,
+        materialConfig,
       });
 
       group.add(mesh);

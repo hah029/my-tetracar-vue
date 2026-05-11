@@ -4,11 +4,11 @@ import { useCommonStore } from "./commonStore";
 import type { RoadConfig } from "@/game/road";
 import textureUrl from "@/assets/textures/road_tile.jpg";
 import type { GeometryConfig, MaterialConfig } from "@/game/cube/types";
-import { usePlayerStore } from "./playerStore";
+import { MODELS } from "@/assets/models";
+import { TEXTURES } from "@/assets/textures";
 
 export const useEnvironmentStore = defineStore("environmentStore", () => {
   const commonStore = useCommonStore();
-  const playerStore = usePlayerStore();
   const AXES_SIZE = 5;
 
   const DEFAULT_LANES = [
@@ -66,11 +66,11 @@ export const useEnvironmentStore = defineStore("environmentStore", () => {
       commonStore.XZ_SCALING,
       commonStore.XZ_SCALING,
     ],
-    modelUrl: commonStore.cubeUrl,
+    modelUrl: MODELS.cube,
   };
 
   const SIDE_OBJECT_MATERIAL_CONFIG: MaterialConfig = {
-    textureUrl: commonStore.base_texture,
+    textureUrl: TEXTURES.cube.base,
   };
 
   return {

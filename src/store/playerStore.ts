@@ -6,6 +6,8 @@ import { useProgressStore } from "@/store/progressStore";
 import { useCommonStore } from "@/store/commonStore";
 import type { GeometryConfig, MaterialConfig } from "@/game/cube/types";
 import type { TextureMap } from "@/game/car/CarVisualState";
+import { MODELS } from "@/assets/models";
+import { TEXTURES } from "@/assets/textures";
 
 export const usePlayerStore = defineStore("playerStore", () => {
   // #region - основные константы
@@ -34,58 +36,58 @@ export const usePlayerStore = defineStore("playerStore", () => {
       pos: [COLS[1], HEIGHT, ROWS[3]],
       scale: GLB_SCALES,
       name: "shield",
-      modelUrl: commonStore.cubeUrl,
+      modelUrl: MODELS.cube,
     },
 
     {
       pos: [COLS[1], HEIGHT, ROWS[2]],
       scale: GLB_SCALES,
       name: "default",
-      modelUrl: commonStore.cubeUrl,
+      modelUrl: MODELS.cube,
     },
 
     {
       pos: [COLS[1], HEIGHT, ROWS[1]],
       scale: GLB_SCALES,
       name: "default",
-      modelUrl: commonStore.cubeUrl,
+      modelUrl: MODELS.cube,
     },
     // передние колеса
     {
       pos: [COLS[0], HEIGHT, ROWS[0]],
       scale: GLB_SCALES,
       name: "nitro",
-      modelUrl: commonStore.cubeUrl,
+      modelUrl: MODELS.cube,
     },
     {
       pos: [COLS[2], HEIGHT, ROWS[0]],
       scale: GLB_SCALES,
       name: "nitro",
-      modelUrl: commonStore.cubeUrl,
+      modelUrl: MODELS.cube,
     },
     // передние колеса
     {
       pos: [COLS[2], HEIGHT, ROWS[2]],
       scale: GLB_SCALES,
       name: "nitro",
-      modelUrl: commonStore.cubeUrl,
+      modelUrl: MODELS.cube,
     },
     {
       pos: [COLS[0], HEIGHT, ROWS[2]],
       scale: GLB_SCALES,
       name: "nitro",
-      modelUrl: commonStore.cubeUrl,
+      modelUrl: MODELS.cube,
     },
   ];
   const CAR_MATERIAL_CONFIG: MaterialConfig = {
-    textureUrl: commonStore.base_texture,
+    textureUrl: TEXTURES.cube.base,
   };
 
   const CAR_MATERIAL_CONFIG_EXTRA: TextureMap = {
-    default: commonStore.base_texture,
-    nitro: commonStore.nitro_texture,
-    shield: commonStore.shield_texture,
-    damage: commonStore.damage_texture,
+    default: TEXTURES.cube.base,
+    nitro: TEXTURES.cube.nitro,
+    shield: TEXTURES.cube.shield,
+    damage: TEXTURES.cube.bullet,
   };
 
   const CAR_EMISSION_CONFIG_EXTRA = {

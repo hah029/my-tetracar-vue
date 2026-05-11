@@ -1,19 +1,9 @@
 // src/store/cameraStore.ts
 import type { GeometryConfig, MaterialConfig } from "@/game/cube/types";
 import { defineStore } from "pinia";
-// models
-import cubeUrl from "@/assets/models/cube.glb";
-import obstacle1x3 from "@/assets/models/cube_obstacle_1x3.glb";
-import obstacle2x3 from "@/assets/models/cube_obstacle_2x3.glb";
-import obstacle3x3 from "@/assets/models/cube_obstacle_3x3.glb";
-// texture
-import golden_texture from "@/assets/textures/cube_gold.svg";
-import base_texture from "@/assets/textures/cube_base.svg";
-import nitro_texture from "@/assets/textures/cube_nitro.svg";
-import shield_texture from "@/assets/textures/cube_armor.svg";
-import damage_texture from "@/assets/textures/cube_bullet.svg";
-import bullet_texture from "@/assets/textures/cube_bullet.svg";
-// import energonUrl from "@/assets/models/energon.glb";
+
+import { MODELS } from "@/assets/models";
+import { TEXTURES } from "@/assets/textures";
 
 export const useCommonStore = defineStore("common", () => {
   const XZ_SCALING = 1;
@@ -45,17 +35,17 @@ export const useCommonStore = defineStore("common", () => {
 
   const ITEM_GEOMETRY_CONFIG: GeometryConfig = {
     scale: [XZ_SCALING, XZ_SCALING, XZ_SCALING],
-    modelUrl: cubeUrl,
+    modelUrl: MODELS.cube,
   };
 
   // const ENERGON_GEOMETRY_CONFIG: GeometryConfig = {
   //   scale: [XZ_SCALING, XZ_SCALING, XZ_SCALING],
   //   // modelUrl: energonUrl,
-  //   modelUrl: cubeUrl,
+  //   modelUrl: MODELS.cube,
   // };
 
   const GOLDEN_MATERIAL_CONFIG: MaterialConfig = {
-    textureUrl: golden_texture,
+    textureUrl: TEXTURES.cube.golden,
     emissive: 0xefbf04,
     emissiveIntensity: 0.6,
     metalness: 4.0,
@@ -152,21 +142,21 @@ export const useCommonStore = defineStore("common", () => {
       {
         pos: [0, YPOS, ZPOS],
         scale: [XZ_SCALING, XZ_SCALING, XZ_SCALING],
-        modelUrl: obstacle1x3,
+        modelUrl: MODELS.obstacle1x3,
       },
     ],
     [
       {
         pos: [0, YPOS, ZPOS],
         scale: [XZ_SCALING, XZ_SCALING, XZ_SCALING],
-        modelUrl: obstacle2x3,
+        modelUrl: MODELS.obstacle2x3,
       },
     ],
     [
       {
         pos: [0, YPOS, ZPOS],
         scale: [XZ_SCALING, XZ_SCALING, XZ_SCALING],
-        modelUrl: obstacle3x3,
+        modelUrl: MODELS.obstacle3x3,
       },
     ],
   ];
@@ -177,17 +167,17 @@ export const useCommonStore = defineStore("common", () => {
       {
         pos: [LXPS, YPOS, ZPOS],
         scale: [XZ_SCALING, XZ_SCALING, XZ_SCALING],
-        modelUrl: cubeUrl,
+        modelUrl: MODELS.cube,
       },
       {
         pos: [0, YPOS, ZPOS],
         scale: [XZ_SCALING, XZ_SCALING, XZ_SCALING],
-        modelUrl: cubeUrl,
+        modelUrl: MODELS.cube,
       },
       {
         pos: [RXPS, YPOS, ZPOS],
         scale: [XZ_SCALING, XZ_SCALING, XZ_SCALING],
-        modelUrl: cubeUrl,
+        modelUrl: MODELS.cube,
       },
     ],
 
@@ -197,33 +187,33 @@ export const useCommonStore = defineStore("common", () => {
       {
         pos: [LXPS, YPOS, ZPOS],
         scale: [XZ_SCALING, XZ_SCALING, XZ_SCALING],
-        modelUrl: cubeUrl,
+        modelUrl: MODELS.cube,
       },
       {
         pos: [0, YPOS, ZPOS],
         scale: [XZ_SCALING, XZ_SCALING, XZ_SCALING],
-        modelUrl: cubeUrl,
+        modelUrl: MODELS.cube,
       },
       {
         pos: [RXPS, YPOS, ZPOS],
         scale: [XZ_SCALING, XZ_SCALING, XZ_SCALING],
-        modelUrl: cubeUrl,
+        modelUrl: MODELS.cube,
       },
       // средний ряд
       {
         pos: [LXPS, YPOS, ZPOS - XZ_SCALING * 2],
         scale: [XZ_SCALING, XZ_SCALING, XZ_SCALING],
-        modelUrl: cubeUrl,
+        modelUrl: MODELS.cube,
       },
       {
         pos: [0, YPOS, ZPOS - XZ_SCALING * 2],
         scale: [XZ_SCALING, XZ_SCALING, XZ_SCALING],
-        modelUrl: cubeUrl,
+        modelUrl: MODELS.cube,
       },
       {
         pos: [RXPS, YPOS, ZPOS - XZ_SCALING * 2],
         scale: [XZ_SCALING, XZ_SCALING, XZ_SCALING],
-        modelUrl: cubeUrl,
+        modelUrl: MODELS.cube,
       },
     ],
 
@@ -233,72 +223,72 @@ export const useCommonStore = defineStore("common", () => {
       {
         pos: [LXPS, YPOS, ZPOS],
         scale: [XZ_SCALING, XZ_SCALING, XZ_SCALING],
-        modelUrl: cubeUrl,
+        modelUrl: MODELS.cube,
       },
       {
         pos: [0, YPOS, ZPOS],
         scale: [XZ_SCALING, XZ_SCALING, XZ_SCALING],
-        modelUrl: cubeUrl,
+        modelUrl: MODELS.cube,
       },
       {
         pos: [RXPS, YPOS, ZPOS],
         scale: [XZ_SCALING, XZ_SCALING, XZ_SCALING],
-        modelUrl: cubeUrl,
+        modelUrl: MODELS.cube,
       },
       // средний ряд
       {
         pos: [LXPS, YPOS, ZPOS - XZ_SCALING * 2],
         scale: [XZ_SCALING, XZ_SCALING, XZ_SCALING],
-        modelUrl: cubeUrl,
+        modelUrl: MODELS.cube,
       },
       {
         pos: [0, YPOS, ZPOS - XZ_SCALING * 2],
         scale: [XZ_SCALING, XZ_SCALING, XZ_SCALING],
-        modelUrl: cubeUrl,
+        modelUrl: MODELS.cube,
       },
       {
         pos: [RXPS, YPOS, ZPOS - XZ_SCALING * 2],
         scale: [XZ_SCALING, XZ_SCALING, XZ_SCALING],
-        modelUrl: cubeUrl,
+        modelUrl: MODELS.cube,
       },
       // верхний ряд
       {
         pos: [LXPS, YPOS, ZPOS - XZ_SCALING * 4],
         scale: [XZ_SCALING, XZ_SCALING, XZ_SCALING],
-        modelUrl: cubeUrl,
+        modelUrl: MODELS.cube,
       },
       {
         pos: [0, YPOS, ZPOS - XZ_SCALING * 4],
         scale: [XZ_SCALING, XZ_SCALING, XZ_SCALING],
-        modelUrl: cubeUrl,
+        modelUrl: MODELS.cube,
       },
       {
         pos: [RXPS, YPOS, ZPOS - XZ_SCALING * 4],
         scale: [XZ_SCALING, XZ_SCALING, XZ_SCALING],
-        modelUrl: cubeUrl,
+        modelUrl: MODELS.cube,
       },
     ],
   ];
 
   const MAGNET_MATERIAL_CONFIG: MaterialConfig = {
-    textureUrl: base_texture,
+    textureUrl: TEXTURES.cube.base,
     // color: 0x00ff00,
     emissive: 0x000000,
     emissiveIntensity: 0.6,
   };
   const BULLET_MATERIAL_CONFIG: MaterialConfig = {
-    textureUrl: bullet_texture,
+    textureUrl: TEXTURES.cube.bullet,
     emissive: 0xdd0000,
     emissiveIntensity: 0.6,
   };
   const NITRO_MATERIAL_CONFIG: MaterialConfig = {
-    textureUrl: base_texture,
+    textureUrl: TEXTURES.cube.base,
     // color: 0x00ff00,
     emissive: 0x00dd00,
     emissiveIntensity: 0.6,
   };
   const SHIELD_MATERIAL_CONFIG: MaterialConfig = {
-    textureUrl: base_texture,
+    textureUrl: TEXTURES.cube.base,
     // color: 0x00ff00,
     emissive: 0xffffff,
     emissiveIntensity: 0.6,
@@ -357,12 +347,6 @@ export const useCommonStore = defineStore("common", () => {
     MOVING_OBSTACLE_SPEED,
     OPTIMIZED_OBSTACLE_FORMS,
     FULL_OBSTACLE_FORMS,
-
-    cubeUrl,
-    base_texture,
-    nitro_texture,
-    shield_texture,
-    damage_texture,
 
     MAGNET_MATERIAL_CONFIG,
     NITRO_MATERIAL_CONFIG,

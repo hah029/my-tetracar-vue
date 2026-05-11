@@ -8,6 +8,7 @@ import { EnemyCar } from "./EnemyCar";
 import { Jump } from "./Jump";
 import { useCommonStore } from "@/store/commonStore";
 import { usePlayerStore } from "@/store/playerStore";
+import { TEXTURES } from "@/assets/textures";
 
 export class ObstacleManager {
   private static instance: ObstacleManager | null = null;
@@ -51,6 +52,7 @@ export class ObstacleManager {
       this.useGLB,
       undefined,
       formDetailed,
+      { textureUrl: TEXTURES.cube.obstacle3x3 },
     );
 
     this.obstacles.push(obstacle);
@@ -95,7 +97,16 @@ export class ObstacleManager {
 
   public spawnEnemyCar(lane: number, z = useCommonStore().BASE_SEGMENTS_ZPOS) {
     const form = usePlayerStore().CAR_CUBES_CONFIG;
-    const obstacle = new EnemyCar(lane, z, form, this.scene, true);
+    const obstacle = new EnemyCar(
+      lane,
+      z,
+      form,
+      this.scene,
+      true,
+      undefined,
+      undefined,
+      { textureUrl: TEXTURES.cube.base },
+    );
     this.scene.add(obstacle);
     this.obstacles.push(obstacle);
   }
