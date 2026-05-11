@@ -1,26 +1,19 @@
 import * as THREE from "three";
-
 import { BaseObstacle } from "./BaseObstacle";
-
 import type { GeometryConfig } from "@/game/cube/types";
 import type { PhysicsConfig } from "@/game/physics/types";
-
 import { CubeBuilder } from "@/game/cube/Cube";
-
 import { RoadManager } from "@/game/road/RoadManager";
-
-import { CAR_MATERIAL_CONFIG } from "@/game/car";
 
 import {
   DestructionManager,
   type DestructionCell,
   type TransformationObject,
 } from "../DestructionManager";
-import { InteractiveItemsManager } from "../InteractiveItemsManager";
-
-import { useCommonStore } from "@/store/commonStore";
-
 import { BaseItem } from "../items/BaseItem";
+import { InteractiveItemsManager } from "../InteractiveItemsManager";
+import { useCommonStore } from "@/store/commonStore";
+import { usePlayerStore } from "@/store/playerStore";
 
 type DropType =
   | "golden_coin"
@@ -38,6 +31,7 @@ export class CubeObstacle extends BaseObstacle {
   private scene: THREE.Scene;
   private lane: number;
   private collider = new THREE.Box3();
+  private worldCollider = new THREE.Box3();
   private physicsConfig: Required<PhysicsConfig>;
   private destructionManager = DestructionManager.getInstance();
   private interactiveItemsManager = InteractiveItemsManager.getInstance();
@@ -66,19 +60,11 @@ export class CubeObstacle extends BaseObstacle {
     };
 
     const x = RoadManager.getInstance().getLanePosition(laneIndex);
-
     this.position.set(x, 0, zPos);
 
-    // IMPORTANT:
-    // if detail config exists -> use it for destruction
-    // otherwise fallback to base config
     const destructionSource = formDetailConfig ?? formBaseConfig;
-
     this.buildDestructionCells(destructionSource);
-
     this.buildVisual(formBaseConfig, useGLB);
-
-    // this.buildCollider(destructionSource);
   }
 
   // =========================================================
@@ -98,7 +84,7 @@ export class CubeObstacle extends BaseObstacle {
         geomConfig: config,
         useGLB,
         useTexture: true,
-        materialConfig: CAR_MATERIAL_CONFIG,
+        materialConfig: usePlayerStore().CAR_MATERIAL_CONFIG,
       });
 
       group.add(mesh);
@@ -107,14 +93,8 @@ export class CubeObstacle extends BaseObstacle {
     this.visualMesh = group;
 
     const size = new THREE.Vector3();
-
-    // 2. Create a Box3 and compute it from your object
     const box = new THREE.Box3().setFromObject(group);
-
-    // 3. Extract the dimensions into your 'size' vector
     box.getSize(size);
-
-    console.log(`Width: ${size.x}, Height: ${size.y}, Depth: ${size.z}`);
 
     this.add(group);
   }
@@ -148,8 +128,6 @@ export class CubeObstacle extends BaseObstacle {
 
     return this.worldCollider;
   }
-
-  private worldCollider = new THREE.Box3();
 
   public update(dt: number, speed: number): boolean {
     if (this.isDestroyed) {
@@ -228,14 +206,6 @@ export class CubeObstacle extends BaseObstacle {
       // ============================================
       // DEBRIS
       // ============================================
-
-      // const debris = await CubeBuilder.build({
-      //   index: i,
-      //   geomConfig: cell.geomConfig,
-      //   useGLB: true,
-      //   useTexture: true,
-      //   materialConfig: CAR_MATERIAL_CONFIG,
-      // });
       const debris = new BaseItem(
         worldPos.z,
         undefined,

@@ -15,14 +15,15 @@ class CameraSystemClass {
 
   // impact shake
   private impactTimer = 0;
-  private impactDuration = 50000;
-  private impactAmplitude = 10000;
   private impactOffset = new THREE.Vector3();
+  private impactDuration!: number;
+  private impactAmplitude!: number;
 
   initialize(camera: THREE.PerspectiveCamera) {
     const cameraStore = useCameraStore();
 
     this.camera = camera;
+
     this.camera.position.set(
       cameraStore.CAMERA_INIT_POSITION_X,
       cameraStore.CAMERA_INIT_POSITION_Y,
@@ -33,6 +34,9 @@ class CameraSystemClass {
       cameraStore.CAMERA_INIT_LOOKAT_Y,
       cameraStore.CAMERA_INIT_LOOKAT_Z,
     );
+
+    this.impactDuration = useCameraStore().IMPACT_DURATION;
+    this.impactAmplitude = useCameraStore().MAX_IMPACT_AMPLITUDE;
   }
 
   update(
@@ -46,15 +50,14 @@ class CameraSystemClass {
     if (!this.camera) return;
     if (car.isDestroyed()) return;
 
-    const MAX_SPEED = usePlayerStore().maxSpeed;
+    const cameraStore = useCameraStore();
 
     const carPos = car.position;
-    const speedFactor = speed / MAX_SPEED;
+    const speedFactor = speed / usePlayerStore().maxSpeed;
     // const speedFactorNorm = Math.min(speedFactor, 1);
     const speedFactorNorm = speedFactor;
 
     // 1. Позиция камеры
-    const cameraStore = useCameraStore();
     const targetCamPos = new THREE.Vector3(
       carPos.x,
       cameraStore.CAMERA_HEIGHT - (cameraStore.CAMERA_HEIGHT * speedFactor - 1),
@@ -106,6 +109,7 @@ class CameraSystemClass {
     if (!this.camera) return;
 
     const cameraStore = useCameraStore();
+
     let targetCamPos: THREE.Vector3;
 
     // Проверка валидности вектора
@@ -208,10 +212,11 @@ class CameraSystemClass {
       console.warn("[CameraSystem.reset] camera is null");
       return;
     }
-    this.shakeTimer = 0;
-    this.shakeOffset.set(0, 0, 0);
 
     const cameraStore = useCameraStore();
+
+    this.shakeTimer = 0;
+    this.shakeOffset.set(0, 0, 0);
 
     this.camera.position.set(
       carPosition.x,
@@ -233,6 +238,7 @@ class CameraSystemClass {
 
   private applyShake(speedFactor: number, deltaTime = 1) {
     this.shakeTimer += deltaTime;
+
     const cameraStore = useCameraStore();
 
     const amplitude =
@@ -266,9 +272,10 @@ class CameraSystemClass {
     strength: number, // 0..1
     duration = 0.4,
   ) {
+    const cameraStore = useCameraStore();
+
     this.impactTimer = 0;
     this.impactDuration = duration;
-    const cameraStore = useCameraStore();
 
     this.impactAmplitude = THREE.MathUtils.lerp(
       cameraStore.IMPACT_SHAKE_MIN,
@@ -277,23 +284,22 @@ class CameraSystemClass {
     );
   }
 
-  private applyImpactShake(deltaTime: number) {
-    if (this.impactTimer >= this.impactDuration) {
-      this.impactOffset.set(0, 0, 0);
-      return;
-    }
+  // private applyImpactShake(deltaTime: number) {
+  //   if (this.impactTimer >= this.impactDuration) {
+  //     this.impactOffset.set(0, 0, 0);
+  //     return;
+  //   }
 
-    const cameraStore = useCameraStore();
-    this.impactTimer += deltaTime;
-    const t = this.impactTimer / this.impactDuration;
+  //   this.impactTimer += deltaTime;
+  //   const t = this.impactTimer / this.impactDuration;
 
-    // easing: резкий старт → плавное затухание
-    const decay = Math.exp(-cameraStore.IMPACT_SHAKE_DECAY_RATE * t);
+  //   // easing: резкий старт → плавное затухание
+  //   const decay = Math.exp(-cameraStore.IMPACT_SHAKE_DECAY_RATE * t);
 
-    this.impactOffset
-      .set(Math.random() * 2 - 1, Math.random() * 2 - 1, Math.random() * 2 - 1)
-      .multiplyScalar(this.impactAmplitude * decay);
-  }
+  //   this.impactOffset
+  //     .set(Math.random() * 2 - 1, Math.random() * 2 - 1, Math.random() * 2 - 1)
+  //     .multiplyScalar(this.impactAmplitude * decay);
+  // }
 
   getCamera() {
     return this.camera;

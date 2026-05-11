@@ -2,16 +2,12 @@ import * as THREE from "three";
 import { cameraTarget } from "@/game/camera/cameraTarget.js";
 import { RoadManager } from "../road/RoadManager.js";
 import { type CarState, type CarConfig } from "./types";
-import {
-  CAR_EMISSION_CONFIG_EXTRA,
-  CAR_MATERIAL_CONFIG_EXTRA,
-  DEFAULT_CAR_CONFIG,
-} from "./config";
 import { CarCollider } from "./CarCollider";
 import { CarCubesBuilder } from "./CarCubesBuilder";
-import { CarPhysics } from "./CarPhysics";
 import { useGameState } from "@/store/gameState.js";
 import { CarVisualState, type CarVisualEffect } from "./CarVisualState";
+import { usePlayerStore } from "@/store/playerStore.js";
+import { CarPhysics } from "./CarPhysics.js";
 
 export class Car extends THREE.Group {
   private scene: THREE.Scene;
@@ -30,7 +26,7 @@ export class Car extends THREE.Group {
     this.scene = scene;
 
     this.config = {
-      ...DEFAULT_CAR_CONFIG,
+      ...usePlayerStore().getDefaultCarConfig(),
       ...config,
     };
     this.currentLane = this.config.startLane;
@@ -172,12 +168,16 @@ export class Car extends THREE.Group {
     this.state.cubes = this.cubes;
     this.visualState = new CarVisualState(this.cubes);
 
-    this.visualState.preloadTextures(CAR_MATERIAL_CONFIG_EXTRA);
-    Object.entries(CAR_EMISSION_CONFIG_EXTRA).forEach(([k, v]) => {
-      if (k !== "default") {
-        this.visualState?.setEmissiveColor(k as any, v);
-      }
-    });
+    this.visualState.preloadTextures(
+      usePlayerStore().CAR_MATERIAL_CONFIG_EXTRA,
+    );
+    Object.entries(usePlayerStore().CAR_EMISSION_CONFIG_EXTRA).forEach(
+      ([k, v]) => {
+        if (k !== "default") {
+          this.visualState?.setEmissiveColor(k as any, v);
+        }
+      },
+    );
 
     // Добавляем камеру обратно
     this.add(cameraTarget);

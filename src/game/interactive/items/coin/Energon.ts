@@ -1,16 +1,6 @@
 // src/game/coin/Coin.ts
-import type { MaterialConfig } from "@/game/cube/types";
 import { CoinItem } from "./CoinItem";
-import { CubeBuilder } from "@/game/cube/Cube";
-import { ENERGON_GEOMETRY_CONFIG } from "../BaseConfig";
 import { useCommonStore } from "@/store/commonStore";
-
-const ENERGON_CONFIG = {
-  useGLB: true,
-  geomConfig: ENERGON_GEOMETRY_CONFIG,
-  useTexture: false,
-  materialConfig: null,
-};
 
 export class Energon extends CoinItem {
   constructor(

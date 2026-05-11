@@ -14,7 +14,6 @@ import { CollisionSystem } from "@/game/collision/CollisionSystem";
 import { BulletSystem } from "@/game/combat/BulletSystem";
 import { FlashEffectManager } from "@/game/effects/FlashEffectManager";
 // enums
-import { DEFAULT_LANES } from "@/game/road/config/RoadConfig";
 import { UpdateMode } from "@/game/core/UpdateMode";
 // stores
 import { useProgressStore } from "@/store/progressStore";
@@ -34,6 +33,7 @@ import { NitroItem } from "@/game/interactive/items/booster/NitroItem";
 import { ShieldItem } from "@/game/interactive/items/booster/ShieldItem";
 import { MagnetItem } from "@/game/interactive/items/booster/MagnetItem";
 import { MagnetSystem } from "@/game/magnet/MagnetSystem";
+import { useEnvironmentStore } from "@/store/environmentStore";
 
 export function useGame() {
   const playerStore = usePlayerStore();
@@ -79,7 +79,10 @@ export function useGame() {
 
     // === Инициализация менеджеров ===
     roadManager = RoadManager.getInstance();
-    roadManager.initialize({ lanes: DEFAULT_LANES, length: 250 }, scene);
+    roadManager.initialize(
+      { lanes: useEnvironmentStore().DEFAULT_LANES, length: 250 },
+      scene,
+    );
 
     cityManager = CityManager.getInstance();
     cityManager.initialize(scene);

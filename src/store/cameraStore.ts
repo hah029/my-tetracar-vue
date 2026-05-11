@@ -51,6 +51,9 @@ export const useCameraStore = defineStore("camera", () => {
   const DESTROYED_CAMERA_OFFSET_Y = 3;
   const DESTROYED_CAMERA_OFFSET_Z = 8;
 
+  const IMPACT_DURATION = 50000;
+  const MAX_IMPACT_AMPLITUDE = 10000;
+
   return {
     CAMERA_HEIGHT,
     CAMERA_DISTANCE,
@@ -84,5 +87,7 @@ export const useCameraStore = defineStore("camera", () => {
     CAMERA_INIT_LOOKAT_X,
     CAMERA_INIT_LOOKAT_Y,
     CAMERA_INIT_LOOKAT_Z,
+    IMPACT_DURATION,
+    MAX_IMPACT_AMPLITUDE,
   };
 });

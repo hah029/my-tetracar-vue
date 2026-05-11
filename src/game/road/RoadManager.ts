@@ -1,15 +1,14 @@
 // /game/road/RoadManager.ts
 
 import * as THREE from "three";
+import type { RoadConfig, RoadStats } from "./types";
 import { Road } from "./Road";
 import { RoadLine } from "./RoadLine";
 import { SpeedLine } from "./SpeedLine";
 import { RoadEdge } from "./edges";
-import { DEFAULT_ROAD_CONFIG } from "./config";
 import { SideObjectsInstanced } from "./SideObjectsInstanced";
-import type { RoadConfig, RoadStats } from "./types";
-import { XZ_SCALING } from "../cube/config";
 import { useCommonStore } from "@/store/commonStore";
+import { useEnvironmentStore } from "@/store/environmentStore";
 
 export class RoadManager {
   private static instance: RoadManager | null = null;
@@ -17,7 +16,7 @@ export class RoadManager {
   private roadLines: RoadLine[] = [];
   private speedLines: SpeedLine[] = [];
   private edges: THREE.Mesh[] = [];
-  private sideObjectSpacing = XZ_SCALING * 4;
+  private sideObjectSpacing = useCommonStore().XZ_SCALING * 4;
   private leftSideObjects: SideObjectsInstanced | null = null;
   private rightSideObjects: SideObjectsInstanced | null = null;
 
@@ -25,7 +24,7 @@ export class RoadManager {
   private scene!: THREE.Scene;
 
   public initialize(config: RoadConfig, scene: THREE.Scene) {
-    this.config = { ...DEFAULT_ROAD_CONFIG, ...config };
+    this.config = { ...useEnvironmentStore().DEFAULT_ROAD_CONFIG, ...config };
     this.scene = scene;
   }
 

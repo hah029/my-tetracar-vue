@@ -4,10 +4,10 @@ import type { GeometryConfig } from "@/game/cube/types";
 import { RoadManager } from "@/game/road/RoadManager";
 
 import { CubeObstacle } from "./CubeObstacle";
-import { FULL_OBSTACLE_FORMS } from "./config";
+import { useCommonStore } from "@/store/commonStore";
 
 export class MovingObstacle extends CubeObstacle {
-  private speedX = 0.005;
+  private speedX = useCommonStore().MOVING_OBSTACLE_SPEED;
   private direction: 1 | -1;
   private minX: number;
   private maxX: number;
@@ -29,7 +29,7 @@ export class MovingObstacle extends CubeObstacle {
       scene,
       useGLB,
       undefined,
-      FULL_OBSTACLE_FORMS[0],
+      useCommonStore().FULL_OBSTACLE_FORMS[0],
     );
 
     const road = RoadManager.getInstance();

@@ -1,8 +1,8 @@
 // src/game/car/CarCubesBuilder.ts
 import * as THREE from "three";
 import { type GeometryConfig, type MaterialConfig } from "@/game/cube/types";
-import { CAR_CUBES_CONFIG, CAR_MATERIAL_CONFIG } from "./config";
 import { CubeBuilder } from "@/game/cube/Cube";
+import { usePlayerStore } from "@/store/playerStore";
 
 export class CarCubesBuilder {
   constructor() {}
@@ -18,10 +18,11 @@ export class CarCubesBuilder {
     onCubeCreated?: (cube: THREE.Object3D) => void,
   ): Promise<THREE.Object3D[]> {
     const cubes: THREE.Object3D[] = [];
+    const playerStore = usePlayerStore();
 
     // Проходим по всем конфигам кубиков
-    for (let i = 0; i < CAR_CUBES_CONFIG.length; i++) {
-      const config = CAR_CUBES_CONFIG[i];
+    for (let i = 0; i < playerStore.CAR_CUBES_CONFIG.length; i++) {
+      const config = playerStore.CAR_CUBES_CONFIG[i];
       if (!config) continue;
 
       // Преобразуем конфиг в geomConfig и materialConfig
@@ -32,19 +33,14 @@ export class CarCubesBuilder {
         modelUrl: useGLB ? config.modelUrl : undefined,
       };
 
-      const materialConfig: MaterialConfig = {
-        textureUrl: CAR_MATERIAL_CONFIG.textureUrl,
-        color: CAR_MATERIAL_CONFIG.color,
-        emissive: CAR_MATERIAL_CONFIG.emissive,
-        emissiveIntensity: CAR_MATERIAL_CONFIG.emissiveIntensity,
-      };
+      const materialConfig: MaterialConfig = playerStore.CAR_MATERIAL_CONFIG;
 
       try {
         const cube = await CubeBuilder.build({
           index: i,
           geomConfig,
           useGLB,
-          useTexture: !!CAR_MATERIAL_CONFIG.textureUrl,
+          useTexture: !!playerStore.CAR_MATERIAL_CONFIG.textureUrl,
           materialConfig,
         });
         cubes.push(cube);
@@ -55,7 +51,7 @@ export class CarCubesBuilder {
           index: i,
           geomConfig,
           useGLB: false,
-          useTexture: !!CAR_MATERIAL_CONFIG.textureUrl,
+          useTexture: !!playerStore.CAR_MATERIAL_CONFIG.textureUrl,
           materialConfig,
         });
         cubes.push(fallbackCube);

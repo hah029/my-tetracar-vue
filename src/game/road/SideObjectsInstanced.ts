@@ -2,11 +2,8 @@
 
 import * as THREE from "three";
 import { CubeBuilder } from "../cube/Cube";
-import {
-  SIDE_OBJECT_GEOMETRY_CONFIG,
-  SIDE_OBJECT_MATERIAL_CONFIG,
-} from "./config/SideObjectConfig";
 import { useCommonStore } from "@/store/commonStore";
+import { useEnvironmentStore } from "@/store/environmentStore";
 
 export class SideObjectsInstanced {
   private mesh!: THREE.InstancedMesh;
@@ -40,9 +37,9 @@ export class SideObjectsInstanced {
     // создаём один куб через CubeBuilder
     const cube = await CubeBuilder.build({
       useGLB: true,
-      geomConfig: SIDE_OBJECT_GEOMETRY_CONFIG,
+      geomConfig: useEnvironmentStore().SIDE_OBJECT_GEOMETRY_CONFIG,
       useTexture: true,
-      materialConfig: SIDE_OBJECT_MATERIAL_CONFIG,
+      materialConfig: useEnvironmentStore().SIDE_OBJECT_MATERIAL_CONFIG,
     });
 
     // ищем Mesh внутри
@@ -66,7 +63,9 @@ export class SideObjectsInstanced {
     this.mesh.receiveShadow = true;
 
     this.scene.add(this.mesh);
-    const scale = new THREE.Vector3(...SIDE_OBJECT_GEOMETRY_CONFIG.scale);
+    const scale = new THREE.Vector3(
+      ...useEnvironmentStore().SIDE_OBJECT_GEOMETRY_CONFIG.scale,
+    );
 
     for (let i = 0; i < this.count; i++) {
       const z = startZ - i * this.spacing;

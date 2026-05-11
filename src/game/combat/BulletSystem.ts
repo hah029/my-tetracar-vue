@@ -12,7 +12,7 @@ export class BulletSystem {
   private bullets: Bullet[] = [];
   private scene!: THREE.Scene;
 
-  private readonly MAX_DISTANCE = 50;
+  private readonly MAX_DISTANCE = useCommonStore().BULLET_MAX_DISTANCE;
 
   private bulletBox = new THREE.Box3();
   private obstacleBox = new THREE.Box3();
@@ -59,7 +59,7 @@ export class BulletSystem {
       for (const obstacle of obstacles) {
         if (!obstacle) continue;
 
-        if (obstacle.getLane() !== bullet.lane) continue;
+        if (obstacle.getLane() !== bullet.getLane()) continue;
 
         this.obstacleBox.setFromObject(obstacle);
 

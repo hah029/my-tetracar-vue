@@ -1,17 +1,13 @@
 import * as THREE from "three";
-import { CAR_CUBES_CONFIG } from "@/game/car";
 import { RoadManager } from "@/game/road/RoadManager";
 
-import {
-  OPTIMIZED_OBSTACLE_FORMS,
-  FULL_OBSTACLE_FORMS,
-} from "./config/ObstacleCubesConfig";
 import { BaseObstacle } from "./BaseObstacle";
 import { MovingObstacle } from "./MovingObstacle";
 import { StaticObstacle } from "./StaticObstacle";
 import { EnemyCar } from "./EnemyCar";
 import { Jump } from "./Jump";
 import { useCommonStore } from "@/store/commonStore";
+import { usePlayerStore } from "@/store/playerStore";
 
 export class ObstacleManager {
   private static instance: ObstacleManager | null = null;
@@ -42,11 +38,11 @@ export class ObstacleManager {
 
     let obstacle: StaticObstacle;
 
-    const formBase = OPTIMIZED_OBSTACLE_FORMS[index];
+    const formBase = useCommonStore().OPTIMIZED_OBSTACLE_FORMS[index];
     if (!formBase) {
       return null;
     }
-    const formDetailed = FULL_OBSTACLE_FORMS[index];
+    const formDetailed = useCommonStore().FULL_OBSTACLE_FORMS[index];
     obstacle = new StaticObstacle(
       lane,
       z,
@@ -63,7 +59,9 @@ export class ObstacleManager {
   }
 
   private getRandomObstacleIndex(): number {
-    return Math.floor(Math.random() * OPTIMIZED_OBSTACLE_FORMS.length);
+    return Math.floor(
+      Math.random() * useCommonStore().OPTIMIZED_OBSTACLE_FORMS.length,
+    );
   }
 
   public spawnMovingObstacle(
@@ -75,7 +73,7 @@ export class ObstacleManager {
     const lanes = RoadManager.getInstance().getLanesCount();
     const index =
       formIndex !== undefined ? formIndex : this.getRandomObstacleIndex();
-    const form = OPTIMIZED_OBSTACLE_FORMS[index];
+    const form = useCommonStore().OPTIMIZED_OBSTACLE_FORMS[index];
     if (!form) {
       return;
     }
@@ -96,7 +94,7 @@ export class ObstacleManager {
   }
 
   public spawnEnemyCar(lane: number, z = useCommonStore().BASE_SEGMENTS_ZPOS) {
-    const form = CAR_CUBES_CONFIG;
+    const form = usePlayerStore().CAR_CUBES_CONFIG;
     const obstacle = new EnemyCar(lane, z, form, this.scene, true);
     this.scene.add(obstacle);
     this.obstacles.push(obstacle);

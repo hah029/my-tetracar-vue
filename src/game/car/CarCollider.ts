@@ -107,7 +107,7 @@ export class CarCollider {
 
   public checkJumpCollision(
     jump: THREE.Object3D,
-    carPosition: THREE.Vector3,
+    carPosition?: THREE.Vector3,
   ): boolean {
     const jumpBox = new THREE.Box3().setFromObject(jump);
     // const xDistance = Math.abs(carPosition.x - jump.position.x);

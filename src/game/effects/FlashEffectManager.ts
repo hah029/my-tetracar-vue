@@ -5,6 +5,7 @@ import flashFragmentShader from "@/game/shaders/flash/fragment.glsl";
 
 import explosionVertexShader from "@/game/shaders/explosion/vertex.glsl";
 import explosionFragmentShader from "@/game/shaders/explosion/fragment.glsl";
+import { useCommonStore } from "@/store/commonStore";
 
 // Типы эффектов
 export type FlashType =
@@ -62,8 +63,8 @@ export class FlashEffectManager {
   spawnFlash(
     type: FlashType,
     position: THREE.Vector3,
-    size = 6,
-    duration = 100,
+    size = useCommonStore().FLASH_SIZE_DEFAULT,
+    duration = useCommonStore().FLASH_DURATION_DEFAULT,
   ) {
     if (!this.scene) return;
 
@@ -98,8 +99,8 @@ export class FlashEffectManager {
   spawnExplosion(
     type: FlashType,
     position: THREE.Vector3,
-    size = 6,
-    duration = 500,
+    size = useCommonStore().EXPLOSION_SIZE_DEFAULT,
+    duration = useCommonStore().EXPLOSION_DURATION_DEFAULT,
   ) {
     if (!this.scene) return;
 

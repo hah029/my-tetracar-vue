@@ -1,5 +1,6 @@
 import * as THREE from "three";
 import { loadTexture } from "@/helpers/loaders";
+import { usePlayerStore } from "@/store/playerStore";
 
 export type CarVisualEffect = "nitro" | "shield" | "damage" | "default";
 
@@ -7,17 +8,14 @@ export type TextureMap = Record<CarVisualEffect, string>;
 
 export class CarVisualState {
   private meshes: THREE.Mesh[] = [];
-  private DEFAULT_EMISSION_INTENSITY = 1.2;
-
   private textures = new Map<CarVisualEffect, THREE.Texture>();
-
   private emissiveColors = new Map<CarVisualEffect, THREE.Color>();
-
   private activeEffects = new Set<CarVisualEffect>();
-  private blinking = false;
+
+  private blinkDuration = 0; // сколько длится cooldown
+  private isBlinking = false;
   private blinkTime = 0;
-  private blinkDuration = 1; // сколько длится cooldown
-  private blinkSpeed = 10; // частота мигания
+  private blinkSpeed = usePlayerStore().DEFAULT_BLINK_SPEED; // частота мигания
 
   constructor(cubes: THREE.Object3D[]) {
     cubes.forEach((cube) => {
@@ -44,14 +42,14 @@ export class CarVisualState {
     });
   }
 
-  startBlink(duration: number) {
-    this.blinking = true;
+  startBlink(duration: number = usePlayerStore().DEFAULT_BLINK_DURATION) {
+    this.isBlinking = true;
     this.blinkTime = 0;
     this.blinkDuration = duration;
   }
 
   update(dt: number) {
-    if (!this.blinking) return;
+    if (!this.isBlinking) return;
 
     this.blinkTime += dt / 1000;
 
@@ -63,7 +61,7 @@ export class CarVisualState {
     }
 
     if (this.blinkTime >= this.blinkDuration) {
-      this.blinking = false;
+      this.isBlinking = false;
 
       for (const mesh of this.meshes) {
         const material = mesh.material as THREE.MeshStandardMaterial;
@@ -129,7 +127,7 @@ export class CarVisualState {
       }
 
       material.emissive.copy(emissiveColor);
-      material.emissiveIntensity = this.DEFAULT_EMISSION_INTENSITY;
+      material.emissiveIntensity = usePlayerStore().DEFAULT_EMISSION_INTENSITY;
     }
   }
 

@@ -1,11 +1,7 @@
 import * as THREE from "three";
 import type { RoadConfig } from "./types";
-import {
-  DEFAULT_ROAD_CONFIG,
-  calculateRoadWidth,
-  getEdgePositions,
-} from "./config";
 import { loadTexture } from "@/helpers/loaders";
+import { useEnvironmentStore } from "@/store/environmentStore";
 
 export class Road extends THREE.Mesh {
   public readonly lanes: number[];
@@ -13,12 +9,15 @@ export class Road extends THREE.Mesh {
   public readonly length: number;
 
   constructor(config?: RoadConfig) {
-    const tmpConfig = { ...DEFAULT_ROAD_CONFIG, ...config };
+    const tmpConfig = {
+      ...useEnvironmentStore().DEFAULT_ROAD_CONFIG,
+      ...config,
+    };
     if (!tmpConfig.lanes || tmpConfig.lanes.length === 0) {
       throw new Error("Road must have at least one lane");
     }
 
-    const width = calculateRoadWidth(tmpConfig.lanes);
+    const width = useEnvironmentStore().calculateRoadWidth(tmpConfig.lanes);
     const geometry = new THREE.PlaneGeometry(width, tmpConfig.length!);
     let material: THREE.Material;
 
@@ -89,6 +88,6 @@ export class Road extends THREE.Mesh {
 
   // получаем позиции границ дороги
   public getEdgePositions(): { left: number; right: number } {
-    return getEdgePositions(this.lanes);
+    return useEnvironmentStore().getEdgePositions(this.lanes);
   }
 }

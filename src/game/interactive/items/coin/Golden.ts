@@ -2,7 +2,6 @@
 
 import { useCommonStore } from "@/store/commonStore";
 import { CoinItem } from "./CoinItem";
-import { GOLDEN_MATERIAL_CONFIG } from "./config";
 
 export class Golden extends CoinItem {
   constructor(
@@ -12,7 +11,9 @@ export class Golden extends CoinItem {
     yPos?: number,
     value: number = useCommonStore().BASE_COIN_VALUE,
   ) {
-    super(zPos, laneIndex, xPos, yPos, { ...GOLDEN_MATERIAL_CONFIG });
+    super(zPos, laneIndex, xPos, yPos, {
+      ...useCommonStore().GOLDEN_MATERIAL_CONFIG,
+    });
     this.value = value;
   }
 }

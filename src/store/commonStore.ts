@@ -1,8 +1,22 @@
 // src/store/cameraStore.ts
-import { XZ_SCALING } from "@/game/cube/config";
+import type { GeometryConfig, MaterialConfig } from "@/game/cube/types";
 import { defineStore } from "pinia";
+// models
+import cubeUrl from "@/assets/models/cube.glb";
+import obstacle1x3 from "@/assets/models/cube_obstacle_1x3.glb";
+import obstacle2x3 from "@/assets/models/cube_obstacle_2x3.glb";
+import obstacle3x3 from "@/assets/models/cube_obstacle_3x3.glb";
+// texture
+import golden_texture from "@/assets/textures/cube_gold.svg";
+import base_texture from "@/assets/textures/cube_base.svg";
+import nitro_texture from "@/assets/textures/cube_nitro.svg";
+import shield_texture from "@/assets/textures/cube_armor.svg";
+import damage_texture from "@/assets/textures/cube_bullet.svg";
+import bullet_texture from "@/assets/textures/cube_bullet.svg";
+// import energonUrl from "@/assets/models/energon.glb";
 
 export const useCommonStore = defineStore("common", () => {
+  const XZ_SCALING = 1;
   // Основные параметры камеры
   const BASE_ITEM_ROTATION = 0.03; // скорость вращения айтемов (всех)
   const BASE_ITEM_YPOS = XZ_SCALING / 4; // базовая высота спавна айтемов
@@ -18,7 +32,40 @@ export const useCommonStore = defineStore("common", () => {
 
   // вероятность спавна энергона
   // работает в пределах 0...1 (0 - не выпадает вообще, 1 - выпадает только энергон)
-  const ENERGON_SPAWN_PROBABILITY = 0.005;
+  const COIN_SPAWN_PROBABILITIES = {
+    energon: 5,
+    golden: 1000,
+  };
+  const BOOSTER_SPAWN_PROBABILITIES = {
+    nitro: 1,
+    shield: 1,
+    magnet: 1,
+    bullet: 1,
+  };
+
+  const ITEM_GEOMETRY_CONFIG: GeometryConfig = {
+    scale: [XZ_SCALING, XZ_SCALING, XZ_SCALING],
+    modelUrl: cubeUrl,
+  };
+
+  // const ENERGON_GEOMETRY_CONFIG: GeometryConfig = {
+  //   scale: [XZ_SCALING, XZ_SCALING, XZ_SCALING],
+  //   // modelUrl: energonUrl,
+  //   modelUrl: cubeUrl,
+  // };
+
+  const GOLDEN_MATERIAL_CONFIG: MaterialConfig = {
+    textureUrl: golden_texture,
+    emissive: 0xefbf04,
+    emissiveIntensity: 0.6,
+    metalness: 4.0,
+  };
+
+  // const ENERGON_MATERIAL_CONFIG: MaterialConfig = {
+  //   emissive: 0x82c8e5,
+  //   emissiveIntensity: 0.6,
+  //   metalness: 0,
+  // };
 
   // глобальная физика
   const GRAVITY = 20;
@@ -30,6 +77,23 @@ export const useCommonStore = defineStore("common", () => {
   // физика взрыва
   const EXPLOSION_FORCE = 25;
   const EXPLOSION_UPWARD = 20;
+
+  const BULLET_DEFAULT_SPEED = 0.15;
+  const BULLET_MAX_DISTANCE = 50;
+  const BULLET_DEFAULT_MATERIAL = {
+    color: 0xff0000,
+    emissive: 0xff0000,
+    emissiveIntensity: 5,
+  };
+  // const BULLET_DEFAULT_GEOMETRY = {
+  //   width: 1,
+  //   height: 1,
+  //   depth: 1,
+  // };
+
+  function getBulletGeometry() {
+    return [1, 1, 1];
+  }
 
   function getBasePhysics() {
     return {
@@ -53,14 +117,212 @@ export const useCommonStore = defineStore("common", () => {
     magnet_booster: 1,
   };
 
+  const DANGER_DISTANCE = 30;
+  const COLLISION_COOLDOWN_MS = 2000;
+
+  const BASE_CUBE_MATERIAL_CONFIG = {
+    textureUrl: null,
+    color: 0xffffff,
+    emissive: 0x000000,
+    emissiveIntensity: 1,
+    ior: 1,
+    transmission: 1,
+    metalness: 1,
+    roughness: 1,
+    thickness: 1,
+  };
+
+  const FLASH_SIZE_DEFAULT = 6;
+  const EXPLOSION_SIZE_DEFAULT = 6;
+  const FLASH_DURATION_DEFAULT = 100;
+  const EXPLOSION_DURATION_DEFAULT = 500;
+
+  const JUMP_WIDTH = 5;
+  const JUMP_HEIGHT = 1;
+  const JUMP_DEPTH = 8;
+
+  const MOVING_OBSTACLE_SPEED = 0.005;
+
+  const YPOS = BASE_ITEM_YPOS;
+  const ZPOS = 0;
+  const LXPS = -2 * XZ_SCALING;
+  const RXPS = 2 * XZ_SCALING;
+  const OPTIMIZED_OBSTACLE_FORMS: GeometryConfig[][] = [
+    [
+      {
+        pos: [0, YPOS, ZPOS],
+        scale: [XZ_SCALING, XZ_SCALING, XZ_SCALING],
+        modelUrl: obstacle1x3,
+      },
+    ],
+    [
+      {
+        pos: [0, YPOS, ZPOS],
+        scale: [XZ_SCALING, XZ_SCALING, XZ_SCALING],
+        modelUrl: obstacle2x3,
+      },
+    ],
+    [
+      {
+        pos: [0, YPOS, ZPOS],
+        scale: [XZ_SCALING, XZ_SCALING, XZ_SCALING],
+        modelUrl: obstacle3x3,
+      },
+    ],
+  ];
+  const FULL_OBSTACLE_FORMS: GeometryConfig[][] = [
+    // Стена из трёх кубиков в ряд
+    [
+      // нижний ряд
+      {
+        pos: [LXPS, YPOS, ZPOS],
+        scale: [XZ_SCALING, XZ_SCALING, XZ_SCALING],
+        modelUrl: cubeUrl,
+      },
+      {
+        pos: [0, YPOS, ZPOS],
+        scale: [XZ_SCALING, XZ_SCALING, XZ_SCALING],
+        modelUrl: cubeUrl,
+      },
+      {
+        pos: [RXPS, YPOS, ZPOS],
+        scale: [XZ_SCALING, XZ_SCALING, XZ_SCALING],
+        modelUrl: cubeUrl,
+      },
+    ],
+
+    // Стена из трёх кубиков в 2 ряда
+    [
+      // нижний ряд
+      {
+        pos: [LXPS, YPOS, ZPOS],
+        scale: [XZ_SCALING, XZ_SCALING, XZ_SCALING],
+        modelUrl: cubeUrl,
+      },
+      {
+        pos: [0, YPOS, ZPOS],
+        scale: [XZ_SCALING, XZ_SCALING, XZ_SCALING],
+        modelUrl: cubeUrl,
+      },
+      {
+        pos: [RXPS, YPOS, ZPOS],
+        scale: [XZ_SCALING, XZ_SCALING, XZ_SCALING],
+        modelUrl: cubeUrl,
+      },
+      // средний ряд
+      {
+        pos: [LXPS, YPOS, ZPOS - XZ_SCALING * 2],
+        scale: [XZ_SCALING, XZ_SCALING, XZ_SCALING],
+        modelUrl: cubeUrl,
+      },
+      {
+        pos: [0, YPOS, ZPOS - XZ_SCALING * 2],
+        scale: [XZ_SCALING, XZ_SCALING, XZ_SCALING],
+        modelUrl: cubeUrl,
+      },
+      {
+        pos: [RXPS, YPOS, ZPOS - XZ_SCALING * 2],
+        scale: [XZ_SCALING, XZ_SCALING, XZ_SCALING],
+        modelUrl: cubeUrl,
+      },
+    ],
+
+    // квадрат 3x3
+    [
+      // нижний ряд
+      {
+        pos: [LXPS, YPOS, ZPOS],
+        scale: [XZ_SCALING, XZ_SCALING, XZ_SCALING],
+        modelUrl: cubeUrl,
+      },
+      {
+        pos: [0, YPOS, ZPOS],
+        scale: [XZ_SCALING, XZ_SCALING, XZ_SCALING],
+        modelUrl: cubeUrl,
+      },
+      {
+        pos: [RXPS, YPOS, ZPOS],
+        scale: [XZ_SCALING, XZ_SCALING, XZ_SCALING],
+        modelUrl: cubeUrl,
+      },
+      // средний ряд
+      {
+        pos: [LXPS, YPOS, ZPOS - XZ_SCALING * 2],
+        scale: [XZ_SCALING, XZ_SCALING, XZ_SCALING],
+        modelUrl: cubeUrl,
+      },
+      {
+        pos: [0, YPOS, ZPOS - XZ_SCALING * 2],
+        scale: [XZ_SCALING, XZ_SCALING, XZ_SCALING],
+        modelUrl: cubeUrl,
+      },
+      {
+        pos: [RXPS, YPOS, ZPOS - XZ_SCALING * 2],
+        scale: [XZ_SCALING, XZ_SCALING, XZ_SCALING],
+        modelUrl: cubeUrl,
+      },
+      // верхний ряд
+      {
+        pos: [LXPS, YPOS, ZPOS - XZ_SCALING * 4],
+        scale: [XZ_SCALING, XZ_SCALING, XZ_SCALING],
+        modelUrl: cubeUrl,
+      },
+      {
+        pos: [0, YPOS, ZPOS - XZ_SCALING * 4],
+        scale: [XZ_SCALING, XZ_SCALING, XZ_SCALING],
+        modelUrl: cubeUrl,
+      },
+      {
+        pos: [RXPS, YPOS, ZPOS - XZ_SCALING * 4],
+        scale: [XZ_SCALING, XZ_SCALING, XZ_SCALING],
+        modelUrl: cubeUrl,
+      },
+    ],
+  ];
+
+  const MAGNET_MATERIAL_CONFIG: MaterialConfig = {
+    textureUrl: base_texture,
+    // color: 0x00ff00,
+    emissive: 0x000000,
+    emissiveIntensity: 0.6,
+  };
+  const BULLET_MATERIAL_CONFIG: MaterialConfig = {
+    textureUrl: bullet_texture,
+    emissive: 0xdd0000,
+    emissiveIntensity: 0.6,
+  };
+  const NITRO_MATERIAL_CONFIG: MaterialConfig = {
+    textureUrl: base_texture,
+    // color: 0x00ff00,
+    emissive: 0x00dd00,
+    emissiveIntensity: 0.6,
+  };
+  const SHIELD_MATERIAL_CONFIG: MaterialConfig = {
+    textureUrl: base_texture,
+    // color: 0x00ff00,
+    emissive: 0xffffff,
+    emissiveIntensity: 0.6,
+  };
+
+  const SEGMENT_ROW_BODY_LENGTH = XZ_SCALING * 3;
+  const SEGMENT_ROW_SPACING_LENGTH = SEGMENT_ROW_BODY_LENGTH;
+  const SEGMENT_ROW_LENGTH =
+    SEGMENT_ROW_BODY_LENGTH + SEGMENT_ROW_SPACING_LENGTH;
+
   return {
+    XZ_SCALING,
+
+    ITEM_GEOMETRY_CONFIG,
+    GOLDEN_MATERIAL_CONFIG,
+
     BASE_ITEM_ROTATION,
     BASE_ITEM_YPOS,
     BASE_SEGMENTS_ZPOS,
     ITEMS_REMOVING_ZPOS,
     BASE_SEGMENT_DIFFICULTY_STEP,
     BASE_COIN_VALUE,
-    ENERGON_SPAWN_PROBABILITY,
+    COIN_SPAWN_PROBABILITIES,
+    BOOSTER_SPAWN_PROBABILITIES,
     //
     GRAVITY,
     FRICTION,
@@ -72,5 +334,42 @@ export const useCommonStore = defineStore("common", () => {
 
     getBasePhysics,
     DESTROYED_ROLLDROP_WEIGHTS,
+
+    DANGER_DISTANCE,
+    COLLISION_COOLDOWN_MS,
+
+    BULLET_DEFAULT_SPEED,
+    BULLET_DEFAULT_MATERIAL,
+    getBulletGeometry,
+    BULLET_MAX_DISTANCE,
+
+    BASE_CUBE_MATERIAL_CONFIG,
+
+    FLASH_SIZE_DEFAULT,
+    EXPLOSION_SIZE_DEFAULT,
+    FLASH_DURATION_DEFAULT,
+    EXPLOSION_DURATION_DEFAULT,
+
+    JUMP_WIDTH,
+    JUMP_HEIGHT,
+    JUMP_DEPTH,
+
+    MOVING_OBSTACLE_SPEED,
+    OPTIMIZED_OBSTACLE_FORMS,
+    FULL_OBSTACLE_FORMS,
+
+    cubeUrl,
+    base_texture,
+    nitro_texture,
+    shield_texture,
+    damage_texture,
+
+    MAGNET_MATERIAL_CONFIG,
+    NITRO_MATERIAL_CONFIG,
+    SHIELD_MATERIAL_CONFIG,
+    BULLET_MATERIAL_CONFIG,
+
+    SEGMENT_ROW_BODY_LENGTH,
+    SEGMENT_ROW_SPACING_LENGTH,
   };
 });

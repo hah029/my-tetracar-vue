@@ -1,15 +1,14 @@
 // src/game/car/CarPhysics
 
 import * as THREE from "three";
-import { type CarConfig } from "./types";
-import { DEFAULT_CAR_CONFIG } from "./config";
 import { RoadManager } from "../road/RoadManager";
 import { RoadEdge } from "../road/edges/RoadEdge";
-import { JumpSimulator, type JumpState } from "./JumpSimulator";
 import { CubePhysics } from "@/game/physics/CubePhysics";
 import type { PhysicsConfig } from "../physics/types";
 import { useCommonStore } from "@/store/commonStore";
 import { usePlayerStore } from "@/store/playerStore";
+import type { CarConfig } from ".";
+import { JumpSimulator, type JumpState } from "../physics/JumpSimulator";
 
 export class CarPhysics {
   private config: Required<CarConfig>;
@@ -21,7 +20,7 @@ export class CarPhysics {
 
   constructor(config: Partial<CarConfig> = {}) {
     this.config = {
-      ...DEFAULT_CAR_CONFIG,
+      ...usePlayerStore().getDefaultCarConfig(),
       ...config,
     };
     this.jumpSimulator = new JumpSimulator({
@@ -118,7 +117,7 @@ export class CarPhysics {
       cube.position.copy(worldPos);
       cube.quaternion.copy(worldRot);
 
-      // Уменьшенная сила разлёта для машины (коэффициент 0.7)
+      // Уменьшенная сила разлёта для машины
       const forceMultiplier = 0.7;
       const baseVel = new THREE.Vector3(
         (Math.random() - 0.5) *

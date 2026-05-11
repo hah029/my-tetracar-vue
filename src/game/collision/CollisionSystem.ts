@@ -3,9 +3,7 @@ import type { Jump } from "@/game/interactive/obstacle/Jump";
 import type { BaseObstacle } from "@/game/interactive/obstacle/BaseObstacle";
 import type { Car } from "../car";
 import type { BaseItem } from "../interactive/items/BaseItem";
-
-const DANGER_DISTANCE = 30;
-const COLLISION_COOLDOWN_MS = 2000;
+import { useCommonStore } from "@/store/commonStore";
 
 export type CollisionResult = {
   impactPoint?: THREE.Vector3;
@@ -37,7 +35,6 @@ export class CollisionSystem {
 
     const currentTime = now ?? performance.now();
 
-    // проверяем трамплины ВСЕГДА, даже если на кулдауне
     for (const jump of jumps) {
       if (jump.userData.activated) continue;
 
@@ -52,7 +49,10 @@ export class CollisionSystem {
     }
 
     // если на кулдауне — проверяем только трамплины, препятствия не трогаем
-    if (currentTime - this.lastCollisionTime < COLLISION_COOLDOWN_MS) {
+    if (
+      currentTime - this.lastCollisionTime <
+      useCommonStore().COLLISION_COOLDOWN_MS
+    ) {
       return null;
     }
 
@@ -62,7 +62,7 @@ export class CollisionSystem {
 
       if (collides) {
         this.lastCollisionTime = currentTime;
-        car.startShieldCooldown(COLLISION_COOLDOWN_MS / 1000);
+        car.startShieldCooldown(useCommonStore().COLLISION_COOLDOWN_MS / 1000);
         return {
           impactSubject: obstacle,
           impactPoint: obstacle.position.clone(),
@@ -113,9 +113,12 @@ export class CollisionSystem {
       const zDiff = Math.abs(obstaclePos.z - carPos.z);
       const xDiff = Math.abs(obstaclePos.x - carPos.x);
 
-      if (zDiff > DANGER_DISTANCE * 2 || xDiff > 1.0) continue;
+      if (zDiff > useCommonStore().DANGER_DISTANCE * 2 || xDiff > 1.0) continue;
 
-      const dangerByZ = Math.max(0, 1 - zDiff / DANGER_DISTANCE);
+      const dangerByZ = Math.max(
+        0,
+        1 - zDiff / useCommonStore().DANGER_DISTANCE,
+      );
       const dangerByX = Math.max(0, 1 - xDiff / 1.0);
 
       const danger = dangerByZ * 0.7 + dangerByX * 0.3;

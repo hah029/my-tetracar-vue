@@ -1,16 +1,121 @@
+import * as THREE from "three";
+
 import { defineStore } from "pinia";
 import { ref } from "vue";
 import { useProgressStore } from "@/store/progressStore";
+import { useCommonStore } from "@/store/commonStore";
+import type { GeometryConfig, MaterialConfig } from "@/game/cube/types";
+import type { TextureMap } from "@/game/car/CarVisualState";
 
 export const usePlayerStore = defineStore("playerStore", () => {
   // #region - основные константы
   const progressStore = useProgressStore();
+  const commonStore = useCommonStore();
+
+  const COLS: [number, number, number] = [
+    -commonStore.XZ_SCALING * 2,
+    0,
+    commonStore.XZ_SCALING * 2,
+  ];
+  const ROWS: [number, number, number, number] = [
+    commonStore.XZ_SCALING * 3,
+    commonStore.XZ_SCALING,
+    -commonStore.XZ_SCALING,
+    -commonStore.XZ_SCALING * 3,
+  ];
+  const HEIGHT = commonStore.BASE_ITEM_YPOS;
+  const GLB_SCALES: [number, number, number] = [
+    commonStore.XZ_SCALING,
+    commonStore.XZ_SCALING,
+    commonStore.XZ_SCALING,
+  ];
+  const CAR_CUBES_CONFIG: GeometryConfig[] = [
+    {
+      pos: [COLS[1], HEIGHT, ROWS[3]],
+      scale: GLB_SCALES,
+      name: "shield",
+      modelUrl: commonStore.cubeUrl,
+    },
+
+    {
+      pos: [COLS[1], HEIGHT, ROWS[2]],
+      scale: GLB_SCALES,
+      name: "default",
+      modelUrl: commonStore.cubeUrl,
+    },
+
+    {
+      pos: [COLS[1], HEIGHT, ROWS[1]],
+      scale: GLB_SCALES,
+      name: "default",
+      modelUrl: commonStore.cubeUrl,
+    },
+    // передние колеса
+    {
+      pos: [COLS[0], HEIGHT, ROWS[0]],
+      scale: GLB_SCALES,
+      name: "nitro",
+      modelUrl: commonStore.cubeUrl,
+    },
+    {
+      pos: [COLS[2], HEIGHT, ROWS[0]],
+      scale: GLB_SCALES,
+      name: "nitro",
+      modelUrl: commonStore.cubeUrl,
+    },
+    // передние колеса
+    {
+      pos: [COLS[2], HEIGHT, ROWS[2]],
+      scale: GLB_SCALES,
+      name: "nitro",
+      modelUrl: commonStore.cubeUrl,
+    },
+    {
+      pos: [COLS[0], HEIGHT, ROWS[2]],
+      scale: GLB_SCALES,
+      name: "nitro",
+      modelUrl: commonStore.cubeUrl,
+    },
+  ];
+  const CAR_MATERIAL_CONFIG: MaterialConfig = {
+    textureUrl: commonStore.base_texture,
+  };
+
+  const CAR_MATERIAL_CONFIG_EXTRA: TextureMap = {
+    default: commonStore.base_texture,
+    nitro: commonStore.nitro_texture,
+    shield: commonStore.shield_texture,
+    damage: commonStore.damage_texture,
+  };
+
+  const CAR_EMISSION_CONFIG_EXTRA = {
+    default: 0x000000,
+    nitro: 0x005500,
+    shield: 0x555555,
+    damage: 0x550000,
+  };
 
   const BASE_SPEED = 0.05; // м/с - стартовая скорость машинки
   const MAX_SPEED = 1.0; // м/с - максимальная скорость машинки
   const NITRO_MULTIPLIER = 1.5;
   const ACCELERATION = 0.0000005; // - темп ускорения машинки
   const FORCED_JUMP_MULTIPLIER = 10;
+  // size + collider
+  const COLLIDER_SHRINK_X = 1.0;
+  const COLLIDER_SHRINK_Z = 1.0;
+  const COLLIDER_Y_OFFSET = 0.0;
+  const COLLIDER_HEIGHT_FACTOR = 0.8;
+  //
+  const LANE_CHANGE_SPEED = 0.3;
+  const MAX_TILT = 0.08;
+  const TILT_SMOOTHING = 0.2;
+  // jumps
+  const JUMP_HEIGHT = 8.0;
+  const JUMP_DURATION = 0.2;
+
+  const DEFAULT_EMISSION_INTENSITY = 1.2;
+  const DEFAULT_BLINK_DURATION = 1;
+  const DEFAULT_BLINK_SPEED = 10;
 
   // speed
   const speed = ref(BASE_SPEED);
@@ -189,15 +294,67 @@ export const usePlayerStore = defineStore("playerStore", () => {
   function addNewMsg(msg_) {
     notificationMsg.value = msg_;
   }
+
+  function getColliderOptions() {
+    return {
+      colliderShrinkX: COLLIDER_SHRINK_X,
+      colliderShrinkZ: COLLIDER_SHRINK_Z,
+      colliderYOffset: COLLIDER_Y_OFFSET,
+      colliderHeightFactor: COLLIDER_HEIGHT_FACTOR,
+    };
+  }
+
+  function getRuleOptions() {
+    return {
+      laneChangeSpeed: LANE_CHANGE_SPEED,
+      maxTilt: MAX_TILT,
+      tiltSmoothing: TILT_SMOOTHING,
+    };
+  }
+
+  function getJumpOptions() {
+    return {
+      jumpHeight: JUMP_HEIGHT,
+      jumpDuration: JUMP_DURATION,
+    };
+  }
+
+  function getDefaultCarConfig() {
+    // Позиционирование
+    return {
+      startLane: 2,
+      startPosition: new THREE.Vector3(0, useCommonStore().BASE_ITEM_YPOS, 0),
+      // Размеры и коллайдер
+      ...getColliderOptions(),
+
+      // // Управление
+      ...getRuleOptions(),
+
+      // // Прыжки
+      ...getJumpOptions(),
+    };
+  }
   // #endregion
 
   return {
-    // states
+    // constants
+    CAR_CUBES_CONFIG,
+    CAR_MATERIAL_CONFIG,
+    CAR_MATERIAL_CONFIG_EXTRA,
+    CAR_EMISSION_CONFIG_EXTRA,
+
     NITRO_MULTIPLIER,
     BASE_NITRO_TIMER,
     BASE_MAGNET_TIMER,
     BASE_SPEED,
     FORCED_JUMP_MULTIPLIER,
+    JUMP_HEIGHT,
+
+    DEFAULT_EMISSION_INTENSITY,
+    DEFAULT_BLINK_DURATION,
+    DEFAULT_BLINK_SPEED,
+
+    // states
     speed,
     baseSpeed,
     isNitroEnabled,
@@ -250,5 +407,7 @@ export const usePlayerStore = defineStore("playerStore", () => {
     canShoot,
     makeEventHappened,
     addNewMsg,
+
+    getDefaultCarConfig,
   };
 });

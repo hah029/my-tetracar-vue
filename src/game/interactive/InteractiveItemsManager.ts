@@ -6,15 +6,9 @@ import { CoinManager } from "./items/coin/CoinManager";
 import { BoosterManager } from "./items/booster/BoosterManager";
 import { Car, CarManager } from "../car";
 // other
-import { simulateJumpTrajectory } from "@/game/car/CarTrajectory";
-import { DEFAULT_CAR_CONFIG } from "@/game/car/config";
 import { UpdateMode } from "@/game/core/UpdateMode";
 import { LanePattern } from "@/game/interactive/types/LanePattern";
 import { SegmentQueue } from "./segments/SegmentQueue";
-import {
-  SEGMENT_ROW_BODY_LENGTH,
-  SEGMENT_ROW_SPACING_LENGTH,
-} from "./segments/SegmentLibrary";
 // stores
 import { usePlayerStore } from "@/store/playerStore";
 import { useProgressStore } from "@/store/progressStore";
@@ -23,6 +17,7 @@ import type { BaseItem } from "./items/BaseItem";
 import type { BaseObstacle } from "./obstacle/BaseObstacle";
 import { MagnetSystem } from "../magnet/MagnetSystem";
 import { DestructionManager } from "./DestructionManager";
+import { simulateJumpTrajectory } from "../physics/JumpSimulator";
 
 export class InteractiveItemsManager {
   private static instance: InteractiveItemsManager | null = null;
@@ -148,12 +143,14 @@ export class InteractiveItemsManager {
     const segment = this.segmentQueue.getNext();
     const isReversed = segment.canReversed ? Math.random() < 0.5 : false;
 
+    const commonStore = useCommonStore();
+
     const baseMultiplier = 30;
     // const baseMultiplier = 20;
 
     const segmentRowLength =
-      SEGMENT_ROW_BODY_LENGTH +
-      SEGMENT_ROW_SPACING_LENGTH *
+      commonStore.SEGMENT_ROW_BODY_LENGTH +
+      commonStore.SEGMENT_ROW_SPACING_LENGTH *
         ((baseMultiplier * speed) / usePlayerStore().maxSpeed);
 
     console.log("segmentRowLength", segmentRowLength);
@@ -348,7 +345,7 @@ export class InteractiveItemsManager {
 
     const trajectory = simulateJumpTrajectory({
       startY: 0.5, // высота машины при прыжке
-      jumpHeight: DEFAULT_CAR_CONFIG.jumpHeight,
+      jumpHeight: usePlayerStore().JUMP_HEIGHT,
       gravity: useCommonStore().GRAVITY,
       deltaTime: deltaTime,
       forwardSpeed: speed,

@@ -1,13 +1,6 @@
 import type { Segment } from "./Segment";
 import { LanePattern as L } from "../types/LanePattern";
 import { SegmentTypes as T } from "../types/SegmentType";
-import { XZ_SCALING } from "@/game/cube/config";
-
-export const SEGMENT_ROW_BODY_LENGTH = XZ_SCALING * 3;
-export const SEGMENT_ROW_SPACING_LENGTH = SEGMENT_ROW_BODY_LENGTH;
-
-export const SEGMENT_ROW_LENGTH =
-  SEGMENT_ROW_BODY_LENGTH + SEGMENT_ROW_SPACING_LENGTH;
 
 export const SEGMENTS: Segment[] = [
   {

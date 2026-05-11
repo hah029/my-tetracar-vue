@@ -3,18 +3,7 @@ import * as THREE from "three";
 import { loadCubeModel } from "./loadCube";
 import type { GeometryConfig, CubeUserData, MaterialConfig } from "./types";
 import { loadTexture } from "@/helpers/loaders";
-
-const BASE_MATERIAL_CONFIG = {
-  textureUrl: null,
-  color: 0xffffff,
-  emissive: 0x000000,
-  emissiveIntensity: 1,
-  ior: 1,
-  transmission: 1,
-  metalness: 1,
-  roughness: 1,
-  thickness: 1,
-};
+import { useCommonStore } from "@/store/commonStore";
 
 export class CubeBuilder {
   private static modelCache = new Map<string, THREE.Group>();
@@ -30,7 +19,7 @@ export class CubeBuilder {
     let cube: THREE.Object3D;
 
     let _materialConfig = {
-      ...BASE_MATERIAL_CONFIG,
+      ...useCommonStore().BASE_CUBE_MATERIAL_CONFIG,
       ...materialConfig,
     };
 

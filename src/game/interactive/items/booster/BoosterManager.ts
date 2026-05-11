@@ -3,16 +3,10 @@ import { ShieldItem } from "./ShieldItem";
 import { MagnetItem } from "./MagnetItem";
 import { BulletItem } from "./BulletItem";
 import { makeWeightedChoice } from "@/helpers/functions";
+import { useCommonStore } from "@/store/commonStore";
 
 export class BoosterManager {
   private static instance: BoosterManager | null = null;
-
-  public readonly spawnProbabilities = {
-    nitro: 1,
-    shield: 1,
-    magnet: 1,
-    bullet: 1,
-  };
 
   public static getInstance(): BoosterManager {
     if (!BoosterManager.instance) {
@@ -31,7 +25,9 @@ export class BoosterManager {
     xPos?: number,
     yPos?: number,
   ) {
-    let choice = makeWeightedChoice(this.spawnProbabilities);
+    let choice = makeWeightedChoice(
+      useCommonStore().BOOSTER_SPAWN_PROBABILITIES,
+    );
 
     switch (choice) {
       case "nitro":

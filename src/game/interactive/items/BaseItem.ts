@@ -5,7 +5,6 @@ import { RoadManager } from "@/game/road/RoadManager";
 import type { ItemType } from "./types";
 import type { MaterialConfig } from "@/game/cube/types";
 import { CubeBuilder } from "@/game/cube/Cube";
-import { ITEM_GEOMETRY_CONFIG } from "./BaseConfig";
 import { useCommonStore } from "@/store/commonStore";
 
 export class BaseItem extends THREE.Group {
@@ -51,7 +50,7 @@ export class BaseItem extends THREE.Group {
   async build(material: MaterialConfig | null = null): Promise<void> {
     const config = {
       useGLB: true,
-      geomConfig: ITEM_GEOMETRY_CONFIG,
+      geomConfig: useCommonStore().ITEM_GEOMETRY_CONFIG,
       useTexture: material != null,
       materialConfig: material != null ? material : undefined,
     };

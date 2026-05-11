@@ -1,16 +1,11 @@
 // src/game/car/CarManager.ts
-
 import { useGameState } from "@/store/gameState";
 import { Car } from "./Car";
 import { type CarConfig, type CarStats } from "./types";
 import * as THREE from "three";
-import { CoinManager } from "../interactive/items/coin/CoinManager";
 
 import nitroFragmentShader from "@/game/shaders/nitro/fragment.glsl";
 import nitroVertexShader from "@/game/shaders/nitro/vertex.glsl";
-import { MagnetSystem } from "../magnet/MagnetSystem";
-// import shieldFragmentShader from "@/game/shaders/shield/fragment.glsl";
-// import shieldVertexShader from "@/game/shaders/shield/vertex.glsl";
 
 export class CarManager {
   private static instance: CarManager | null = null;
@@ -19,8 +14,6 @@ export class CarManager {
   private nitroLeft: THREE.Mesh | null = null;
   private nitroRight: THREE.Mesh | null = null;
   private nitroMaterial: THREE.ShaderMaterial | null = null;
-  // private shieldMesh: THREE.Mesh | null = null;
-  // private shieldMaterial: THREE.ShaderMaterial | null = null;
 
   private constructor() {}
 
@@ -47,13 +40,6 @@ export class CarManager {
     }
 
     this.car = new Car(this.scene, config);
-
-    // const field = MagnetSystem.getInstance().createMagnetField();
-
-    // this.scene.add(field);
-    // this.car.userData.magnetField = field;
-    // field.visible = false;
-
     this.createNitroEffect();
 
     return this.car;
