@@ -13,8 +13,6 @@ import {
 import { BaseItem } from "../items/BaseItem";
 import { InteractiveItemsManager } from "../InteractiveItemsManager";
 import { useCommonStore } from "@/store/commonStore";
-import { usePlayerStore } from "@/store/playerStore";
-import { TEXTURES } from "@/assets/textures";
 
 type DropType =
   | "golden_coin"

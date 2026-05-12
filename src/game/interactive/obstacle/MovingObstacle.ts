@@ -1,6 +1,6 @@
 import * as THREE from "three";
 
-import type { GeometryConfig } from "@/game/cube/types";
+import type { GeometryConfig, MaterialConfig } from "@/game/cube/types";
 import { RoadManager } from "@/game/road/RoadManager";
 
 import { CubeObstacle } from "./CubeObstacle";
@@ -21,6 +21,7 @@ export class MovingObstacle extends CubeObstacle {
     useGLB = false,
     direction: 1 | -1 = 1,
     formConfig: GeometryConfig[],
+    materialConfig?: MaterialConfig,
   ) {
     super(
       startLane,
@@ -30,6 +31,7 @@ export class MovingObstacle extends CubeObstacle {
       useGLB,
       undefined,
       useCommonStore().FULL_OBSTACLE_FORMS[0],
+      materialConfig,
     );
 
     const road = RoadManager.getInstance();

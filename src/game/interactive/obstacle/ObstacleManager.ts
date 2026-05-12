@@ -89,6 +89,7 @@ export class ObstacleManager {
       this.useGLB,
       Math.random() > 0.5 ? 1 : -1, // direction
       form,
+      { textureUrl: TEXTURES.cube.obstacle3x3 },
     );
 
     this.scene.add(obstacle);
