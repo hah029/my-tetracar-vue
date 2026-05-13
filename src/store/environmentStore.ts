@@ -2,7 +2,7 @@
 import { defineStore } from "pinia";
 import { useCommonStore } from "./commonStore";
 import type { RoadConfig } from "@/game/road";
-import textureUrl from "@/assets/textures/road_tile.jpg";
+import textureUrl from "@/assets/textures/road_tile.svg";
 import type { GeometryConfig, MaterialConfig } from "@/game/cube/types";
 import { MODELS } from "@/assets/models";
 import { TEXTURES } from "@/assets/textures";
