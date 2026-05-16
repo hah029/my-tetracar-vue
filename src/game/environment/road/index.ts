@@ -2,7 +2,6 @@
 import { RoadManager } from "./RoadManager";
 
 export * from "./types";
-export * from "./config";
 export * from "./Road";
 export * from "./RoadLine";
 export * from "./SpeedLine";

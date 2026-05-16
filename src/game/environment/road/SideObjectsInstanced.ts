@@ -2,12 +2,8 @@
 
 import * as THREE from "three";
 
-import { loadCubeModel } from "../cube/loadCube";
-
+// import { loadCubeModel } from "@/game/cube/loadCube";
 import { useCommonStore } from "@/store/commonStore";
-
-import { useEnvironmentStore } from "@/store/environmentStore";
-
 import { atlas } from "@/assets/textures/TextureAtlas";
 
 export class SideObjectsInstanced {

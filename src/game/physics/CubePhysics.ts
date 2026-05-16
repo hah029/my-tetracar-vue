@@ -1,6 +1,6 @@
 // src/game/physics/CubePhysics.ts
 import * as THREE from "three";
-import { RoadEdge } from "@/game/road/edges";
+import { RoadEdge } from "@/game/environment/road/edges/RoadEdge";
 import { useCommonStore } from "@/store/commonStore";
 
 export interface CubePhysicsConfig {

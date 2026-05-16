@@ -79,20 +79,28 @@ export const useProgressStore = defineStore("progressStore", () => {
     score.value = 0;
   }
 
-  function restoreHighScore() {
-    platform.getPlayerStatByKey("highScore").then((value) => {
-      if (value) highScore.value = value;
-    });
+  async function restoreHighScore() {
+    try {
+      const value = await platform.getPlayerStatByKey("highScore");
+      if (value !== null && value !== undefined) {
+        highScore.value = value;
+      }
+    } catch (error) {
+      console.error("Failed to restore high score:", error);
+    }
     resetNewRecord();
   }
 
-  function saveHighScore(): void {
-    isNewRecord.value = false;
-    if (score.value > highScore.value) {
+  async function saveHighScore(): Promise<void> {
+    // Сохраняем рекорд, если установлен флаг нового рекорда или текущий счёт превышает сохранённый
+    if (isNewRecord.value || score.value > highScore.value) {
+      // Обновляем локальный highScore на случай, если флаг не установлен, но счёт больше
       highScore.value = score.value;
-      platform.setPlayerStatByKey("highScore", highScore.value);
-      platform.setLeaderboardScore("debugLeaderboard1", highScore.value);
+      await platform.setPlayerStatByKey("highScore", highScore.value);
+      await platform.setLeaderboardScore("debugLeaderboard1", highScore.value);
     }
+    // Сбрасываем флаг после сохранения
+    isNewRecord.value = false;
   }
 
   function resetNewRecord() {
@@ -132,9 +140,9 @@ export const useProgressStore = defineStore("progressStore", () => {
     calcScore("energon", amount);
   }
 
-  function saveCoins(): void {
-    platform.setPlayerStatByKey("goldens", goldens.value);
-    platform.setPlayerStatByKey("energons", energons.value);
+  async function saveCoins(): Promise<void> {
+    await platform.setPlayerStatByKey("goldens", goldens.value);
+    await platform.setPlayerStatByKey("energons", energons.value);
   }
 
   function restoreCoins() {
@@ -176,11 +184,14 @@ export const useProgressStore = defineStore("progressStore", () => {
     return Math.floor(currentDistance.value);
   }
 
-  function saveProgress(): void {
-    saveCoins();
-    saveHighScore();
-
-    // save to leaderboad
+  async function saveProgress(): Promise<void> {
+    try {
+      await saveCoins();
+      await saveHighScore();
+      // save to leaderboad
+    } catch (error) {
+      console.error("Failed to save progress:", error);
+    }
   }
 
   function restoreProgress(): void {

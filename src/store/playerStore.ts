@@ -108,7 +108,7 @@ export const usePlayerStore = defineStore("playerStore", () => {
   const COLLIDER_Y_OFFSET = 0.0;
   const COLLIDER_HEIGHT_FACTOR = 0.8;
   //
-  const LANE_CHANGE_SPEED = 0.28;
+  const LANE_CHANGE_SPEED = 0.32;
   const MAX_TILT = 0.05;
   const TILT_SMOOTHING = 0.2;
   // jumps
@@ -144,11 +144,11 @@ export const usePlayerStore = defineStore("playerStore", () => {
   // armor
   const isShieldEnabled = ref(false);
   const armor = ref(0);
-  const maxArmor = ref(5);
+  const maxArmor = ref(1);
 
   //ammo
-  const ammo = ref(0);
-  const maxAmmo = ref(5);
+  const ammo = ref(10);
+  const maxAmmo = ref(10);
 
   // position
   const currentLane = ref(1); // 0..3 для полос

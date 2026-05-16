@@ -1,6 +1,6 @@
 import * as THREE from "three";
 import { cameraTarget } from "@/game/camera/cameraTarget.js";
-import { RoadManager } from "../road/RoadManager.js";
+import { RoadManager } from "@/game/environment/road";
 import { type CarState, type CarConfig } from "./types";
 import { CarCollider } from "./CarCollider";
 import { CarCubesBuilder } from "./CarCubesBuilder";

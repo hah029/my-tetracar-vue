@@ -1,7 +1,7 @@
 import * as THREE from "three";
 
 import type { GeometryConfig, MaterialConfig } from "@/game/cube/types";
-import { RoadManager } from "@/game/road/RoadManager";
+import { RoadManager } from "@/game/environment/road";
 
 import { CubeObstacle } from "./CubeObstacle";
 import { useCommonStore } from "@/store/commonStore";

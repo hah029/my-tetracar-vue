@@ -1,6 +1,6 @@
 // src/game/coin/Coin.ts
 import * as THREE from "three";
-import { RoadManager } from "@/game/road/RoadManager";
+import { RoadManager } from "@/game/environment/road";
 
 import type { ItemType } from "./types";
 import type { MaterialConfig } from "@/game/cube/types";

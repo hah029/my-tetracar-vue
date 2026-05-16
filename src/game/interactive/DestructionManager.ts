@@ -1,6 +1,6 @@
 import * as THREE from "three";
-import { RoadManager } from "@/game/road/RoadManager";
-import { RoadEdge } from "@/game/road/edges";
+import { RoadManager } from "@/game/environment/road";
+import { RoadEdge } from "@/game/environment/road/edges";
 import { BaseItem } from "./items/BaseItem";
 import { useCommonStore } from "@/store/commonStore";
 import { CubePhysics } from "@/game/physics/CubePhysics";

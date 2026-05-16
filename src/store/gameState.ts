@@ -54,7 +54,12 @@ export const useGameState = defineStore("gameState", () => {
 
       case GameStates.Menu:
         sound.playMusicSequence("music_intro", "music_background");
-        progress.saveProgress();
+        // Асинхронное сохранение прогресса, ошибки логируем
+        progress
+          .saveProgress()
+          .catch((err) =>
+            console.error("Failed to save progress on menu:", err),
+          );
 
         if (prev === GameStates.Gameover || prev === GameStates.Pause) {
           resetCallback?.();
@@ -72,7 +77,12 @@ export const useGameState = defineStore("gameState", () => {
         break;
 
       case GameStates.Gameover:
-        progress.saveProgress();
+        // Асинхронное сохранение прогресса перед переходом
+        progress
+          .saveProgress()
+          .catch((err) =>
+            console.error("Failed to save progress on gameover:", err),
+          );
         sound.playMusic("music_gameover");
         break;
 

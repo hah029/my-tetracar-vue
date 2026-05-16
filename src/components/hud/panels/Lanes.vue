@@ -8,7 +8,7 @@
 <script setup lang="ts">
 import { computed } from "vue";
 import { usePlayerStore } from "@/store/playerStore";
-import { RoadManager } from "@/game/road";
+import { RoadManager } from "@/game/environment/road";
 
 const playerStore = usePlayerStore();
 

@@ -1,8 +1,8 @@
 // src/game/car/CarPhysics
 
 import * as THREE from "three";
-import { RoadManager } from "../road/RoadManager";
-import { RoadEdge } from "../road/edges/RoadEdge";
+import { RoadManager } from "@/game/environment/road";
+import { RoadEdge } from "@/game/environment/road/edges/RoadEdge";
 import { CubePhysics } from "@/game/physics/CubePhysics";
 import type { PhysicsConfig } from "../physics/types";
 import { useCommonStore } from "@/store/commonStore";

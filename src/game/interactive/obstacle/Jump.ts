@@ -1,6 +1,6 @@
 // src/game/Jump.ts
 import * as THREE from "three";
-import { RoadManager } from "@/game/road/RoadManager";
+import { RoadManager } from "@/game/environment/road";
 import { useCommonStore } from "@/store/commonStore";
 
 export interface JumpConfig {

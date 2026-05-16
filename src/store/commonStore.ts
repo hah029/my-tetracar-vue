@@ -28,9 +28,9 @@ export const useCommonStore = defineStore("common", () => {
   };
   const BOOSTER_SPAWN_PROBABILITIES = {
     nitro: 1,
-    shield: 1,
+    shield: 0,
     magnet: 1,
-    bullet: 1,
+    bullet: 0,
   };
 
   const ITEM_GEOMETRY_CONFIG: GeometryConfig = {

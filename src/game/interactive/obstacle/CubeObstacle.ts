@@ -3,7 +3,7 @@ import { BaseObstacle } from "./BaseObstacle";
 import type { GeometryConfig, MaterialConfig } from "@/game/cube/types";
 import type { PhysicsConfig } from "@/game/physics/types";
 import { CubeBuilder } from "@/game/cube/Cube";
-import { RoadManager } from "@/game/road/RoadManager";
+import { RoadManager } from "@/game/environment/road";
 
 import {
   DestructionManager,

@@ -4,7 +4,7 @@ import { ref } from "vue";
 // managers
 import { type CollisionResult } from "@/game/collision/CollisionSystem";
 import { type FlashType } from "@/game/effects/FlashEffectManager";
-import { RoadManager } from "@/game/road/RoadManager";
+import { RoadManager } from "@/game/environment/road";
 import { CarManager } from "@/game/car/CarManager";
 import { ObstacleManager } from "@/game/interactive/obstacle/ObstacleManager";
 import { InteractiveItemsManager } from "@/game/interactive/InteractiveItemsManager";
