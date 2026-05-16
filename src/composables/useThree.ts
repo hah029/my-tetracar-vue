@@ -74,6 +74,7 @@ export function useThree(container: Ref<HTMLElement | null>) {
     bloomPass.enabled = vfxOn && graphics.bloomEnabled;
     fxaaPass.enabled = vfxOn && graphics.fxaaEnabled;
     rgbShiftPass.enabled = vfxOn && graphics.rgbShiftEnabled;
+    afterimagePass.enabled = vfxOn && graphics.afterimageEnabled;
 
     // 5. Режим день/ночь (фон, туман, освещение)
     updateLightingMode();
@@ -162,7 +163,7 @@ export function useThree(container: Ref<HTMLElement | null>) {
       1.2,
     );
 
-    afterimagePass = new AfterimagePass(0.1);
+    afterimagePass = new AfterimagePass(0.7);
 
     fxaaPass = new ShaderPass(FXAAShader);
     fxaaPass.material.uniforms.resolution!.value.set(

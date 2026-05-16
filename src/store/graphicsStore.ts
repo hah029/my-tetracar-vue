@@ -4,7 +4,8 @@ import { Platform } from "@/sdk/Platform";
 
 export const useGraphicsStore = defineStore("graphics", () => {
   const vfxEnabled = ref(true); // общий рубильник эффектов
-  const bloomEnabled = ref(true); // по умолчанию выключен
+  const bloomEnabled = ref(false); // по умолчанию выключен
+  const afterimageEnabled = ref(false); // по умолчанию выключен
   const fxaaEnabled = ref(true); // по умолчанию включен
   const nightMode = ref(false); // false = день, true = ночь
   const shadowEnabled = ref(true);
@@ -20,6 +21,9 @@ export const useGraphicsStore = defineStore("graphics", () => {
     await storage
       .getPlayerDataByKey("bloomEnabled")
       .then((v: boolean) => (bloomEnabled.value = v ?? false));
+    await storage
+      .getPlayerDataByKey("afterimageEnabled")
+      .then((v: boolean) => (afterimageEnabled.value = v ?? false));
     await storage
       .getPlayerDataByKey("fxaaEnabled")
       .then((v: boolean) => (fxaaEnabled.value = v ?? false));
@@ -47,6 +51,13 @@ export const useGraphicsStore = defineStore("graphics", () => {
   async function toggleBloom() {
     bloomEnabled.value = !bloomEnabled.value;
     await storage.setPlayerDataByKey("bloomEnabled", bloomEnabled.value);
+  }
+  async function toggleAfterimage() {
+    afterimageEnabled.value = !afterimageEnabled.value;
+    await storage.setPlayerDataByKey(
+      "afterimageEnabled",
+      afterimageEnabled.value,
+    );
   }
   async function toggleFxaa() {
     fxaaEnabled.value = !fxaaEnabled.value;
@@ -99,6 +110,7 @@ export const useGraphicsStore = defineStore("graphics", () => {
     shadowEnabled,
     shadowQuality,
     rgbShiftEnabled,
+    afterimageEnabled,
     toggleVfx,
     toggleBloom,
     toggleFxaa,
@@ -110,5 +122,6 @@ export const useGraphicsStore = defineStore("graphics", () => {
     getBloomStrength,
     getShadowQuality,
     toggleRGBShift,
+    toggleAfterimage,
   };
 });

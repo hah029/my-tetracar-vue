@@ -108,6 +108,7 @@
         "vfxAndMusic": {
             "vfxEnabled": "все эффекты",
             "bloomEnabled": "свечение",
+            "afterimageEnabled": "размытие",
             "fxaaEnabled": "FXAA",
             "rgbShiftEnabled": "RGB смещение",
             "shadowEnabled": "тени",

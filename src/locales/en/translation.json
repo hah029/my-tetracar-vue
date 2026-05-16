@@ -108,6 +108,7 @@
         "vfxAndMusic": {
             "vfxEnabled": "all effects",
             "bloomEnabled": "bloom",
+            "afterimageEnabled": "motion blur",
             "fxaaEnabled": "FXAA",
             "rgbShiftEnabled": "RGB shift",
             "shadowEnabled": "shadows",

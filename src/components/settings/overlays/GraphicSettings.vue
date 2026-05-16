@@ -23,8 +23,20 @@
             </button>
         </div>
 
-        <!-- FXAA (индивидуально) -->
+        <!-- Bloom (индивидуально) -->
         <div v-if="rowView[2]" class="settings_row">
+            <span>{{ foo.makeText("settings.vfxAndMusic.afterimageEnabled", "Motion Blur") }}</span>
+            <button class="toggle_btn" :class="{ 'toggle_btn--active': graphicsStore.afterimageEnabled }"
+                @click="toggleAfterimage">
+                {{ graphicsStore.afterimageEnabled ?
+                    foo.makeText("settings.toggleOn", "empty") :
+                    foo.makeText("settings.toggleOff", "empty")
+                }}
+            </button>
+        </div>
+
+        <!-- FXAA (индивидуально) -->
+        <div v-if="rowView[3]" class="settings_row">
             <span>{{ foo.makeText("settings.vfxAndMusic.fxaaEnabled", "FXAA") }}</span>
             <button class="toggle_btn" :class="{ 'toggle_btn--active': graphicsStore.fxaaEnabled }" @click="toggleFxaa">
                 {{ graphicsStore.fxaaEnabled ?
@@ -34,7 +46,7 @@
             </button>
         </div>
 
-        <div v-if="rowView[3]" class="settings_row">
+        <div v-if="rowView[4]" class="settings_row">
             <span>{{ foo.makeText("settings.vfxAndMusic.rgbShiftEnabled", "RGB Shift") }}</span>
             <button class="toggle_btn" :class="{ 'toggle_btn--active': graphicsStore.rgbShiftEnabled }"
                 @click="toggleRGBShift">
@@ -46,7 +58,7 @@
         </div>
 
         <!-- Тени (вкл/выкл) -->
-        <div v-if="rowView[4]" class="settings_row">
+        <div v-if="rowView[5]" class="settings_row">
             <span>{{ foo.makeText("settings.vfxAndMusic.shadowEnabled", "Тени") }}</span>
             <button class="toggle_btn" :class="{ 'toggle_btn--active': graphicsStore.shadowEnabled }"
                 @click="toggleShadows">
@@ -58,7 +70,7 @@
         </div>
 
         <!-- Качество теней (цикличное) -->
-        <div v-if="rowView[5] && graphicsStore.shadowEnabled" class="settings_row">
+        <div v-if="rowView[6] && graphicsStore.shadowEnabled" class="settings_row">
             <span>{{ foo.makeText("settings.vfxAndMusic.shadowQuality", "Качество теней") }}</span>
             <button class="toggle_btn toggle_btn--quality" @click="cycleShadowQuality">
                 {{ shadowQualityLabel }}
@@ -66,7 +78,7 @@
         </div>
 
         <!-- Ночной режим -->
-        <div v-if="rowView[6]" class="settings_row">
+        <div v-if="rowView[7]" class="settings_row">
             <span>{{ foo.makeText("settings.vfxAndMusic.nightMode", "Ночной режим") }}</span>
             <button class="toggle_btn" :class="{ 'toggle_btn--active': graphicsStore.nightMode }"
                 @click="toggleNightMode">
@@ -86,7 +98,6 @@ import { createNewText } from '@/helpers/functions';
 import { useGraphicsStore } from "@/store/graphicsStore";
 
 const graphicsStore = useGraphicsStore();
-const volume = ref(Number(localStorage.getItem("masterVolume") ?? 0.6));
 const rowView = ref(Array(9).fill(false)); // 9 строк
 
 const foo = createNewText();
@@ -106,6 +117,9 @@ function toggleVfx() {
 function toggleBloom() {
     graphicsStore.toggleBloom();
 }
+function toggleAfterimage() {
+    graphicsStore.toggleAfterimage();
+}
 function toggleFxaa() {
     graphicsStore.toggleFxaa();
 }
@@ -113,7 +127,7 @@ function toggleShadows() {
     graphicsStore.toggleShadow();
 }
 function cycleShadowQuality() {
-    graphicsStore.cycleShadowQuality(); // реализовать цикл low -> medium -> high -> low
+    graphicsStore.cycleShadowQuality();
 }
 function toggleNightMode() {
     graphicsStore.toggleNightMode();
