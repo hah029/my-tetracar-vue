@@ -5,6 +5,10 @@ import flashFragmentShader from "@/game/shaders/flash/fragment.glsl";
 
 import explosionVertexShader from "@/game/shaders/explosion/vertex.glsl";
 import explosionFragmentShader from "@/game/shaders/explosion/fragment.glsl";
+
+import landingWaveVertexShader from "@/game/shaders/landingWave/vertex.glsl";
+import landingWaveFragmentShader from "@/game/shaders/landingWave/fragment.glsl";
+
 import { useCommonStore } from "@/store/commonStore";
 
 // Типы эффектов
@@ -20,6 +24,7 @@ interface FlashEffect {
   mesh: THREE.Mesh;
   createdAt: number;
   duration: number;
+  billboard?: boolean;
 }
 
 export class FlashEffectManager {
@@ -94,6 +99,7 @@ export class FlashEffectManager {
       mesh,
       createdAt: performance.now(),
       duration,
+      billboard: true,
     });
   }
 
@@ -130,7 +136,47 @@ export class FlashEffectManager {
       mesh,
       createdAt: performance.now(),
       duration,
+      billboard: true,
     });
+  }
+
+  spawnLandingWave(position: THREE.Vector3, size = 10, duration = 200) {
+    if (!this.scene) return;
+
+    const material = new THREE.ShaderMaterial({
+      transparent: true,
+      depthWrite: false,
+      // depthTest: true,
+
+      blending: THREE.AdditiveBlending,
+
+      uniforms: {
+        uTime: { value: 0 },
+        uColor: { value: new THREE.Color("#ffffff7b") },
+      },
+
+      vertexShader: landingWaveVertexShader,
+      fragmentShader: landingWaveFragmentShader,
+    });
+
+    const mesh = new THREE.Mesh(new THREE.PlaneGeometry(size, size), material);
+
+    // кладем на землю
+    mesh.rotation.x = -Math.PI / 2;
+
+    mesh.position.copy(position);
+    // mesh.position.y += 0.03;
+
+    this.scene.add(mesh);
+
+    this.effects.push({
+      mesh,
+      createdAt: performance.now(),
+      duration,
+      billboard: false,
+    });
+
+    CameraSystem.triggerImpactShake(10, 200);
   }
 
   update(now = performance.now()) {
@@ -145,7 +191,9 @@ export class FlashEffectManager {
         continue;
       }
 
-      fx.mesh.lookAt(CameraSystem.getCamera()!.position);
+      if (fx.billboard) {
+        fx.mesh.lookAt(CameraSystem.getCamera()!.position);
+      }
 
       const mat = fx.mesh.material as THREE.ShaderMaterial;
       mat.uniforms.uTime.value = progress;

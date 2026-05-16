@@ -58,7 +58,9 @@ export class Road extends THREE.Mesh {
     this.rotation.x = -Math.PI / 2;
     this.position.z = 0;
     this.position.y = tmpConfig.yPosition!;
-    this.receiveShadow = false;
+
+    this.castShadow = false;
+    this.receiveShadow = true;
 
     console.log(this);
   }

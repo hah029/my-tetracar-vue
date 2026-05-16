@@ -27,6 +27,8 @@ export function useControls(game: ReturnType<typeof useGame>) {
     RIGHT_ALT = "KeyD",
     DOWN = "ArrowDown",
     DOWN_ALT = "KeyS",
+    UP = "ArrowUp",
+    UP_ALT = "KeyW",
 
     SPACE = "Space",
     NITRO = "KeyN",
@@ -150,6 +152,11 @@ export function useControls(game: ReturnType<typeof useGame>) {
       case controlKeys.DOWN:
       case controlKeys.DOWN_ALT:
         playerStore.forceJump = true;
+        break;
+
+      case controlKeys.UP:
+      case controlKeys.UP_ALT:
+        game.jumpPlayer(60 / 1000);
         break;
 
       case controlKeys.SPACE:

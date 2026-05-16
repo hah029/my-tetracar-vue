@@ -8,9 +8,12 @@ import App from "./App.vue";
 import { locales } from "./locales";
 import { resolveAutoLanguage } from "./helpers/i18n";
 import { Platform, type IGamePlatform } from "./sdk/Platform";
+import { loadAtlas } from "./assets/textures/TextureAtlas";
 
 // что выбрал пользователь
 const savedLang = localStorage.getItem("lang") || "auto";
+
+await loadAtlas();
 
 // итоговый язык
 let initialLang = savedLang === "auto" ? resolveAutoLanguage() : savedLang;

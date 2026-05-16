@@ -86,7 +86,7 @@ export class DestructionManager {
     ud.status = "landed";
 
     item.position.x = item.position.x;
-    item.position.y = 0;
+    item.position.y = useCommonStore().BASE_ITEM_YPOS / 2;
 
     // останавливаем физику
     ud.velocity.set(0, 0, 0);

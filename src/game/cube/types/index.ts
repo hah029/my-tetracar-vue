@@ -1,3 +1,4 @@
+import type { TextureAtlas } from "@/assets/textures/TextureAtlas";
 import * as THREE from "three";
 
 export interface GeometryConfig {
@@ -6,11 +7,17 @@ export interface GeometryConfig {
   name?: string;
   modelUrl?: string;
 }
+
 export interface MaterialConfig {
   textureUrl?: string;
+
+  atlas?: TextureAtlas;
+  atlasSprite?: string;
+
   color?: number;
   emissive?: number;
   emissiveIntensity?: number;
+
   ior?: number;
   transmission?: number;
   metalness?: number;

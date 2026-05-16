@@ -61,9 +61,10 @@ export const useEnvironmentStore = defineStore("environmentStore", () => {
 
   const SIDE_OBJECT_GEOMETRY_CONFIG: GeometryConfig = {
     scale: [
-      commonStore.XZ_SCALING,
-      commonStore.XZ_SCALING,
-      commonStore.XZ_SCALING,
+      // commonStore.XZ_SCALING,
+      // commonStore.XZ_SCALING,
+      // commonStore.XZ_SCALING,
+      2, 2, 2,
     ],
     modelUrl: MODELS.cube,
   };

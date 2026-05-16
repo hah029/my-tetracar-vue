@@ -8,6 +8,7 @@ import { useGameState } from "@/store/gameState.js";
 import { CarVisualState, type CarVisualEffect } from "./CarVisualState";
 import { usePlayerStore } from "@/store/playerStore.js";
 import { CarPhysics } from "./CarPhysics.js";
+import { FlashEffectManager } from "../effects/FlashEffectManager.js";
 
 export class Car extends THREE.Group {
   private scene: THREE.Scene;
@@ -125,6 +126,10 @@ export class Car extends THREE.Group {
 
     // Обновляем прыжок
     const jumpResult = this.physics.updateJump(this.position.y, dt);
+
+    if (jumpResult.hasLanded)
+      FlashEffectManager.getInstance().spawnLandingWave(this.position);
+
     this.position.y = jumpResult.newY;
     this.state.isJumping = jumpResult.isJumping;
     this.rotation.x += (jumpResult.pitch - this.rotation.x) * 0.05;

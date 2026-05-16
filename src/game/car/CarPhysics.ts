@@ -9,6 +9,7 @@ import { useCommonStore } from "@/store/commonStore";
 import { usePlayerStore } from "@/store/playerStore";
 import type { CarConfig } from ".";
 import { JumpSimulator, type JumpState } from "../physics/JumpSimulator";
+import { FlashEffectManager } from "../effects/FlashEffectManager";
 
 export class CarPhysics {
   private config: Required<CarConfig>;
@@ -47,6 +48,7 @@ export class CarPhysics {
     newY: number;
     isJumping: boolean;
     pitch: number;
+    hasLanded: boolean;
   } {
     // Если прыжок не активен – просто возвращаем текущую высоту,
     // а внутреннее состояние подгоняем под неё (для корректного старта в будущем)
@@ -56,6 +58,7 @@ export class CarPhysics {
         newY: currentY,
         isJumping: false,
         pitch: 0,
+        hasLanded: false,
       };
     }
 
@@ -63,6 +66,7 @@ export class CarPhysics {
     const dtSeconds = deltaTime / 1000;
     // Активная фаза прыжка – используем симуляцию
     const prevVelocity = this.jumpState.velocity;
+    const prevIsJumping = this.jumpState.isJumping;
 
     const simMultiplier = usePlayerStore().forceJump
       ? usePlayerStore().FORCED_JUMP_MULTIPLIER
@@ -72,12 +76,15 @@ export class CarPhysics {
       dtSeconds * simMultiplier,
     );
 
+    const hasLanded = prevIsJumping && !this.jumpState.isJumping;
+
     let pitch = prevVelocity > 0 ? 0.2 : -0.1;
     if (usePlayerStore().forceJump) pitch = -0.2;
     return {
       newY: this.jumpState.y,
       isJumping: this.jumpState.isJumping,
       pitch,
+      hasLanded: hasLanded && usePlayerStore().forceJump,
     };
   }
 

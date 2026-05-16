@@ -172,6 +172,7 @@ export function GameLoop(
               isDestroyed: () => game.car.value.isDestroyed,
             },
             currentSpeed,
+            // deltaTime,
           );
         }
 
