@@ -13,7 +13,7 @@ import { loadAtlas } from "./assets/textures/TextureAtlas";
 // что выбрал пользователь
 const savedLang = localStorage.getItem("lang") || "auto";
 
-await loadAtlas();
+loadAtlas().catch((err) => console.log("Atlas loading failed:", err));
 
 // итоговый язык
 let initialLang = savedLang === "auto" ? resolveAutoLanguage() : savedLang;
