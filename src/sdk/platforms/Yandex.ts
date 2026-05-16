@@ -151,7 +151,7 @@ export class YandexPlatform implements IGamePlatform {
     return await dataPromiseWriter;
   }
 
-  async setPlayerStatByKey(stat: string, value: any | null) {
+  async setPlayerStatByKey(stat: string, value: number) {
     if (!this.sdk) return null;
     const player = await this.sdk.getPlayer();
     return await player.setStats({ [stat]: value });
@@ -164,7 +164,7 @@ export class YandexPlatform implements IGamePlatform {
     const player = await this.sdk.getPlayer();
     let statsPromise = player.getStats([key]);
     if (!statsPromise) return null;
-    return await statsPromise;
+    return Number(await statsPromise);
   }
 
   async getLeaderboardEntries(

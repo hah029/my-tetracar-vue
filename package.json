@@ -3,7 +3,7 @@
   "appName": "TetroCar",
   "teamName": "Wicked Team",
   "private": true,
-  "version": "0.0.17",
+  "version": "0.0.18",
   "type": "module",
   "scripts": {
     "dev": "vite",
