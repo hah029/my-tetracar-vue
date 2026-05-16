@@ -9,7 +9,7 @@ export const useCommonStore = defineStore("common", () => {
   const XZ_SCALING = 1;
   // Основные параметры камеры
   const BASE_ITEM_ROTATION = 0.03; // скорость вращения айтемов (всех)
-  const BASE_ITEM_YPOS = XZ_SCALING / 4; // базовая высота спавна айтемов
+  const BASE_ITEM_YPOS = XZ_SCALING / 2; // базовая высота спавна айтемов
 
   // Z-координата спавна всех сегментов (здесь нужно именно в минус уводить)
   const BASE_SEGMENTS_ZPOS = -100;
@@ -58,7 +58,7 @@ export const useCommonStore = defineStore("common", () => {
   // };
 
   // глобальная физика
-  const GRAVITY = 20;
+  const GRAVITY = 30;
   const FRICTION = 2.5;
   const BOUNCE_FACTOR = 0.4;
   //
@@ -69,7 +69,7 @@ export const useCommonStore = defineStore("common", () => {
   const EXPLOSION_UPWARD = 20;
 
   const BULLET_DEFAULT_SPEED = 0.15;
-  const BULLET_MAX_DISTANCE = 50;
+  const BULLET_MAX_DISTANCE = 100;
   const BULLET_DEFAULT_MATERIAL = {
     color: 0xff0000,
     emissive: 0xff0000,

@@ -99,13 +99,20 @@
         "toggleOn": "вкл",
         "toggleOff": "выкл",
         "menuList": {
-            "technical": "графика и аудио",
+            "graphics": "графика",
+            "sounds": "звуки",
             "lang": "язык",
             "controls": "управление",
             "about": "об игре"
         },
         "vfxAndMusic": {
-            "vfxEnabled": "эффекты",
+            "vfxEnabled": "все эффекты",
+            "bloomEnabled": "свечение",
+            "fxaaEnabled": "FXAA",
+            "rgbShiftEnabled": "RGB смещение",
+            "shadowEnabled": "тени",
+            "shadowQuality": "качество теней",
+            "nightMode": "ночь",
             "musicEnabled": "музыка",
             "sfxEnabled": "звуки",
             "volumeLevel": "громкость"

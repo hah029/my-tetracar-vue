@@ -94,8 +94,8 @@ export class CubeBuilder {
     cube.traverse((child) => {
       if ((child as THREE.Mesh).isMesh) {
         const mesh = child as THREE.Mesh;
-        mesh.castShadow = false;
-        mesh.receiveShadow = false;
+        mesh.castShadow = true;
+        mesh.receiveShadow = true;
       }
     });
     // Логирование для диагностики масштаба
@@ -111,8 +111,8 @@ export class CubeBuilder {
     const pos = config.pos ?? [0, 0, 0];
     cube.position.set(pos[0], pos[1], pos[2]);
     cube.scale.set(config.scale[0], config.scale[1], config.scale[2]);
-    cube.castShadow = false;
-    cube.receiveShadow = false;
+    cube.castShadow = true;
+    cube.receiveShadow = true;
     return cube;
   }
 

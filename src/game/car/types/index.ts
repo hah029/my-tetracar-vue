@@ -26,7 +26,7 @@ export interface CarConfig {
 
   // Прыжки
   jumpHeight?: number;
-  jumpDuration?: number;
+  // jumpDuration?: number;
   // gravity?: number;
 
   // // Разрушение

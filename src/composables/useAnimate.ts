@@ -2,7 +2,6 @@
 import * as THREE from "three";
 import Stats from "three/examples/jsm/libs/stats.module.js";
 import { EffectComposer } from "three/examples/jsm/postprocessing/EffectComposer.js";
-// import { AfterimagePass } from "three/examples/jsm/postprocessing/AfterimagePass.js";
 // composables
 import { useGameState } from "@/store/gameState";
 import { usePlayerStore } from "@/store/playerStore";
@@ -10,10 +9,8 @@ import { useProgressStore } from "@/store/progressStore";
 import { useGame } from "./useGame";
 // managers
 import { CameraSystem } from "@/game/camera/CameraSystem";
-// import { SoundManager } from "@/game/sound/SoundManager";
 import { DebugColliderVisualizer } from "@/helpers/debug/DebugColliderVisualizer";
 import { UpdateMode } from "@/game/core/UpdateMode";
-// import { CarManager } from "@/game/car";
 import { BulletSystem } from "@/game/combat/BulletSystem";
 import { GameStates } from "@/game/core/GameState";
 import { Jump } from "@/game/interactive/obstacle";
@@ -27,10 +24,15 @@ export function GameLoop(
   composer: EffectComposer,
   // motionBlur: AfterimagePass,
   debugCollider?: DebugColliderVisualizer,
+  setRGBShiftAmount?: any,
 ) {
   const gameState = useGameState();
   const playerStore = usePlayerStore();
   const progressStore = useProgressStore();
+
+  let currentShiftAmount = 0;
+  const maxShift = 0.008; // максимум при полном нитро
+  const lerpSpeed = 500; // скорость изменения
 
   // ----------------------------
   // показываем / скрываем FPS-панель через Ctrl+Q
@@ -174,6 +176,16 @@ export function GameLoop(
         }
 
         game.updateEffects();
+
+        // const target = playerStore.isNitroEnabled ? maxShift : 0;
+        // // Плавно двигаем текущее значение к целевому
+        // currentShiftAmount +=
+        //   (target - currentShiftAmount) * Math.min(1, deltaTime * lerpSpeed);
+
+        // console.log("currentShiftAmount", currentShiftAmount);
+
+        // setRGBShiftAmount(currentShiftAmount);
+
         debugCollider?.update();
       }
     } else {

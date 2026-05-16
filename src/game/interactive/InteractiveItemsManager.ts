@@ -92,8 +92,8 @@ export class InteractiveItemsManager {
 
     // base physics
     this.updateItems(
-      // items.filter((item) => item.userData.status === "landed"),
-      items,
+      items.filter((item) => item.userData.status !== "magnetized"),
+      // items,
       deltaTime,
       speed,
     );
@@ -132,7 +132,7 @@ export class InteractiveItemsManager {
     this.worldFrontZ += speed * deltaTime;
 
     while (this.worldFrontZ > minZ && spawned < MAX_SPAWNS_PER_FRAME) {
-      console.log("this.worldFrontZ", this.worldFrontZ);
+      // console.log("this.worldFrontZ", this.worldFrontZ);
       const length = this.spawnSegment(deltaTime, speed, this.worldFrontZ);
       this.worldFrontZ = this.worldFrontZ - length;
       spawned++;
@@ -153,7 +153,7 @@ export class InteractiveItemsManager {
       commonStore.SEGMENT_ROW_SPACING_LENGTH *
         ((baseMultiplier * speed) / usePlayerStore().maxSpeed);
 
-    console.log("segmentRowLength", segmentRowLength);
+    // console.log("segmentRowLength", segmentRowLength);
 
     segment.pattern.forEach((row, rowIndex) => {
       const z = baseZ - rowIndex * segmentRowLength;

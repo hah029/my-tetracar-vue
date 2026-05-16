@@ -99,13 +99,20 @@
         "toggleOn": "on",
         "toggleOff": "off",
         "menuList": {
-            "technical": "video & sound",
+            "graphics": "graphics",
+            "sounds": "sounds",
             "lang": "language",
             "controls": "controls",
             "about": "about"
         },
         "vfxAndMusic": {
-            "vfxEnabled": "effects",
+            "vfxEnabled": "all effects",
+            "bloomEnabled": "bloom",
+            "fxaaEnabled": "FXAA",
+            "rgbShiftEnabled": "RGB shift",
+            "shadowEnabled": "shadows",
+            "shadowQuality": "shadows quality",
+            "nightMode": "night",
             "musicEnabled": "music",
             "sfxEnabled": "sounds",
             "volumeLevel": "volume"

@@ -25,7 +25,7 @@ export const usePlayerStore = defineStore("playerStore", () => {
     -commonStore.XZ_SCALING,
     -commonStore.XZ_SCALING * 3,
   ];
-  const HEIGHT = commonStore.BASE_ITEM_YPOS;
+  const HEIGHT = commonStore.BASE_ITEM_YPOS / 2;
   const GLB_SCALES: [number, number, number] = [
     commonStore.XZ_SCALING,
     commonStore.XZ_SCALING,
@@ -100,22 +100,21 @@ export const usePlayerStore = defineStore("playerStore", () => {
   const BASE_SPEED = 0.05; // м/с - стартовая скорость машинки
   const MAX_SPEED = 1.0; // м/с - максимальная скорость машинки
   const NITRO_MULTIPLIER = 1.5;
-  const ACCELERATION = 0.0000005; // - темп ускорения машинки
-  const FORCED_JUMP_MULTIPLIER = 10;
+  const ACCELERATION = 0.000005; // - темп ускорения машинки
+  const FORCED_JUMP_MULTIPLIER = 5;
   // size + collider
   const COLLIDER_SHRINK_X = 1.0;
   const COLLIDER_SHRINK_Z = 1.0;
   const COLLIDER_Y_OFFSET = 0.0;
   const COLLIDER_HEIGHT_FACTOR = 0.8;
   //
-  const LANE_CHANGE_SPEED = 0.3;
-  const MAX_TILT = 0.08;
+  const LANE_CHANGE_SPEED = 0.28;
+  const MAX_TILT = 0.05;
   const TILT_SMOOTHING = 0.2;
   // jumps
-  const JUMP_HEIGHT = 8.0;
-  const JUMP_DURATION = 0.2;
+  const JUMP_HEIGHT = 4.0;
 
-  const DEFAULT_EMISSION_INTENSITY = 1.2;
+  const DEFAULT_EMISSION_INTENSITY = 5;
   const DEFAULT_BLINK_DURATION = 1;
   const DEFAULT_BLINK_SPEED = 10;
 
@@ -137,8 +136,8 @@ export const usePlayerStore = defineStore("playerStore", () => {
   const BASE_MAGNET_TIMER = 10000;
   const isMagnetEnabled = ref(false);
   const magnetTimer = ref(BASE_MAGNET_TIMER);
-  const magnetRadius = ref(10);
-  const magnetForce = ref(10);
+  const magnetRadius = ref(20);
+  const magnetForce = ref(40);
   const magnetMaxTargets = ref(8);
   const magnetTypes = ref([] as any[]);
 
@@ -317,7 +316,6 @@ export const usePlayerStore = defineStore("playerStore", () => {
   function getJumpOptions() {
     return {
       jumpHeight: JUMP_HEIGHT,
-      jumpDuration: JUMP_DURATION,
     };
   }
 

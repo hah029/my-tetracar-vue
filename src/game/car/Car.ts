@@ -50,6 +50,7 @@ export class Car extends THREE.Group {
     this.physics = new CarPhysics(this.config);
 
     this.position.copy(this.config.startPosition);
+    this.castShadow = true;
     this.scene = scene;
     this.scene.add(this);
 

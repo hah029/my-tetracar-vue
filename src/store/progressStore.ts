@@ -59,7 +59,7 @@ export const useProgressStore = defineStore("progressStore", () => {
           isNewRecord.value = true;
           playerStore.addNewMsg("newRecord");
           soundManager.play("sfx_new_record");
-        //   oldHighScore.value = highScore.value; // запоминаем предыдущий рекорд
+          //   oldHighScore.value = highScore.value; // запоминаем предыдущий рекорд
         }
         highScore.value = score.value;
       }
@@ -80,8 +80,8 @@ export const useProgressStore = defineStore("progressStore", () => {
   }
 
   function restoreHighScore() {
-    platform.getPlayerDataByKey("highScore").then((value) => {
-        if (value) highScore.value = value;
+    platform.getPlayerStatByKey("highScore").then((value) => {
+      if (value) highScore.value = value;
     });
     resetNewRecord();
   }
@@ -90,7 +90,8 @@ export const useProgressStore = defineStore("progressStore", () => {
     isNewRecord.value = false;
     if (score.value > highScore.value) {
       highScore.value = score.value;
-      platform.setPlayerDataByKey("highScore", highScore.value)
+      platform.setPlayerStatByKey("highScore", highScore.value);
+      platform.setLeaderboardScore("debugLeaderboard1", highScore.value);
     }
   }
 
@@ -132,16 +133,16 @@ export const useProgressStore = defineStore("progressStore", () => {
   }
 
   function saveCoins(): void {
-      platform.setPlayerDataByKey("goldens", goldens.value);
-      platform.setPlayerDataByKey("energons", energons.value);
+    platform.setPlayerStatByKey("goldens", goldens.value);
+    platform.setPlayerStatByKey("energons", energons.value);
   }
 
   function restoreCoins() {
-    platform.getPlayerDataByKey("goldens").then((value) => {
-        if (value) goldens.value = value;
+    platform.getPlayerStatByKey("goldens").then((value) => {
+      if (value) goldens.value = value;
     });
-    platform.getPlayerDataByKey("energons").then((value) => {
-        if (value) energons.value = value;
+    platform.getPlayerStatByKey("energons").then((value) => {
+      if (value) energons.value = value;
     });
   }
   // #endregion
@@ -181,7 +182,7 @@ export const useProgressStore = defineStore("progressStore", () => {
 
     // save to leaderboad
   }
-  
+
   function restoreProgress(): void {
     restoreHighScore();
     restoreCoins();

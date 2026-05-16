@@ -57,10 +57,11 @@ export class YandexPlatform implements IGamePlatform {
         onClose: () => console.log("Rewarded Ad closed"),
         onRewarded: () => rewardCallbackMethod(callbackObject),
         onError: () => {
-          console.log('Rewarded Ad error');
+          console.log("Rewarded Ad error");
           if (closeCallbackMethod !== null) {
             closeCallbackMethod(callbackObject);
-          }},
+          }
+        },
       },
     });
   }
@@ -69,7 +70,6 @@ export class YandexPlatform implements IGamePlatform {
     if (!this.sdk) return null;
 
     const player = await this.sdk.getPlayer();
-
     return player === undefined ? null : player.isAuthorized();
   }
 
@@ -77,7 +77,6 @@ export class YandexPlatform implements IGamePlatform {
     if (!this.sdk) return null;
 
     const player = await this.sdk.getPlayer();
-
     return player === undefined ? null : player.getUniqueID();
   }
 
@@ -85,14 +84,11 @@ export class YandexPlatform implements IGamePlatform {
     if (!this.sdk) return null;
 
     const player = await this.sdk.getPlayer();
-
     return player === undefined ? null : player.getName();
   }
 
   async getPlayerStats(keys: Array<string> | null) {
-    if (!this.sdk) {
-      return null;
-    }
+    if (!this.sdk) return null;
     const player = await this.sdk.getPlayer();
     let statsPromise;
     if (keys === null) {
@@ -100,105 +96,76 @@ export class YandexPlatform implements IGamePlatform {
     } else {
       statsPromise = player.getStats(keys);
     }
-    if (!statsPromise) {
-      return null;
-    }
-    const data = await statsPromise;
-    return data;
+    if (!statsPromise) return null;
+    return await statsPromise;
   }
 
   async setPlayerStats(stats: any | null) {
-    if (!this.sdk) {
-      return null;
-    }
+    if (!this.sdk) return null;
     const player = await this.sdk.getPlayer();
     return await player.setStats(stats);
   }
 
   async getPlayerData() {
-    if (!this.sdk) {
-      return null;
-    }
+    if (!this.sdk) return null;
 
     const player = await this.sdk.getPlayer();
-
     const dataPromise = player.getData();
-
-    if (!dataPromise) {
-      return null;
-    }
-
-    const data = await dataPromise;
-
-    return data;
+    if (!dataPromise) return null;
+    return await dataPromise;
   }
 
   async getPlayerDataByKey(key: string) {
-    if (!this.sdk) {
-        return null;
-      }
-    
-      const player = await this.sdk.getPlayer();
+    if (!this.sdk) return null;
 
-      const dataPromise = player.getData();
-
-    if (!dataPromise) {
-      return null;
-    }
-
+    const player = await this.sdk.getPlayer();
+    const dataPromise = player.getData();
+    if (!dataPromise) return null;
     const data = await dataPromise;
-
     return key in data ? data[key] : null;
   }
 
   async setPlayerData(data: any) {
-    if (!this.sdk) {
-      return null;
-    }
+    if (!this.sdk) return null;
 
     const player = await this.sdk.getPlayer();
-
     const dataPromise = player.setData(data);
-
-    if (!dataPromise) {
-      return null;
-    }
-
-    const result = await dataPromise;
-
-    return result;
+    if (!dataPromise) return null;
+    return await dataPromise;
   }
 
   async setPlayerDataByKey(key: string, value: any) {
-    if (!this.sdk) {
-        return null;
-      }
-    
-      const player = await this.sdk.getPlayer();
+    if (!this.sdk) return null;
 
-      const dataPromiseReader = player.getData();
+    const player = await this.sdk.getPlayer();
+    const dataPromiseReader = player.getData();
 
-    if (!dataPromiseReader) {
-      return null;
-    }
+    if (!dataPromiseReader) return null;
 
     let data = await dataPromiseReader;
     data[key] = value;
 
     const dataPromiseWriter = player.setData(data);
 
-    if (!dataPromiseWriter) {
-        return null;
-    }
-      const result = await dataPromiseWriter;
-      return result;
+    if (!dataPromiseWriter) return null;
+    return await dataPromiseWriter;
   }
 
-//   async setPlayerDataByKey(key: string, value: any) {
-//     const player = this.getPlayer();
-//     player.data[key] = value;
-//     this.savePlayer(player);
-//   }
+  async setPlayerStatByKey(stat: string, value: any | null) {
+    if (!this.sdk) return null;
+    const player = await this.sdk.getPlayer();
+    return await player.setStats({ [stat]: value });
+  }
+
+  async getPlayerStatByKey(key: string | null) {
+    if (!this.sdk) return null;
+    if (!key) return null;
+
+    const player = await this.sdk.getPlayer();
+    let statsPromise = player.getStats([key]);
+    if (!statsPromise) return null;
+    return await statsPromise;
+  }
 
   async getLeaderboardEntries(
     leaderboardName: string,
@@ -236,46 +203,42 @@ export class YandexPlatform implements IGamePlatform {
     if (!this.sdk) return;
     this.sdk.features.LoadingAPI.ready();
   }
-  
+
   async consumePrevPurchases(consumePurchaseCallback: Function) {
     if (!this.sdk) return;
-    
+
     const payments = await this.sdk.getPayments();
-    
-    console.log('consumePrevPurchases, payments = ' + (payments === null ? 'null': JSON.stringify(payments)));
-    
-				this.sdk.payments.getPurchases().then(purchases => {
-	
-if (purchases.length > 0) {							
-console.log('purchases(to consume): ' + JSON.stringify(purchases));
 
-// purchases(to consume): [{"productID":"bulletPack1","purchaseToken":"0a240251-a16e-4b5a-8d73-d8bbf318bf2b"}]
+    console.log(
+      "consumePrevPurchases, payments = " +
+        (payments === null ? "null" : JSON.stringify(payments)),
+    );
 
-}
-							
-					purchases.forEach(purchase => this.consumePurchaseCore(payments, purchase, consumePurchaseCallback));  // дозавершаем каждую покупку
-							
-				});
-    
-    
-    
-    
-	
-	
+    this.sdk.payments.getPurchases().then((purchases) => {
+      if (purchases.length > 0) {
+        console.log("purchases(to consume): " + JSON.stringify(purchases));
+
+        // purchases(to consume): [{"productID":"bulletPack1","purchaseToken":"0a240251-a16e-4b5a-8d73-d8bbf318bf2b"}]
+      }
+
+      purchases.forEach((purchase) =>
+        this.consumePurchaseCore(payments, purchase, consumePurchaseCallback),
+      ); // дозавершаем каждую покупку
+    });
   }
 
+  consumePurchaseCore(payments: any, purchase: any, callback: Function) {
+    console.log(
+      "consumePurchase, purchase = " +
+        (purchase !== null ? JSON.stringify(purchase) : "null"),
+    );
+    console.log("consumePurchase, callback = " + callback);
 
-consumePurchaseCore(payments: any, purchase: any, callback: Function) {
+    if (callback !== null) {
+      callback(purchase); // отправляем в ядро игры для начислений игровых предметов и т.п.
+    }
 
-console.log('consumePurchase, purchase = ' + (purchase !== null ? JSON.stringify(purchase) : 'null') );
-console.log('consumePurchase, callback = ' + callback);
-
-	if (callback !== null) {
-		callback(purchase);  // отправляем в ядро игры для начислений игровых предметов и т.п.
-	}
-
-	
-	/*
+    /*
 	// в purchase.productID отделяем группу от количества
     const lastUnderscoreIndex = purchase.productID.lastIndexOf('_');
                     
@@ -307,63 +270,63 @@ console.log('consumePurchase, callback = ' + callback);
     }
 
 	*/
-	
-	payments.consumePurchase(purchase.purchaseToken);  // это убирает незавершённость покупки на сервере ЯИ!
-	
-console.log('consumePurchase completed, purchase = ' + JSON.stringify(purchase));
 
+    payments.consumePurchase(purchase.purchaseToken); // это убирает незавершённость покупки на сервере ЯИ!
 
-}
+    console.log(
+      "consumePurchase completed, purchase = " + JSON.stringify(purchase),
+    );
+  }
 
-  
   async getShopCatalog() {
     if (!this.sdk) return null;
-    
+
     const payments = await this.sdk.getPayments();
-    
-    console.log('getShopCatalog, payments = ' + (payments === null ? 'null': JSON.stringify(payments)));
 
-	const catalog = await payments.getCatalog(); 
+    console.log(
+      "getShopCatalog, payments = " +
+        (payments === null ? "null" : JSON.stringify(payments)),
+    );
 
-    console.log('getShopCatalog, catalog = ' + (catalog === null ? 'null': JSON.stringify(catalog)));
-    
-//getShopCatalog, catalog = [{"id":"bulletPack1","title":"Патроны - 10 штук","description":"","imageURI":"/default256x256","price":"10 RUB","priceValue":"10","priceCurrencyCode":"RUB"},{"id":"removeAd","title":"Отключение рекламы","description":"","imageURI":"/default256x256","price":"20 RUB","priceValue":"20","priceCurrencyCode":"RUB"}]    
-    
-	return catalog;
+    const catalog = await payments.getCatalog();
+
+    console.log(
+      "getShopCatalog, catalog = " +
+        (catalog === null ? "null" : JSON.stringify(catalog)),
+    );
+
+    //getShopCatalog, catalog = [{"id":"bulletPack1","title":"Патроны - 10 штук","description":"","imageURI":"/default256x256","price":"10 RUB","priceValue":"10","priceCurrencyCode":"RUB"},{"id":"removeAd","title":"Отключение рекламы","description":"","imageURI":"/default256x256","price":"20 RUB","priceValue":"20","priceCurrencyCode":"RUB"}]
+
+    return catalog;
   }
-  
+
   async buyShopItem(productId: string, consumePurchase: Function) {
     if (!this.sdk) return null;
-	
-    console.log('Attempting to buy:', productId);
+
+    console.log("Attempting to buy:", productId);
 
     const payments = await this.sdk.getPayments();
-    
+
     if (payments) {
-        payments.purchase(productId).then(purchase => {
-			
-            console.log('Purchase successful:', purchase);
-            
-//alert('Покупка успешна!, purchase = ' + JSON.stringify(purchase));
-            
-            // Дозавершаем покупку
-            this.consumePurchaseCore(payments, purchase, consumePurchase);
-            
-        }).catch(err => {
-            console.error('Purchase error:', err);
-            
-//alert('Ошибка покупки: ' + err.message);
-            
+      payments
+        .purchase({ id: productId })
+        .then((purchase) => {
+          console.log("Purchase successful:", purchase);
+
+          //alert('Покупка успешна!, purchase = ' + JSON.stringify(purchase));
+
+          // Дозавершаем покупку
+          this.consumePurchaseCore(payments, purchase, consumePurchase);
+        })
+        .catch((err) => {
+          console.error("Purchase error:", err);
+
+          //alert('Ошибка покупки: ' + err.message);
         });
     } else {
-        console.warn('Payments not available');
-        
-//alert('Покупки недоступны');
+      console.warn("Payments not available");
 
+      //alert('Покупки недоступны');
     }
-    
-	
-	
   }
-
 }

@@ -127,7 +127,10 @@ export class CarVisualState {
       }
 
       material.emissive.copy(emissiveColor);
-      material.emissiveIntensity = usePlayerStore().DEFAULT_EMISSION_INTENSITY;
+
+      let emissiveIntensity = usePlayerStore().DEFAULT_EMISSION_INTENSITY;
+      if (tag === "nitro") emissiveIntensity *= 2;
+      material.emissiveIntensity = emissiveIntensity;
     }
   }
 

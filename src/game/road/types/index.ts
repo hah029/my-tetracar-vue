@@ -16,7 +16,6 @@ export interface RoadConfig {
   emissive?: number;
   opacity?: number;
   yPosition?: number;
-  segmentLength?: number;
   gap?: number;
   edgeOffset?: number;
   textureUrl?: string;

@@ -73,7 +73,7 @@ export class CarPhysics {
     );
 
     let pitch = prevVelocity > 0 ? 0.2 : -0.1;
-    if (usePlayerStore().forceJump) pitch = -0.3;
+    if (usePlayerStore().forceJump) pitch = -0.2;
     return {
       newY: this.jumpState.y,
       isJumping: this.jumpState.isJumping,

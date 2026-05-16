@@ -8,7 +8,7 @@
                 </div>
             </div>
         </Transition>
-    
+
         <div class="score_container">
             <div class="settings_row">
                 <span>{{ $t("gameOverMenu.summary.points.label") }}</span>
@@ -46,7 +46,7 @@
         <div class="header_image rotate_180">
             <img class='image image_correction' src="@/assets/images/title_line_image.svg" />
         </div>
-    
+
         <TransitionGroup name="buttons_group_showing" tag="div" class="buttons_group group_correction">
             <button v-for="(btn, index) in menuButtons" v-if="gameStore.activeOverlay !== 'settings'" :key="btn.id"
                 class="menu_btn btn_correction" :style="{ animationDelay: `${index * 0.06}s` }" @click="btn.action">
@@ -58,117 +58,117 @@
 
 
 <script setup lang="ts">
-    import { onMounted, ref, computed } from "vue";
-    import { useGameState } from "../store/gameState";
-    import { usePlayerStore } from "../store/playerStore";
-    import { useProgressStore } from "@/store/progressStore";
-    import { GameStates } from "@/game/core/GameState";
-    import { createNewText } from '@/helpers/functions';
+import { onMounted, ref, computed } from "vue";
+import { useGameState } from "../store/gameState";
+import { usePlayerStore } from "../store/playerStore";
+import { useProgressStore } from "@/store/progressStore";
+import { GameStates } from "@/game/core/GameState";
+import { createNewText } from '@/helpers/functions';
 
-    // подключаем store
-    const gameState = useGameState();
-    const playerStore = usePlayerStore();
-    const progressStore = useProgressStore();
-    const gameStore = useGameState();
-    
-    // генерируем фразу для титула
-    const foo = createNewText();
-    const isHeaderShown = ref(false);
-    const dynamicTitleName = computed(() => foo.makeText("gameOverMenu.title", 'empty'));
+// подключаем store
+const gameState = useGameState();
+const playerStore = usePlayerStore();
+const progressStore = useProgressStore();
+const gameStore = useGameState();
 
-    // генерируем результаты гонки
-    const scoreRounded = computed(() => Math.floor(progressStore.score));
-    const highScoreRounded = computed(() => Math.floor(progressStore.highScore));
-    const distance = computed(() => progressStore.getDistanceInCubes());
-    const currentSpeedRounded = computed(() => playerStore.getCurrentSpeedInCubesPerHour(1));
+// генерируем фразу для титула
+const foo = createNewText();
+const isHeaderShown = ref(false);
+const dynamicTitleName = computed(() => foo.makeText("gameOverMenu.title", 'empty'));
 
-    const menuButtons = computed(() => [
-        { id: 1, text: foo.makeText("gameOverMenu.menuList.restartGame"), action: restartGame },
-        { id: 2, text: foo.makeText("gameOverMenu.menuList.goToMainMenu"), action: goToMainMenu },
-    ]);
+// генерируем результаты гонки
+const scoreRounded = computed(() => Math.floor(progressStore.score));
+const highScoreRounded = computed(() => Math.floor(progressStore.highScore));
+const distance = computed(() => progressStore.getDistanceInCubes());
+const currentSpeedRounded = computed(() => playerStore.getCurrentSpeedInCubesPerHour(1));
 
-    function restartGame() {
-        playerStore.resetPlayerAchievements();
-        gameState.setState(GameStates.Countdown);
-    };
+const menuButtons = computed(() => [
+    { id: 1, text: foo.makeText("gameOverMenu.menuList.restartGame"), action: restartGame },
+    { id: 2, text: foo.makeText("gameOverMenu.menuList.goToMainMenu"), action: goToMainMenu },
+]);
 
-    function goToMainMenu() {
-        playerStore.resetPlayerAchievements();
-        gameState.setState(GameStates.Menu);
-    };
+function restartGame() {
+    playerStore.resetPlayerAchievements();
+    gameState.setState(GameStates.Countdown);
+};
 
-    onMounted(() => {
-        isHeaderShown.value = true;
-    });
+function goToMainMenu() {
+    playerStore.resetPlayerAchievements();
+    gameState.setState(GameStates.Menu);
+};
+
+onMounted(() => {
+    isHeaderShown.value = true;
+});
 </script>
 
 
 <style scoped lang="scss">
-    @use "@/styles/menu.scss";
-    @use "@/styles/animations.scss";
+@use "@/styles/menu.scss";
+@use "@/styles/animations.scss";
 
-    .container_correction {
-        justify-content: flex-start !important;
-        top: 13.313rem;
+.container_correction {
+    justify-content: flex-start !important;
+    top: 13.313rem;
+}
+
+.header_correction {
+    font-size: 3.125rem; // (50px)
+    color: #F79CFF;
+}
+
+.rotate_180 {
+    rotate: 180deg;
+}
+
+.image_correction {
+    filter: invert(90%) sepia(13%) saturate(4482%) hue-rotate(235deg) brightness(103%) contrast(101%);
+}
+
+.btn_correction {
+    font-size: 1.875rem; // (30px)
+}
+
+.group_correction {
+    margin-top: 25rem;
+
+    &>*+* {
+        margin-top: 1.56rem; // 25px - row-gap (между кнопками)
+    }
+}
+
+.score_container {
+    width: 25rem;
+    margin: 2.5rem;
+    gap: 1rem;
+    display: flex;
+    flex-direction: column;
+
+
+    font-family: 'jost-light';
+    text-transform: uppercase;
+    font-size: 1.375rem;
+    color: #F79CFF;
+}
+
+.settings_row {
+    display: flex;
+    justify-content: space-between;
+    // font-size: 16px;
+    // font-weight: bold;
+    // color: #FDFFE3;
+}
+
+.score-value {
+    font-size: 20px;
+
+    &.gold {
+        color: #ffd700;
     }
 
-    .header_correction {
-        font-size: 3.125rem; // (50px)
-        color: #F79CFF;
+    &.newRecord {
+        color: #ffd900bc;
+        font-size: 16px;
     }
-
-    .rotate_180 {
-        rotate: 180deg;
-    }
-
-    .image_correction {
-        filter: invert(90%) sepia(13%) saturate(4482%) hue-rotate(235deg) brightness(103%) contrast(101%);
-    }
-
-    .btn_correction {
-        font-size: 1.875rem; // (30px)
-    }
-
-    .group_correction {
-        margin-top: 25rem;
-        
-        &>*+* {
-            margin-top: 1.56rem; // 25px - row-gap (между кнопками)
-        }
-    }
-
-    .score_container {
-        width: 25rem;
-        margin: 2.5rem;
-        gap: 1rem;
-        display: flex;
-        flex-direction: column;
-
-
-        font-family: 'jost-light';
-        text-transform: uppercase;
-        font-size: 1.375rem;
-        color: #F79CFF;
-    }
-
-    .settings_row {
-        display: flex;
-        justify-content: space-between;
-        // font-size: 16px;
-        // font-weight: bold;
-        // color: #FDFFE3;
-    }
-
-    .score-value {
-        font-size: 20px;
-
-        &.gold {
-            color: #ffd700;
-        }
-
-        &.newRecord {
-            color: #ffd900bc;
-            font-size: 16px;
-        }
-    }
+}
 </style>

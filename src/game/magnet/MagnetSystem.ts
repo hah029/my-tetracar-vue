@@ -117,7 +117,7 @@ export class MagnetSystem {
   }
 
   private createMagnetLine(): THREE.Mesh {
-    const geometry = new THREE.PlaneGeometry(0.18, 1, 1, 20);
+    const geometry = new THREE.PlaneGeometry(0.6, 1, 1, 20);
     geometry.rotateX(Math.PI / 2);
 
     const material = new THREE.ShaderMaterial({

@@ -80,6 +80,7 @@ export class FlashEffectManager {
 
       vertexShader: flashVertexShader,
       fragmentShader: flashFragmentShader,
+      toneMapped: false,
     });
 
     const mesh = new THREE.Mesh(new THREE.CircleGeometry(size), material);

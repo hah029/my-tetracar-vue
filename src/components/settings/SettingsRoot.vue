@@ -16,20 +16,15 @@
             <!-- CONTENT -->
             <TransitionGroup name="buttons_group_showing" tag="div" class="buttons_group group_correction">
                 <!-- MAIN -->
-                <button
-                    v-for="(btn, index) in menuButtons"
-                    v-if="currentView === SettingsView.Main"
-                    :key="btn.id" 
-                    class="menu_btn btn_correction"
-                    :style="{ animationDelay: `${index * 0.06}s` }" 
-                    @click="btn.action"
-                >
+                <button v-for="(btn, index) in menuButtons" v-if="currentView === SettingsView.Main" :key="btn.id"
+                    class="menu_btn btn_correction" :style="{ animationDelay: `${index * 0.06}s` }" @click="btn.action">
                     {{ btn.text }}
                 </button>
             </TransitionGroup>
 
             <!-- SUBMENUS -->
             <SoundSettings v-if="currentView === SettingsView.Sound" :backStatus="isBackButtonClicked" />
+            <GraphicSettings v-if="currentView === SettingsView.Graphics" :backStatus="isBackButtonClicked" />
             <LanguageSettings v-else-if="currentView === SettingsView.Language" :backStatus="isBackButtonClicked" />
             <ControlSettings v-else-if="currentView === SettingsView.Controls" :backStatus="isBackButtonClicked" />
             <AboutSettings v-else-if="currentView === SettingsView.About" :backStatus="isBackButtonClicked" />
@@ -47,177 +42,186 @@
 
 
 <script setup lang="ts">
-    import SoundSettings from "./overlays/SoundSettings.vue";
-    import LanguageSettings from "./overlays/LanguageSettings.vue";
-    import ControlSettings from "./overlays/ControlSettings.vue";
-    import AboutSettings from "./overlays/AboutSettings.vue";
+import SoundSettings from "./overlays/SoundSettings.vue";
+import GraphicSettings from "./overlays/GraphicSettings.vue";
+import LanguageSettings from "./overlays/LanguageSettings.vue";
+import ControlSettings from "./overlays/ControlSettings.vue";
+import AboutSettings from "./overlays/AboutSettings.vue";
 
-    import { onMounted, computed, ref } from "vue";
-    import { createNewText, deleteTextLines } from '@/helpers/functions';
-    import { useGameState } from "@/store/gameState";
+import { onMounted, computed, ref } from "vue";
+import { createNewText, deleteTextLines } from '@/helpers/functions';
+import { useGameState } from "@/store/gameState";
 
-    enum SettingsView {
-        Main,
-        Sound,
-        Language,
-        Controls,
-        About,
-        null,
-    }
+enum SettingsView {
+    Main,
+    Sound,
+    Graphics,
+    Language,
+    Controls,
+    About,
+    null,
+}
 
-    // ===== STORES =====
-    const gameState = useGameState();
+// ===== STORES =====
+const gameState = useGameState();
 
-    // ===== LOCAL STATE =====
-    // const currentView = ref<SettingsView>(SettingsView.Main);
-    const currentView = ref<SettingsView>(SettingsView.null);
+// ===== LOCAL STATE =====
+const currentView = ref<SettingsView>(SettingsView.null);
 
-    const isHeaderShown = ref(false);
-    const isBackButtonShown = ref(false);
-    const isBackButtonClicked = ref(false);
+const isHeaderShown = ref(false);
+const isBackButtonShown = ref(false);
+const isBackButtonClicked = ref(false);
 
-    // ===== TEXT =====
-    const foo_1 = createNewText();
-    const foo_2 = deleteTextLines();
+// ===== TEXT =====
+const foo_1 = createNewText();
+const foo_2 = deleteTextLines();
 
-    // ===== UI STATE (без таймаутов) =====
-    const isInSubMenu = computed(() => currentView.value !== SettingsView.Main && currentView.value !== SettingsView.null);
+// ===== UI STATE (без таймаутов) =====
+const isInSubMenu = computed(() => currentView.value !== SettingsView.Main && currentView.value !== SettingsView.null);
 
-    // ===== MENU =====
-    const menuButtons = computed(() => [
-        {
-            id: 1,
-            text: foo_1.makeText("settings.menuList.technical"),
-            action: () => currentView.value = SettingsView.Sound,
-        },
-        {
-            id: 2,
-            text: foo_1.makeText("settings.menuList.lang"),
-            action: () => currentView.value = SettingsView.Language,
-        },
-        {
-            id: 3,
-            text: foo_1.makeText("settings.menuList.controls"),
-            action: () => currentView.value = SettingsView.Controls,
-        },
-        {
-            id: 4,
-            text: foo_1.makeText("settings.menuList.about"),
-            action: () => currentView.value = SettingsView.About,
-        },
-    ]);
+// ===== MENU =====
+const menuButtons = computed(() => [
+    {
+        id: 1,
+        text: foo_1.makeText("settings.menuList.graphics"),
+        action: () => currentView.value = SettingsView.Graphics,
+    },
+    {
+        id: 2,
+        text: foo_1.makeText("settings.menuList.sounds"),
+        action: () => currentView.value = SettingsView.Sound,
+    },
+    {
+        id: 3,
+        text: foo_1.makeText("settings.menuList.lang"),
+        action: () => currentView.value = SettingsView.Language,
+    },
+    {
+        id: 4,
+        text: foo_1.makeText("settings.menuList.controls"),
+        action: () => currentView.value = SettingsView.Controls,
+    },
+    {
+        id: 5,
+        text: foo_1.makeText("settings.menuList.about"),
+        action: () => currentView.value = SettingsView.About,
+    },
+]);
 
-    // ===== TITLE =====
-    const dynamicTitleName = computed(() => {
-        if (isInSubMenu.value) {
-            const map = {
-                [SettingsView.Sound]: menuButtons.value[0]!.text,
-                [SettingsView.Language]: menuButtons.value[1]!.text,
-                [SettingsView.Controls]: menuButtons.value[2]!.text,
-                [SettingsView.About]: menuButtons.value[3]!.text,
-            };
-            return foo_2.correctText(map[currentView.value]);
-        } else {
-            return foo_1.makeText("settings.title", "empty");
+// ===== TITLE =====
+const dynamicTitleName = computed(() => {
+    if (isInSubMenu.value) {
+        const map = {
+            [SettingsView.Graphics]: menuButtons.value[0]!.text,
+            [SettingsView.Sound]: menuButtons.value[1]!.text,
+            [SettingsView.Language]: menuButtons.value[2]!.text,
+            [SettingsView.Controls]: menuButtons.value[3]!.text,
+            [SettingsView.About]: menuButtons.value[4]!.text,
         };
-    });
-
-    // ===== BACK =====
-    function backButtonClick() {
-        if (isInSubMenu.value) {
-            isBackButtonClicked.value = true;
-            setTimeout(() => {
-                isBackButtonClicked.value = false;
-                currentView.value = SettingsView.Main;
-            }, 500);
-
-        } else {
-            if (gameState.currentState == 'menu') {
-                isHeaderShown.value = false;
-            };
-            setTimeout(() => {
-                currentView.value = SettingsView.null;
-            }, 100);
-            setTimeout(() => {
-                isBackButtonShown.value = false;
-            }, 400);
-
-            setTimeout(() => {
-                gameState.closeOverlay();
-            }, 500);
-        };
+        return foo_2.correctText(map[currentView.value]);
+    } else {
+        return foo_1.makeText("settings.title", "empty");
     };
+});
 
-    function setContainerPos() {
-        if (gameState.currentState == 'menu') {
-            return 'container_pos_main_menu';
-        } else if (gameState.currentState == 'pause') {
-            return 'container_pos_pause';
-        };
-    };
-    function setHeaderSize() {
-        if (gameState.currentState == 'pause') {
-            return 'header_pause';
-        };
-    };
-
-    onMounted(() => {
-        isHeaderShown.value = true;
+// ===== BACK =====
+function backButtonClick() {
+    if (isInSubMenu.value) {
+        isBackButtonClicked.value = true;
         setTimeout(() => {
+            isBackButtonClicked.value = false;
             currentView.value = SettingsView.Main;
-        }, 200);
-        setTimeout(() => {
-            isBackButtonShown.value = true;
         }, 500);
-    });
+
+    } else {
+        if (gameState.currentState == 'menu') {
+            isHeaderShown.value = false;
+        };
+        setTimeout(() => {
+            currentView.value = SettingsView.null;
+        }, 100);
+        setTimeout(() => {
+            isBackButtonShown.value = false;
+        }, 400);
+
+        setTimeout(() => {
+            gameState.closeOverlay();
+        }, 500);
+    };
+};
+
+function setContainerPos() {
+    if (gameState.currentState == 'menu') {
+        return 'container_pos_main_menu';
+    } else if (gameState.currentState == 'pause') {
+        return 'container_pos_pause';
+    };
+};
+function setHeaderSize() {
+    if (gameState.currentState == 'pause') {
+        return 'header_pause';
+    };
+};
+
+onMounted(() => {
+    isHeaderShown.value = true;
+    setTimeout(() => {
+        currentView.value = SettingsView.Main;
+    }, 200);
+    setTimeout(() => {
+        isBackButtonShown.value = true;
+    }, 500);
+});
 </script>
 
 
 <style scoped lang="scss">
-    @use "@/styles/menu.scss";
-    @use "@/styles/animations.scss";
+@use "@/styles/menu.scss";
+@use "@/styles/animations.scss";
 
-    .container_pos_main_menu {
-        justify-content: flex-end !important;
-    }
-    .container_pos_pause {
-        justify-content: flex-start !important;
-        top: 19.75rem !important;
-    }
-    .header_pause {
-        font-size: 3.125rem; // (50px)
-    }
+.container_pos_main_menu {
+    justify-content: flex-end !important;
+}
 
-    .settings_container {
-        position: relative;
-        height: 30rem;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: space-between;
-        box-sizing: border-box;
-        padding-bottom: 2.687rem;
+.container_pos_pause {
+    justify-content: flex-start !important;
+    top: 19.75rem !important;
+}
+
+.header_pause {
+    font-size: 3.125rem; // (50px)
+}
+
+.settings_container {
+    position: relative;
+    height: 30rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: space-between;
+    box-sizing: border-box;
+    padding-bottom: 2.687rem;
+}
+
+.group_correction {
+    top: 8.75rem;
+
+    &>*+* {
+        margin-top: 0.938rem; // 15px - row-gap (между кнопками)
     }
+}
 
-    .group_correction {
-        top: 8.75rem;
-        
-        &>*+* {
-            margin-top: 0.938rem; // 15px - row-gap (между кнопками)
-        }
-    }
+.btn_correction {
+    font-size: 1.875rem; // (30px)
+}
 
-    .btn_correction {
-        font-size: 1.875rem; // (30px)
-    }
+/* we will explain what these classes do next! */
+// .v-enter-active {
+//     transition: opacity 0.5s ease;
+// }
 
-    /* we will explain what these classes do next! */
-    // .v-enter-active {
-    //     transition: opacity 0.5s ease;
-    // }
-
-    // .v-enter-from,
-    // .v-leave-to {
-    //     opacity: 1;
-    // }
+// .v-enter-from,
+// .v-leave-to {
+//     opacity: 1;
+// }
 </style>

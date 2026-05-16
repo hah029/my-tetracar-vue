@@ -147,6 +147,18 @@ export class LocalStoragePlatform implements IGamePlatform {
     return player.stats;
   }
 
+  async getPlayerStatByKey(key: string) {
+    return key in this.getPlayer().stats ? this.getPlayer().stats[key] : null;
+  }
+
+  async setPlayerStatByKey(key: string, value: any) {
+    const player = this.getPlayer();
+    player.stats[key] = value;
+    this.savePlayer(player);
+
+    return player.stats;
+  }
+
   async setLeaderboardScore(
     leaderboardName: string,
     score: number,
@@ -201,16 +213,13 @@ export class LocalStoragePlatform implements IGamePlatform {
     };
   }
 
-  consumePrevPurchases(consumePurchase: Function) {
-  }
+  consumePrevPurchases(consumePurchase: Function) {}
 
-  async buyShopItem(productId: string, consumePurchase: Function) {
-  }
-  
+  async buyShopItem(productId: string, consumePurchase: Function) {}
+
   async getShopCatalog() {
     return null;
   }
-
 
   getLocale() {
     return this.storage?.getItem(this.LANG_KEY) || "ru";

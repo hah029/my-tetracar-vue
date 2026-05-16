@@ -23,12 +23,11 @@ export const useEnvironmentStore = defineStore("environmentStore", () => {
     lanes: DEFAULT_LANES,
     // width: 11, // Можно вычислять: (max lane - min lane) + edgeOffset*2
     // width: 5.9,
-    length: 500,
+    length: 800,
     color: 0x88ccff,
     emissive: 0x224466,
-    opacity: 0.6,
+    opacity: 0.8,
     yPosition: 0.0,
-    segmentLength: 500,
     gap: 0,
     edgeOffset: 0.3, // Отступ от крайних полос до границ
     textureUrl: textureUrl,

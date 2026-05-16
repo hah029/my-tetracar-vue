@@ -54,6 +54,7 @@ export const useGameState = defineStore("gameState", () => {
 
       case GameStates.Menu:
         sound.playMusicSequence("music_intro", "music_background");
+        progress.saveProgress();
 
         if (prev === GameStates.Gameover || prev === GameStates.Pause) {
           resetCallback?.();
@@ -71,7 +72,6 @@ export const useGameState = defineStore("gameState", () => {
         break;
 
       case GameStates.Gameover:
-        // progress.saveHighScore();
         progress.saveProgress();
         sound.playMusic("music_gameover");
         break;

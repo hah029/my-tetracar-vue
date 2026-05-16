@@ -53,9 +53,17 @@ class CameraSystemClass {
     const cameraStore = useCameraStore();
 
     const carPos = car.position;
-    const speedFactor = speed / usePlayerStore().maxSpeed;
+
+    const rawSpeedFactor = speed / usePlayerStore().maxSpeed;
+    const speedFactor = THREE.MathUtils.clamp(rawSpeedFactor, 0, 1);
+    const nitroBoost = usePlayerStore().isNitroEnabled ? 0.06 : 0;
+    // speedFactor *= usePlayerStore().isNitroEnabled ? 2 : 1;
     // const speedFactorNorm = Math.min(speedFactor, 1);
     const speedFactorNorm = speedFactor;
+
+    // maxFov *= usePlayerStore().isNitroEnabled ? 2 : 1;
+    const fovCurve = 1 - Math.pow(1 - speedFactor, 2);
+    const distanceCurve = Math.pow(speedFactor, 0.6);
 
     // 1. Позиция камеры
     const targetCamPos = new THREE.Vector3(
@@ -64,7 +72,7 @@ class CameraSystemClass {
       carPos.z +
         cameraStore.CAMERA_DISTANCE -
         cameraStore.CAMERA_DISTANCE *
-          speedFactor *
+          distanceCurve *
           cameraStore.DISTANCE_REDUCTION_FACTOR,
     );
 
@@ -81,9 +89,12 @@ class CameraSystemClass {
       (targetTilt - this.camera.rotation.z) * cameraStore.CAMERA_FOLLOW_SPEED;
 
     // 3. Динамический FOV с плавным изменением
+    // const targetFOV =
+    //   cameraStore.FOV_MIN + (maxFov - cameraStore.FOV_MIN) * speedFactorNorm;
     const targetFOV =
       cameraStore.FOV_MIN +
-      (cameraStore.FOV_MAX - cameraStore.FOV_MIN) * speedFactorNorm;
+      (cameraStore.FOV_MAX - cameraStore.FOV_MIN) * fovCurve +
+      cameraStore.FOV_MAX * nitroBoost;
     this.camera.fov = THREE.MathUtils.clamp(
       this.camera.fov +
         (targetFOV - this.camera.fov) * cameraStore.FOV_FOLLOW_SPEED,

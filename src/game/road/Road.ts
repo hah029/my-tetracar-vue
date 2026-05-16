@@ -33,18 +33,18 @@ export class Road extends THREE.Mesh {
 
       material = new THREE.MeshStandardMaterial({
         map: texture,
-        emissive: 0xffffff,
-        // emissiveIntensity: 0.8,  // пока отключил - из-за нее не рисовалась текстура
-        emissiveIntensity: 0,
+        // emissive: tmpConfig.emissive ?? 0xffffff,
+        // emissiveIntensity: 0.8, // пока отключил - из-за нее не рисовалась текстура
+        // emissiveIntensity: 0.2,
         transparent: true,
-        opacity: 0.45,
+        opacity: tmpConfig.opacity ?? 0.45,
       });
     } else {
       material = new THREE.MeshStandardMaterial({
         color: 0xffffff,
         emissiveIntensity: 0.8,
         transparent: true,
-        opacity: 0.2,
+        opacity: tmpConfig.opacity ?? 0.2,
         // side: THREE.DoubleSide,
       });
     }
@@ -59,6 +59,8 @@ export class Road extends THREE.Mesh {
     this.position.z = 0;
     this.position.y = tmpConfig.yPosition!;
     this.receiveShadow = false;
+
+    console.log(this);
   }
 
   // получаем позицию полосы по индексу

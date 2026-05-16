@@ -26,15 +26,15 @@ export class CityManager {
     const MAX_SCALE = 1 / 2;
     const DEFAULT_CONFIG = {
       // z positions range
-      zStart: -100,
-      zEnd: 20,
+      zStart: -200,
+      zEnd: 30,
       //
       minHeight: MIN_SCALE,
       maxHeight: MAX_SCALE,
       minWidth: MIN_SCALE,
       maxWidth: MAX_SCALE,
 
-      spacing: 5,
+      spacing: 0.5,
 
       speedFactor: 0.3,
       color: 0x333355,
@@ -45,24 +45,12 @@ export class CityManager {
       scene,
       {
         ...DEFAULT_CONFIG,
-        xMin: -100,
-        xMax: 100,
+        xMin: -200,
+        xMax: 200,
       },
       modelUrls,
     );
     this.layers.push(layer1);
-
-    // Второй слой (правая сторона)
-    const layer2 = await CityLayerInstanced.create(
-      scene,
-      {
-        ...DEFAULT_CONFIG,
-        xMin: -100,
-        xMax: 100,
-      },
-      modelUrls,
-    );
-    this.layers.push(layer2);
   }
 
   public update(deltaTime: number, speed: number): void {
