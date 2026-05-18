@@ -7,9 +7,9 @@ export const useGraphicsStore = defineStore("graphics", () => {
   const bloomEnabled = ref(false); // по умолчанию выключен
   const afterimageEnabled = ref(false); // по умолчанию выключен
   const fxaaEnabled = ref(true); // по умолчанию включен
-  const nightMode = ref(false); // false = день, true = ночь
-  const shadowEnabled = ref(true);
-  const rgbShiftEnabled = ref(true);
+  const nightMode = ref(true); // false = день, true = ночь
+  const shadowEnabled = ref(false);
+  const rgbShiftEnabled = ref(false);
   const shadowQuality = ref<"low" | "medium" | "high">("medium");
   const storage = Platform.getInstance();
 
@@ -17,7 +17,7 @@ export const useGraphicsStore = defineStore("graphics", () => {
   async function loadFromStorage() {
     await storage
       .getPlayerDataByKey("vfxEnabled")
-      .then((v: boolean) => (vfxEnabled.value = v ?? false));
+      .then((v: boolean) => (vfxEnabled.value = v ?? true));
     await storage
       .getPlayerDataByKey("bloomEnabled")
       .then((v: boolean) => (bloomEnabled.value = v ?? false));
@@ -26,13 +26,13 @@ export const useGraphicsStore = defineStore("graphics", () => {
       .then((v: boolean) => (afterimageEnabled.value = v ?? false));
     await storage
       .getPlayerDataByKey("fxaaEnabled")
-      .then((v: boolean) => (fxaaEnabled.value = v ?? false));
+      .then((v: boolean) => (fxaaEnabled.value = v ?? true));
     await storage
       .getPlayerDataByKey("rgbShiftEnabled")
       .then((v: boolean) => (rgbShiftEnabled.value = v ?? false));
     await storage
       .getPlayerDataByKey("nightMode")
-      .then((v: boolean) => (nightMode.value = v ?? false));
+      .then((v: boolean) => (nightMode.value = v ?? true));
     await storage
       .getPlayerDataByKey("shadowEnabled")
       .then((v: boolean) => (shadowEnabled.value = v ?? false));
