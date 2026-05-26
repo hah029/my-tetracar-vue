@@ -149,7 +149,7 @@ export class CityLayerInstanced {
       const width = THREE.MathUtils.randFloat(minWidth, maxWidth);
 
       // Позиция по y = -height, чтобы низ здания был на уровне земли
-      const pos = new THREE.Vector3(x, -50, z);
+      const pos = new THREE.Vector3(x, -100, z);
       const scale = new THREE.Vector3(width, height, width);
       const modelIndex = Math.floor(Math.random() * this.modelUrls.length);
 

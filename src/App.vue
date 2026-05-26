@@ -36,10 +36,11 @@ import { DebugColliderVisualizer } from "./helpers/debug/DebugColliderVisualizer
 import { GameStates } from "./game/core/GameState";
 import { provide } from 'vue';
 import DebugPanel from '@/components/hud/panels/DebugPanel.vue';
+import { usePlayerStore } from "./store/playerStore";
 // import { useProgressStore } from "./store/progressStore";
 
 const threeRoot = ref<HTMLDivElement | null>(null);
-const { getScene, getCamera, getComposer, setRGBShiftAmount } = useThree(threeRoot);
+const threeInstance = useThree(threeRoot);
 const game = useGame();
 const gameState = useGameState();
 const controls = useControls(game);
@@ -74,9 +75,13 @@ let loop: ReturnType<typeof GameLoop>;
 let soundManager: SoundManager;
 
 onMounted(() => {
-    const scene = getScene();
-    const camera = getCamera();
-    const composer = getComposer();
+    const scene = threeInstance.getScene();
+    const camera = threeInstance.getCamera();
+    const composer = threeInstance.getComposer();
+
+    const playerStore = usePlayerStore();
+    playerStore.renderInstance = threeInstance;
+
 
     // console.log('🔍 App: Got scene:', !!scene);
     // console.log('🔍 App: Got composer:', !!composer);
@@ -110,7 +115,7 @@ onMounted(() => {
 
     // main loop initialize
     const debugCollider = new DebugColliderVisualizer(scene);
-    loop = GameLoop(game, composer, debugCollider, setRGBShiftAmount);
+    loop = GameLoop(game, composer, debugCollider, threeInstance.setRGBShiftAmount);
     loop.setupEventListeners();
     loop.start();
 

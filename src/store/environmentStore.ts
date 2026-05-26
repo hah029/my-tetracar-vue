@@ -1,7 +1,7 @@
 // src/store/gameState.ts
 import { defineStore } from "pinia";
 import { useCommonStore } from "./commonStore";
-import type { RoadConfig } from "@/game/road";
+import type { RoadConfig } from "@/game/environment/road";
 import textureUrl from "@/assets/textures/road_tile.svg";
 import type { GeometryConfig, MaterialConfig } from "@/game/cube/types";
 import { MODELS } from "@/assets/models";
@@ -10,6 +10,11 @@ import { TEXTURES } from "@/assets/textures";
 export const useEnvironmentStore = defineStore("environmentStore", () => {
   const commonStore = useCommonStore();
   const AXES_SIZE = 5;
+
+  const NIGHT_BACKGROUND = 0x222222;
+  const DAY_BACKGROUND = 0xdddddd;
+  const FOG_NEAR = 0.01;
+  const FOG_FAR = 200;
 
   const DEFAULT_LANES = [
     -(12 * commonStore.XZ_SCALING),
@@ -24,9 +29,9 @@ export const useEnvironmentStore = defineStore("environmentStore", () => {
     // width: 11, // Можно вычислять: (max lane - min lane) + edgeOffset*2
     // width: 5.9,
     length: 800,
-    color: 0x88ccff,
-    emissive: 0x224466,
-    opacity: 0.8,
+    color: 0xeeeeee,
+    emissive: 0xeeeeee,
+    opacity: 0.25,
     yPosition: 0.0,
     gap: 0,
     edgeOffset: 0.3, // Отступ от крайних полос до границ
@@ -34,9 +39,10 @@ export const useEnvironmentStore = defineStore("environmentStore", () => {
   };
   const NEON_ROAD_CONFIG: RoadConfig = {
     ...DEFAULT_ROAD_CONFIG,
-    color: 0x3366aa,
-    emissive: 0x112244,
-    opacity: 0.5,
+    color: 0xeeeeee,
+    emissive: 0xeeeeee,
+    opacity: 0.25,
+    emissiveIntensity: 0.1,
   };
 
   // Вспомогательная функция для вычисления ширины дороги
@@ -76,9 +82,16 @@ export const useEnvironmentStore = defineStore("environmentStore", () => {
   return {
     AXES_SIZE,
     DEFAULT_ROAD_CONFIG,
+    NEON_ROAD_CONFIG,
     DEFAULT_LANES,
     SIDE_OBJECT_GEOMETRY_CONFIG,
     SIDE_OBJECT_MATERIAL_CONFIG,
+
+    NIGHT_BACKGROUND,
+    DAY_BACKGROUND,
+    FOG_NEAR,
+    FOG_FAR,
+
     calculateRoadWidth,
     getEdgePositions,
   };

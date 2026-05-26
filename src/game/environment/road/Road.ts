@@ -33,10 +33,9 @@ export class Road extends THREE.Mesh {
 
       material = new THREE.MeshStandardMaterial({
         map: texture,
-        // emissive: tmpConfig.emissive ?? 0xffffff,
-        // emissiveIntensity: 0.8, // пока отключил - из-за нее не рисовалась текстура
-        // emissiveIntensity: 0.2,
         transparent: true,
+        emissive: tmpConfig.emissive ?? 0xffffff,
+        emissiveIntensity: tmpConfig.emissiveIntensity ?? 1,
         opacity: tmpConfig.opacity ?? 0.45,
       });
     } else {
@@ -45,7 +44,6 @@ export class Road extends THREE.Mesh {
         emissiveIntensity: 0.8,
         transparent: true,
         opacity: tmpConfig.opacity ?? 0.2,
-        // side: THREE.DoubleSide,
       });
     }
 

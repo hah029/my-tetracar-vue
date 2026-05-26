@@ -14,6 +14,7 @@ export interface RoadConfig {
   length: number;
   color?: number;
   emissive?: number;
+  emissiveIntensity?: number;
   opacity?: number;
   yPosition?: number;
   gap?: number;

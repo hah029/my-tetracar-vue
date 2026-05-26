@@ -6,7 +6,7 @@ export const useCameraStore = defineStore("camera", () => {
   const CAMERA_HEIGHT = 20;
   const CAMERA_DISTANCE = 25;
   const CAMERA_LOOKAHEAD = 20;
-  const CAMERA_FOLLOW_SPEED = 2.0;
+  const CAMERA_FOLLOW_SPEED = 0.7;
 
   const CAMERA_INIT_POSITION_X = 0;
   const CAMERA_INIT_POSITION_Y = 15;
@@ -17,8 +17,8 @@ export const useCameraStore = defineStore("camera", () => {
 
   // FOV
   const FOV_MIN = 60;
-  const FOV_MAX = 80;
-  const FOV_FOLLOW_SPEED = 0.5;
+  const FOV_MAX = 100;
+  const FOV_FOLLOW_SPEED = 0.05;
   const FOV_CLAMP_MIN = 10;
   const FOV_CLAMP_MAX = 170;
 

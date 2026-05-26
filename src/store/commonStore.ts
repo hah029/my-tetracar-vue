@@ -73,7 +73,7 @@ export const useCommonStore = defineStore("common", () => {
   const BULLET_DEFAULT_MATERIAL = {
     color: 0xff0000,
     emissive: 0xff0000,
-    emissiveIntensity: 5,
+    emissiveIntensity: 10,
   };
   // const BULLET_DEFAULT_GEOMETRY = {
   //   width: 1,

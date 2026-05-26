@@ -152,7 +152,7 @@ export class FlashEffectManager {
 
       uniforms: {
         uTime: { value: 0 },
-        uColor: { value: new THREE.Color("#ffffff7b") },
+        uColor: { value: new THREE.Color("#ececec") },
       },
 
       vertexShader: landingWaveVertexShader,

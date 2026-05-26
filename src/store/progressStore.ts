@@ -80,15 +80,13 @@ export const useProgressStore = defineStore("progressStore", () => {
   }
 
   async function restoreHighScore() {
-    try {
-      const value = await platform.getPlayerStatByKey("highScore");
-      if (value !== null && value !== undefined) {
-        highScore.value = value;
-      }
-    } catch (error) {
-      console.error("Failed to restore high score:", error);
-    }
-    resetNewRecord();
+    platform
+      .getPlayerStatByKey("highScore")
+      .then((value) => {
+        if (value) highScore.value = value;
+        resetNewRecord();
+      })
+      .catch((err) => console.error("Failed to restore high score:", err));
   }
 
   async function saveHighScore(): Promise<void> {

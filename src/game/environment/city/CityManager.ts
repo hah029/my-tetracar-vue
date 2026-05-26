@@ -22,8 +22,8 @@ export class CityManager {
     // Массив URL трёх разных GLB-моделей
     const modelUrls = [building1, building2, building3];
 
-    const MIN_SCALE = 1 / 4;
-    const MAX_SCALE = 1 / 2;
+    const MIN_SCALE = 1;
+    const MAX_SCALE = 2;
     const DEFAULT_CONFIG = {
       // z positions range
       zStart: -200,
@@ -34,9 +34,9 @@ export class CityManager {
       minWidth: MIN_SCALE,
       maxWidth: MAX_SCALE,
 
-      spacing: 0.5,
+      spacing: 2,
 
-      speedFactor: 0.3,
+      speedFactor: 0.1,
       color: 0x333355,
     };
 

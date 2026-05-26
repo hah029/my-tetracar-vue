@@ -177,6 +177,7 @@ export function GameLoop(
         }
 
         game.updateEffects();
+        usePlayerStore().updateNitro(deltaTime);
 
         // const target = playerStore.isNitroEnabled ? maxShift : 0;
         // // Плавно двигаем текущее значение к целевому

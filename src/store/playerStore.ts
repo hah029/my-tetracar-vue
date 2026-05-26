@@ -4,6 +4,7 @@ import { defineStore } from "pinia";
 import { ref } from "vue";
 import { useProgressStore } from "@/store/progressStore";
 import { useCommonStore } from "@/store/commonStore";
+import { useThree } from "@/composables/useThree";
 import type { GeometryConfig, MaterialConfig } from "@/game/cube/types";
 import type { TextureMap } from "@/game/car/CarVisualState";
 import { MODELS } from "@/assets/models";
@@ -13,6 +14,7 @@ export const usePlayerStore = defineStore("playerStore", () => {
   // #region - основные константы
   const progressStore = useProgressStore();
   const commonStore = useCommonStore();
+  const renderInstance = ref();
 
   const COLS: [number, number, number] = [
     -commonStore.XZ_SCALING * 2,
@@ -99,7 +101,6 @@ export const usePlayerStore = defineStore("playerStore", () => {
 
   const BASE_SPEED = 0.05; // м/с - стартовая скорость машинки
   const MAX_SPEED = 1.0; // м/с - максимальная скорость машинки
-  const NITRO_MULTIPLIER = 1.5;
   const ACCELERATION = 0.000005; // - темп ускорения машинки
   const FORCED_JUMP_MULTIPLIER = 5;
   // size + collider
@@ -108,7 +109,7 @@ export const usePlayerStore = defineStore("playerStore", () => {
   const COLLIDER_Y_OFFSET = 0.0;
   const COLLIDER_HEIGHT_FACTOR = 0.8;
   //
-  const LANE_CHANGE_SPEED = 0.32;
+  const LANE_CHANGE_SPEED = 0.26;
   const MAX_TILT = 0.05;
   const TILT_SMOOTHING = 0.2;
   // jumps
@@ -127,11 +128,25 @@ export const usePlayerStore = defineStore("playerStore", () => {
   const forceJump = ref(false);
 
   // nitro
+  const NITRO_MULTIPLIER = 1.5;
+  const NITRO_AFTER_IMAGE_PASS = 0.8;
+  const NITRO_RGB_SHIFT = 0.003;
   const BASE_NITRO_TIMER = 5000;
   const isNitroEnabled = ref(false);
   const nitroTimer = ref(BASE_NITRO_TIMER);
   const goldenNitroMultiplier = ref(2);
   const energonNitroMultiplier = ref(2);
+  const nitroMultiplierCurrent = ref(1);
+  const nitroMultiplierTarget = ref(1);
+  // const nitroAfterImagePassCurrent = ref(0);
+  // const nitroAfterImagePassTarget = ref(0);
+  // const nitroRGBShiftCurrent = ref(0);
+  // const nitroRGBShiftTarget = ref(0);
+  const NITRO_ACCEL_IN_SPEED = 0.005;
+  const NITRO_ACCEL_OUT_SPEED = 0.001;
+  // const NITRO_AFTER_IMAGE_PASS_TRANSITION = 0.01;
+  // const NITRO_RGB_SHIFT_TRANSITION = 1;
+
   // magnet
   const BASE_MAGNET_TIMER = 10000;
   const isMagnetEnabled = ref(false);
@@ -174,14 +189,74 @@ export const usePlayerStore = defineStore("playerStore", () => {
   // #region - работаем с нитро
   // включаем нитро
   function enableNitro() {
+    if (!isNitroEnabled.value) {
+      progressStore.riseMultiplier(2, "multiply");
+    }
+
     isNitroEnabled.value = true;
-    if (!isNitroEnabled.value) progressStore.riseMultiplier(2, "multiply");
+
+    nitroMultiplierTarget.value = NITRO_MULTIPLIER;
+    // nitroAfterImagePassTarget.value = NITRO_AFTER_IMAGE_PASS;
+    // nitroRGBShiftTarget.value = NITRO_RGB_SHIFT;
+
+    if (renderInstance.value != null) {
+      renderInstance.value.setAfterImagePassAmount(NITRO_AFTER_IMAGE_PASS);
+      renderInstance.value.setRGBShiftAmount(NITRO_RGB_SHIFT);
+    }
   }
-  // отключаем нитро
+
   function disableNitro() {
     isNitroEnabled.value = false;
+
     nitroTimer.value = BASE_NITRO_TIMER;
-    if (progressStore.currentMultiplier != 1) progressStore.reduceMultiplier(2);
+
+    nitroMultiplierTarget.value = 1;
+    // nitroAfterImagePassTarget.value = 0;
+    // nitroRGBShiftTarget.value = 0;
+
+    if (progressStore.currentMultiplier != 1) {
+      progressStore.reduceMultiplier(2);
+    }
+
+    if (renderInstance.value != null) {
+      renderInstance.value.setAfterImagePassAmount(0);
+      renderInstance.value.setRGBShiftAmount(0);
+    }
+  }
+
+  function updateNitro(delta: number) {
+    const transitionSpeed =
+      nitroMultiplierCurrent.value < nitroMultiplierTarget.value
+        ? NITRO_ACCEL_IN_SPEED
+        : NITRO_ACCEL_OUT_SPEED;
+
+    nitroMultiplierCurrent.value = THREE.MathUtils.lerp(
+      nitroMultiplierCurrent.value,
+      nitroMultiplierTarget.value,
+      delta * transitionSpeed,
+    );
+
+    // nitroAfterImagePassCurrent.value = THREE.MathUtils.lerp(
+    //   nitroAfterImagePassCurrent.value,
+    //   nitroAfterImagePassTarget.value,
+    //   delta * NITRO_AFTER_IMAGE_PASS_TRANSITION,
+    // );
+
+    // nitroRGBShiftCurrent.value = THREE.MathUtils.lerp(
+    //   nitroRGBShiftCurrent.value,
+    //   nitroRGBShiftTarget.value,
+    //   delta * NITRO_RGB_SHIFT_TRANSITION,
+    // );
+
+    // renderInstance.value.setAfterImagePassAmount(
+    //   nitroAfterImagePassCurrent.value,
+    // );
+
+    // renderInstance.value.setRGBShiftAmount(nitroRGBShiftCurrent.value);
+
+    // console.log("nitroMultiplierCurrent", nitroMultiplierCurrent.value);
+    // console.log("nitroAfterImagePassCurrent", nitroAfterImagePassCurrent.value);
+    // console.log("nitroRGBShiftCurrent", nitroRGBShiftCurrent.value);
   }
   // #endregion
 
@@ -230,14 +305,12 @@ export const usePlayerStore = defineStore("playerStore", () => {
   }
 
   function getCurrentSpeed() {
-    let multiplier = 1.0;
-    if (isNitroEnabled.value) {
-      multiplier = NITRO_MULTIPLIER;
-    }
-    let curSpeed = baseSpeed.value * multiplier;
+    const curSpeed = baseSpeed.value * nitroMultiplierCurrent.value;
+
     if (curSpeed > maxSpeed.value) {
       return maxSpeed.value;
     }
+
     return curSpeed;
   }
 
@@ -387,6 +460,7 @@ export const usePlayerStore = defineStore("playerStore", () => {
     resetPlayerAchievements,
     enableNitro,
     disableNitro,
+    updateNitro,
 
     enableShield,
     disableShield,
@@ -409,5 +483,7 @@ export const usePlayerStore = defineStore("playerStore", () => {
     addNewMsg,
 
     getDefaultCarConfig,
+
+    renderInstance,
   };
 });

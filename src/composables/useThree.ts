@@ -87,16 +87,28 @@ export function useThree(container: Ref<HTMLElement | null>) {
   function updateLightingMode() {
     if (!scene) return;
 
+    useEnvironmentStore().DAY_BACKGROUND;
+
     const graphics = useGraphicsStore();
     const isNight = graphics.nightMode;
 
     // Фон и туман
     if (isNight) {
-      scene.background = new THREE.Color(0x000000);
-      scene.fog = new THREE.Fog(0x000000, 0.01, 200);
+      scene.background = new THREE.Color(
+        useEnvironmentStore().NIGHT_BACKGROUND,
+      );
+      scene.fog = new THREE.Fog(
+        useEnvironmentStore().NIGHT_BACKGROUND,
+        useEnvironmentStore().FOG_NEAR,
+        useEnvironmentStore().FOG_FAR,
+      );
     } else {
-      scene.background = new THREE.Color(0xdddddd);
-      scene.fog = new THREE.Fog(0xdddddd, 0.01, 200);
+      scene.background = new THREE.Color(useEnvironmentStore().DAY_BACKGROUND);
+      scene.fog = new THREE.Fog(
+        useEnvironmentStore().DAY_BACKGROUND,
+        useEnvironmentStore().FOG_NEAR,
+        useEnvironmentStore().FOG_FAR,
+      );
     }
 
     // Освещение (если сохранено в scene.userData.lights)
@@ -119,6 +131,12 @@ export function useThree(container: Ref<HTMLElement | null>) {
   function setRGBShiftAmount(amount: number) {
     if (rgbShiftPass) {
       rgbShiftPass.uniforms.amount.value = amount;
+    }
+  }
+
+  function setAfterImagePassAmount(amount: number) {
+    if (afterimagePass) {
+      afterimagePass.uniforms.damp.value = amount;
     }
   }
 
@@ -163,7 +181,7 @@ export function useThree(container: Ref<HTMLElement | null>) {
       1.2,
     );
 
-    afterimagePass = new AfterimagePass(0.7);
+    afterimagePass = new AfterimagePass(0);
 
     fxaaPass = new ShaderPass(FXAAShader);
     fxaaPass.material.uniforms.resolution!.value.set(
@@ -173,7 +191,7 @@ export function useThree(container: Ref<HTMLElement | null>) {
 
     // ---- RGBShiftPass ----
     rgbShiftPass = new ShaderPass(RGBShiftShader);
-    // rgbShiftPass.uniforms.amount.value = 0.003; // начальная сила сдвига (маленькая)
+    rgbShiftPass.uniforms.amount.value = 0; // начальная сила сдвига (маленькая)
 
     const outputPass = new OutputPass();
 
@@ -274,5 +292,6 @@ export function useThree(container: Ref<HTMLElement | null>) {
     getComposer,
     getMotionBlurPass,
     setRGBShiftAmount,
+    setAfterImagePassAmount,
   };
 }
