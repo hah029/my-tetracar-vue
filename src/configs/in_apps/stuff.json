@@ -1,0 +1,56 @@
+[
+    {
+        "id": "24hourAdOff",
+        "title": "Отключение рекламы на 24 часа",
+        "price": 10,
+        "currency": "energon"
+    },
+    {
+        "id": "7dayAdOff",
+        "title": "Отключение рекламы на 7 дней",
+        "price": 50,
+        "currency": "energon"
+    },
+    {
+        "id": "foreverAdOff",
+        "title": "Отключение рекламы навсегда",
+        "price": 500,
+        "currency": "energon"
+    },
+    {
+        "id": "25hour15multiplier",
+        "title": "х1,5 к множителю на 24 часа",
+        "price": 25,
+        "currency": "energon"
+    },
+    {
+        "id": "bulletCapacityExtending",
+        "title": "расширение слотов под патроны + пополнение запаса магазина",
+        "price": 5000,
+        "currency": "golden"
+    },
+    {
+        "id": "shieldCapacityExtending",
+        "title": "расширение слотов под броню + пополнение запаса магазина",
+        "price": 5000,
+        "currency": "golden"
+    },
+    {
+        "id": "bulletMaximizing",
+        "title": "Пополнение запаса патронов (полные текущие слоты)",
+        "price": 1000,
+        "currency": "golden"
+    },
+    {
+        "id": "shieldMaximizing",
+        "title": "Пополнение запаса брони (полные текущие слоты)",
+        "price": 1000,
+        "currency": "golden"
+    },
+    {
+        "id": "25hourMagnetRadiusIncreasing",
+        "title": "Увеличение радиуса магнита",
+        "price": 10000,
+        "currency": "golden"
+    }
+]

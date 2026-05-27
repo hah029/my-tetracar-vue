@@ -1,19 +1,3 @@
-// общий интерфейс для всех платформ
-export type LeaderBoardPlayer = {
-  publicName: string;
-  uniqueId: string;
-};
-
-export type LeaderBoardRecord = {
-  player: LeaderBoardPlayer;
-  rank: number;
-  score: number;
-};
-
-export type LeaderBoard = {
-  entries: Array<LeaderBoardRecord>;
-};
-
 export interface IGamePlatform {
   init(): Promise<void>;
 
@@ -67,14 +51,6 @@ export interface IGamePlatform {
     includeUser: boolean,
     quantityAround: number,
   ): any | null;
-  // #endregion
-
-  // #region - работа с внутриигровыми покупками
-  consumePrevPurchases(consumePurchase: Function); // дозавершаем подвисшие предыдущие покупки (начисляем игроку купленные игровые предметы)
-
-  getShopCatalog(): any | null; // получаем список товаров магазина
-
-  buyShopItem(productId: string, consumePurchase: Function); // запускаем процесс покупки
   // #endregion
 
   gameReady(); // дёргаем, когда всё загрузилось и игра полностью готова к геймплею

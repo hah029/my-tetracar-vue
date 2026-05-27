@@ -1,0 +1,26 @@
+[
+    {
+        "id": "carSkinBasic1",
+        "title": "Базовый скин 1",
+        "price": 2500,
+        "currency": "golden"
+    },
+    {
+        "id": "carSkinBasic2",
+        "title": "Базовый скин 2",
+        "price": 2500,
+        "currency": "golden"
+    },
+    {
+        "id": "carSkinPremium1",
+        "title": "Премиум скин 1",
+        "price": 25,
+        "currency": "energon"
+    },
+    {
+        "id": "carSkinPremium2",
+        "title": "Премиум скин 1",
+        "price": 25,
+        "currency": "energon"
+    }
+]

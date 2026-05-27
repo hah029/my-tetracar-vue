@@ -1,4 +1,4 @@
-import type { SDK, Player, LeaderboardEntriesData } from "ysdk";
+import type { SDK, Player, LeaderboardEntriesData, Product } from "ysdk";
 import type { IGamePlatform } from "../IGamePlatform";
 
 // Яндекс Игры

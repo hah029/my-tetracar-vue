@@ -10,6 +10,7 @@ import { SoundManager } from "@/game/sound/SoundManager";
 type UIOverlay =
   | null
   | "settings"
+  | "shop"
   | "quitConfirm"
   | "leaderBoards"
   | "trainingScreen";
@@ -177,6 +178,10 @@ export const useGameState = defineStore("gameState", () => {
     resetCallback = cb;
   }
 
+  function openShop() {
+    activeOverlay.value = "shop";
+  }
+
   function openSettings() {
     activeOverlay.value = "settings";
   }
@@ -231,6 +236,7 @@ export const useGameState = defineStore("gameState", () => {
     setResetCallback,
 
     openSettings,
+    openShop,
     openLeaderBoards,
     openQuitGameWindow,
     confirmQuit,
