@@ -5,5 +5,5 @@ export type AudioMap = {
 };
 
 export type AudioConfig = {
-  [key: string]: string;
+  [key: string]: any;
 };

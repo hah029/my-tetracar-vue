@@ -15,14 +15,15 @@ class CameraSystemClass {
 
   // impact shake
   private impactTimer = 0;
-  private impactDuration = 50000;
-  private impactAmplitude = 10000;
   private impactOffset = new THREE.Vector3();
+  private impactDuration!: number;
+  private impactAmplitude!: number;
 
   initialize(camera: THREE.PerspectiveCamera) {
     const cameraStore = useCameraStore();
 
     this.camera = camera;
+
     this.camera.position.set(
       cameraStore.CAMERA_INIT_POSITION_X,
       cameraStore.CAMERA_INIT_POSITION_Y,
@@ -33,6 +34,9 @@ class CameraSystemClass {
       cameraStore.CAMERA_INIT_LOOKAT_Y,
       cameraStore.CAMERA_INIT_LOOKAT_Z,
     );
+
+    this.impactDuration = useCameraStore().IMPACT_DURATION;
+    this.impactAmplitude = useCameraStore().MAX_IMPACT_AMPLITUDE;
   }
 
   update(
@@ -46,21 +50,29 @@ class CameraSystemClass {
     if (!this.camera) return;
     if (car.isDestroyed()) return;
 
-    const MAX_SPEED = usePlayerStore().maxSpeed;
+    const cameraStore = useCameraStore();
 
     const carPos = car.position;
-    const speedFactor = speed / MAX_SPEED;
-    const speedFactorNorm = Math.min(speedFactor, 1);
+
+    const rawSpeedFactor = speed / usePlayerStore().maxSpeed;
+    const speedFactor = THREE.MathUtils.clamp(rawSpeedFactor, 0, 1);
+    const nitroBoost = usePlayerStore().isNitroEnabled ? 0.06 : 0;
+    // speedFactor *= usePlayerStore().isNitroEnabled ? 2 : 1;
+    // const speedFactorNorm = Math.min(speedFactor, 1);
+    const speedFactorNorm = speedFactor;
+
+    // maxFov *= usePlayerStore().isNitroEnabled ? 2 : 1;
+    const fovCurve = 1 - Math.pow(1 - speedFactor, 2);
+    const distanceCurve = Math.pow(speedFactor, 0.6);
 
     // 1. Позиция камеры
-    const cameraStore = useCameraStore();
     const targetCamPos = new THREE.Vector3(
       carPos.x,
       cameraStore.CAMERA_HEIGHT - (cameraStore.CAMERA_HEIGHT * speedFactor - 1),
       carPos.z +
         cameraStore.CAMERA_DISTANCE -
         cameraStore.CAMERA_DISTANCE *
-          speedFactor *
+          distanceCurve *
           cameraStore.DISTANCE_REDUCTION_FACTOR,
     );
 
@@ -77,9 +89,12 @@ class CameraSystemClass {
       (targetTilt - this.camera.rotation.z) * cameraStore.CAMERA_FOLLOW_SPEED;
 
     // 3. Динамический FOV с плавным изменением
+    // const targetFOV =
+    //   cameraStore.FOV_MIN + (maxFov - cameraStore.FOV_MIN) * speedFactorNorm;
     const targetFOV =
       cameraStore.FOV_MIN +
-      (cameraStore.FOV_MAX - cameraStore.FOV_MIN) * speedFactorNorm;
+      (cameraStore.FOV_MAX - cameraStore.FOV_MIN) * fovCurve +
+      cameraStore.FOV_MAX * nitroBoost;
     this.camera.fov = THREE.MathUtils.clamp(
       this.camera.fov +
         (targetFOV - this.camera.fov) * cameraStore.FOV_FOLLOW_SPEED,
@@ -97,30 +112,110 @@ class CameraSystemClass {
     this.camera.lookAt(lookAtPos);
   }
 
-  updateDestroyed(cubes: THREE.Object3D[], deltaTime: number) {
+  updateDestroyed(
+    cubes: THREE.Object3D[],
+    deltaTime: number,
+    fallbackPosition?: THREE.Vector3,
+  ) {
     if (!this.camera) return;
-    if (cubes.length === 0) return;
 
     const cameraStore = useCameraStore();
-    const center = new THREE.Vector3();
-    cubes.forEach((cube) => center.add(cube.position));
-    center.divideScalar(cubes.length);
 
-    const targetCamPos = center
-      .clone()
-      .add(
-        new THREE.Vector3(
-          cameraStore.DESTROYED_CAMERA_OFFSET_X,
-          cameraStore.DESTROYED_CAMERA_OFFSET_Y,
-          cameraStore.DESTROYED_CAMERA_OFFSET_Z,
-        ),
+    let targetCamPos: THREE.Vector3;
+
+    // Проверка валидности вектора
+    const isValidVector = (v: THREE.Vector3) =>
+      !isNaN(v.x) &&
+      !isNaN(v.y) &&
+      !isNaN(v.z) &&
+      isFinite(v.x) &&
+      isFinite(v.y) &&
+      isFinite(v.z);
+
+    if (cubes.length > 0) {
+      const center = new THREE.Vector3();
+      let validCount = 0;
+      cubes.forEach((cube) => {
+        if (isValidVector(cube.position)) {
+          center.add(cube.position);
+          validCount++;
+        }
+      });
+      if (validCount > 0) {
+        center.divideScalar(validCount);
+        targetCamPos = center
+          .clone()
+          .add(
+            new THREE.Vector3(
+              cameraStore.DESTROYED_CAMERA_OFFSET_X,
+              cameraStore.DESTROYED_CAMERA_OFFSET_Y,
+              cameraStore.DESTROYED_CAMERA_OFFSET_Z,
+            ),
+          );
+      } else {
+        // Все кубы имеют невалидные позиции, используем fallback
+        targetCamPos = this.getSafeFallbackPosition(
+          fallbackPosition,
+          cameraStore,
+        );
+      }
+    } else {
+      // Используем fallback-позицию (например, последнюю позицию машины)
+      targetCamPos = this.getSafeFallbackPosition(
+        fallbackPosition,
+        cameraStore,
       );
+    }
+
+    // Гарантируем, что targetCamPos валиден
+    if (!isValidVector(targetCamPos)) {
+      targetCamPos = new THREE.Vector3(
+        0,
+        cameraStore.DESTROYED_CAMERA_OFFSET_Y,
+        cameraStore.DESTROYED_CAMERA_OFFSET_Z,
+      );
+    }
+
+    // Отключаем тряску при разрушении, чтобы камера не "заваливалась"
+    this.impactAmplitude = 0;
+    this.impactOffset.set(0, 0, 0);
+
     this.camera.position.lerp(targetCamPos, cameraStore.DESTROYED_LERP_FACTOR);
 
-    this.applyImpactShake(deltaTime);
-    this.camera.position.add(this.impactOffset);
+    // Сброс наклона камеры и FOV
+    this.camera.rotation.z = 0;
+    this.camera.rotation.x = 0;
+    this.camera.fov = cameraStore.FOV_MIN;
+    this.camera.updateProjectionMatrix();
 
-    this.camera.lookAt(center);
+    // LookAt точка: чуть ниже и ближе, чтобы камера смотрела слегка вниз, но не заваливалась
+    const lookAtPos = new THREE.Vector3(
+      targetCamPos.x,
+      targetCamPos.y - 1,
+      targetCamPos.z - cameraStore.CAMERA_LOOKAHEAD,
+    );
+    this.camera.lookAt(lookAtPos);
+  }
+
+  private getSafeFallbackPosition(
+    fallbackPosition: THREE.Vector3 | undefined,
+    cameraStore: ReturnType<typeof useCameraStore>,
+  ): THREE.Vector3 {
+    const isValidVector = (v: THREE.Vector3) =>
+      !isNaN(v.x) &&
+      !isNaN(v.y) &&
+      !isNaN(v.z) &&
+      isFinite(v.x) &&
+      isFinite(v.y) &&
+      isFinite(v.z);
+    if (fallbackPosition && isValidVector(fallbackPosition)) {
+      return fallbackPosition.clone();
+    }
+    return new THREE.Vector3(
+      0,
+      cameraStore.DESTROYED_CAMERA_OFFSET_Y,
+      cameraStore.DESTROYED_CAMERA_OFFSET_Z,
+    );
   }
 
   reset(carPosition: THREE.Vector3) {
@@ -128,10 +223,11 @@ class CameraSystemClass {
       console.warn("[CameraSystem.reset] camera is null");
       return;
     }
-    this.shakeTimer = 0;
-    this.shakeOffset.set(0, 0, 0);
 
     const cameraStore = useCameraStore();
+
+    this.shakeTimer = 0;
+    this.shakeOffset.set(0, 0, 0);
 
     this.camera.position.set(
       carPosition.x,
@@ -153,6 +249,7 @@ class CameraSystemClass {
 
   private applyShake(speedFactor: number, deltaTime = 1) {
     this.shakeTimer += deltaTime;
+
     const cameraStore = useCameraStore();
 
     const amplitude =
@@ -186,9 +283,10 @@ class CameraSystemClass {
     strength: number, // 0..1
     duration = 0.4,
   ) {
+    const cameraStore = useCameraStore();
+
     this.impactTimer = 0;
     this.impactDuration = duration;
-    const cameraStore = useCameraStore();
 
     this.impactAmplitude = THREE.MathUtils.lerp(
       cameraStore.IMPACT_SHAKE_MIN,
@@ -197,22 +295,25 @@ class CameraSystemClass {
     );
   }
 
-  private applyImpactShake(deltaTime: number) {
-    if (this.impactTimer >= this.impactDuration) {
-      this.impactOffset.set(0, 0, 0);
-      return;
-    }
+  // private applyImpactShake(deltaTime: number) {
+  //   if (this.impactTimer >= this.impactDuration) {
+  //     this.impactOffset.set(0, 0, 0);
+  //     return;
+  //   }
 
-    const cameraStore = useCameraStore();
-    this.impactTimer += deltaTime;
-    const t = this.impactTimer / this.impactDuration;
+  //   this.impactTimer += deltaTime;
+  //   const t = this.impactTimer / this.impactDuration;
 
-    // easing: резкий старт → плавное затухание
-    const decay = Math.exp(-cameraStore.IMPACT_SHAKE_DECAY_RATE * t);
+  //   // easing: резкий старт → плавное затухание
+  //   const decay = Math.exp(-cameraStore.IMPACT_SHAKE_DECAY_RATE * t);
 
-    this.impactOffset
-      .set(Math.random() * 2 - 1, Math.random() * 2 - 1, Math.random() * 2 - 1)
-      .multiplyScalar(this.impactAmplitude * decay);
+  //   this.impactOffset
+  //     .set(Math.random() * 2 - 1, Math.random() * 2 - 1, Math.random() * 2 - 1)
+  //     .multiplyScalar(this.impactAmplitude * decay);
+  // }
+
+  getCamera() {
+    return this.camera;
   }
 }
 

@@ -2,91 +2,42 @@
 import * as THREE from "three";
 import { ref } from "vue";
 // managers
-import { RoadManager } from "@/game/road/RoadManager";
+import { type CollisionResult } from "@/game/collision/CollisionSystem";
+import { type FlashType } from "@/game/effects/FlashEffectManager";
+import { RoadManager } from "@/game/environment/road";
 import { CarManager } from "@/game/car/CarManager";
 import { ObstacleManager } from "@/game/interactive/obstacle/ObstacleManager";
-import { CollisionSystem } from "@/game/collision/CollisionSystem";
 import { InteractiveItemsManager } from "@/game/interactive/InteractiveItemsManager";
-import { BoosterManager } from "@/game/interactive/items/booster/BoosterManager";
-import { CoinManager } from "@/game/interactive/items/coin/CoinManager";
 import { CityManager } from "@/game/environment/city/CityManager";
 import { SoundManager } from "@/game/sound/SoundManager";
+import { CollisionSystem } from "@/game/collision/CollisionSystem";
 import { BulletSystem } from "@/game/combat/BulletSystem";
-import { BulletItemManager } from "@/game/interactive/items/bullet/BulletItemManager";
-import { DestructionManager } from "@/game/interactive/DestructionManager";
+import { FlashEffectManager } from "@/game/effects/FlashEffectManager";
 // enums
-import { DEFAULT_LANES } from "@/game/road/config/RoadConfig";
 import { UpdateMode } from "@/game/core/UpdateMode";
 // stores
 import { useProgressStore } from "@/store/progressStore";
 import { usePlayerStore } from "@/store/playerStore";
+// objects
+import type { CarRef } from "@/game/car";
 import { CameraSystem } from "@/game/camera/CameraSystem";
 import { useGameState } from "@/store/gameState";
 import { GameStates } from "@/game/core/GameState";
-import type { BaseObstacle } from "@/game/interactive/obstacle/BaseObstacle";
-
-// Интерфейс для реактивной ссылки car
-interface CarRef {
-  mesh: THREE.Group;
-  targetX: number;
-  isDestroyed: boolean;
-  isJumping: boolean;
-  cubes: THREE.Object3D[];
-}
-
-// Вынесенная функция для создания всех источников света
-function setupLights(scene: THREE.Scene) {
-  // 1. Очень слабый фоновый свет (теперь холодный оттенок)
-  const ambientLight = new THREE.AmbientLight(0x404060, 0.1); // синеватый, низкая интенсивность
-  scene.add(ambientLight);
-
-  // 2. Основной направленный свет (имитация солнца/луны) — тёплый, с тенями
-  const dirLight = new THREE.DirectionalLight(0xffeedd, 2);
-  dirLight.position.set(-10, 20, 5);
-  // dirLight.castShadow = true; // включаем тени для глубины
-  // dirLight.shadow.mapSize.width = 1024;
-  // dirLight.shadow.mapSize.height = 1024;
-  // const d = 30;
-  // dirLight.shadow.camera.left = -d;
-  // dirLight.shadow.camera.right = d;
-  // dirLight.shadow.camera.top = d;
-  // dirLight.shadow.camera.bottom = -d;
-  // dirLight.shadow.camera.near = 1;
-  // dirLight.shadow.camera.far = 50;
-  scene.add(dirLight);
-
-  // 3. Заполняющий свет спереди-сверху (холодный, чтобы создать контраст с тёплым основным)
-  const fillLight = new THREE.DirectionalLight(0xccddff, 2.5);
-  fillLight.position.set(-5, 10, 5);
-  fillLight.castShadow = true;
-  scene.add(fillLight);
-
-  // 4. Акцентный свет сзади (имитация света от города / задних фар) — тёплый, слабый
-  // const backAccent = new THREE.PointLight(0xffaa66, 5);
-  // backAccent.position.set(0, 3, 15);
-  // scene.add(backAccent);
-
-  // // 5. Цветные акценты по углам (теперь слабее и с меньшей насыщенностью)
-  // const colors = [0x553333, 0x335533, 0x333355, 0x555533]; // приглушённые тона
-  // const positions: [number, number, number][] = [
-  //   [8, 4, 8],
-  //   [-8, 4, 8],
-  //   [8, 4, -8],
-  //   [-8, 4, -8],
-  // ];
-
-  // positions.forEach((pos, i) => {
-  //   const light = new THREE.PointLight(colors[i], 30);
-  //   light.position.set(pos[0], pos[1], pos[2]);
-  //   scene.add(light);
-  // });
-
-  // 6. Лёгкая дымка для глубины (не обязательно, но добавит атмосферы)
-  scene.fog = new THREE.FogExp2(0x000000, 0.02);
-}
+import { setupLights } from "@/game/light/setupLight";
+import { BaseObstacle } from "@/game/interactive/obstacle/BaseObstacle";
+import { Golden } from "@/game/interactive/items/coin/Golden";
+import { Energon } from "@/game/interactive/items/coin/Energon";
+import { BaseItem } from "@/game/interactive/items/BaseItem";
+import { BulletItem } from "@/game/interactive/items/booster/BulletItem";
+import { NitroItem } from "@/game/interactive/items/booster/NitroItem";
+import { ShieldItem } from "@/game/interactive/items/booster/ShieldItem";
+import { MagnetItem } from "@/game/interactive/items/booster/MagnetItem";
+import { MagnetSystem } from "@/game/magnet/MagnetSystem";
+import { useEnvironmentStore } from "@/store/environmentStore";
 
 export function useGame() {
   const playerStore = usePlayerStore();
+  const progressStore = useProgressStore();
   const car = ref<CarRef>({
     mesh: new THREE.Group(),
     targetX: 0,
@@ -112,13 +63,13 @@ export function useGame() {
   let roadManager: RoadManager;
   let carManager: CarManager;
   let obstacleManager: ObstacleManager;
-  let coinManager: CoinManager;
   let interactiveManager: InteractiveItemsManager;
-  let destructionManager: DestructionManager;
   let cityManager: CityManager;
-  let boosterManager: BoosterManager;
-  let bulletItemManager: BulletItemManager;
   let soundManager: SoundManager;
+  let flashEffectManager: FlashEffectManager;
+
+  let bulletSystem: BulletSystem;
+  let collisionSystem: CollisionSystem;
 
   function init(scene: THREE.Scene) {
     sceneRef = scene;
@@ -128,7 +79,7 @@ export function useGame() {
 
     // === Инициализация менеджеров ===
     roadManager = RoadManager.getInstance();
-    roadManager.initialize({ lanes: DEFAULT_LANES, length: 250 }, scene);
+    roadManager.initialize(useEnvironmentStore().DEFAULT_ROAD_CONFIG, scene);
 
     cityManager = CityManager.getInstance();
     cityManager.initialize(scene);
@@ -136,30 +87,21 @@ export function useGame() {
     obstacleManager = ObstacleManager.getInstance();
     obstacleManager.initialize(scene, true);
 
-    coinManager = CoinManager.getInstance();
-    coinManager.initialize(scene);
-
-    boosterManager = BoosterManager.getInstance();
-    boosterManager.initialize(scene);
-
-    bulletItemManager = BulletItemManager.getInstance();
-    bulletItemManager.initialize(scene);
-
     interactiveManager = InteractiveItemsManager.getInstance();
-    interactiveManager.initialize(
-      obstacleManager,
-      coinManager,
-      boosterManager,
-      bulletItemManager,
-    );
-
-    destructionManager = DestructionManager.getInstance();
-    destructionManager.initialize(scene, interactiveManager);
+    interactiveManager.initialize(scene, obstacleManager);
 
     carManager = CarManager.getInstance();
     carManager.initialize(scene);
 
-    BulletSystem.getInstance().initialize(scene);
+    flashEffectManager = FlashEffectManager.getInstance();
+    flashEffectManager.initialize(scene);
+
+    bulletSystem = BulletSystem.getInstance();
+    bulletSystem.initialize(scene);
+
+    MagnetSystem.getInstance().initialize(scene);
+
+    collisionSystem = CollisionSystem.getInstance();
 
     // инициализация происходит на уровне App.vue
     soundManager = SoundManager.getInstance();
@@ -172,6 +114,16 @@ export function useGame() {
     car.value.isDestroyed = false;
     car.value.cubes = [];
     carManager.buildCar(true);
+  }
+
+  // метод для вызова вспышки
+  function spawnFlash(
+    type: FlashType,
+    position: THREE.Vector3,
+    size?: number,
+    duration?: number,
+  ) {
+    flashEffectManager.spawnFlash(type, position, size, duration);
   }
 
   // === Обновление позиции и состояния машины (вызывать каждый кадр) ===
@@ -211,7 +163,6 @@ export function useGame() {
         o.destroy(impactPoint, transformRequired);
       });
     }
-    // Не нужно обновлять obstacles.value здесь, т.к. следующий кадр updateInteractiveItems сделает это
   }
 
   function destroyCar(impactPoint?: THREE.Vector3) {
@@ -233,14 +184,14 @@ export function useGame() {
   function movePlayerLeft(dt: number) {
     if (useGameState().currentState != GameStates.Play) return;
     carManager.getCar().moveLeft();
-    soundManager.play("sfx_click");
+    soundManager.play("sfx_moving");
     updatePlayer(dt);
   }
 
   function movePlayerRight(dt: number) {
     if (useGameState().currentState != GameStates.Play) return;
     carManager.getCar().moveRight();
-    soundManager.play("sfx_click");
+    soundManager.play("sfx_moving");
     updatePlayer(dt);
   }
 
@@ -261,19 +212,16 @@ export function useGame() {
     speed: number,
     mode: UpdateMode,
   ) {
-    interactiveManager.update(deltaTime, speed, mode);
+    interactiveManager.update(carManager.getCar(), deltaTime, speed, mode);
 
     obstacleSyncTimer += deltaTime;
-    if (obstacleSyncTimer < 200) return; // ⛔ 5 раз в сек
+    if (obstacleSyncTimer < 1000) return; // ⛔ 1 раз в сек
     obstacleSyncTimer = 0;
 
     obstacles.value.length = 0;
     interactiveManager.getObstacles().forEach((o) => {
       obstacles.value.push({ mesh: o, position: o.position });
     });
-  }
-  function updateDestructionItems(deltaTime: number, speed: number) {
-    destructionManager.update(deltaTime, speed);
   }
 
   function resetObstacles() {
@@ -314,9 +262,9 @@ export function useGame() {
     jumps.value = [];
   }
 
-  function checkCollision(now?: number) {
-    if (!carManager || !obstacleManager) return { collision: false };
-    return CollisionSystem.checkCollision(
+  function checkObstaclesCollision(now?: number) {
+    if (!carManager || !obstacleManager) return null;
+    return collisionSystem.checkObstacleCollision(
       carManager.getCar(),
       obstacleManager.getJumps(),
       obstacleManager.getObstacles(),
@@ -324,38 +272,36 @@ export function useGame() {
     );
   }
 
-  function checkCoinCollision() {
-    if (!carManager || !coinManager) return { gold: 0, diamond: 0, total: 0 };
-    return coinManager.checkCarCollision(carManager.getCar());
-  }
-
-  function checkBoosterCollision() {
-    if (!carManager || !boosterManager)
-      return { collision: false, subject: "" };
-    return boosterManager.checkCarCollision(carManager.getCar());
-  }
-
-  function checkBulletItemCollision() {
-    if (!carManager || !bulletItemManager) return 0;
-    return bulletItemManager.checkCarCollision(carManager.getCar());
+  function checkItemsCollision() {
+    if (!carManager || !interactiveManager) return null;
+    return collisionSystem.checkItemsCollision(
+      carManager.getCar(),
+      interactiveManager.getItems(),
+    );
   }
 
   function getDangerLevel() {
     if (!carManager || !obstacleManager) return 0;
-    return CollisionSystem.getDangerLevel(carManager.getCar(), [
+    return collisionSystem.getDangerLevel(carManager.getCar(), [
       ...obstacleManager.getObstacles(),
     ]);
   }
+
   function findRootTaggedObject(obj: THREE.Object3D): THREE.Object3D {
     let current: THREE.Object3D | null = obj;
 
-//    while (current.parent && !current.parent.isScene) {
-    while (current.parent && (!('isScene' in current.parent) || !current.parent.isScene)) {  // а то компилятор ругался
+    //    while (current.parent && !current.parent.isScene) {
+    while (
+      current.parent &&
+      (!("isScene" in current.parent) || !current.parent.isScene)
+    ) {
+      // а то компилятор ругался
       current = current.parent;
     }
 
     return current;
   }
+
   function reset() {
     if (!carManager || !obstacleManager || !roadManager || !sceneRef) {
       console.warn("[useGame.reset] missing managers:", {
@@ -369,28 +315,19 @@ export function useGame() {
 
     carManager.resetCar();
     interactiveManager.reset();
-    destructionManager.reset();
     roadManager.clear();
-    CollisionSystem.reset();
-    BulletSystem.getInstance().reset();
+    collisionSystem.reset();
+    bulletSystem.reset();
+    flashEffectManager.clear();
 
     // Дополнительная очистка: удаляем оставшиеся объекты по тегам
     if (sceneRef) {
-      // const toRemove: THREE.Object3D[] = [];
-      // let traverseCount = 0;
       const toRemove = new Set<THREE.Object3D>();
 
       sceneRef.traverse((obj) => {
         const ud = obj.userData;
 
-        if (
-          ud.isObstacle ||
-          ud.isCoin ||
-          ud.isBooster ||
-          ud.isBulletItem ||
-          ud.isJump ||
-          ud.isInteractiveItem
-        ) {
+        if (ud.isObstacle || ud.isJump || ud.isInteractiveItem) {
           const root = findRootTaggedObject(obj);
           toRemove.add(root);
         }
@@ -411,12 +348,13 @@ export function useGame() {
 
     resetJumps();
     obstacles.value = [];
-    // updateInteractiveItems(0, 0, UpdateMode.Destruction); // синхронизация
 
     playerStore.disableNitro();
+    playerStore.disableMagnet();
     playerStore.resetGameData();
-    useProgressStore().resetScore();
-    useProgressStore().resetDistance();
+    // reset progress
+    progressStore.resetScore();
+    progressStore.resetDistance();
 
     CameraSystem.reset(car.value.mesh.position);
   }
@@ -426,13 +364,144 @@ export function useGame() {
     const playerStore = usePlayerStore();
 
     if (!playerStore.canShoot()) {
-      console.warn("[useGame] cannot shoot, returning");
+      playerStore.addNewMsg("outOfAmmo");
       return;
     }
 
-    BulletSystem.getInstance().spawnBullet(CarManager.getInstance().getCar());
+    bulletSystem.spawnBullet(carManager.getCar());
     playerStore.consumeAmmo();
     soundManager.play("sfx_shot");
+  }
+
+  function handleJumpCollision(deltaTime: number) {
+    jumpPlayer(deltaTime);
+    progressStore.calcScore("jump", 1);
+    soundManager.play("sfx_jump");
+  }
+
+  function handleBaseObstacleCollision(
+    collision: CollisionResult,
+    currentSpeed: number,
+  ): boolean {
+    // Проверка наличия брони
+    if (playerStore.isShieldEnabled) {
+      destroyObstacles(collision.impactPoint!, [
+        collision.impactSubject as BaseObstacle,
+      ]);
+
+      playerStore.reduceShield();
+      if (playerStore.armor == 0) {
+        CarManager.getInstance().disableShield();
+        playerStore.disableShield();
+      }
+      progressStore.calcScore("reduceShield", 1);
+      return false;
+    }
+
+    // Обработка уничтожения машины
+    destroyCar(collision.impactPoint);
+    destroyObstacles(
+      collision.impactPoint!,
+      [collision.impactSubject as BaseObstacle],
+      false,
+    );
+    soundManager.play("sfx_destroy_bot");
+    const strength = Math.min(currentSpeed / playerStore.maxSpeed, 1);
+    CameraSystem.triggerImpactShake(strength);
+
+    return true;
+  }
+
+  function handleCoinCollision(collision: CollisionResult) {
+    let coins = 1;
+    const carPos = car.value.mesh.position;
+
+    if (collision.impactSubject instanceof Golden) {
+      coins *= playerStore.isNitroEnabled
+        ? playerStore.goldenNitroMultiplier
+        : 1;
+      progressStore.addGolden(coins);
+      soundManager.play("sfx_add_golden");
+      spawnFlash("golden", carPos, 4);
+      return;
+    }
+
+    if (collision.impactSubject instanceof Energon) {
+      coins *= playerStore.isNitroEnabled
+        ? playerStore.energonNitroMultiplier
+        : 1;
+      progressStore.addEnergon(coins);
+      playerStore.makeEventHappened("addEnergon");
+
+      soundManager.play("sfx_add_energon");
+      spawnFlash("energon", carPos);
+      return;
+    }
+  }
+
+  function handleBoosterCollision(collision: CollisionResult) {
+    const carPos = car.value.mesh.position;
+
+    if (collision.impactSubject instanceof BulletItem) {
+      if (playerStore.ammo >= playerStore.maxAmmo) {
+        playerStore.addNewMsg("maxAmmo");
+        return;
+      }
+
+      playerStore.addAmmo();
+      playerStore.addNewMsg("ammoRefilled");
+      playerStore.makeEventHappened("addBullet");
+
+      soundManager.play("sfx_add_patron");
+      spawnFlash("bullet", carPos);
+      return;
+    }
+
+    if (collision.impactSubject instanceof NitroItem) {
+      CarManager.getInstance().enableNitro();
+
+      playerStore.enableNitro();
+      playerStore.addNewMsg("nitroActivated");
+      playerStore.makeEventHappened("addNitro");
+
+      soundManager.play("sfx_add_nitro");
+      spawnFlash("nitro", carPos);
+
+      return;
+    }
+
+    if (collision.impactSubject instanceof ShieldItem) {
+      if (playerStore.armor >= playerStore.maxArmor) {
+        playerStore.addNewMsg("maxArmor");
+        return;
+      }
+
+      playerStore.addArmor();
+
+      if (!playerStore.isShieldEnabled) {
+        playerStore.enableShield();
+        CarManager.getInstance().enableShield();
+      }
+
+      playerStore.addNewMsg("armorEquipped");
+      playerStore.makeEventHappened("addArmor");
+
+      soundManager.play("sfx_add_armor");
+      spawnFlash("shield", carPos);
+      return;
+    }
+
+    if (collision.impactSubject instanceof MagnetItem) {
+      playerStore.enableMagnet(collision.impactSubject.userData.magnetTypes!);
+      playerStore.addNewMsg("magnetActivated");
+      playerStore.makeEventHappened("addMagnet");
+      spawnFlash("magnet", carPos);
+      return;
+    }
+  }
+
+  function removeItem(item: BaseItem) {
+    interactiveManager.removeItem(item);
   }
 
   return {
@@ -449,22 +518,33 @@ export function useGame() {
     jumpPlayer,
     shoot,
 
+    updateEffects: () => {
+      flashEffectManager?.update();
+    },
+
     addObstacle: (obstacle: THREE.Mesh) => {
       if (sceneRef) sceneRef.add(obstacle);
     },
     updateInteractiveItems,
-    updateDestructionItems,
     updateRoad,
     updateJumps,
     updateCity,
+    // updateMagnet,
     resetObstacles,
     destroyObstacles,
     resetJumps,
-    checkCollision,
-    checkCoinCollision,
-    checkBoosterCollision,
-    checkBulletItemCollision,
     getDangerLevel,
     reset,
+    spawnFlash,
+
+    checkObstaclesCollision,
+    checkItemsCollision,
+
+    handleJumpCollision,
+    handleBaseObstacleCollision,
+    handleCoinCollision,
+    handleBoosterCollision,
+
+    removeItem,
   };
 }

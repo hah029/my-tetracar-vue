@@ -1,35 +1,33 @@
 // src/game/car/CarPhysics
 
 import * as THREE from "three";
-import { type CarConfig } from "./types";
-import { DEFAULT_CAR_CONFIG } from "./config";
-import { RoadManager } from "../road/RoadManager";
-import { RoadEdge } from "../road/edges/RoadEdge";
-import { JumpSimulator, type JumpState } from "./JumpSimulator";
+import { RoadManager } from "@/game/environment/road";
+import { RoadEdge } from "@/game/environment/road/edges/RoadEdge";
 import { CubePhysics } from "@/game/physics/CubePhysics";
 import type { PhysicsConfig } from "../physics/types";
+import { useCommonStore } from "@/store/commonStore";
+import { usePlayerStore } from "@/store/playerStore";
+import type { CarConfig } from ".";
+import { JumpSimulator, type JumpState } from "../physics/JumpSimulator";
+import { FlashEffectManager } from "../effects/FlashEffectManager";
 
 export class CarPhysics {
   private config: Required<CarConfig>;
   private jumpSimulator: JumpSimulator;
   private jumpState: JumpState;
   private physicsConfig: Required<PhysicsConfig> = {
-    gravity: 0.01,
-    bounceFactor: 0.4,
-    friction: 0.85,
-    collisionFactor: 0.2,
-    removalHeight: -10,
-    explosionForce: 0.2,
-    explosionUpward: 0.8,
-    cubeRotationSpeed: 0.05,
+    ...useCommonStore().getBasePhysics(),
   };
 
   constructor(config: Partial<CarConfig> = {}) {
-    this.config = { ...DEFAULT_CAR_CONFIG, ...config };
+    this.config = {
+      ...usePlayerStore().getDefaultCarConfig(),
+      ...config,
+    };
     this.jumpSimulator = new JumpSimulator({
-      gravity: this.config.gravity,
       jumpHeight: this.config.jumpHeight,
-      groundY: 0.8,
+      gravity: useCommonStore().GRAVITY,
+      groundY: useCommonStore().BASE_ITEM_YPOS + 0.6,
     });
 
     this.jumpState = this.jumpSimulator.createInitialState();
@@ -50,6 +48,7 @@ export class CarPhysics {
     newY: number;
     isJumping: boolean;
     pitch: number;
+    hasLanded: boolean;
   } {
     // Если прыжок не активен – просто возвращаем текущую высоту,
     // а внутреннее состояние подгоняем под неё (для корректного старта в будущем)
@@ -59,6 +58,7 @@ export class CarPhysics {
         newY: currentY,
         isJumping: false,
         pitch: 0,
+        hasLanded: false,
       };
     }
 
@@ -66,12 +66,25 @@ export class CarPhysics {
     const dtSeconds = deltaTime / 1000;
     // Активная фаза прыжка – используем симуляцию
     const prevVelocity = this.jumpState.velocity;
-    this.jumpState = this.jumpSimulator.step(this.jumpState, dtSeconds);
-    const pitch = prevVelocity > 0 ? 0.2 : -0.1;
+    const prevIsJumping = this.jumpState.isJumping;
+
+    const simMultiplier = usePlayerStore().forceJump
+      ? usePlayerStore().FORCED_JUMP_MULTIPLIER
+      : 1;
+    this.jumpState = this.jumpSimulator.step(
+      this.jumpState,
+      dtSeconds * simMultiplier,
+    );
+
+    const hasLanded = prevIsJumping && !this.jumpState.isJumping;
+
+    let pitch = prevVelocity > 0 ? 0.2 : -0.1;
+    if (usePlayerStore().forceJump) pitch = -0.2;
     return {
       newY: this.jumpState.y,
       isJumping: this.jumpState.isJumping,
       pitch,
+      hasLanded: hasLanded && usePlayerStore().forceJump,
     };
   }
 
@@ -111,23 +124,31 @@ export class CarPhysics {
       cube.position.copy(worldPos);
       cube.quaternion.copy(worldRot);
 
-      const velocity = new THREE.Vector3(
-        (Math.random() - 0.5) * this.config.explosionForce,
-        Math.random() * this.config.explosionUpward + 0.1,
-        (Math.random() - 0.5) * this.config.explosionForce,
+      // Уменьшенная сила разлёта для машины
+      const forceMultiplier = 0.7;
+      const baseVel = new THREE.Vector3(
+        (Math.random() - 0.5) *
+          this.physicsConfig.explosionForce *
+          forceMultiplier,
+        Math.random() * this.physicsConfig.explosionUpward * forceMultiplier +
+          0.1,
+        (Math.random() - 0.5) *
+          this.physicsConfig.explosionForce *
+          forceMultiplier,
       );
 
       if (impactPoint) {
         const dir = cube.position.clone().sub(impactPoint).normalize();
-        velocity.copy(dir.multiplyScalar(this.config.explosionForce));
+        dir.multiplyScalar(this.physicsConfig.explosionForce * forceMultiplier);
+        baseVel.add(dir); // суммируем случайный и направленный вектор
       }
 
       const userData = cube.userData as any;
-      userData.velocity = velocity;
+      userData.velocity = baseVel;
       userData.rotationSpeed = new THREE.Vector3(
-        (Math.random() - 0.5) * this.config.cubeRotationSpeed,
-        (Math.random() - 0.5) * this.config.cubeRotationSpeed,
-        (Math.random() - 0.5) * this.config.cubeRotationSpeed,
+        (Math.random() - 0.5) * this.physicsConfig.cubeRotationSpeed,
+        (Math.random() - 0.5) * this.physicsConfig.cubeRotationSpeed,
+        (Math.random() - 0.5) * this.physicsConfig.cubeRotationSpeed,
       );
     });
   }
@@ -135,12 +156,13 @@ export class CarPhysics {
   public updateDestroyedCubes(
     cubes: THREE.Object3D[],
     scene: THREE.Scene,
+    dt: number = 0.016,
   ): void {
     const edges = RoadManager.getInstance()
       .getEdges()
       .filter((e) => e instanceof RoadEdge) as RoadEdge[];
 
-    CubePhysics.updateCubes(cubes, this.physicsConfig, edges, (cube) => {
+    CubePhysics.update(cubes, this.physicsConfig, edges, dt, (cube) => {
       // удаляем куб из сцены
       scene.remove(cube);
     });

@@ -1,6 +1,6 @@
-export type CoinType = "gold" | "diamond";
+export type CoinType = "golden" | "energon";
 
 export const CoinTypes = {
-  Gold: "gold",
-  Diamond: "diamond",
+  Golden: "golden",
+  Energon: "energon",
 } as const;

@@ -1,7 +1,7 @@
 import * as THREE from "three";
 import type { AudioMap } from "./types";
-import { SOUNDS_CONFIG } from "./config";
 import { useAudioStore } from "@/store/audioStore";
+import { MUSICS, SFX } from "@/assets/sounds/index";
 
 export class SoundManager {
   private static instance: SoundManager | null = null;
@@ -13,11 +13,7 @@ export class SoundManager {
   private currentMusicName: string | null = null;
   private musicTimeout: number | null = null;
 
-  private musicSet = new Set([
-    "music_intro",
-    "music_background",
-    "music_gameover",
-  ]);
+  private musicSet = new Set(MUSICS.keys);
 
   public static getInstance(): SoundManager {
     if (!SoundManager.instance) {
@@ -30,22 +26,26 @@ export class SoundManager {
     this.listener = new THREE.AudioListener();
     camera.add(this.listener);
     this.loader = new THREE.AudioLoader();
-    Object.entries(SOUNDS_CONFIG).forEach(([k, v]) => {
-      this.load(k, v);
+    Object.entries(MUSICS).forEach(([k, v]) => {
+      this.load(k, v, this.sounds, 0.4);
+    });
+    Object.entries(SFX).forEach(([k, v]) => {
+      this.load(k, v, this.sounds, 0.6);
     });
   }
 
-  private load(name: string, path: string) {
+  private load(
+    name: string,
+    path: string,
+    storage: AudioMap,
+    defaultVolume = 0.4,
+  ) {
     const sound = new THREE.Audio(this.listener);
     this.loader.load(path, (buffer) => {
       sound.setBuffer(buffer);
-      if (this.musicSet.has(name)) {
-        sound.setVolume(0.4);
-      } else {
-        sound.setVolume(0.6);
-      }
+      sound.setVolume(defaultVolume);
     });
-    this.sounds[name] = sound;
+    storage[name] = sound;
   }
 
   private stopCurrentMusic() {
@@ -71,7 +71,6 @@ export class SoundManager {
     const isMusic = this.musicSet.has(name);
 
     if (isMusic && !audioStore.musicEnabled) return;
-    if (!isMusic && !audioStore.sfxEnabled) return;
 
     if (sound.isPlaying) sound.stop();
     sound.play();
@@ -82,6 +81,27 @@ export class SoundManager {
       this.currentMusic = sound;
       this.currentMusicName = name;
     }
+  }
+
+  // Метод для одноразовых звуков, которые не конфликтуют друг с другом
+  playOneShot(name: string, volume: number = 0.6) {
+    const audioStore = useAudioStore();
+    if (!audioStore.masterEnabled) return;
+
+    const originalSound = this.sounds[name];
+    if (!originalSound?.buffer) return;
+
+    // Создаём отдельный Audio для этого воспроизведения
+    const tempSound = new THREE.Audio(this.listener);
+    tempSound.setBuffer(originalSound.buffer);
+    tempSound.setVolume(volume);
+    tempSound.play();
+
+    // Автоматическая очистка после окончания
+    tempSound.onEnded = () => {
+      tempSound.stop();
+      tempSound.disconnect();
+    };
   }
 
   // Новый метод для управления музыкой (с проверкой дублей)
@@ -180,10 +200,6 @@ export class SoundManager {
     }
   }
 
-  setSFX(enabled: boolean) {
-    useAudioStore().sfxEnabled = enabled;
-  }
-
   toggleMaster() {
     this.setMaster(!useAudioStore().masterEnabled);
   }
@@ -193,7 +209,6 @@ export class SoundManager {
   }
 
   setMasterVolume(volume: number) {
-    localStorage.setItem("masterVolume", volume.toString());
     Object.values(this.sounds).forEach((sound) => {
       sound.setVolume(volume);
     });

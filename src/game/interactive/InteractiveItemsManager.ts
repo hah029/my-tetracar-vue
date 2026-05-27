@@ -1,36 +1,39 @@
 // src/game/interactive/InteractiveItemsManager.ts
+import * as THREE from "three";
 // managers
 import { ObstacleManager } from "./obstacle/ObstacleManager";
 import { CoinManager } from "./items/coin/CoinManager";
 import { BoosterManager } from "./items/booster/BoosterManager";
-import { BulletItemManager } from "./items/bullet/BulletItemManager";
+import { Car, CarManager } from "../car";
 // other
-import { simulateJumpTrajectory } from "@/game/car/CarTrajectory";
-import { DEFAULT_CAR_CONFIG } from "@/game/car/config";
 import { UpdateMode } from "@/game/core/UpdateMode";
 import { LanePattern } from "@/game/interactive/types/LanePattern";
 import { SegmentQueue } from "./segments/SegmentQueue";
 // stores
 import { usePlayerStore } from "@/store/playerStore";
 import { useProgressStore } from "@/store/progressStore";
-import { CarManager } from "../car";
+import { useCommonStore } from "@/store/commonStore";
+import type { BaseItem } from "./items/BaseItem";
+import type { BaseObstacle } from "./obstacle/BaseObstacle";
+import { MagnetSystem } from "../magnet/MagnetSystem";
+import { DestructionManager } from "./DestructionManager";
+import { simulateJumpTrajectory } from "../physics/JumpSimulator";
 
 export class InteractiveItemsManager {
   private static instance: InteractiveItemsManager | null = null;
+  private items: BaseItem[] = [];
+  private scene!: THREE.Scene;
+
   private obstacleManager!: ObstacleManager;
   private coinManager!: CoinManager;
   private boosterManager!: BoosterManager;
-  private bulletItemManager!: BulletItemManager;
   private segmentQueue!: SegmentQueue;
-  private distanceSinceLastSegment = 0;
-  private segmentLength = 18;
-  private difficultyStep = 150;
-  private nextSegmentZ = -60;
-  private boosterEnabledTimer = 0;
-  private boosterEnabledInterval = 5000;
-
-  private DIAMOND_SPAWN_PROBABILITY = 0.005;
-  private NITRO_SPAWN_PROBABILITY = 0.5;
+  private worldFrontZ = useCommonStore().BASE_SEGMENTS_ZPOS;
+  private difficultyStep = useCommonStore().BASE_SEGMENT_DIFFICULTY_STEP;
+  private nitroEnabledTimer = 0;
+  private magnetEnabledTimer = 0;
+  private magnetSystem = MagnetSystem.getInstance();
+  private destructionManager = DestructionManager.getInstance();
 
   public static getInstance(): InteractiveItemsManager {
     if (!InteractiveItemsManager.instance) {
@@ -39,78 +42,121 @@ export class InteractiveItemsManager {
     return InteractiveItemsManager.instance;
   }
 
-  // private constructor(
-  //   obstacleManager: ObstacleManager,
-  //   coinManager: CoinManager,
-  //   boosterManager: BoosterManager,
-  //   bulletItemManager: BulletItemManager,
-  // ) {
-  //   this.obstacleManager = obstacleManager;
-  //   this.coinManager = coinManager;
-  //   this.boosterManager = boosterManager;
-  //   this.bulletItemManager = bulletItemManager;
-  //   this.segmentQueue = new SegmentQueue(() => {
-  //     const distance = useProgressStore().getDistance();
-  //     return Math.floor(distance / this.difficultyStep) + 1;
-  //   });
-  // }
-
-  public initialize(
-    obstacleManager: ObstacleManager,
-    coinManager: CoinManager,
-    boosterManager: BoosterManager,
-    bulletItemManager: BulletItemManager,
-  ) {
+  public initialize(scene: THREE.Scene, obstacleManager: ObstacleManager) {
+    this.scene = scene;
     this.obstacleManager = obstacleManager;
-    this.coinManager = coinManager;
-    this.boosterManager = boosterManager;
-    this.bulletItemManager = bulletItemManager;
+
+    this.coinManager = CoinManager.getInstance();
+    this.boosterManager = BoosterManager.getInstance();
+    this.destructionManager = DestructionManager.getInstance();
+    this.magnetSystem.initialize(scene);
+
     this.segmentQueue = new SegmentQueue(() => {
       const distance = useProgressStore().getDistance();
       return Math.floor(distance / this.difficultyStep) + 1;
     });
   }
 
-  public update(deltaTime: number, speed: number, mode: UpdateMode) {
-    // obstacles / jumps
-    const distance = useProgressStore().getDistance();
+  public update(car: Car, deltaTime: number, speed: number, mode: UpdateMode) {
+    this.prePhysics(deltaTime, speed);
+    this.updatePhysics(car, deltaTime, speed);
 
-    if (distance - this.distanceSinceLastSegment >= this.segmentLength) {
-      this.spawnSegment(deltaTime, speed, this.nextSegmentZ);
-      this.nextSegmentZ -= this.segmentLength;
-      this.distanceSinceLastSegment = distance;
-    }
+    if (mode === UpdateMode.Destruction) return;
 
+    this.updatePlayerEffects(deltaTime);
+  }
+
+  private prePhysics(deltaTime: number, speed: number) {
+    this.ensureWorldFilled(deltaTime, speed);
+  }
+
+  private updatePhysics(car: Car, deltaTime: number, speed: number) {
     this.obstacleManager.update(deltaTime, speed);
-    this.coinManager.update(deltaTime, speed);
-    this.boosterManager.update(deltaTime, speed);
-    this.bulletItemManager.update(deltaTime, speed);
+    const items = this.getItems();
 
-    if (mode === UpdateMode.Destruction) {
-      return; // ⛔ стоп спавн, таймеры, геймплей
-    }
+    // update magnet
+    this.magnetSystem.applyMagnet(car, items, usePlayerStore().magnetTypes);
+    this.magnetSystem.updateMagnetedItems(
+      car,
+      items.filter((item) => item.userData.status === "magnetized"),
+      deltaTime,
+      performance.now(),
+    );
+
+    // update destroyed
+    this.destructionManager.update(
+      items.filter((item) => item.userData.status === "flying"),
+      deltaTime,
+      speed,
+    );
+
+    // base physics
+    this.updateItems(
+      items.filter((item) => item.userData.status !== "magnetized"),
+      // items,
+      deltaTime,
+      speed,
+    );
+  }
+
+  private updatePlayerEffects(deltaTime: number) {
     const playerStore = usePlayerStore();
-
     if (playerStore.isNitroEnabled) {
-      this.boosterEnabledTimer += deltaTime;
+      this.nitroEnabledTimer += deltaTime;
       playerStore.nitroTimer -= deltaTime;
-    }
 
-    if (this.boosterEnabledTimer >= this.boosterEnabledInterval) {
-      CarManager.getInstance().disableNitro();
-      playerStore.disableNitro();
-      this.boosterEnabledTimer = 0;
+      if (this.nitroEnabledTimer >= usePlayerStore().BASE_NITRO_TIMER) {
+        CarManager.getInstance().disableNitro();
+        playerStore.disableNitro();
+        this.nitroEnabledTimer = 0;
+      }
+    }
+    if (playerStore.isMagnetEnabled) {
+      this.magnetEnabledTimer += deltaTime;
+      playerStore.magnetTimer -= deltaTime;
+
+      if (this.magnetEnabledTimer >= usePlayerStore().BASE_MAGNET_TIMER) {
+        playerStore.disableMagnet();
+        this.magnetEnabledTimer = 0;
+      }
+    }
+  }
+
+  private ensureWorldFilled(deltaTime: number, speed: number) {
+    // 🚫 защита от спама за кадр
+    const MAX_SPAWNS_PER_FRAME = 1;
+    let spawned = 0;
+
+    const minZ = useCommonStore().BASE_SEGMENTS_ZPOS * 1.2;
+
+    this.worldFrontZ += speed * deltaTime;
+
+    while (this.worldFrontZ > minZ && spawned < MAX_SPAWNS_PER_FRAME) {
+      // console.log("this.worldFrontZ", this.worldFrontZ);
+      const length = this.spawnSegment(deltaTime, speed, this.worldFrontZ);
+      this.worldFrontZ = this.worldFrontZ - length;
+      spawned++;
     }
   }
 
   public spawnSegment(dt: number, speed: number, baseZ: number) {
     const segment = this.segmentQueue.getNext();
+    const isReversed = segment.canReversed ? Math.random() < 0.5 : false;
 
-    const rowSpacing = 4;
-    const isReversed = Math.random() < 0.5;
+    const commonStore = useCommonStore();
+
+    const baseMultiplier = 30;
+    // const baseMultiplier = 20;
+
+    const segmentRowLength =
+      commonStore.SEGMENT_ROW_BODY_LENGTH +
+      commonStore.SEGMENT_ROW_SPACING_LENGTH *
+        ((baseMultiplier * speed) / usePlayerStore().maxSpeed);
+
+    // console.log("segmentRowLength", segmentRowLength);
 
     segment.pattern.forEach((row, rowIndex) => {
-      const z = baseZ - rowIndex * rowSpacing;
+      const z = baseZ - rowIndex * segmentRowLength;
       let row_ = [...row];
 
       if (isReversed) {
@@ -120,78 +166,172 @@ export class InteractiveItemsManager {
       row_.forEach((value, lane) => {
         switch (value) {
           case LanePattern.Obstacle:
-            this.obstacleManager.spawnStaticObstacle(lane, z);
+            this.obstacleManager.spawnStaticObstacle(lane, z, 2);
             break;
-
+          case LanePattern.Obstacle1:
+            this.obstacleManager.spawnStaticObstacle(lane, z, 0);
+            break;
+          case LanePattern.Obstacle2:
+            this.obstacleManager.spawnStaticObstacle(lane, z, 1);
+            break;
+          case LanePattern.Obstacle3:
+            this.obstacleManager.spawnStaticObstacle(lane, z, 2);
+            break;
           case LanePattern.Jump:
+            this.spawnJump(lane, dt, speed, z);
+            break;
+          case LanePattern.JumpCoins:
+            if (
+              usePlayerStore().isNitroEnabled &&
+              usePlayerStore().nitroTimer < Math.abs(z / speed)
+            ) {
+              this.spawnJumpWithCoins(
+                lane,
+                dt,
+                speed / usePlayerStore().NITRO_MULTIPLIER,
+                z,
+              );
+              break;
+            }
             this.spawnJumpWithCoins(lane, dt, speed, z);
             break;
-
           case LanePattern.Coin:
-            this.spawnSingleCoin(lane, z);
+            this.spawnSingleCoin(z, lane);
             break;
-
+          case LanePattern.Energon:
+            this.spawnEnergonCoin(z, lane);
+            break;
           case LanePattern.CoinLine:
-            this.spawnCoinLine(lane, z);
+            this.spawnCoinLine(z, lane);
             break;
-
           case LanePattern.Booster:
-            this.spawnBooster(lane, z);
+            this.spawnBooster(z, lane);
             break;
-
+          case LanePattern.Nitro:
+            this.spawnNitroBooster(z, lane);
+            break;
+          case LanePattern.Shield:
+            this.spawnShieldBooster(z, lane);
+            break;
+          case LanePattern.Magnet:
+            this.spawnMagnetBooster(z, lane);
+            break;
           case LanePattern.BulletItem:
-            this.spawnBulletItem(lane, z);
+            this.spawnBulletItem(z, lane);
             break;
-
           case LanePattern.MovingObstacle:
-            this.obstacleManager.spawnMovingObstacle(lane, 1);
+            this.obstacleManager.spawnMovingObstacle(lane, z, 1, 0);
             break;
-
           case LanePattern.EnemyCar:
             this.obstacleManager.spawnEnemyCar(lane, z);
             break;
         }
       });
     });
+
+    return segment.pattern.length * segmentRowLength;
   }
 
-  public spawnSingleCoin(lane: number, baseZ: number) {
-    if (Math.random() < this.DIAMOND_SPAWN_PROBABILITY) {
-      this.coinManager.spawnDiamond(lane, baseZ);
-    } else {
-      this.coinManager.spawnGold(lane, baseZ);
-    };
+  // спавн объектов
+  public spawnSingleCoin(baseZ: number, laneIndex?: number, posX?: number) {
+    const item = this.coinManager.spawnRandom(
+      baseZ,
+      laneIndex,
+      posX,
+    ) as BaseItem;
+    if (item) {
+      this.addItem(item);
+      return item;
+    }
+    return null;
   }
 
-  public spawnDiamondCoin(lane: number, baseZ: number) {
-    this.coinManager.spawnDiamond(lane, baseZ);
-  }
-  public spawnGoldCoin(lane: number, baseZ: number) {
-    this.coinManager.spawnGold(lane, baseZ);
+  public spawnEnergonCoin(baseZ: number, laneIndex?: number, xPos?: number) {
+    const item = this.coinManager.spawnEnergon(
+      baseZ,
+      laneIndex,
+      xPos,
+    ) as BaseItem;
+    if (item) {
+      this.addItem(item);
+      return item;
+    }
+    return null;
   }
 
-  public spawnCoinLine(lane: number, baseZ: number) {
-    for (let i = 0; i < 5; i++) {
-      this.coinManager.spawnGold(lane, baseZ - i * 4);
+  public spawnGoldenCoin(baseZ: number, laneIndex?: number, xPos?: number) {
+    const item = this.coinManager.spawnGolden(
+      baseZ,
+      laneIndex,
+      xPos,
+    ) as BaseItem;
+    if (item) {
+      this.addItem(item);
+      return item;
+    }
+    return null;
+  }
+
+  public spawnCoinLine(
+    baseZ: number,
+    laneIndex: number,
+    count: number = 5,
+    spacing: number = 4,
+  ) {
+    for (let i = 0; i < count; i++) {
+      const item = this.coinManager.spawnGolden(
+        baseZ - i * spacing,
+        laneIndex,
+      ) as BaseItem;
+      if (item) {
+        this.addItem(item);
+      }
     }
   }
 
-  public spawnBooster(lane: number, baseZ: number) {
-    if (Math.random() < this.NITRO_SPAWN_PROBABILITY) {
-      this.boosterManager.spawnNitro(lane, baseZ);
-    } else {
-      this.boosterManager.spawnShield(lane, baseZ);
-    };
-  }
-  public spawnNitroBooster(lane: number, baseZ: number) {
-    this.boosterManager.spawnNitro(lane, baseZ);
-  }
-  public spawnShieldBooster(lane: number, baseZ: number) {
-    this.boosterManager.spawnShield(lane, baseZ);
+  public spawnBooster(baseZ: number, laneIndex?: number, xPos?: number) {
+    const item = this.boosterManager.spawnRandom(baseZ, laneIndex, xPos);
+    if (item) {
+      this.addItem(item);
+      return item;
+    }
+    return null;
   }
 
-  public spawnBulletItem(lane: number, baseZ: number) {
-    this.bulletItemManager.spawnBullet(lane, baseZ);
+  public spawnNitroBooster(baseZ: number, laneIndex?: number, xPos?: number) {
+    const item = this.boosterManager.spawnNitro(baseZ, laneIndex, xPos);
+    if (item) {
+      this.addItem(item);
+      return item;
+    }
+    return null;
+  }
+
+  public spawnMagnetBooster(baseZ: number, laneIndex?: number, xPos?: number) {
+    const item = this.boosterManager.spawnMagnet(baseZ, laneIndex, xPos);
+    if (item) {
+      this.addItem(item);
+      return item;
+    }
+    return null;
+  }
+
+  public spawnShieldBooster(baseZ: number, laneIndex?: number, xPos?: number) {
+    const item = this.boosterManager.spawnShield(baseZ, laneIndex, xPos);
+    if (item) {
+      this.addItem(item);
+      return item;
+    }
+    return null;
+  }
+
+  public spawnBulletItem(baseZ: number, laneIndex?: number, xPos?: number) {
+    const item = this.boosterManager.spawnBullet(baseZ, laneIndex, xPos);
+    if (item) {
+      this.addItem(item);
+      return item;
+    }
+    return null;
   }
 
   public spawnJumpWithCoins(
@@ -205,19 +345,37 @@ export class InteractiveItemsManager {
 
     const trajectory = simulateJumpTrajectory({
       startY: 0.5, // высота машины при прыжке
-      jumpHeight: DEFAULT_CAR_CONFIG.jumpHeight,
-      gravity: DEFAULT_CAR_CONFIG.gravity,
+      jumpHeight: usePlayerStore().JUMP_HEIGHT,
+      gravity: useCommonStore().GRAVITY,
       deltaTime: deltaTime,
       forwardSpeed: speed,
     });
 
     const step = Math.max(1, Math.floor(trajectory.length / 10)); // больше монет
+    let item: BaseItem | null = null;
     for (let i = 0; i < trajectory.length; i += step) {
       const point = trajectory[i];
       if (point === undefined) continue;
       const coinZ = jumpZ + point.zOffset + 1;
-      this.coinManager.spawnGold(lane, coinZ, point.y, 5);
+      item = this.coinManager.spawnGolden(
+        coinZ,
+        lane,
+        undefined,
+        point.y,
+      ) as BaseItem;
+
+      if (item) this.addItem(item);
     }
+  }
+
+  public spawnJump(
+    lane: number,
+    deltaTime: number,
+    speed: number,
+    baseZ: number,
+  ) {
+    const jumpZ = baseZ + this.getJumpDistance(deltaTime, speed);
+    this.obstacleManager.spawnJump(lane, jumpZ);
   }
 
   private getJumpDistance(deltaTime: number, speed: number): number {
@@ -228,30 +386,54 @@ export class InteractiveItemsManager {
   }
 
   // прокси
-  public getObstacles() {
+  public getObstacles(): BaseObstacle[] {
     return this.obstacleManager.getObstacles();
   }
 
-  public getJumps() {
-    return this.obstacleManager.getJumps();
-  }
-
-  public getBoosters() {
-    return this.boosterManager.getBoosters();
-  }
-
-  public getBulletItems() {
-    return this.bulletItemManager.getBullets();
+  public getItems(): BaseItem[] {
+    return this.items;
   }
 
   public reset() {
     this.obstacleManager.reset();
-    this.coinManager.reset();
-    this.boosterManager.reset();
-    this.bulletItemManager.reset();
+
+    this.items.forEach((item) => {
+      if (item.userData.magnetLine) this.scene.remove(item.userData.magnetLine);
+
+      this.scene.remove(item);
+    });
+    this.items = [];
+
     this.segmentQueue.reset();
-    this.distanceSinceLastSegment = 0;
-    this.nextSegmentZ = -60;
-    this.boosterEnabledTimer = 0;
+
+    this.worldFrontZ = useCommonStore().BASE_SEGMENTS_ZPOS;
+    this.nitroEnabledTimer = 0;
+    this.magnetEnabledTimer = 0;
+  }
+
+  public addItem(item: BaseItem) {
+    this.items.push(item);
+    this.scene.add(item);
+  }
+
+  public removeItem(item: BaseItem) {
+    const index = this.items.indexOf(item);
+    if (index !== -1) {
+      this.items.splice(index, 1);
+    }
+
+    const line = item.userData.magnetLine;
+    if (line) this.scene.remove(line);
+
+    this.scene.remove(item);
+  }
+
+  public updateItems(items: BaseItem[], deltaTime: number, speed: number) {
+    for (let i = items.length - 1; i >= 0; i--) {
+      const item = items[i];
+      if (item.update(deltaTime, speed)) {
+        this.removeItem(item);
+      }
+    }
   }
 }

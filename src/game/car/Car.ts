@@ -1,17 +1,14 @@
 import * as THREE from "three";
 import { cameraTarget } from "@/game/camera/cameraTarget.js";
-import { RoadManager } from "../road/RoadManager.js";
+import { RoadManager } from "@/game/environment/road";
 import { type CarState, type CarConfig } from "./types";
-import {
-  CAR_EMISSION_CONFIG_EXTRA,
-  CAR_MATERIAL_CONFIG_EXTRA,
-  DEFAULT_CAR_CONFIG,
-} from "./config";
 import { CarCollider } from "./CarCollider";
 import { CarCubesBuilder } from "./CarCubesBuilder";
-import { CarPhysics } from "./CarPhysics";
 import { useGameState } from "@/store/gameState.js";
 import { CarVisualState, type CarVisualEffect } from "./CarVisualState";
+import { usePlayerStore } from "@/store/playerStore.js";
+import { CarPhysics } from "./CarPhysics.js";
+import { FlashEffectManager } from "../effects/FlashEffectManager.js";
 
 export class Car extends THREE.Group {
   private scene: THREE.Scene;
@@ -29,7 +26,10 @@ export class Car extends THREE.Group {
     super();
     this.scene = scene;
 
-    this.config = { ...DEFAULT_CAR_CONFIG, ...config };
+    this.config = {
+      ...usePlayerStore().getDefaultCarConfig(),
+      ...config,
+    };
     this.currentLane = this.config.startLane;
 
     this.state = {
@@ -46,12 +46,12 @@ export class Car extends THREE.Group {
       yOffset: this.config.colliderYOffset,
       heightFactor: this.config.colliderHeightFactor,
     });
-    // this.collider.createDebugCollider(scene);
 
     this.builder = new CarCubesBuilder();
     this.physics = new CarPhysics(this.config);
 
     this.position.copy(this.config.startPosition);
+    this.castShadow = true;
     this.scene = scene;
     this.scene.add(this);
 
@@ -99,7 +99,7 @@ export class Car extends THREE.Group {
   // Обновление
   public update(dt: number): void {
     if (this.state.isDestroyed) {
-      this.physics.updateDestroyedCubes(this.cubes, this.scene);
+      this.physics.updateDestroyedCubes(this.cubes, this.scene, dt);
       return;
     }
 
@@ -126,12 +126,18 @@ export class Car extends THREE.Group {
 
     // Обновляем прыжок
     const jumpResult = this.physics.updateJump(this.position.y, dt);
+
+    if (jumpResult.hasLanded)
+      FlashEffectManager.getInstance().spawnLandingWave(this.position);
+
     this.position.y = jumpResult.newY;
     this.state.isJumping = jumpResult.isJumping;
-    this.rotation.x += (jumpResult.pitch - this.rotation.x) * 0.2;
+    this.rotation.x += (jumpResult.pitch - this.rotation.x) * 0.05;
 
     // Обновляем коллайдер
-    this.collider.updateFromObject(this);
+    if (this.cubes.length > 0) {
+      this.collider.updateFromCubes(this.cubes);
+    }
 
     if (useGameState().isDebug && !this.collider.debugMesh) {
       this.collider.enableDebug(this.scene);
@@ -168,18 +174,24 @@ export class Car extends THREE.Group {
     this.state.cubes = this.cubes;
     this.visualState = new CarVisualState(this.cubes);
 
-    this.visualState.preloadTextures(CAR_MATERIAL_CONFIG_EXTRA);
-    Object.entries(CAR_EMISSION_CONFIG_EXTRA).forEach(([k, v]) => {
-      if (k !== "default") {
-        this.visualState?.setEmissiveColor(k as any, v);
-      }
-    });
+    this.visualState.preloadTextures(
+      usePlayerStore().CAR_MATERIAL_CONFIG_EXTRA,
+    );
+    Object.entries(usePlayerStore().CAR_EMISSION_CONFIG_EXTRA).forEach(
+      ([k, v]) => {
+        if (k !== "default") {
+          this.visualState?.setEmissiveColor(k as any, v);
+        }
+      },
+    );
 
     // Добавляем камеру обратно
     this.add(cameraTarget);
 
     // Обновляем коллайдер
-    this.collider.updateFromObject(this);
+    if (this.cubes.length > 0) {
+      this.collider.updateFromCubes(this.cubes);
+    }
   }
 
   // Разрушение
@@ -310,5 +322,19 @@ export class Car extends THREE.Group {
     setTimeout(() => {
       this.visualState?.disable("damage" as CarVisualEffect);
     }, 400);
+  }
+
+  public getShieldSourceMeshes(): THREE.Mesh[] {
+    const meshes: THREE.Mesh[] = [];
+
+    for (const cube of this.cubes) {
+      cube.traverse((obj) => {
+        if (obj instanceof THREE.Mesh) {
+          meshes.push(obj);
+        }
+      });
+    }
+
+    return meshes;
   }
 }

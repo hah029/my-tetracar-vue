@@ -1,6 +1,5 @@
 import * as THREE from "three";
 
-
 export interface CarState {
   isJumping: boolean;
   jumpVelocity: number;
@@ -27,15 +26,15 @@ export interface CarConfig {
 
   // Прыжки
   jumpHeight?: number;
-  jumpDuration?: number;
-  gravity?: number;
+  // jumpDuration?: number;
+  // gravity?: number;
 
-  // Разрушение
-  explosionForce?: number;
-  explosionUpward?: number;
-  cubeRotationSpeed?: number;
-  cubeGravity?: number;
-  removalHeight?: number;
+  // // Разрушение
+  // explosionForce?: number;
+  // explosionUpward?: number;
+  // cubeRotationSpeed?: number;
+  // cubeGravity?: number;
+  // removalHeight?: number;
 }
 
 export interface CarStats {
@@ -44,4 +43,13 @@ export interface CarStats {
   isDestroyed: boolean;
   isJumping: boolean;
   cubesCount: number;
+}
+
+// Интерфейс для реактивной ссылки car
+export interface CarRef {
+  mesh: THREE.Group;
+  targetX: number;
+  isDestroyed: boolean;
+  isJumping: boolean;
+  cubes: THREE.Object3D[];
 }

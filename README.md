@@ -37,9 +37,11 @@ src/
 - sfx_1 - 1
 - sfx_start - старт!
 <!--  -->
-- sfx_add_patron - звук поднятия монетки
-- sfx_change_mode - ???
+- sfx_add_golden - поимка голдена
+- sfx_add_energon - поимка энергона
 - sfx_click - звук смены полосы
 - sfx_destroy_bot - уничтожение бота (другой машинки) или препятствия
-- sfx_inc_100_progress - ???
 - sfx_shot - звук выстрела
+- sfx_add_patron - поимка патрона
+- sfx_add_armor - поимка брони
+- sfx_new_record - достижение рекорда

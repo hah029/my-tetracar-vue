@@ -8,7 +8,6 @@
     }
 }
 
-
 // #region - блок анимаций логотипа
     // анимации появления / исчезновения всего контейнера с логотипом игры
     .game_logo_whole_menu_showing-enter-active {
@@ -82,7 +81,6 @@
     }
 // #endregion
 
-
 // #region - блок анимаций кнопок Главного меню
     .buttons_group_showing-enter-active {
         animation: slideIn 0.5s cubic-bezier(0.25, 0.1, 0.25, 1) backwards;
@@ -122,5 +120,23 @@
     }
     .header_footer_block_anim-leave-active {
         animation: slideOut 0.5s cubic-bezier(0.25, 0.1, 0.25, 1) forwards;
+    }
+// #endregion
+
+// #region - блок анимаций HUD
+    .notification_anim-enter-active,
+    .notification_anim-leave-active {
+        transition: all 0.5s cubic-bezier(0.25, 0.1, 0.25, 1);
+    }
+    .notification_anim-enter-from {
+        opacity: 0;
+        transform: translateY(-20px);
+    }
+    .notification_anim-leave-to {
+        opacity: 0;
+        transform: translateY(-20px);
+    }
+    .notification_anim-move {
+        transition: transform 0.5s ease;
     }
 // #endregion

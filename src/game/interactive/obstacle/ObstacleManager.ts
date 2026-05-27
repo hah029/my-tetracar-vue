@@ -1,13 +1,14 @@
 import * as THREE from "three";
-import { CAR_CUBES_CONFIG } from "@/game/car";
-import { RoadManager } from "@/game/road/RoadManager";
+import { RoadManager } from "@/game/environment/road";
 
-import { OBSTACLE_FORMS } from "./config/ObstacleCubesConfig";
 import { BaseObstacle } from "./BaseObstacle";
 import { MovingObstacle } from "./MovingObstacle";
 import { StaticObstacle } from "./StaticObstacle";
 import { EnemyCar } from "./EnemyCar";
 import { Jump } from "./Jump";
+import { useCommonStore } from "@/store/commonStore";
+import { usePlayerStore } from "@/store/playerStore";
+import { TEXTURES } from "@/assets/textures";
 
 export class ObstacleManager {
   private static instance: ObstacleManager | null = null;
@@ -30,38 +31,55 @@ export class ObstacleManager {
 
   public spawnStaticObstacle(
     lane: number,
-    z = -60,
+    z = useCommonStore().BASE_SEGMENTS_ZPOS,
     formIndex?: number,
   ): StaticObstacle | null {
     const index =
       formIndex !== undefined ? formIndex : this.getRandomObstacleIndex();
-    const form = OBSTACLE_FORMS[index];
-    if (!form) {
+
+    let obstacle: StaticObstacle;
+
+    const formBase = useCommonStore().OPTIMIZED_OBSTACLE_FORMS[index];
+    if (!formBase) {
       return null;
     }
-    const obstacle = new StaticObstacle(lane, z, form, this.scene, this.useGLB);
+    const formDetailed = useCommonStore().FULL_OBSTACLE_FORMS[index];
+    obstacle = new StaticObstacle(
+      lane,
+      z,
+      formBase,
+      this.scene,
+      this.useGLB,
+      undefined,
+      formDetailed,
+      { textureUrl: TEXTURES.cube.obstacle3x3 },
+    );
+
     this.obstacles.push(obstacle);
     this.scene.add(obstacle);
     return obstacle;
   }
 
   private getRandomObstacleIndex(): number {
-    return Math.floor(Math.random() * OBSTACLE_FORMS.length);
+    return Math.floor(
+      Math.random() * useCommonStore().OPTIMIZED_OBSTACLE_FORMS.length,
+    );
   }
 
   public spawnMovingObstacle(
     startLane: number,
-    width: number,
-    z = -60,
+    z = useCommonStore().BASE_SEGMENTS_ZPOS,
+    width = 1,
     formIndex?: number,
   ) {
     const lanes = RoadManager.getInstance().getLanesCount();
     const index =
       formIndex !== undefined ? formIndex : this.getRandomObstacleIndex();
-    const form = OBSTACLE_FORMS[index];
+    const form = useCommonStore().OPTIMIZED_OBSTACLE_FORMS[index];
     if (!form) {
       return;
     }
+
     const obstacle = new MovingObstacle(
       startLane,
       width,
@@ -69,21 +87,35 @@ export class ObstacleManager {
       lanes,
       this.scene,
       this.useGLB,
+      Math.random() > 0.5 ? 1 : -1, // direction
       form,
+      { textureUrl: TEXTURES.cube.obstacle3x3 },
     );
 
     this.scene.add(obstacle);
     this.obstacles.push(obstacle);
   }
 
-  public spawnEnemyCar(lane: number, z = -60) {
-    const form = CAR_CUBES_CONFIG;
-    const obstacle = new EnemyCar(lane, z, form, this.scene, true);
+  public spawnEnemyCar(lane: number, z = useCommonStore().BASE_SEGMENTS_ZPOS) {
+    const form = usePlayerStore().CAR_CUBES_CONFIG;
+    const obstacle = new EnemyCar(
+      lane,
+      z,
+      form,
+      this.scene,
+      true,
+      undefined,
+      undefined,
+      { textureUrl: TEXTURES.cube.base },
+    );
     this.scene.add(obstacle);
     this.obstacles.push(obstacle);
   }
 
-  public spawnJump(lane: number, z = -60): Jump | null {
+  public spawnJump(
+    lane: number,
+    z = useCommonStore().BASE_SEGMENTS_ZPOS,
+  ): Jump | null {
     const jump = new Jump(lane, this.scene, z);
     this.jumps.push(jump);
     return jump;
@@ -111,6 +143,10 @@ export class ObstacleManager {
 
   public getObstacles() {
     return this.obstacles;
+  }
+
+  public getObstaclesCount() {
+    return this.obstacles.length;
   }
 
   public getJumps() {

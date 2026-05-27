@@ -1,6 +1,6 @@
 import { SEGMENTS } from "./SegmentLibrary";
 import type { Segment } from "./Segment";
-import { SegmentTypes } from "../types/SegmentType";
+// import { SegmentTypes } from "../types/SegmentType";
 import { LanePattern } from "../types/LanePattern";
 
 export class SegmentGenerator {
@@ -20,48 +20,48 @@ export class SegmentGenerator {
       pool = available;
     }
 
-    const last = this.history[this.history.length - 1];
+    // const last = this.history[this.history.length - 1];
 
-    if (last) {
-      // 3️⃣ не повторяем один и тот же тип подряд
-      const noSameType = pool.filter((s) => s.type !== last.type);
+    // if (last) {
+    //   // 3️⃣ не повторяем один и тот же тип подряд
+    //   const noSameType = pool.filter((s) => s.type !== last.type);
 
-      if (noSameType.length > 0) {
-        pool = noSameType;
-      }
+    //   if (noSameType.length > 0) {
+    //     pool = noSameType;
+    //   }
 
-      // 4️⃣ после challenge даём отдых
-      if (last.type === SegmentTypes.Challenge) {
-        const restPool = pool.filter(
-          (s) =>
-            s.type === SegmentTypes.Safe ||
-            s.type === SegmentTypes.Coins ||
-            s.type === SegmentTypes.Boost,
-        );
+    //   // 4️⃣ после challenge даём отдых
+    //   if (last.type === SegmentTypes.Challenge) {
+    //     const restPool = pool.filter(
+    //       (s) =>
+    //         s.type === SegmentTypes.Safe ||
+    //         s.type === SegmentTypes.Coins ||
+    //         s.type === SegmentTypes.Boost,
+    //     );
 
-        if (restPool.length > 0) {
-          pool = restPool;
-        }
-      }
+    //     if (restPool.length > 0) {
+    //       pool = restPool;
+    //     }
+    //   }
 
-      // 5️⃣ после jump не даём jump
-      if (last.type === SegmentTypes.Jump) {
-        const noJump = pool.filter((s) => s.type !== SegmentTypes.Jump);
+    //   // 5️⃣ после jump не даём jump
+    //   if (last.type === SegmentTypes.Jump) {
+    //     const noJump = pool.filter((s) => s.type !== SegmentTypes.Jump);
 
-        if (noJump.length > 0) {
-          pool = noJump;
-        }
-      }
-    }
+    //     if (noJump.length > 0) {
+    //       pool = noJump;
+    //     }
+    //   }
+    // }
 
-    // 6️⃣ убираем недавние сегменты (anti-repeat)
-    const notRecent = pool.filter(
-      (s) => !this.history.some((h) => h.id === s.id),
-    );
+    // // 6️⃣ убираем недавние сегменты (anti-repeat)
+    // const notRecent = pool.filter(
+    //   (s) => !this.history.some((h) => h.id === s.id),
+    // );
 
-    if (notRecent.length > 0) {
-      pool = notRecent;
-    }
+    // if (notRecent.length > 0) {
+    //   pool = notRecent;
+    // }
 
     // 7️⃣ выбираем случайный
     const segment = this.weightedRandom(pool);
@@ -82,13 +82,15 @@ export class SegmentGenerator {
     return row.some(
       (cell) =>
         cell === LanePattern.Empty ||
+        // cell === LanePattern.Jump ||
         cell === LanePattern.Coin ||
         cell === LanePattern.CoinLine,
     );
   }
 
   static isSegmentPlayable(pattern: LanePattern[][]): boolean {
-    return pattern.every((row) => SegmentGenerator.hasSafeLane(row));
+    return true;
+    // return pattern.every((row) => SegmentGenerator.hasSafeLane(row));
   }
 
   private static weightedRandom(pool: Segment[]): Segment {

@@ -1,0 +1,88 @@
+{"frames": [
+
+{
+	"filename": "building",
+	"frame": {"x":4,"y":4,"w":245,"h":245},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":245,"h":245},
+	"sourceSize": {"w":245,"h":245}
+},
+{
+	"filename": "cube_armor",
+	"frame": {"x":255,"y":4,"w":64,"h":64},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":64,"h":64},
+	"sourceSize": {"w":64,"h":64}
+},
+{
+	"filename": "cube_base",
+	"frame": {"x":325,"y":4,"w":64,"h":64},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":64,"h":64},
+	"sourceSize": {"w":64,"h":64}
+},
+{
+	"filename": "cube_bullet",
+	"frame": {"x":395,"y":4,"w":64,"h":64},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":64,"h":64},
+	"sourceSize": {"w":64,"h":64}
+},
+{
+	"filename": "cube_energon",
+	"frame": {"x":255,"y":74,"w":64,"h":64},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":64,"h":64},
+	"sourceSize": {"w":64,"h":64}
+},
+{
+	"filename": "cube_gold",
+	"frame": {"x":325,"y":74,"w":64,"h":64},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":64,"h":64},
+	"sourceSize": {"w":64,"h":64}
+},
+{
+	"filename": "cube_magnet",
+	"frame": {"x":395,"y":74,"w":64,"h":64},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":64,"h":64},
+	"sourceSize": {"w":64,"h":64}
+},
+{
+	"filename": "cube_nitro",
+	"frame": {"x":255,"y":144,"w":64,"h":64},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":64,"h":64},
+	"sourceSize": {"w":64,"h":64}
+},
+{
+	"filename": "cube_obstacle_3x",
+	"frame": {"x":4,"y":255,"w":245,"h":245},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":245,"h":245},
+	"sourceSize": {"w":245,"h":245}
+},
+{
+	"filename": "road_tile",
+	"frame": {"x":465,"y":4,"w":32,"h":32},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":32,"h":32},
+	"sourceSize": {"w":32,"h":32}
+}],
+"meta": {
+	"image": "tetrocar_atlas_test.png",
+	"size": {"w":512,"h":512},
+	"scale": "1"
+}
+}

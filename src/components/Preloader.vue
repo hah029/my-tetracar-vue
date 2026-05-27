@@ -32,7 +32,7 @@
 
         // переходим в главное меню
         setTimeout(() => {
-            gameState.isFirstGame = false;
+            gameState.isPreloaderShown = false;
             gameState.setState(GameStates.Menu);
         }, 500);
     };

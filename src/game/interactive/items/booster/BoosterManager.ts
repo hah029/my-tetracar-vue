@@ -1,13 +1,12 @@
-import * as THREE from "three";
-import { Nitro } from "./Nitro";
-import { Shield } from "./Shield";
-import { Car } from "@/game/car/Car";
-import type { BaseItem } from "../BaseItem";
+import { NitroItem } from "./NitroItem";
+import { ShieldItem } from "./ShieldItem";
+import { MagnetItem } from "./MagnetItem";
+import { BulletItem } from "./BulletItem";
+import { makeWeightedChoice } from "@/helpers/functions";
+import { useCommonStore } from "@/store/commonStore";
 
 export class BoosterManager {
   private static instance: BoosterManager | null = null;
-  private boosters: BaseItem[] = [];
-  private scene!: THREE.Scene;
 
   public static getInstance(): BoosterManager {
     if (!BoosterManager.instance) {
@@ -16,96 +15,67 @@ export class BoosterManager {
     return BoosterManager.instance;
   }
 
-  public initialize(scene: THREE.Scene) {
-    this.scene = scene;
-  }
-
   /* =======================
      SPAWN
      ======================= */
 
-  public spawnNitro(laneIndex: number, zPos: number, yPos: number = 0.2): void {
-    const booster = new Nitro(laneIndex, zPos, yPos);
-    this.boosters.push(booster);
-    this.scene.add(booster);
+  public spawnRandom(
+    zPos: number,
+    laneIndex?: number,
+    xPos?: number,
+    yPos?: number,
+  ) {
+    let choice = makeWeightedChoice(
+      useCommonStore().BOOSTER_SPAWN_PROBABILITIES,
+    );
+
+    switch (choice) {
+      case "nitro":
+        return this.spawnNitro(zPos, laneIndex, xPos, yPos);
+      case "shield":
+        return this.spawnShield(zPos, laneIndex, xPos, yPos);
+      case "magnet":
+        return this.spawnMagnet(zPos, laneIndex, xPos, yPos);
+      case "bullet":
+        return this.spawnBullet(zPos, laneIndex, xPos, yPos);
+      default:
+        return this.spawnShield(zPos, laneIndex, xPos, yPos);
+    }
+  }
+
+  public spawnNitro(
+    zPos: number,
+    laneIndex?: number,
+    xPos?: number,
+    yPos?: number,
+  ) {
+    return new NitroItem(zPos, laneIndex, xPos, yPos);
+  }
+
+  public spawnMagnet(
+    zPos: number,
+    laneIndex?: number,
+    xPos?: number,
+    yPos?: number,
+  ) {
+    return new MagnetItem(zPos, laneIndex, xPos, yPos);
   }
 
   public spawnShield(
-    laneIndex: number,
     zPos: number,
-    yPos: number = 0.2,
-  ): void {
-    const booster = new Shield(laneIndex, zPos, yPos);
-    this.boosters.push(booster);
-    this.scene.add(booster);
+    laneIndex?: number,
+    xPos?: number,
+    yPos?: number,
+  ) {
+    return new ShieldItem(zPos, laneIndex, xPos, yPos);
   }
 
-  /* =======================
-     UPDATE
-     ======================= */
-
-  public update(deltaTime: number, speed: number): void {
-    for (let i = this.boosters.length - 1; i >= 0; i--) {
-      const booster = this.boosters[i];
-      if (booster === undefined) continue;
-      if (booster.update(deltaTime, speed)) {
-        this.removeBooster(i);
-      }
-    }
-  }
-
-  /* =======================
-     COLLISION
-     ======================= */
-
-  /**
-   * Проверка подбора нитро-буста машиной
-   * @returns флаг подбора буста для изменения состояния машины
-   */
-  public checkCarCollision(car: Car) {
-    const carCollider = car.getCollider();
-
-    let collisions = {
-      collision: false,
-      subject: "",
-    };
-
-    // Проверка коллизии с бустером
-    for (let i = this.boosters.length - 1; i >= 0; i--) {
-      const booster = this.boosters[i];
-      if (booster === undefined) continue;
-
-      if (carCollider.intersectsSphere(booster.collider)) {
-        collisions["subject"] = booster.itemType;
-        collisions["collision"] = true;
-        this.removeBooster(i);
-      }
-    }
-
-    return collisions;
-  }
-
-  /* =======================
-     HELPERS
-     ======================= */
-
-  private removeBooster(index: number): void {
-    const booster = this.boosters[index];
-    if (booster === undefined) return;
-    this.scene.remove(booster);
-    this.boosters.splice(index, 1);
-  }
-
-  /* =======================
-     RESET / GETTERS
-     ======================= */
-
-  public reset(): void {
-    this.boosters.forEach((coin) => this.scene.remove(coin));
-    this.boosters = [];
-  }
-
-  public getBoosters(): Nitro[] {
-    return this.boosters;
+  public spawnBullet(
+    zPos: number,
+    laneIndex?: number,
+    xPos?: number,
+    yPos?: number,
+  ) {
+    return new BulletItem(zPos, laneIndex, xPos, yPos);
   }
 }

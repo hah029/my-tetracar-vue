@@ -31,6 +31,10 @@
     import SettingsRoot from "./settings/SettingsRoot.vue";
     import LeaderBoardsRoot from "./leaderboards/LeaderBoardsRoot.vue";
 
+    import { useProgressStore } from "@/store/progressStore";
+
+    const progressStore = useProgressStore();
+
     const foo = createNewText();
 
     // подключаем store
@@ -72,6 +76,8 @@
 
     onMounted(() => {
         isMainMenuEnabled.value = true;
+
+        progressStore.restoreProgress();
     });
 </script>
 

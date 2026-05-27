@@ -3,22 +3,22 @@ import { defineStore } from "pinia";
 
 export const useCameraStore = defineStore("camera", () => {
   // Основные параметры камеры
-  const CAMERA_HEIGHT = 5;
-  const CAMERA_DISTANCE = 8;
-  const CAMERA_LOOKAHEAD = 10;
-  const CAMERA_FOLLOW_SPEED = 2.0;
+  const CAMERA_HEIGHT = 20;
+  const CAMERA_DISTANCE = 25;
+  const CAMERA_LOOKAHEAD = 20;
+  const CAMERA_FOLLOW_SPEED = 0.7;
 
   const CAMERA_INIT_POSITION_X = 0;
-  const CAMERA_INIT_POSITION_Y = 4;
-  const CAMERA_INIT_POSITION_Z = 5;
+  const CAMERA_INIT_POSITION_Y = 15;
+  const CAMERA_INIT_POSITION_Z = 20;
   const CAMERA_INIT_LOOKAT_X = 0;
   const CAMERA_INIT_LOOKAT_Y = 1;
   const CAMERA_INIT_LOOKAT_Z = -10;
 
   // FOV
   const FOV_MIN = 60;
-  const FOV_MAX = 80;
-  const FOV_FOLLOW_SPEED = 0.5;
+  const FOV_MAX = 100;
+  const FOV_FOLLOW_SPEED = 0.05;
   const FOV_CLAMP_MIN = 10;
   const FOV_CLAMP_MAX = 170;
 
@@ -29,7 +29,7 @@ export const useCameraStore = defineStore("camera", () => {
   const DISTANCE_REDUCTION_FACTOR = 0.8;
 
   // Смещение lookAt по Y
-  const LOOKAT_Y_OFFSET = 1;
+  const LOOKAT_Y_OFFSET = 2;
 
   // Параметры тряски (shake)
   const SHAKE_BASE_AMPLITUDE = 0.000001;
@@ -50,6 +50,9 @@ export const useCameraStore = defineStore("camera", () => {
   const DESTROYED_CAMERA_OFFSET_X = 0;
   const DESTROYED_CAMERA_OFFSET_Y = 3;
   const DESTROYED_CAMERA_OFFSET_Z = 8;
+
+  const IMPACT_DURATION = 50000;
+  const MAX_IMPACT_AMPLITUDE = 10000;
 
   return {
     CAMERA_HEIGHT,
@@ -84,5 +87,7 @@ export const useCameraStore = defineStore("camera", () => {
     CAMERA_INIT_LOOKAT_X,
     CAMERA_INIT_LOOKAT_Y,
     CAMERA_INIT_LOOKAT_Z,
+    IMPACT_DURATION,
+    MAX_IMPACT_AMPLITUDE,
   };
 });

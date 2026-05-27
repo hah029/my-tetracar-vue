@@ -26,7 +26,6 @@ export class SegmentQueue {
 
   private generate() {
     const segment = SegmentGenerator.getSegment(this.difficulty());
-
     this.queue.push(segment);
   }
 

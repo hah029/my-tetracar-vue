@@ -2,44 +2,49 @@
 import { defineStore } from "pinia";
 import { ref } from "vue";
 
-// import { usePlayerStore } from "./playerStore";
+import { usePlayerStore } from "@/store/playerStore";
 import { useProgressStore } from "./progressStore";
 import { GameStates } from "@/game/core/GameState";
 import { SoundManager } from "@/game/sound/SoundManager";
 
-type UIOverlay = null | "settings" | "quitConfirm" | "leaderBoards";
+type UIOverlay =
+  | null
+  | "settings"
+  | "quitConfirm"
+  | "leaderBoards"
+  | "trainingScreen";
 
 export const useGameState = defineStore("gameState", () => {
   // ===== STATE =====
   const currentState = ref<GameStates>(GameStates.Preloader);
   const isDebug = ref(false);
-  const isFirstGame = ref(true);
+  const isPreloaderShown = ref(true);
+  const isFirstGame = ref(false);
   const activeOverlay = ref<UIOverlay>(null);
   const previousState = ref<GameStates>(GameStates.Preloader); // Запоминаем предыдущее состояние
+  const playerStore = usePlayerStore();
 
   let resetCallback: (() => void) | null = null;
 
   // ===== FSM: allowed transitions =====
   const transitions: Record<GameStates, GameStates[]> = {
     [GameStates.Preloader]: [GameStates.Menu],
-
     [GameStates.Menu]: [GameStates.Countdown],
-
     [GameStates.Countdown]: [GameStates.Play],
-
     [GameStates.Play]: [GameStates.Pause, GameStates.Gameover],
-
     [GameStates.Pause]: [GameStates.Play, GameStates.Menu],
-
     [GameStates.Gameover]: [GameStates.Menu, GameStates.Countdown],
-
-    [GameStates.QuitConfirm]: [GameStates.Menu, GameStates.Play, GameStates.Pause, GameStates.Gameover],
+    [GameStates.QuitConfirm]: [
+      GameStates.Menu,
+      GameStates.Play,
+      GameStates.Pause,
+      GameStates.Gameover,
+    ],
   };
 
   // ===== HOOKS =====
   function onEnter(state: GameStates, prev: GameStates) {
     const progress = useProgressStore();
-    // const player = usePlayerStore();
     const sound = SoundManager.getInstance();
 
     switch (state) {
@@ -49,6 +54,12 @@ export const useGameState = defineStore("gameState", () => {
 
       case GameStates.Menu:
         sound.playMusicSequence("music_intro", "music_background");
+        // Асинхронное сохранение прогресса, ошибки логируем
+        progress
+          .saveProgress()
+          .catch((err) =>
+            console.error("Failed to save progress on menu:", err),
+          );
 
         if (prev === GameStates.Gameover || prev === GameStates.Pause) {
           resetCallback?.();
@@ -66,7 +77,12 @@ export const useGameState = defineStore("gameState", () => {
         break;
 
       case GameStates.Gameover:
-        progress.saveHighScore();
+        // Асинхронное сохранение прогресса перед переходом
+        progress
+          .saveProgress()
+          .catch((err) =>
+            console.error("Failed to save progress on gameover:", err),
+          );
         sound.playMusic("music_gameover");
         break;
 
@@ -121,6 +137,10 @@ export const useGameState = defineStore("gameState", () => {
     onEnter(to, from);
   }
 
+  function setFirstGameIndicator(value_: boolean) {
+    isFirstGame.value = value_;
+  }
+
   // ===== PUBLIC API =====
 
   function startGame() {
@@ -140,6 +160,8 @@ export const useGameState = defineStore("gameState", () => {
   }
 
   function endGame() {
+    playerStore.resetPlayerAchievements();
+    playerStore.resetPlayerAchievements();
     setState(GameStates.Gameover);
   }
 
@@ -191,11 +213,13 @@ export const useGameState = defineStore("gameState", () => {
   return {
     currentState,
     isDebug,
+    isPreloaderShown,
     isFirstGame,
     activeOverlay,
 
     // FSM
     setState,
+    setFirstGameIndicator,
 
     // API
     startGame,

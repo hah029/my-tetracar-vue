@@ -22,21 +22,21 @@ export class CityManager {
     // Массив URL трёх разных GLB-моделей
     const modelUrls = [building1, building2, building3];
 
-    const MIN_SCALE = 1 / 8;
-    const MAX_SCALE = 1 / 4;
+    const MIN_SCALE = 1;
+    const MAX_SCALE = 2;
     const DEFAULT_CONFIG = {
       // z positions range
-      zStart: -100,
-      zEnd: 10,
+      zStart: -200,
+      zEnd: 30,
       //
       minHeight: MIN_SCALE,
       maxHeight: MAX_SCALE,
       minWidth: MIN_SCALE,
       maxWidth: MAX_SCALE,
 
-      spacing: 1,
+      spacing: 2,
 
-      speedFactor: 0.3,
+      speedFactor: 0.1,
       color: 0x333355,
     };
 
@@ -45,24 +45,12 @@ export class CityManager {
       scene,
       {
         ...DEFAULT_CONFIG,
-        xMin: -50,
-        xMax: 50,
+        xMin: -200,
+        xMax: 200,
       },
       modelUrls,
     );
     this.layers.push(layer1);
-
-    // Второй слой (правая сторона)
-    const layer2 = await CityLayerInstanced.create(
-      scene,
-      {
-        ...DEFAULT_CONFIG,
-        xMin: -50,
-        xMax: 50,
-      },
-      modelUrls,
-    );
-    this.layers.push(layer2);
   }
 
   public update(deltaTime: number, speed: number): void {

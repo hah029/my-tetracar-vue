@@ -2,6 +2,9 @@ import * as THREE from "three";
 import { Bullet } from "./Bullet";
 import { Car } from "../car";
 import { ObstacleManager } from "../interactive/obstacle";
+import { useProgressStore } from "@/store/progressStore";
+import { useCommonStore } from "@/store/commonStore";
+import { FlashEffectManager } from "../effects/FlashEffectManager";
 
 export class BulletSystem {
   private static instance: BulletSystem | null = null;
@@ -9,7 +12,7 @@ export class BulletSystem {
   private bullets: Bullet[] = [];
   private scene!: THREE.Scene;
 
-  private readonly MAX_DISTANCE = 50;
+  private readonly MAX_DISTANCE = useCommonStore().BULLET_MAX_DISTANCE;
 
   private bulletBox = new THREE.Box3();
   private obstacleBox = new THREE.Box3();
@@ -31,7 +34,7 @@ export class BulletSystem {
     const bullet = new Bullet(lane);
 
     bullet.position.copy(car.position);
-    bullet.position.y = 0.15;
+    bullet.position.y = car.position.y + useCommonStore().BASE_ITEM_YPOS;
     bullet.position.z -= 1;
 
     this.scene.add(bullet);
@@ -40,6 +43,7 @@ export class BulletSystem {
 
   update(dt: number) {
     const obstacles = ObstacleManager.getInstance().getObstacles();
+    const progressStore = useProgressStore();
 
     for (let i = this.bullets.length - 1; i >= 0; i--) {
       const bullet = this.bullets[i];
@@ -49,24 +53,28 @@ export class BulletSystem {
 
       // дополнительно увеличиваем бокс коллайдера в два раза
       // (чтобы уменьшить шанс пролета пули сквозь препятствие)
-      this.bulletBox.expandByScalar(2);
+      this.bulletBox.expandByScalar(1.1);
 
       let removed = false;
       for (const obstacle of obstacles) {
         if (!obstacle) continue;
 
-        if (obstacle.getLane() !== bullet.lane) continue;
+        if (obstacle.getLane() !== bullet.getLane()) continue;
 
         this.obstacleBox.setFromObject(obstacle);
 
         if (this.bulletBox.intersectsBox(this.obstacleBox)) {
-///          obstacle.destroy(bullet.position.clone());
-obstacle.destroy(bullet.position.clone(), false);  // а то компилятор ругался
+          obstacle.destroy(bullet.position.clone(), true); // а то компилятор ругался
+          progressStore.calcScore("bulletHit", 1);
 
           this.scene.remove(bullet);
           this.bullets.splice(i, 1);
 
           removed = true;
+          FlashEffectManager.getInstance().spawnExplosion(
+            "bullet",
+            bullet.position,
+          );
           break;
         }
       }

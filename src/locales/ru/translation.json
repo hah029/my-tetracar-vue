@@ -1,5 +1,9 @@
 {
-    "gameTitle": "тетрокар",
+    "gameTitle": "tetrocar",
+    "preloader": {
+        "pressAnyButton": "нажми на кнопку",
+        "pressAnyButtonMob": "коснись, чтобы начать"
+    },
     "mainMenu": {
         "goBack": "назад",
         "startGame": "старт",
@@ -7,8 +11,52 @@
         "settings": "настройки",
         "leaderboards": "рекорды"
     },
-    "preloader": {
-        "pressAnyButton": "нажми на кнопку"
+    "trainingScreen": {
+        "earn": {
+            "title": "набирай",
+            "text": [
+                "очки прогресса -",
+                "попадай в топ!"
+            ]
+        },
+        "collect": {
+            "title": "собирай",
+            "text": [
+                "голдены",
+                "энергоны"
+            ]
+        },
+        "use": {
+            "title": "используй",
+            "text": [
+                "патроны",
+                "броню",
+                "нитро",
+                "магнит"
+            ]
+        },
+        "startButton": "погнали!"
+    },
+    "gamePlay": {
+        "progress": "прогресс",
+        "maxProgress": "макс.",
+        "speed": "скорость",
+        "keyStats": {
+            "progress": "прогресс",
+            "maxProgress": "макс.",
+            "speed": "скорость"
+        },
+        "notificationsList": {
+            "armorEquipped": "броня установлена!",
+            "maxArmor": "достигнут максимум брони!",
+            "nitroActivated": "нитро активировано!",
+            "magnetActivated": "магнит запущен!",
+            "ammoRefilled": "боезапас пополнен!",
+            "maxAmmo": "достигнут максимум патронов!",
+            "outOfAmmo": "нет патронов!",
+            "newRecord": "есть рекорд!"
+        },
+        "goMessage": "погнали!"
     },
     "pauseMenu": {
         "title": "пауза",
@@ -51,13 +99,21 @@
         "toggleOn": "вкл",
         "toggleOff": "выкл",
         "menuList": {
-            "technical": "графика и аудио",
+            "graphics": "графика",
+            "sounds": "звуки",
             "lang": "язык",
             "controls": "управление",
             "about": "об игре"
         },
         "vfxAndMusic": {
-            "vfxEnabled": "эффекты",
+            "vfxEnabled": "все эффекты",
+            "bloomEnabled": "свечение",
+            "afterimageEnabled": "размытие",
+            "fxaaEnabled": "FXAA",
+            "rgbShiftEnabled": "RGB смещение",
+            "shadowEnabled": "тени",
+            "shadowQuality": "качество теней",
+            "nightMode": "ночь",
             "musicEnabled": "музыка",
             "sfxEnabled": "звуки",
             "volumeLevel": "громкость"
@@ -68,24 +124,31 @@
             "en": "english"
         },
         "controls": {
+            "mobileLabels": {
+                "pause": "пауза",
+                "fire": "выстрел",
+                "swipe": "свайп",
+                "switcher": "левша / правша"
+            },
             "labels": {
                 "left": "влево",
                 "right": "вправо",
+                "drop": "крутое пике",
                 "fire": "выстрел",
-                "pause": "пауза",
-                "shop": "магазин"
+                "pause": "пауза"
             },
             "keys": {
                 "left": "a",
                 "right": "d",
+                "drop": "s",
                 "fire": "пробел",
-                "pause": "esc",
-                "shop": "b"
+                "pause": "esc"
             }
         },
         "about": {
             "eula": "лицензионное соглашение",
             "thirdParty": "сторонние лицензии",
+            "howToPlay": "как играть",
             "aboutUs": "о нас"
         },
         "debug": {
