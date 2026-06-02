@@ -1,3 +1,5 @@
+import type { Product } from "ysdk";
+
 export interface IGamePlatform {
   init(): Promise<void>;
 
@@ -51,6 +53,14 @@ export interface IGamePlatform {
     includeUser: boolean,
     quantityAround: number,
   ): any | null;
+  // #endregion
+
+  // #region - shop
+  consumePrevPurchases(consumePurchaseCallback: Function): Promise<any>;
+
+  getShopCatalog(): Promise<Product[] | null>;
+
+  buyShopItem(productId: string, consumePurchase: Function): Promise<any>;
   // #endregion
 
   gameReady(); // дёргаем, когда всё загрузилось и игра полностью готова к геймплею
