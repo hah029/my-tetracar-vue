@@ -4,21 +4,25 @@ import * as THREE from "three";
 import type { RoadConfig, RoadStats } from "./types";
 import { Road } from "./Road";
 import { RoadLine } from "./RoadLine";
+import { RoadLane } from "./RoadLane";
 import { SpeedLine } from "./SpeedLine";
 import { RoadEdge } from "./edges";
 import { SideObjectsInstanced } from "./SideObjectsInstanced";
 import { useCommonStore } from "@/store/commonStore";
 import { useEnvironmentStore } from "@/store/environmentStore";
+import { CarManager } from "@/game/car";
 
 export class RoadManager {
   private static instance: RoadManager | null = null;
   private road: Road | null = null;
   private roadLines: RoadLine[] = [];
+  private roadLanes: RoadLane[] = [];
   private speedLines: SpeedLine[] = [];
   private edges: THREE.Mesh[] = [];
   private sideObjectSpacing = useCommonStore().XZ_SCALING * 4;
   private leftSideObjects: SideObjectsInstanced | null = null;
   private rightSideObjects: SideObjectsInstanced | null = null;
+  private carManager = CarManager.getInstance();
 
   private config!: RoadConfig;
   private scene!: THREE.Scene;
@@ -49,7 +53,8 @@ export class RoadManager {
     this.scene.add(this.road);
     this.scene.add(this.road);
     this.addEdges();
-    // this.addRoadLines();
+    this.addRoadLines();
+    this.addRoadLanes();
     this.addSideObjects();
   }
 
@@ -106,34 +111,73 @@ export class RoadManager {
     this.edges.push(rightEdge);
   }
 
-  // private addRoadLines(): void {
-  //   if (!this.road) return;
+  private addRoadLines(): void {
+    if (!this.road) return;
 
-  //   const { length } = this.config;
-  //   if (!length) {
-  //     throw new Error();
-  //   }
-  //   const lanes = this.road.getLanePositions();
+    const { length } = this.config;
+    if (!length) {
+      throw new Error();
+    }
+    const lanes = this.road.getLanePositions();
 
-  //   for (let i = 0; i < lanes.length - 1; i++) {
-  //     const prev_ = lanes[i];
-  //     const next_ = lanes[i + 1];
-  //     if (prev_ == undefined || next_ == undefined) continue;
-  //     const x = (prev_ + next_) / 2;
+    for (let i = 0; i < lanes.length - 1; i++) {
+      const prev_ = lanes[i];
+      const next_ = lanes[i + 1];
+      if (prev_ == undefined || next_ == undefined) continue;
+      const x = (prev_ + next_) / 2;
 
-  //     const line = new RoadLine({
-  //       x,
-  //       z: -length / 2,
-  //       length,
-  //     });
-  //     this.roadLines.push(line);
-  //     this.scene.add(line);
-  //   }
-  // }
+      const line = new RoadLine({
+        x,
+        z: -length / 2,
+        length,
+      });
+      this.roadLines.push(line);
+      this.scene.add(line);
+    }
+  }
+  private addRoadLanes(): void {
+    if (!this.road) return;
+
+    const { length } = this.config;
+    if (!length) {
+      throw new Error();
+    }
+    const lanes = this.road.lanes;
+
+    const width = this.road.width / lanes.length;
+
+    console.log("lanes", lanes);
+
+    for (let i = 0; i < lanes.length; i++) {
+      const laneX = lanes[i];
+
+      // if (laneX == undefined) continue;
+      const lane = new RoadLane({
+        x: laneX,
+        z: -length / 2,
+        length,
+        width,
+      });
+      this.roadLanes.push(lane);
+      this.scene.add(lane);
+    }
+  }
 
   public update(deltaTime: number, speed: number): void {
     this.leftSideObjects?.update(deltaTime, speed);
     this.rightSideObjects?.update(deltaTime, speed);
+
+    this.updateCurrentLane(this.carManager.getCar().getCurrentLane());
+  }
+
+  private updateCurrentLane(currentLane: number) {
+    for (let i = 0; i < this.roadLanes.length; i++) {
+      if (i == currentLane) {
+        this.roadLanes[i].visible = true;
+      } else {
+        this.roadLanes[i].visible = false;
+      }
+    }
   }
 
   public clear(): void {
@@ -143,6 +187,8 @@ export class RoadManager {
     }
     this.roadLines.forEach((line) => this.scene.remove(line));
     this.roadLines = [];
+    this.roadLanes.forEach((line) => this.scene.remove(line));
+    this.roadLanes = [];
     this.edges.forEach((edge) => this.scene.remove(edge));
     this.edges = [];
 

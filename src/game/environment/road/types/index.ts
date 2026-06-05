@@ -8,6 +8,16 @@ export interface RoadLineConfig {
   length?: number;
 }
 
+export interface RoadLaneConfig {
+  x: number;
+  z: number;
+  color?: number;
+  emissive?: number;
+  opacity?: number;
+  length?: number;
+  width?: number;
+}
+
 export interface RoadConfig {
   lanes: number[];
   width?: number;

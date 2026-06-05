@@ -64,14 +64,14 @@ async function createInstancedMeshFromModel(
     instancedMesh.material.forEach((mat) => {
       if (mat instanceof THREE.MeshStandardMaterial) {
         mat.emissive.setHex(0xffffff);
-        mat.emissiveIntensity = 1;
+        mat.emissiveIntensity = 3;
         mat.emissiveMap = mat.map;
       }
     });
   } else {
     if (instancedMesh.material instanceof THREE.MeshStandardMaterial) {
       instancedMesh.material.emissive.setHex(0xffffff);
-      instancedMesh.material.emissiveIntensity = 1;
+      instancedMesh.material.emissiveIntensity = 3;
       instancedMesh.material.emissiveMap = instancedMesh.material.map;
     }
   }
