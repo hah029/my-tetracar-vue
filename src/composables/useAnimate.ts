@@ -178,18 +178,10 @@ export function GameLoop(
 
         game.updateEffects();
         usePlayerStore().updateNitro(deltaTime);
-
-        // const target = playerStore.isNitroEnabled ? maxShift : 0;
-        // // Плавно двигаем текущее значение к целевому
-        // currentShiftAmount +=
-        //   (target - currentShiftAmount) * Math.min(1, deltaTime * lerpSpeed);
-
-        // console.log("currentShiftAmount", currentShiftAmount);
-
-        // setRGBShiftAmount(currentShiftAmount);
-
         debugCollider?.update();
       }
+
+      game.updateEffects();
     } else {
       // Фоновые состояния: двигаем только дорогу и город
       const currentSpeed = playerStore.baseSpeed;
