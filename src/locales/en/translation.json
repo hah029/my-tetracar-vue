@@ -169,5 +169,13 @@
         "All rights neon-served",
         "All rights preserved… in neon",
         "All rights electrified"
-    ]
+    ],
+    "shop": {
+        "title": "shop",
+        "tabList": {
+            "currency": "currency",
+            "stuff": "stuff",
+            "visual": "visual"
+        }
+    }
 }
