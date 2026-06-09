@@ -48,6 +48,8 @@ export class SideObjectsInstanced {
 
     const geometry = new THREE.BoxGeometry(1, 1, 1);
 
+//console.log(geometry.);
+
     //
     // APPLY ATLAS UV
     //
@@ -60,18 +62,37 @@ export class SideObjectsInstanced {
 
     const uv = geometry.attributes.uv;
 
+console.log('uv.count = ' + uv.count + ', sprite = ' + JSON.stringify(sprite));
+
     for (let i = 0; i < uv.count; i++) {
       const u = uv.getX(i);
 
       const v = uv.getY(i);
 
-      uv.setXY(
-        i,
+console.log('i = ' + i + ', u = ' + u + ', v = ' + v + '; ');
 
-        sprite.uvRect.u + u * sprite.uvRect.w,
+// sprite.uvRect.w = 0.125 - доля ширины квадратика атласа = 64 в ширине атласа = 512 
+// sprite.uvRect.h = 0.125 - доля высоты квадратика атласа = 64 в высоте атласа = 512
 
-        sprite.uvRect.v + v * sprite.uvRect.h,
-      );
+		
+		switch(i) {
+			// верхняя грань
+			case 8:
+			case 9:
+			case 10:
+			case 11:
+				uv.setXY(i, sprite.uvRect.u + u * sprite.uvRect.w * 0.5, sprite.uvRect.v + v * sprite.uvRect.h * 0.5);
+				break;
+				
+			// все остальные грани (хак, т.к. текстуры боковушек в атласе одинаковые, а низ не видно)					 
+			default: 
+				uv.setXY(i, sprite.uvRect.u + sprite.uvRect.w * (0.5 + u * 0.5), sprite.uvRect.v + sprite.uvRect.h * (1 - v) * 0.25);
+		}
+      	
+      
+      
+      
+      
     }
 
     uv.needsUpdate = true;
