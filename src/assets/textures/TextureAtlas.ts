@@ -117,9 +117,17 @@ export class TextureAtlas {
         this.atlasTexture = await loader.loadAsync(this.pngPath);
         this.atlasTexture.colorSpace = THREE.SRGBColorSpace;
         this.atlasTexture.flipY = false;
-        this.atlasTexture.magFilter = THREE.NearestFilter;
-        this.atlasTexture.minFilter = THREE.NearestFilter;
-        this.atlasTexture.generateMipmaps = false;
+
+//        this.atlasTexture.magFilter = THREE.NearestFilter;
+//        this.atlasTexture.minFilter = THREE.NearestFilter;
+//        this.atlasTexture.generateMipmaps = false;
+
+this.atlasTexture.magFilter = THREE.LinearFilter;
+this.atlasTexture.minFilter = THREE.LinearMipmapLinearFilter;
+//this.atlasTexture.magFilter = THREE.NearestFilter;     // Четкие пиксели вблизи
+//this.atlasTexture.minFilter = THREE.NearestMipmapLinearFilter; // Плавные мипмапы вдали
+this.atlasTexture.generateMipmaps = true;
+
         this.atlasTexture.needsUpdate = true;
 
         // Создаем спрайты для каждого фрейма
