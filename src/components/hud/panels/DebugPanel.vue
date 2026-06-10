@@ -73,290 +73,293 @@
   
 
 <script setup lang="ts">
-import { ref, onMounted, onBeforeUnmount } from 'vue'
-import type { Scene, WebGLRenderer } from 'three'
+    import { ref, onMounted, onBeforeUnmount } from 'vue';
+    import type { Scene, WebGLRenderer } from 'three';
+    import { useGraphicsStore } from '@/store/graphicsStore';
 
-// Интерфейсы
-interface DebugStats {
-  triangles: number
-  vertices: number
-  objectsCount: number
-  drawCalls: number
-  geometriesCount: number
-  texturesCount: number
-  geometryMemory: number
-  materialsCount: number
-  gpuMemory: number
-  frameTime: number
-}
-
-// Состояние
-const visible = ref<boolean>(false)
-const stats = ref<DebugStats>({
-  triangles: 0,
-  vertices: 0,
-  objectsCount: 0,
-  drawCalls: 0,
-  geometriesCount: 0,
-  texturesCount: 0,
-  geometryMemory: 0,
-  materialsCount: 0,
-  gpuMemory: 0,
-  frameTime: 16.6
-})
-
-let scene: Scene | null = null
-let renderer: WebGLRenderer | null = null
-let updateInterval: number | null = null
-let lastFrameTime: number = performance.now()
-let animationFrameId: number | null = null
-
-// Вспомогательные функции
-const formatNumber = (num: number): string => {
-  if (num > 1000000) return (num / 1000000).toFixed(1) + 'M'
-  if (num > 1000) return (num / 1000).toFixed(1) + 'K'
-  return num.toString()
-}
-
-const formatBytes = (bytes: number): string => {
-  if (bytes === 0) return '0 B'
-  const k = 1024
-  const sizes = ['B', 'KB', 'MB', 'GB']
-  const i = Math.floor(Math.log(bytes) / Math.log(k))
-  return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i]
-}
-
-// Сбор статистики
-const collectStats = (): void => {
-  if (!scene || !renderer) {
-    console.warn('DebugPanel: No scene or renderer for stats collection');
-    return;
-  }
-
-  let totalTriangles = 0
-  let totalVertices = 0
-  let objectsCount = 0
-  const geometriesSet = new Set<number>()
-  const materialsSet = new Set<number>()
-  let geometryMemoryTotal = 0
-
-  // Обход сцены
-  scene.traverse((object: any) => {
-    if (object.isMesh) {
-      objectsCount++
-      
-      const geometry = object.geometry
-      if (geometry) {
-        geometriesSet.add(geometry.id)
-        
-        // Подсчет треугольников и вершин
-        if (geometry.index) {
-          totalTriangles += geometry.index.count / 3
-        } else if (geometry.attributes.position) {
-          totalTriangles += geometry.attributes.position.count / 3
-        }
-        
-        if (geometry.attributes.position) {
-          totalVertices += geometry.attributes.position.count
-        }
-        
-        // Подсчет памяти геометрии
-        let geomMem = 0
-        for (const key in geometry.attributes) {
-          const attr = geometry.attributes[key]
-          if (attr && attr.count && attr.itemSize) {
-            geomMem += attr.count * attr.itemSize * 4
-          }
-        }
-        if (geometry.index) {
-          geomMem += geometry.index.count * 2
-        }
-        geometryMemoryTotal += geomMem
-      }
-      
-      // Собираем материалы
-      if (object.material) {
-        if (Array.isArray(object.material)) {
-          object.material.forEach((m: any) => materialsSet.add(m.id))
-        } else {
-          materialsSet.add(object.material.id)
-        }
-      }
-    }
-  })
-
-    // Draw Calls - правильный доступ к info.render
-    let drawCalls = 0;
-    if (renderer.info && renderer.info.render) {
-        drawCalls = renderer.info.render.calls || 0;
-        // Также проверяй другие возможные места
-        console.log('🔍 DrawCalls from renderer:', drawCalls);
-        console.log('🔍 Full renderer.info:', renderer.info);
+    // Интерфейсы
+    interface DebugStats {
+        triangles: number
+        vertices: number
+        objectsCount: number
+        drawCalls: number
+        geometriesCount: number
+        texturesCount: number
+        geometryMemory: number
+        materialsCount: number
+        gpuMemory: number
+        frameTime: number
     };
-  
-  // Дополнительно: пробуем получить из renderer.info.programs для шейдерных переключений
-  const shaderPrograms = renderer.info.programs?.length || 0
 
-  // Сбор текстур
-  const texturesSet = new Set<number>()
-  let gpuMemoryEstimate = 0
+    // Состояние
+    const visible = ref<boolean>(false)
+    const stats = ref<DebugStats>({
+        triangles: 0,
+        vertices: 0,
+        objectsCount: 0,
+        drawCalls: 0,
+        geometriesCount: 0,
+        texturesCount: 0,
+        geometryMemory: 0,
+        materialsCount: 0,
+        gpuMemory: 0,
+        frameTime: 16.6
+    });
 
-  materialsSet.forEach(materialId => {
-    let material: any = null
-    scene!.traverse((object: any) => {
-      if (object.isMesh && object.material && !material) {
-        const mat = Array.isArray(object.material) ? object.material : [object.material]
-        mat.forEach((m: any) => {
-          if (m.id === materialId) material = m
-        })
-      }
-    })
+    let scene: Scene | null = null;
+    let renderer: WebGLRenderer | null = null;
+    let updateInterval: number | null = null;
+    let lastFrameTime: number = performance.now();
+    let animationFrameId: number | null = null;
+
+    // Вспомогательные функции
+    const formatNumber = (num: number): string => {
+        if (num > 1000000) return (num / 1000000).toFixed(1) + 'M';
+        if (num > 1000) return (num / 1000).toFixed(1) + 'K';
+        return num.toString();
+    };
+
+    const formatBytes = (bytes: number): string => {
+        if (bytes === 0) return '0 B';
+        const k = 1024;
+        const sizes = ['B', 'KB', 'MB', 'GB'];
+        const i = Math.floor(Math.log(bytes) / Math.log(k));
+        return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+    };
+
+    // Сбор статистики
+    const collectStats = (): void => {
+        if (!scene || !renderer) {
+            console.warn('DebugPanel: No scene or renderer for stats collection');
+            return;
+        };
+
+        let totalTriangles = 0;
+        let totalVertices = 0;
+        let objectsCount = 0;
+        const geometriesSet = new Set<number>();
+        const materialsSet = new Set<number>();
+        let geometryMemoryTotal = 0;
+
+        // Обход сцены
+        scene.traverse((object: any) => {
+            if (object.isMesh) {
+                objectsCount++;
+                const geometry = object.geometry;
+
+                if (geometry) {
+                    geometriesSet.add(geometry.id);
+                    
+                    // Подсчет треугольников и вершин
+                    if (geometry.index) {
+                        totalTriangles += geometry.index.count / 3;
+                    } else if (geometry.attributes.position) {
+                        totalTriangles += geometry.attributes.position.count / 3;
+                    };
+                    
+                    if (geometry.attributes.position) totalVertices += geometry.attributes.position.count;
+                    
+                    // Подсчет памяти геометрии
+                    let geomMem = 0;
+                    for (const key in geometry.attributes) {
+                        const attr = geometry.attributes[key];
+                        if (attr && attr.count && attr.itemSize) geomMem += attr.count * attr.itemSize * 4;
+                    };
+                    if (geometry.index) geomMem += geometry.index.count * 2;
+                    geometryMemoryTotal += geomMem;
+                };
+                
+                // Собираем материалы
+                if (object.material) {
+                    if (Array.isArray(object.material)) {
+                        object.material.forEach((m: any) => materialsSet.add(m.id));
+                    } else {
+                        materialsSet.add(object.material.id);
+                    };
+                };
+            };
+        });
+
+        // ========== ОЦЕНКА DRAW CALLS ==========
+        // ThreeJS с EffectComposer может не давать точных значений,
+        // поэтому оцениваем через количество уникальных материалов
+        // Каждый материал = минимум 1 Draw Call (плюс дополнительные за тени и т.д.)
+        let drawCalls = materialsSet.size;
+        
+        // Добавляем поправку на тени (если включены)
+        if (renderer.shadowMap.enabled) {
+            drawCalls = Math.floor(drawCalls * 1.5); // Тени увеличивают Draw Calls примерно на 50%
+        };
+        
+        // Добавляем поправку на пост-эффекты
+        const graphicsStore = (window as any).__GRAPHICS_STORE__;
+        if (graphicsStore?.bloomEnabled || graphicsStore?.afterimageEnabled) {
+            drawCalls = Math.floor(drawCalls * 1.2); // Эффекты добавляют проходы
+        };
+        
+        // console.log('📊 Estimated Draw Calls (by materials):', drawCalls, '| Unique materials:', materialsSet.size);
     
-    if (material) {
-      const textureProps = ['map', 'normalMap', 'roughnessMap', 'metalnessMap', 'aoMap', 'emissiveMap']
-      textureProps.forEach(prop => {
-        const tex = material[prop]
-        if (tex && tex.isTexture && tex.image) {
-          texturesSet.add(tex.id)
-          if (tex.image.width && tex.image.height) {
-            const size = tex.image.width * tex.image.height * 4
-            gpuMemoryEstimate += size
-          }
-        }
-      })
-    }
-  })
+        // Дополнительно: пробуем получить из renderer.info.programs для шейдерных переключений
+        const shaderPrograms = renderer.info.programs?.length || 0;
 
-  // Обновляем состояние
-  stats.value = {
-    ...stats.value,
-    triangles: Math.floor(totalTriangles),
-    vertices: totalVertices,
-    objectsCount,
-    drawCalls,
-    geometriesCount: geometriesSet.size,
-    materialsCount: materialsSet.size,
-    texturesCount: texturesSet.size,
-    geometryMemory: geometryMemoryTotal,
-    gpuMemory: gpuMemoryEstimate
-  }
+        // Сбор текстур
+        const texturesSet = new Set<number>();
+        let gpuMemoryEstimate = 0;
 
-  // Логируем для отладки (раскомментируй если нужно)
-  // console.log('Stats updated:', {
-  //   triangles: totalTriangles,
-  //   objects: objectsCount,
-  //   drawCalls,
-  //   geometries: geometriesSet.size
-  // });
+        materialsSet.forEach(materialId => {
+            let material: any = null;
+            scene!.traverse((object: any) => {
+                if (object.isMesh && object.material && !material) {
+                    const mat = Array.isArray(object.material) ? object.material : [object.material];
+                    mat.forEach((m: any) => {
+                        if (m.id === materialId) material = m;
+                    });
+                };
+            });
+            
+            if (material) {
+                const textureProps = ['map', 'normalMap', 'roughnessMap', 'metalnessMap', 'aoMap', 'emissiveMap'];
+                textureProps.forEach(prop => {
+                    const tex = material[prop];
+                    if (tex && tex.isTexture && tex.image) {
+                        texturesSet.add(tex.id)
+                        if (tex.image.width && tex.image.height) {
+                            const size = tex.image.width * tex.image.height * 4;
+                            gpuMemoryEstimate += size;
+                        };
+                    };
+                });
+            };
+        });
 
-  // Сброс счетчика вызовов рендерера
-    if (renderer.info && renderer.info.reset) renderer.info.reset();
-    if (renderer.info.render.calls > 0) renderer.info.reset();
-};
+        // Обновляем состояние
+        stats.value = {
+            ...stats.value,
+            triangles: Math.floor(totalTriangles),
+            vertices: totalVertices,
+            objectsCount,
+            drawCalls,
+            geometriesCount: geometriesSet.size,
+            materialsCount: materialsSet.size,
+            texturesCount: texturesSet.size,
+            geometryMemory: geometryMemoryTotal,
+            gpuMemory: gpuMemoryEstimate
+        };
 
-// Мониторинг frame time
-const monitorFrameTime = (): void => {
-  const measureFrame = () => {
-    if (visible.value) {
-      const now = performance.now()
-      const delta = now - lastFrameTime
-      if (delta > 0 && delta < 100) {
-        stats.value.frameTime = delta
-      }
-      lastFrameTime = now
-    }
-    animationFrameId = requestAnimationFrame(measureFrame)
-  }
-  animationFrameId = requestAnimationFrame(measureFrame)
-}
+        // Логируем для отладки (раскомментируй если нужно)
+        // console.log('Stats updated:', {
+        //   triangles: totalTriangles,
+        //   objects: objectsCount,
+        //   drawCalls,
+        //   geometries: geometriesSet.size
+        // });
 
-// Обработчик клавиш
-const handleKeydown = (e: KeyboardEvent): void => {
-  if ((e.ctrlKey || e.metaKey) && e.key === 'q') {
-    e.preventDefault()
-    visible.value = !visible.value
-    console.log('DebugPanel visibility:', visible.value)
-  }
-}
+        // Сброс счетчика вызовов рендерера
+        // if (renderer.info && renderer.info.reset) renderer.info.reset();
+        // if (renderer.info.render.calls > 0) renderer.info.reset();
 
-// Инициализация
-const initDebug = (): void => {
-  console.log('🔍 DebugPanel: Looking for __THREE_DEBUG__...')
-  const threeDebug = (window as any).__THREE_DEBUG__
-  
-  console.log('🔍 DebugPanel: threeDebug =', threeDebug)
-  
-  if (!threeDebug?.scene || !threeDebug?.renderer) {
-    console.warn('DebugPanel: Scene or Renderer not found')
-    return
-  }
+        // Сбрасываем счётчик ТОЛЬКО если он был прочитан и только один раз
+        // if (renderer.info && renderer.info.reset) renderer.info.reset();
+    };
 
-  scene = threeDebug.scene
-  renderer = threeDebug.renderer
-  
-  console.log('✅ DebugPanel: Initialized', {
-    scene: scene ? 'OK' : 'NO',
-    renderer: renderer ? 'OK' : 'NO',
-    rendererInfo: renderer?.info ? 'OK' : 'NO'
-  })
-  
-  // Тестовый сбор статистики через 1 секунду
-  setTimeout(() => {
-    if (scene && renderer) {
-      console.log('DebugPanel: Test stats collection...')
-      collectStats()
-      console.log('Stats after test:', stats.value)
-    }
-  }, 1000)
-}
+    // Мониторинг frame time
+    const monitorFrameTime = (): void => {
+        const measureFrame = () => {
+            if (visible.value) {
+                const now = performance.now();
+                const delta = now - lastFrameTime;
+                if (delta > 0 && delta < 100) stats.value.frameTime = delta;
+                lastFrameTime = now;
+            };
+            animationFrameId = requestAnimationFrame(measureFrame);
+        };
+        animationFrameId = requestAnimationFrame(measureFrame);
+    };
 
-// Lifecycle hooks
-onMounted(() => {
-  console.log('🟢 DebugPanel component mounted')
-  initDebug()
-  
-  if (!scene || !renderer) {
-    console.warn('⚠️ DebugPanel: No scene/renderer, retrying...')
-    // Повторяем инициализацию несколько раз
-    let retries = 0
-    const interval = setInterval(() => {
-      if (scene && renderer) {
-        clearInterval(interval)
-        console.log('✅ DebugPanel: Retry successful')
+    // Обработчик клавиш
+    const handleKeydown = (e: KeyboardEvent): void => {
+        if ((e.ctrlKey || e.metaKey) && e.key === 'q') {
+            e.preventDefault();
+            visible.value = !visible.value;
+            console.log('DebugPanel visibility:', visible.value);
+        };
+    };
+
+    // Инициализация
+    const initDebug = (): void => {
+        console.log('🔍 DebugPanel: Looking for __THREE_DEBUG__...');
+        const threeDebug = (window as any).__THREE_DEBUG__;
+        console.log('🔍 DebugPanel: threeDebug =', threeDebug);
+        
+        if (!threeDebug?.scene || !threeDebug?.renderer) {
+            console.warn('DebugPanel: Scene or Renderer not found');
+            return;
+        };
+
+        scene = threeDebug.scene;
+        renderer = threeDebug.renderer;
+        
+        console.log('✅ DebugPanel: Initialized', {
+            scene: scene ? 'OK' : 'NO',
+            renderer: renderer ? 'OK' : 'NO',
+            rendererInfo: renderer?.info ? 'OK' : 'NO'
+        });
+        
+        // 👇 РЕГИСТРАЦИЯ GRAPHICS_STORE
+        (window as any).__GRAPHICS_STORE__ = useGraphicsStore();
+        console.log('✅ GraphicsStore registered for debug panel');
+        
+        // Тестовый сбор статистики через 1 секунду
+        setTimeout(() => {
+            if (scene && renderer) {
+                console.log('DebugPanel: Test stats collection...');
+                collectStats();
+                console.log('Stats after test:', stats.value);
+            };
+        }, 1000);
+    };
+
+    // Lifecycle hooks
+    onMounted(() => {
+        console.log('🟢 DebugPanel component mounted');
+        initDebug();
+        
+        if (!scene || !renderer) {
+            console.warn('⚠️ DebugPanel: No scene/renderer, retrying...')
+            // Повторяем инициализацию несколько раз
+            let retries = 0;
+            const interval = setInterval(() => {
+                if (scene && renderer) {
+                    clearInterval(interval);
+                    console.log('✅ DebugPanel: Retry successful');
+                    setupPanel();
+                } else if (retries++ > 5) {
+                    clearInterval(interval);
+                    console.error('❌ DebugPanel: Failed to initialize after 5 retries');
+                } else {
+                    initDebug();
+                };
+            }, 500);
+            return;
+        };
+        
         setupPanel()
-      } else if (retries++ > 5) {
-        clearInterval(interval)
-        console.error('❌ DebugPanel: Failed to initialize after 5 retries')
-      } else {
-        initDebug()
-      }
-    }, 500)
-    return
-  }
-  
-  setupPanel()
-})
+    });
 
-const setupPanel = () => {
-  window.addEventListener('keydown', handleKeydown)
-  monitorFrameTime()
-  
-  updateInterval = window.setInterval(() => {
-    if (visible.value && scene && renderer) {
-      collectStats()
-    }
-  }, 500)
-}
+    const setupPanel = () => {
+        window.addEventListener('keydown', handleKeydown);
+        monitorFrameTime();
+        
+        updateInterval = window.setInterval(() => {
+            if (visible.value && scene && renderer) collectStats();
+        }, 500);
+    };
 
-onBeforeUnmount(() => {
-  if (updateInterval) {
-    clearInterval(updateInterval)
-  }
-  if (animationFrameId) {
-    cancelAnimationFrame(animationFrameId)
-  }
-  window.removeEventListener('keydown', handleKeydown)
-})
+    onBeforeUnmount(() => {
+        if (updateInterval) clearInterval(updateInterval);
+        if (animationFrameId) cancelAnimationFrame(animationFrameId);
+        window.removeEventListener('keydown', handleKeydown);
+    });
 </script>
   
 
