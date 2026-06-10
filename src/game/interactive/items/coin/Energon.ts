@@ -1,6 +1,8 @@
-// src/game/coin/Coin.ts
+// src/game/interactive/items/coin/Energon.ts
+
 import { CoinItem } from "./CoinItem";
 import { useCommonStore } from "@/store/commonStore";
+import { MaterialPool } from "@/helpers/MaterialPool";
 
 export class Energon extends CoinItem {
   constructor(
@@ -10,24 +12,8 @@ export class Energon extends CoinItem {
     yPos?: number,
     value: number = useCommonStore().BASE_COIN_VALUE,
   ) {
-    super(zPos, laneIndex, xPos, yPos);
+    // Передаём готовый материал из пула
+    super(zPos, laneIndex, xPos, yPos, null, MaterialPool.getEnergonMaterial());
     this.value = value;
   }
-
-  // async build(material: MaterialConfig | null = null): Promise<void> {
-  //   const config = {
-  //     ...ENERGON_CONFIG,
-  //     useTexture: material != null,
-  //     materialConfig: material != null ? material : undefined,
-  //   };
-
-  //   try {
-  //     this.cube = await CubeBuilder.build(config);
-  //     this.cube.position.copy(this.initialPosition);
-  //     this.add(this.cube);
-  //   } catch (error) {
-  //     console.error("[Energon] build error:", error);
-  //     throw error;
-  //   }
-  // }
 }
