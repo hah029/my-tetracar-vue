@@ -1,8 +1,8 @@
-import { InventoryService } from "../inventory/InventoryService";
-
-import { UpgradeService } from "../upgrades/UpgradeService";
-
-import { EffectService } from "../effects/EffectService";
+// src/purchase/RewardProcessor.ts
+import { InventoryService } from "./services/InventoryService";
+import { UpgradeService } from "./services/UpgradeService";
+import { EffectService } from "./services/EffectService";
+import { WalletService } from "./services/WalletService";
 
 import type { Product } from "./types";
 
@@ -50,6 +50,9 @@ export class RewardProcessor {
   }
 
   private static applyCurrency(product: Product) {
-    // например golden pack
+    // Например, покупка пачки голденов или энергонов
+    if (product.effect?.currency && product.effect?.amount) {
+      WalletService.addCurrency(product.effect.currency, product.effect.amount);
+    }
   }
 }

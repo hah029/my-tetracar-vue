@@ -1,7 +1,9 @@
+// src/purchase/PurchaseService.ts
 import { Platform } from "@/sdk/Platform";
 
 import { WalletService } from "./services/WalletService";
 import { RewardProcessor } from "./RewardProcessor";
+import { useMetaStore } from "@/store/metaStore";
 
 import type { Product, PurchaseTransaction } from "./types";
 
@@ -18,6 +20,15 @@ export class PurchaseService {
    */
   async purchase(product: Product) {
     try {
+      // 0. Проверка: не куплен ли уже товар
+      const checkResult = this.checkProductAvailability(product);
+      if (!checkResult.available) {
+        return {
+          success: false,
+          error: new Error(checkResult.reason),
+        };
+      }
+
       // 1. Оплата
       const transaction = await this.processPayment(product);
 
@@ -40,8 +51,14 @@ export class PurchaseService {
         product.price.currency === "USD" ||
         product.price.currency === "EUR"
       ) {
-        await this.platform.consumePrevPurchases(transaction);
+        await this.platform.consumePrevPurchases(() => {
+          console.log(`[PurchaseService] Consumed purchase: ${transaction.id}`);
+        });
       }
+
+      // 6. Сохраняем прогресс
+      const meta = useMetaStore();
+      await meta.saveProgress();
 
       return {
         success: true,
@@ -57,6 +74,48 @@ export class PurchaseService {
   }
 
   /**
+   * Проверка, доступен ли товар для покупки
+   */
+  private checkProductAvailability(product: Product): {
+    available: boolean;
+    reason?: string;
+  } {
+    const meta = useMetaStore();
+
+    switch (product.type) {
+      case "cosmetic": {
+        const skinId = product.effect?.skinId;
+        if (skinId && meta.isSkinOwned(skinId)) {
+          return { available: false, reason: "already_owned" };
+        }
+        break;
+      }
+
+      case "permanent_feature": {
+        const feature = product.effect?.feature;
+        if (feature && meta.hasPermanentFeature(feature)) {
+          return { available: false, reason: "already_owned" };
+        }
+        break;
+      }
+
+      case "upgrade": {
+        const upgradeKey = product.effect?.upgrade;
+        if (upgradeKey) {
+          // Можно задать максимальный уровень, если нужно
+          // const maxLevel = 10;
+          // if (meta.getUpgradeLevel(upgradeKey) >= maxLevel) {
+          //   return { available: false, reason: "max_level" };
+          // }
+        }
+        break;
+      }
+    }
+
+    return { available: true };
+  }
+
+  /**
    * Оплата товара
    */
   private async processPayment(product: Product): Promise<PurchaseTransaction> {
@@ -64,10 +123,17 @@ export class PurchaseService {
 
     // Real money purchase
     if (currency === "USD" || currency === "EUR") {
-      const sdkTransaction = await this.platform.buyShopItem(product.id);
+      const sdkTransaction = await this.platform.buyShopItem(
+        product.id,
+        (purchase: any) => {
+          console.log(
+            `[PurchaseService] Purchase callback: ${JSON.stringify(purchase)}`,
+          );
+        },
+      );
 
       return {
-        id: sdkTransaction.transactionId ?? crypto.randomUUID(),
+        id: sdkTransaction?.transactionId ?? crypto.randomUUID(),
 
         productId: product.id,
 

@@ -1,56 +1,128 @@
 [
     {
         "id": "24hourAdOff",
+        "type": "timed_feature",
         "title": "Отключение рекламы на 24 часа",
-        "price": 10,
-        "currency": "energon"
+        "description": "Убирает рекламу на 24 часа",
+        "price": {
+            "value": 10,
+            "currency": "energon"
+        },
+        "effect": {
+            "feature": "adOff",
+            "durationHours": 24
+        }
     },
     {
         "id": "7dayAdOff",
+        "type": "timed_feature",
         "title": "Отключение рекламы на 7 дней",
-        "price": 50,
-        "currency": "energon"
+        "description": "Убирает рекламу на 7 дней",
+        "price": {
+            "value": 50,
+            "currency": "energon"
+        },
+        "effect": {
+            "feature": "adOff",
+            "durationHours": 168
+        }
     },
     {
         "id": "foreverAdOff",
+        "type": "permanent_feature",
         "title": "Отключение рекламы навсегда",
-        "price": 500,
-        "currency": "energon"
+        "description": "Навсегда убирает рекламу из игры",
+        "price": {
+            "value": 500,
+            "currency": "energon"
+        },
+        "effect": {
+            "feature": "adOff"
+        }
     },
     {
-        "id": "25hour15multiplier",
+        "id": "scoreMultiplier24h",
+        "type": "timed_feature",
         "title": "х1,5 к множителю на 24 часа",
-        "price": 25,
-        "currency": "energon"
+        "description": "Увеличивает множитель очков на 50% в течение 24 часов",
+        "price": {
+            "value": 25,
+            "currency": "energon"
+        },
+        "effect": {
+            "feature": "scoreMultiplier",
+            "value": 1.5,
+            "durationHours": 24
+        }
     },
     {
         "id": "bulletCapacityExtending",
-        "title": "расширение слотов под патроны + пополнение запаса магазина",
-        "price": 5000,
-        "currency": "golden"
+        "type": "upgrade",
+        "title": "Расширение слотов под патроны",
+        "description": "Увеличивает максимальное количество патронов на 2 + пополняет запас",
+        "price": {
+            "value": 5000,
+            "currency": "golden"
+        },
+        "effect": {
+            "upgrade": "ammoLevel",
+            "value": 1,
+            "refill": "ammo"
+        }
     },
     {
         "id": "shieldCapacityExtending",
-        "title": "расширение слотов под броню + пополнение запаса магазина",
-        "price": 5000,
-        "currency": "golden"
+        "type": "upgrade",
+        "title": "Расширение слотов под броню",
+        "description": "Увеличивает максимальное количество брони на 1 + пополняет запас",
+        "price": {
+            "value": 5000,
+            "currency": "golden"
+        },
+        "effect": {
+            "upgrade": "armorLevel",
+            "value": 1,
+            "refill": "armor"
+        }
     },
     {
         "id": "bulletMaximizing",
-        "title": "Пополнение запаса патронов (полные текущие слоты)",
-        "price": 1000,
-        "currency": "golden"
+        "type": "consumable",
+        "title": "Пополнение патронов",
+        "description": "Полностью пополняет текущий запас патронов",
+        "price": {
+            "value": 1000,
+            "currency": "golden"
+        },
+        "effect": {
+            "refill": "ammo"
+        }
     },
     {
         "id": "shieldMaximizing",
-        "title": "Пополнение запаса брони (полные текущие слоты)",
-        "price": 1000,
-        "currency": "golden"
+        "type": "consumable",
+        "title": "Пополнение брони",
+        "description": "Полностью пополняет текущий запас брони",
+        "price": {
+            "value": 1000,
+            "currency": "golden"
+        },
+        "effect": {
+            "refill": "armor"
+        }
     },
     {
-        "id": "25hourMagnetRadiusIncreasing",
+        "id": "magnetRadiusIncreasing",
+        "type": "upgrade",
         "title": "Увеличение радиуса магнита",
-        "price": 10000,
-        "currency": "golden"
+        "description": "Увеличивает радиус действия магнита на 5 единиц",
+        "price": {
+            "value": 10000,
+            "currency": "golden"
+        },
+        "effect": {
+            "upgrade": "magnetRadiusLevel",
+            "value": 1
+        }
     }
 ]

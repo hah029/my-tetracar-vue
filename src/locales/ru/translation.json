@@ -176,6 +176,20 @@
             "currency": "валюта",
             "stuff": "предметы",
             "visual": "скины"
+        },
+        "product": {
+            "owned": "куплено",
+            "maxLevel": "макс. уровень",
+            "notEnoughCurrency": "не хватает",
+            "alreadyOwned": "уже куплено",
+            "buy": "купить",
+            "activate": "надеть",
+            "purchaseSuccess": "покупка удалась!",
+            "purchaseError": "ошибка покупки"
+        },
+        "balance": {
+            "golden": "голдены",
+            "energon": "энергоны"
         }
     }
 }

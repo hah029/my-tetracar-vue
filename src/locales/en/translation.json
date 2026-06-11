@@ -176,6 +176,20 @@
             "currency": "currency",
             "stuff": "stuff",
             "visual": "visual"
+        },
+        "product": {
+            "owned": "owned",
+            "maxLevel": "max level",
+            "notEnoughCurrency": "not enough",
+            "alreadyOwned": "already owned",
+            "buy": "buy",
+            "activate": "activate",
+            "purchaseSuccess": "purchase successful!",
+            "purchaseError": "purchase failed"
+        },
+        "balance": {
+            "golden": "golden",
+            "energon": "energon"
         }
     }
 }

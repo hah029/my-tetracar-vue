@@ -1,24 +1,45 @@
+// src/purchase/services/WalletService.ts
+import { useMetaStore } from "@/store/metaStore";
+
 class WalletServiceClass {
-  golden = 0;
-
-  energon = 0;
-
-  hasEnoughCurrency(currency: string, amount: number) {
-    return this[currency] >= amount;
-  }
-
-  spendCurrency(currency: string, amount: number) {
-    if (!this.hasEnoughCurrency(currency, amount)) {
-      return false;
+  /**
+   * Проверить, хватает ли валюты
+   */
+  hasEnoughCurrency(currency: string, amount: number): boolean {
+    const meta = useMetaStore();
+    if (currency === "golden") {
+      return meta.goldens >= amount;
     }
-
-    this[currency] -= amount;
-
-    return true;
+    if (currency === "energon") {
+      return meta.energons >= amount;
+    }
+    return false;
   }
 
+  /**
+   * Списать валюту
+   */
+  spendCurrency(currency: string, amount: number): boolean {
+    const meta = useMetaStore();
+    if (currency === "golden") {
+      return meta.spendGolden(amount);
+    }
+    if (currency === "energon") {
+      return meta.spendEnergon(amount);
+    }
+    return false;
+  }
+
+  /**
+   * Добавить валюту
+   */
   addCurrency(currency: string, amount: number) {
-    this[currency] += amount;
+    const meta = useMetaStore();
+    if (currency === "golden") {
+      meta.addGolden(amount);
+    } else if (currency === "energon") {
+      meta.addEnergon(amount);
+    }
   }
 }
 

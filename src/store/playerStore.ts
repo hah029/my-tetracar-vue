@@ -1,8 +1,9 @@
 import * as THREE from "three";
 
 import { defineStore } from "pinia";
-import { ref } from "vue";
+import { ref, computed } from "vue";
 import { useProgressStore } from "@/store/progressStore";
+import { useMetaStore } from "@/store/metaStore";
 import { useCommonStore } from "@/store/commonStore";
 import { useThree } from "@/composables/useThree";
 import type { GeometryConfig, MaterialConfig } from "@/game/cube/types";
@@ -13,6 +14,7 @@ import { TEXTURES } from "@/assets/textures";
 export const usePlayerStore = defineStore("playerStore", () => {
   // #region - основные константы
   const progressStore = useProgressStore();
+  const metaStore = useMetaStore();
   const commonStore = useCommonStore();
   const renderInstance = ref();
 
@@ -151,7 +153,7 @@ export const usePlayerStore = defineStore("playerStore", () => {
   const BASE_MAGNET_TIMER = 10000;
   const isMagnetEnabled = ref(false);
   const magnetTimer = ref(BASE_MAGNET_TIMER);
-  const magnetRadius = ref(20);
+  const magnetRadius = computed(() => metaStore.magnetRadius);
   const magnetForce = ref(40);
   const magnetMaxTargets = ref(8);
   const magnetTypes = ref([] as any[]);
@@ -159,11 +161,11 @@ export const usePlayerStore = defineStore("playerStore", () => {
   // armor
   const isShieldEnabled = ref(false);
   const armor = ref(0);
-  const maxArmor = ref(1);
+  const maxArmor = computed(() => metaStore.maxArmor);
 
   //ammo
   const ammo = ref(10);
-  const maxAmmo = ref(10);
+  const maxAmmo = computed(() => metaStore.maxAmmo);
 
   // position
   const currentLane = ref(1); // 0..3 для полос

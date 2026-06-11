@@ -1,5 +1,6 @@
 // src/store/progressStore.ts
 import { usePlayerStore } from "@/store/playerStore";
+import { useMetaStore } from "@/store/metaStore";
 import { defineStore } from "pinia";
 import { ref } from "vue";
 import { SoundManager } from "@/game/sound/SoundManager";
@@ -8,11 +9,10 @@ import { Platform } from "@/sdk/Platform";
 export const useProgressStore = defineStore("progressStore", () => {
   const platform = Platform.getInstance();
   const playerStore = usePlayerStore();
+  const metaStore = useMetaStore();
   const currentDistance = ref(0);
   const score = ref(0);
   const highScore = ref(0);
-  const goldens = ref(0);
-  const energons = ref(0);
   const currentMultiplier = ref(1);
   const isNewRecord = ref(false);
 
@@ -127,29 +127,15 @@ export const useProgressStore = defineStore("progressStore", () => {
   }
   // #endregion
 
-  // #region - софт и хард валюта
+  // #region - софт и хард валюта (делегировано в MetaStore)
   function addGolden(amount: number) {
-    goldens.value += amount;
+    metaStore.addGolden(amount);
     calcScore("golden", amount);
   }
 
   function addEnergon(amount: number) {
-    energons.value += amount;
+    metaStore.addEnergon(amount);
     calcScore("energon", amount);
-  }
-
-  async function saveCoins(): Promise<void> {
-    await platform.setPlayerStatByKey("goldens", goldens.value);
-    await platform.setPlayerStatByKey("energons", energons.value);
-  }
-
-  function restoreCoins() {
-    platform.getPlayerStatByKey("goldens").then((value) => {
-      if (value) goldens.value = value;
-    });
-    platform.getPlayerStatByKey("energons").then((value) => {
-      if (value) energons.value = value;
-    });
   }
   // #endregion
 
@@ -184,9 +170,8 @@ export const useProgressStore = defineStore("progressStore", () => {
 
   async function saveProgress(): Promise<void> {
     try {
-      await saveCoins();
+      await metaStore.saveProgress();
       await saveHighScore();
-      // save to leaderboad
     } catch (error) {
       console.error("Failed to save progress:", error);
     }
@@ -194,9 +179,7 @@ export const useProgressStore = defineStore("progressStore", () => {
 
   function restoreProgress(): void {
     restoreHighScore();
-    restoreCoins();
-
-    // restore local leaderboad
+    metaStore.restoreProgress();
   }
   // #endregion
 
@@ -204,8 +187,6 @@ export const useProgressStore = defineStore("progressStore", () => {
     currentDistance,
     score,
     highScore,
-    goldens,
-    energons,
     currentMultiplier,
     isNewRecord,
 
