@@ -91,6 +91,12 @@
             "distance": {
                 "label": "расстояние",
                 "units": "кубов"
+            },
+            "goldens": {
+                "label": "голдены"
+            },
+            "energons": {
+                "label": "энергоны"
             }
         }
     },

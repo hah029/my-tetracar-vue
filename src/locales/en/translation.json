@@ -91,6 +91,12 @@
             "distance": {
                 "label": "distance",
                 "units": "cubes"
+            },
+            "goldens": {
+                "label": "goldens"
+            },
+            "energons": {
+                "label": "energons"
             }
         }
     },

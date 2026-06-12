@@ -355,6 +355,7 @@ export function useGame() {
     // reset progress
     progressStore.resetScore();
     progressStore.resetDistance();
+    progressStore.resetCoins();
 
     CameraSystem.reset(car.value.mesh.position);
   }

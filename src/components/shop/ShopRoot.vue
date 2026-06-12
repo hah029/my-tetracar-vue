@@ -289,7 +289,7 @@ onMounted(() => {
 
 .cards {
     display: flex;
-    max-width: 50%;
+    max-width: 75%;
     gap: 1rem;
     flex-wrap: wrap;
     align-content: flex-start;

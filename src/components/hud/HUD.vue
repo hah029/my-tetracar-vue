@@ -151,6 +151,7 @@ import { useGameState } from "@/store/gameState";
 import { usePlayerStore } from "@/store/playerStore";
 import { useProgressStore } from "@/store/progressStore";
 import { createNewText } from '@/helpers/functions';
+import { useMetaStore } from "@/store/metaStore";
 
 
 
@@ -191,11 +192,12 @@ onUnmounted(() => {
 const gameStore = useGameState();
 const playerStore = usePlayerStore();
 const progressStore = useProgressStore();
+const metaStore = useMetaStore();
 const foo = createNewText();
 
 // работаем с валютой (голдены / энергоны)
-const goldens = computed(() => progressStore.goldens);
-const energons = computed(() => progressStore.energons);
+const goldens = computed(() => metaStore.goldens);
+const energons = computed(() => metaStore.energons);
 const score = computed(() => Math.floor(progressStore.score));
 const highScore = computed(() => Math.floor(progressStore.highScore));
 const newNotification = computed(() => playerStore.notificationMsg);

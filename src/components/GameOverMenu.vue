@@ -31,15 +31,22 @@
                 </span>
             </div>
             <div class="settings_row">
-                <span>{{ $t("gameOverMenu.summary.distance.label") }}</span>
+                <span>{{ $t("gameOverMenu.summary.goldens.label") }}</span>
                 <span>
                     <span class="score-value gold">
-                        {{ distance }}
-                    </span>
-                    <span class="score-value gold newRecord">
-                        {{ $t("gameOverMenu.summary.distance.units") }}
+                        +{{ goldens }}
                     </span>
                 </span>
+
+            </div>
+            <div class="settings_row">
+                <span>{{ $t("gameOverMenu.summary.energons.label") }}</span>
+                <span>
+                    <span class="score-value gold">
+                        +{{ energons }}
+                    </span>
+                </span>
+
             </div>
         </div>
 
@@ -79,8 +86,9 @@ const dynamicTitleName = computed(() => foo.makeText("gameOverMenu.title", 'empt
 // генерируем результаты гонки
 const scoreRounded = computed(() => Math.floor(progressStore.score));
 const highScoreRounded = computed(() => Math.floor(progressStore.highScore));
-const distance = computed(() => progressStore.getDistanceInCubes());
-const currentSpeedRounded = computed(() => playerStore.getCurrentSpeedInCubesPerHour(1));
+const currentSpeedRounded = computed(() => (playerStore.getCurrentSpeed() * 100).toFixed(2));
+const goldens = computed(() => progressStore.currentGoldens);
+const energons = computed(() => progressStore.currentEnergons);
 
 const menuButtons = computed(() => [
     { id: 1, text: foo.makeText("gameOverMenu.menuList.restartGame"), action: restartGame },
@@ -108,13 +116,24 @@ onMounted(() => {
 @use "@/styles/animations.scss";
 
 .container_correction {
-    justify-content: flex-start !important;
-    top: 13.313rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+
+    gap: 2.5rem;
+
 }
 
 .header_correction {
     font-size: 3.125rem; // (50px)
     color: #F79CFF;
+    text-shadow: 0px 0px 10px #F79CFF;
 }
 
 .rotate_180 {
@@ -126,23 +145,27 @@ onMounted(() => {
 }
 
 .btn_correction {
-    font-size: 1.875rem; // (30px)
+    font-size: 16px;
 }
 
 .group_correction {
-    margin-top: 25rem;
+    // margin-top: 25rem;
+    position: relative;
+
+
 
     &>*+* {
-        margin-top: 1.56rem; // 25px - row-gap (между кнопками)
+        margin-top: 2rem; // 25px - row-gap (между кнопками)
     }
 }
 
 .score_container {
     width: 25rem;
-    margin: 2.5rem;
+    // margin: 2.5rem;
     gap: 1rem;
     display: flex;
     flex-direction: column;
+    // height: 100%;
 
 
     font-family: 'jost-light';

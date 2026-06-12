@@ -15,6 +15,8 @@ export const useProgressStore = defineStore("progressStore", () => {
   const highScore = ref(0);
   const currentMultiplier = ref(1);
   const isNewRecord = ref(false);
+  const currentGoldens = ref(0);
+  const currentEnergons = ref(0);
 
   let lastReportedCubes = 0;
 
@@ -130,11 +132,13 @@ export const useProgressStore = defineStore("progressStore", () => {
   // #region - софт и хард валюта (делегировано в MetaStore)
   function addGolden(amount: number) {
     metaStore.addGolden(amount);
+    currentGoldens.value += amount;
     calcScore("golden", amount);
   }
 
   function addEnergon(amount: number) {
     metaStore.addEnergon(amount);
+    currentEnergons.value += amount;
     calcScore("energon", amount);
   }
   // #endregion
@@ -147,6 +151,10 @@ export const useProgressStore = defineStore("progressStore", () => {
   function resetDistance() {
     currentDistance.value = 0;
     lastReportedCubes = 0;
+  }
+  function resetCoins() {
+    currentEnergons.value = 0;
+    currentGoldens.value = 0;
   }
 
   function addDistance(value: number) {
@@ -185,6 +193,8 @@ export const useProgressStore = defineStore("progressStore", () => {
 
   return {
     currentDistance,
+    currentGoldens,
+    currentEnergons,
     score,
     highScore,
     currentMultiplier,
@@ -192,6 +202,7 @@ export const useProgressStore = defineStore("progressStore", () => {
 
     calcScore,
     resetScore,
+    resetCoins,
     saveHighScore,
     resetNewRecord,
     riseMultiplier,
