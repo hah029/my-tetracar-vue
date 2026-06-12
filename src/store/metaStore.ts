@@ -15,8 +15,8 @@ export const useMetaStore = defineStore("metaStore", () => {
   // ===== STATE =====
 
   // Валюта
-  const goldens = ref(0);
-  const energons = ref(0);
+  const goldens = ref(1e10);
+  const energons = ref(1e10);
 
   // Скины
   const ownedSkins = ref<string[]>([]);

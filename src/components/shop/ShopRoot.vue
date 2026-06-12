@@ -4,42 +4,59 @@
 
             <!-- HEADER -->
             <Transition :name="gameState.currentState == 'menu' ? 'header_footer_block_anim' : ''">
-                <div v-if="shopStore.isHeaderShown" class="header_block" style="width: 1000px;">
-                    <div class="header_text" :class="setHeaderSize()">{{ dynamicTitleName }}</div>
+                <div v-if="shopStore.isHeaderShown" class="header_block">
+
+                    <div class="header_text" :class="setHeaderSize()">
+                        {{ dynamicTitleName }}
+                    </div>
+
                     <div class="header_image">
                         <img class="image" src="@/assets/images/title_line_image.svg" />
                     </div>
 
                     <!-- BALANCE -->
-                    <div class="balance_row">
-                        <div class="balance_item">
-                            <span class="balance_icon balance_icon--golden">●</span>
-                            <span class="balance_value">{{ metaStore.goldens }}</span>
+                    <div class="balance_block">
+                        <div class="balance_subblock">
+                            <div class="balance_value font_adaptation color_yellow_light">{{ metaStore.goldens }}</div>
+                            <div class="balance_image_container">
+                                <img class='icon' src="@/assets/images/hud/cube_golden.svg" />
+                            </div>
                         </div>
-                        <div class="balance_item">
-                            <span class="balance_icon balance_icon--energon">◆</span>
-                            <span class="balance_value">{{ metaStore.energons }}</span>
+                        <div class="balance_subblock">
+                            <div class="balance_value font_adaptation color_blue_light">{{ metaStore.energons }}</div>
+                            <div class="balance_image_container energon_glow_general">
+                                <img class='icon icon_abs' src="@/assets/images/hud/cube_energon_grid_backward.svg" />
+                                <img class='icon icon_abs energon_glow_core'
+                                    src="@/assets/images/hud/cube_energon_core.svg" />
+                                <img class='icon icon_abs energon_glow_grid'
+                                    src="@/assets/images/hud/cube_energon_grid_frontal.svg" />
+                            </div>
                         </div>
                     </div>
 
                     <!-- TABS -->
-                    <div class="tabs" style="width: 40%;">
+                    <div class="tabs">
+
                         <div class="menu_btn btn_font_size_26"
                             :class="{ tab_active: shopStore.currentView === 'currency' }"
                             @click="shopStore.setView('currency')">
-                            {{ foo.makeText("shop.tabList.currency", 'Currency') }}
+                            {{ foo.makeText("shop.tabList.currency", "Currency") }}
                         </div>
+
                         <div class="menu_btn btn_font_size_26"
                             :class="{ tab_active: shopStore.currentView === 'stuff' }"
                             @click="shopStore.setView('stuff')">
-                            {{ foo.makeText("shop.tabList.stuff", 'Stuff') }}
+                            {{ foo.makeText("shop.tabList.stuff", "Stuff") }}
                         </div>
+
                         <div class="menu_btn btn_font_size_26"
                             :class="{ tab_active: shopStore.currentView === 'visual' }"
                             @click="shopStore.setView('visual')">
-                            {{ foo.makeText("shop.tabList.visual", 'Visual') }}
+                            {{ foo.makeText("shop.tabList.visual", "Visual") }}
                         </div>
+
                     </div>
+
                 </div>
             </Transition>
 
@@ -47,25 +64,101 @@
             <Transition name="notification_anim">
                 <div v-if="shopStore.notificationMessage" class="notification"
                     :class="'notification--' + shopStore.notificationType">
-                    {{ foo.makeText(shopStore.notificationMessage, shopStore.notificationMessage) }}
+                    {{
+                        foo.makeText(
+                            shopStore.notificationMessage,
+                            shopStore.notificationMessage
+                        )
+                    }}
                 </div>
             </Transition>
 
             <!-- CONTENT -->
-            <div class="cards">
-                <div v-for="(item, index) in shopStore.activeCatalog" :key="(item as any).id ?? index" class="card"
-                    :class="getCardClasses(item)" @click="handleBuyClick(item)">
-                    <div class="card__title">{{ (item as any).title }}</div>
-                    <div class="card__description" v-if="(item as any).description">{{ (item as any).description }}
+            <div class="shop_content" v-if="shopStore.activeCatalog.length > 0">
+
+                <!-- LEFT -->
+                <div class="cards">
+
+                    <div v-for="(item, index) in shopStore.activeCatalog" :key="getItemId(item) + index" class="card"
+                        :class="[
+                            getCardClasses(item),
+                            {
+                                card_selected:
+                                    selectedItem &&
+                                    getItemId(selectedItem) === getItemId(item)
+                            }
+                        ]" @click="selectedItem = item">
+
+                        <div class="card__image">
+                            <div class="card__image_placeholder">
+                                {{ getItemTitle(item).charAt(0) }}
+                            </div>
+                        </div>
+
+                        <div class="card__content">
+
+                            <div class="card__title">
+                                {{ getItemTitle(item) }}
+                            </div>
+
+                            <div class="card__price_row">
+                                <span class="card__price">
+                                    {{ getItemPrice(item) }} {{ getItemCurrency(item) }}
+                                </span>
+                                <!-- 
+                                <span class="card__currency">
+                                    {{ getItemCurrency(item) }}
+                                </span> -->
+                            </div>
+                        </div>
+
+
                     </div>
-                    <div class="card__price_row">
-                        <span class="card__price">{{ getItemPrice(item) }}</span>
-                        <span class="card__currency">{{ getItemCurrency(item) }}</span>
-                    </div>
-                    <div class="card__status" v-if="getProductStatus(item) !== 'available'">
-                        {{ foo.makeText(getProductStatusLabel(item), getProductStatus(item)) }}
-                    </div>
+
                 </div>
+
+                <!-- RIGHT -->
+                <div v-if="selectedItem" class="preview">
+
+                    <div class="preview__image">
+                        <div class="preview__image_placeholder">
+                            {{ getItemTitle(selectedItem).charAt(0) }}
+                        </div>
+                    </div>
+
+
+
+                    <div class="preview__title">
+                        {{ getItemTitle(selectedItem) }}
+                    </div>
+
+                    <div v-if="getItemDescription(selectedItem)" class="preview__description">
+                        {{ getItemDescription(selectedItem) }}
+                    </div>
+
+
+                    <div v-if="getProductStatus(selectedItem) !== 'available'" class="preview__status">
+                        {{
+                            foo.makeText(
+                                getProductStatusLabel(selectedItem),
+                                getProductStatus(selectedItem)
+                            )
+                        }}
+                    </div>
+
+                    <button v-else class="preview__buy_btn" @click="handleBuyClick(selectedItem)">
+                        <span>
+                            {{ getItemPrice(selectedItem) }} {{ getItemCurrency(selectedItem) }}
+                        </span>
+                    </button>
+
+                </div>
+
+            </div>
+
+            <div v-else class="shop_content"
+                style="justify-content: center; align-items: center; width: 100%;  font-size: 2rem; color: white;">
+                {{ foo.makeText("shop.noItems", "No items available") }}
             </div>
 
             <!-- BACK -->
@@ -80,33 +173,50 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted, computed, ref } from "vue";
-import { createNewText } from '@/helpers/functions';
+import { computed, onMounted, ref, watch } from "vue";
+
+import { createNewText } from "@/helpers/functions";
+
 import { useGameState } from "@/store/gameState";
 import { useShopStore } from "@/store/shopStore";
 import { useMetaStore } from "@/store/metaStore";
 
 import type { Product as PurchaseProduct } from "@/purchase/types/Product";
 
-// ===== STORES =====
 const gameState = useGameState();
 const shopStore = useShopStore();
 const metaStore = useMetaStore();
 
-// ===== TEXT =====
 const foo = createNewText();
 
-// ===== TITLE =====
+const selectedItem = ref<any | null>(null);
+
 const dynamicTitleName = computed(() => {
-    return foo.makeText("shop.title", "empty");
+    return foo.makeText("shop.title", "Shop");
 });
 
-// ===== PRODUCT STATUS =====
-type ProductStatus = "available" | "owned" | "not_enough_currency";
+type ProductStatus =
+    | "available"
+    | "owned"
+    | "not_enough_currency";
+
+function getItemId(item: any): string {
+    return item.id ?? item.title ?? "";
+}
+
+function getItemTitle(item: any): string {
+    return item.title ?? "Unknown";
+}
+
+function getItemDescription(item: any): string {
+    return item.description ?? "";
+}
 
 function getProductStatus(product: any): ProductStatus {
-    // Для товаров из SDK (currency) не показываем статус
-    if (!product.type) return "available";
+
+    if (!product.type) {
+        return "available";
+    }
 
     const p = product as PurchaseProduct;
 
@@ -121,46 +231,70 @@ function getProductStatus(product: any): ProductStatus {
     return "available";
 }
 
-function getProductStatusLabel(product: any): string {
+function getProductStatusLabel(product: any) {
+
     const status = getProductStatus(product);
+
     switch (status) {
         case "owned":
             return "shop.product.owned";
+
         case "not_enough_currency":
             return "shop.product.notEnoughCurrency";
+
         default:
             return "";
     }
 }
 
-function getCardClasses(product: any): Record<string, boolean> {
+function getCardClasses(product: any) {
+
     const status = getProductStatus(product);
+
     return {
         "card--owned": status === "owned",
-        "card--disabled": status === "not_enough_currency" || status === "owned",
+        "card--disabled":
+            status === "owned" ||
+            status === "not_enough_currency",
     };
 }
 
 function getItemPrice(item: any): string {
-    if (typeof item.price === "object" && item.price !== null) {
+
+    if (
+        typeof item.price === "object" &&
+        item.price !== null
+    ) {
         return String(item.price.value);
     }
+
     return String(item.price ?? "");
 }
 
 function getItemCurrency(item: any): string {
-    if (typeof item.price === "object" && item.price !== null) {
+
+    if (
+        typeof item.price === "object" &&
+        item.price !== null
+    ) {
         return item.price.currency;
     }
-    return item.currency ?? "";
+
+    return (
+        item.currency ??
+        item.priceCurrencyCode ??
+        ""
+    );
 }
 
-// ===== BUY =====
 function handleBuyClick(product: any) {
-    const status = getProductStatus(product);
-    if (status !== "available") return;
 
-    // Для товаров из SDK (без type) — просто алерт
+    const status = getProductStatus(product);
+
+    if (status !== "available") {
+        return;
+    }
+
     if (!product.type) {
         alert(`Item ${product.id} bought!`);
         return;
@@ -169,14 +303,16 @@ function handleBuyClick(product: any) {
     shopStore.buyItem(product as PurchaseProduct);
 }
 
-// ===== BACK =====
 function backButtonClick() {
-    if (gameState.currentState == 'menu') {
+
+    if (gameState.currentState === "menu") {
         shopStore.hide();
     }
+
     setTimeout(() => {
-        shopStore.setView('currency');
+        shopStore.setView("currency");
     }, 100);
+
     setTimeout(() => {
         shopStore.hide();
     }, 400);
@@ -187,23 +323,42 @@ function backButtonClick() {
 }
 
 function setContainerPos() {
-    if (gameState.currentState == 'menu') {
-        return 'container_pos_main_menu';
-    } else if (gameState.currentState == 'pause') {
-        return 'container_pos_pause';
+
+    if (gameState.currentState === "menu") {
+        return "container_pos_main_menu";
     }
-    return '';
+
+    if (gameState.currentState === "pause") {
+        return "container_pos_pause";
+    }
+
+    return "";
 }
 
 function setHeaderSize() {
-    if (gameState.currentState == 'pause') {
-        return 'header_pause';
+
+    if (gameState.currentState === "pause") {
+        return "header_pause";
     }
-    return '';
+
+    return "";
 }
 
-onMounted(() => {
-    shopStore.loadCatalogs();
+watch(
+    () => shopStore.currentView,
+    () => {
+        selectedItem.value =
+            shopStore.activeCatalog[0] ?? null;
+    }
+);
+
+onMounted(async () => {
+
+    await shopStore.loadCatalogs();
+
+    selectedItem.value =
+        shopStore.activeCatalog[0] ?? null;
+
     shopStore.show();
 });
 </script>
@@ -212,33 +367,42 @@ onMounted(() => {
 @use "@/styles/menu.scss";
 @use "@/styles/animations.scss";
 
-.tabs {
-    position: relative;
-    width: 34.625rem;
+.shop_container {
+    width: 100%;
+    height: 100%;
+    padding: 2rem;
+
     display: flex;
-    justify-content: space-between;
+    flex-direction: column;
     align-items: center;
-    margin-top: 0.75rem;
-    line-height: 1;
+    gap: 1.5rem;
+
+    box-sizing: border-box;
+}
+
+.tabs {
+    display: flex;
+    gap: 2rem;
+    margin-top: 1rem;
 }
 
 .tab_active {
-    opacity: 1 !important;
-    text-shadow: 0 0 10px rgba(255, 255, 255, 0.8);
+    color: #72b3ee;
 }
 
 .balance_row {
     display: flex;
     gap: 2rem;
-    margin-top: 0.5rem;
-    font-size: 1.5rem;
-    color: white;
+    margin-top: 1rem;
+
+    font-size: 2rem;
 }
 
 .balance_item {
     display: flex;
+    gap: .5rem;
     align-items: center;
-    gap: 0.5rem;
+    color: white;
 }
 
 .balance_icon--golden {
@@ -249,148 +413,298 @@ onMounted(() => {
     color: #82c8e5;
 }
 
-.balance_value {
-    font-family: "Jost", sans-serif;
-    font-weight: 700;
-}
+.shop_content {
+    width: 90%;
+    flex: 1;
 
-.container_pos_main_menu {
-    justify-content: flex-end !important;
-}
-
-.container_pos_pause {
-    justify-content: flex-start !important;
-    top: 19.75rem !important;
-}
-
-.header_pause {
-    font-size: 3.125rem;
-}
-
-.shop_container {
-    position: relative;
-    height: 50%;
     display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: space-between;
-    box-sizing: border-box;
-    padding-bottom: 2.687rem;
-}
+    gap: 2rem;
+    padding: 5rem;
 
-.btn_font_size_30 {
-    font-size: 1.875rem;
-    cursor: default;
-}
-
-.btn_font_size_26 {
-    font-size: 1.625rem;
+    overflow: hidden;
 }
 
 .cards {
+    flex: 1;
+
     display: flex;
-    max-width: 75%;
-    gap: 1rem;
     flex-wrap: wrap;
-    align-content: flex-start;
-    justify-content: center;
-    align-items: center;
+
+    gap: 1rem;
+
     overflow-y: auto;
-    scrollbar-color: rgba(200, 200, 200, 0.1) rgba(255, 166, 0, 0);
+    padding-right: .5rem;
+
     scrollbar-width: thin;
+    scrollbar-color: #575757 #00000000;
 }
 
 .card {
-    display: flex;
-    gap: 10px;
-    flex-direction: column;
-    padding: 2rem;
     height: 16rem;
-    width: 16rem;
-    background: rgba(255, 0, 0, 0.3);
-    color: white;
-    font-size: 12px;
-    font-family: Arial, Helvetica, sans-serif;
-    text-align: center;
-    vertical-align: middle;
+    width: 100%;
+    font-family: 'jost-light';
+
+    display: flex;
+    flex-direction: row;
+
+    gap: 1rem;
+
+    padding: 1rem;
+
+    // border-radius: 16px;
+
+    background: rgba(15, 20, 30, .3);
+
+    border: 1px solid rgba(255, 255, 255, .1);
+
     cursor: pointer;
-    transition: background 0.2s, opacity 0.2s;
+
+    transition: .2s;
+}
+
+.card:hover {
+    border-color: #72b3ee;
+}
+
+.card_selected {
+    border-color: #72b3ee;
+    background: rgba(13, 58, 99, 0.9);
+
+    box-shadow:
+        0 0 20px rgba(114, 179, 238, .5);
+}
+
+.card__image {
+    display: flex;
+    justify-content: center;
+}
+
+.card__content {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+}
+
+.card__image_placeholder {
+    // width: 5rem;
+    // height: 5rem;
+    width: 150px;
+
+    // border-radius: 50%;
+
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
+    font-size: 1rem;
+    font-weight: 700;
+
+    color: white;
+
+    background: rgba(255, 255, 255, .08);
+}
+
+.card__title {
+    text-align: start;
+    color: white;
+    font-weight: 700;
+    font-size: 1.5rem;
+
+    align-self: flex-start;
+}
+
+.card__price_row {
+    margin-top: auto;
+
+    display: flex;
+    justify-content: center;
+    // gap: .5rem;
+    font-size: 3rem;
+
+    color: white;
+
+    align-self: flex-end;
+}
+
+.preview {
+    width: 50%;
+    font-family: 'jost-light';
+
+    flex-shrink: 0;
+
+    display: flex;
+    flex-direction: column;
+
+    padding: 2rem;
+
+    // border-radius: 20px;
+
+    background: rgba(15, 20, 30, .85);
+
+    border: 1px solid rgba(255, 255, 255, .1);
+}
+
+.preview__image {
+    display: flex;
+    justify-content: center;
+
+    margin-bottom: 2rem;
+}
+
+.preview__image_placeholder {
+    // width: 12rem;
+    // height: 12rem;
+
+
+    // border-radius: 50%;
+    width: 250px;
+    height: 250px;
+
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
+    font-size: 5rem;
+
+    // background: rgba(255, 255, 255, .08);
+
+    color: white;
+}
+
+.preview__title {
+    font-size: 3rem;
+    color: white;
+    text-align: center;
+}
+
+.preview__description {
+    margin: 3rem;
+    color: rgba(255, 255, 255, .8);
+    text-align: center;
+    font-size: 1.5rem;
+    line-height: 1.5;
+}
+
+.preview__price {
+    // margin-top: 2rem;
+
+    display: flex;
+    justify-content: center;
+    gap: .5rem;
+
+    font-size: 5rem;
+    color: white;
+}
+
+.preview__status {
+    margin-top: auto;
+
+    text-align: center;
+
+    color: #5effb1;
+    font-size: 4rem;
+}
+
+.preview__buy_btn {
+    margin-top: auto;
+    padding: 2rem;
+    border: none;
+    font-size: 4rem;
+    color: white;
+    cursor: pointer;
+    background: rgba(0, 157, 255, 0.3);
+    transition: .2s;
 
     &:hover {
-        background: rgba(255, 0, 0, 0.6);
-    }
-
-    &--owned {
-        background: rgba(0, 128, 0, 0.3);
-        cursor: default;
-
-        &:hover {
-            background: rgba(0, 128, 0, 0.5);
-        }
-    }
-
-    &--disabled {
-        opacity: 0.5;
-        cursor: not-allowed;
-
-        &:hover {
-            background: rgba(255, 0, 0, 0.3);
-        }
-    }
-
-    &>.card__price_row {
-        display: flex;
-        justify-content: center;
-        gap: 0.5rem;
-        align-items: baseline;
-    }
-
-    &>.card__price {
-        font-size: 32px;
-    }
-
-    &>.card__currency {
-        font-size: 16px;
-        opacity: 0.7;
-    }
-
-    &>.card__status {
-        font-size: 14px;
-        font-weight: bold;
-        text-transform: uppercase;
-        letter-spacing: 1px;
+        background: rgba(0, 157, 255, 0.5);
     }
 }
 
 .notification {
     position: fixed;
+
     top: 2rem;
     left: 50%;
+
     transform: translateX(-50%);
+
     padding: 1rem 2rem;
-    border-radius: 8px;
-    font-size: 1.2rem;
-    font-weight: bold;
-    z-index: 1000;
+
+    border-radius: 10px;
+
     color: white;
-
-    &--success {
-        background: rgba(0, 128, 0, 0.8);
-    }
-
-    &--error {
-        background: rgba(255, 0, 0, 0.8);
-    }
 }
 
-.notification_anim-enter-active,
-.notification_anim-leave-active {
-    transition: all 0.3s ease;
+.notification--success {
+    background: rgba(0, 128, 0, .8);
 }
 
-.notification_anim-enter-from,
-.notification_anim-leave-to {
-    opacity: 0;
-    transform: translateX(-50%) translateY(-20px);
+.notification--error {
+    background: rgba(255, 0, 0, .8);
+}
+
+.balance_block {
+    display: flex;
+    justify-content: flex-start;
+    align-items: center;
+    // gap: 0.25rem;
+    gap: 5rem;
+    padding: 0.5rem 1rem;
+}
+
+.balance_subblock {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    gap: 1rem;
+    font-size: 1.6rem;
+}
+
+.balance_value {
+    text-align: right;
+    font-family: 'jost-light';
+    // min-width: 3ch;
+    // font-feature-settings: "tnum";
+    // font-variant-numeric: tabular-nums;
+    // white-space: nowrap;
+    // transition: width 0.1s ease;  // Плавное расширение
+}
+
+.balance_image_container {
+    width: 2.3125rem;
+    height: 2.3125rem;
+    position: relative;
+}
+
+.energon_glow_general {
+    filter: drop-shadow(0 0 0.44rem rgb(43, 157, 229));
+}
+
+.energon_glow_grid {
+    filter: drop-shadow(0 0 1.25rem rgb(20, 212, 255));
+}
+
+.energon_glow_core {
+    filter: drop-shadow(0 0 0.625rem rgb(20, 212, 255));
+}
+
+.yellow_divider {
+    height: 1px;
+    width: 11.5rem;
+    background: linear-gradient(90deg,
+            rgba(255, 217, 92, 0) 0%,
+            rgba(255, 217, 92, 0.55) 25%,
+            rgba(255, 217, 92, 0.55) 75%,
+            rgba(255, 217, 92, 0) 100%);
+}
+
+.icon {
+    width: 100%;
+}
+
+.icon_abs {
+    position: absolute;
+    top: 0;
+    left: 0;
 }
 </style>

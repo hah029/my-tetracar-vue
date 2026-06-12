@@ -46,7 +46,6 @@
                         +{{ energons }}
                     </span>
                 </span>
-
             </div>
         </div>
 

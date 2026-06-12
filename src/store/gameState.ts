@@ -55,12 +55,17 @@ export const useGameState = defineStore("gameState", () => {
 
       case GameStates.Menu:
         sound.playMusicSequence("music_intro", "music_background");
-        // Асинхронное сохранение прогресса, ошибки логируем
-        progress
-          .saveProgress()
-          .catch((err) =>
-            console.error("Failed to save progress on menu:", err),
-          );
+
+        // Сохраняем прогресс только если данные уже были восстановлены
+        // (при первом входе Preloader → Menu restoreProgress() ещё не вызывался,
+        //  и saveProgress() перезапишет сохранённые данные нулями)
+        if (prev !== GameStates.Preloader) {
+          progress
+            .saveProgress()
+            .catch((err) =>
+              console.error("Failed to save progress on menu:", err),
+            );
+        }
 
         if (prev === GameStates.Gameover || prev === GameStates.Pause) {
           resetCallback?.();
