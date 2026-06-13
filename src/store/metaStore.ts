@@ -15,8 +15,8 @@ export const useMetaStore = defineStore("metaStore", () => {
   // ===== STATE =====
 
   // Валюта
-  const goldens = ref(1e10);
-  const energons = ref(1e10);
+  const goldens = ref(1e6);
+  const energons = ref(1e6);
 
   // Скины
   const ownedSkins = ref<string[]>([]);
@@ -28,6 +28,11 @@ export const useMetaStore = defineStore("metaStore", () => {
     armorLevel: 0,
     magnetRadiusLevel: 0,
   });
+  const MAX_UPGRADES = Object.freeze({
+    ammoLevel: 3,
+    armorLevel: 3,
+    magnetRadiusLevel: 3,
+  });
 
   // Постоянные возможности
   const permanentFeatures = ref<string[]>([]);
@@ -38,7 +43,7 @@ export const useMetaStore = defineStore("metaStore", () => {
   // ===== COMPUTED (формулы из shop.md п.8) =====
   const BASE_AMMO = 10;
   const BASE_ARMOR = 1;
-  const BASE_MAGNET_RADIUS = 20;
+  const BASE_MAGNET_RADIUS = 5;
 
   const maxAmmo = computed(() => BASE_AMMO + upgrades.value.ammoLevel * 2);
   const maxArmor = computed(() => BASE_ARMOR + upgrades.value.armorLevel);
@@ -104,7 +109,9 @@ export const useMetaStore = defineStore("metaStore", () => {
     if (!(key in upgrades.value)) {
       upgrades.value[key] = 0;
     }
-    upgrades.value[key] += amount;
+    if (upgrades.value[key] < MAX_UPGRADES[key]) {
+      upgrades.value[key] += amount;
+    }
   }
 
   // ===== ПОСТОЯННЫЕ ФИЧИ =====
@@ -146,6 +153,10 @@ export const useMetaStore = defineStore("metaStore", () => {
     activeTimedEffects.value = activeTimedEffects.value.filter(
       (e) => e.expiresAt > now,
     );
+  }
+
+  function getTimedEffect(feature: string): TimedEffect | null {
+    return getActiveTimedEffects().find((e) => e.feature === feature) || null;
   }
 
   // ===== СОХРАНЕНИЕ / ЗАГРУЗКА =====
@@ -242,6 +253,8 @@ export const useMetaStore = defineStore("metaStore", () => {
     permanentFeatures,
     activeTimedEffects,
 
+    MAX_UPGRADES,
+
     // computed
     maxAmmo,
     maxArmor,
@@ -274,6 +287,7 @@ export const useMetaStore = defineStore("metaStore", () => {
     isTimedFeatureActive,
     isFeatureActive,
     cleanupExpiredEffects,
+    getTimedEffect,
 
     // сохранение
     saveProgress,

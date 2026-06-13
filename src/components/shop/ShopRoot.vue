@@ -100,15 +100,20 @@
                             <div class="card__title">
                                 {{ getItemTitle(item) }}
                             </div>
+                            <div class="card__title" v-if="item.type === 'timed_feature'">
+                                {{ getTimedProductTimer(item) }}
+                            </div>
+                            <div class="card__title" v-if="item.type === 'upgrade'">
+                                {{ checkIfUpgradeMaxed(item) ? "(макс)" : getUpgradeLevelString(item) }}
+                            </div>
+                            <div class="card__title">
+                                {{ getProductStatus(item) !== 'available' ? "(куплено)" : "" }}
+                            </div>
 
                             <div class="card__price_row">
                                 <span class="card__price">
                                     {{ getItemPrice(item) }} {{ getItemCurrency(item) }}
                                 </span>
-                                <!-- 
-                                <span class="card__currency">
-                                    {{ getItemCurrency(item) }}
-                                </span> -->
                             </div>
                         </div>
 
@@ -132,25 +137,50 @@
                         {{ getItemTitle(selectedItem) }}
                     </div>
 
+                    <div class="preview_timer">
+                        {{ getTimedProductTimer(selectedItem) }}
+                    </div>
+
                     <div v-if="getItemDescription(selectedItem)" class="preview__description">
                         {{ getItemDescription(selectedItem) }}
                     </div>
 
+                    <div v-if="getProductStatus(selectedItem) !== 'available'">
 
-                    <div v-if="getProductStatus(selectedItem) !== 'available'" class="preview__status">
-                        {{
-                            foo.makeText(
-                                getProductStatusLabel(selectedItem),
-                                getProductStatus(selectedItem)
-                            )
-                        }}
+                        <button
+                            v-if="selectedItem.type == 'cosmetic' && selectedItem.effect.skinId !== metaStore.activeSkin"
+                            class="preview__buy_btn" @click="handleApplyClick(selectedItem)">
+                            Применить
+                        </button>
+
+                        <div v-else-if="selectedItem.type == 'cosmetic' && selectedItem.effect.skinId === metaStore.activeSkin"
+                            class="preview__status">
+                            {{ foo.makeText("shop.product.applied", "Applied") }}
+                        </div>
+
+                        <div v-else class="preview__status">
+                            {{
+                                foo.makeText(
+                                    getProductStatusLabel(selectedItem),
+                                    getProductStatus(selectedItem)
+                                )
+                            }}
+                        </div>
                     </div>
+
 
                     <button v-else class="preview__buy_btn" @click="handleBuyClick(selectedItem)">
                         <span>
                             {{ getItemPrice(selectedItem) }} {{ getItemCurrency(selectedItem) }}
                         </span>
                     </button>
+
+                    <!-- DEBUG: selectedItem status -->
+                    <div style="color:yellow;font-size:1.2rem;margin-top:0.5rem;text-align:center;">
+                        [DEBUG] status={{ getProductStatus(selectedItem) }},
+                        owned={{ shopStore.isProductOwned(selectedItem) }},
+                        type={{ selectedItem?.type }}
+                    </div>
 
                 </div>
 
@@ -214,13 +244,33 @@ function getItemDescription(item: any): string {
 
 function getProductStatus(product: any): ProductStatus {
 
+    const isSelected = product === selectedItem.value || product?.id === selectedItem.value?.id;
+
     if (!product.type) {
+        if (isSelected) {
+            console.log(
+                "[DEBUG SELECTED getProductStatus] product.id=%s, NO TYPE, product keys=%s",
+                product.id,
+                Object.keys(product).join(","),
+            );
+        }
         return "available";
     }
 
     const p = product as PurchaseProduct;
 
-    if (shopStore.isProductOwned(p)) {
+    const owned = shopStore.isProductOwned(p);
+    if (isSelected) {
+        console.log(
+            "[DEBUG SELECTED getProductStatus] product.id=%s, type=%s, isProductOwned=%s, canAfford=%s",
+            product.id,
+            product.type,
+            owned,
+            shopStore.canAfford(p),
+        );
+    }
+
+    if (owned) {
         return "owned";
     }
 
@@ -252,6 +302,7 @@ function getCardClasses(product: any) {
     const status = getProductStatus(product);
 
     return {
+        "card--applied": product.type === "cosmetic" && product.effect.skinId === metaStore.activeSkin,
         "card--owned": status === "owned",
         "card--disabled":
             status === "owned" ||
@@ -301,6 +352,76 @@ function handleBuyClick(product: any) {
     }
 
     shopStore.buyItem(product as PurchaseProduct);
+}
+
+function handleApplyClick(product: PurchaseProduct) {
+
+    console.log("Apply click for", product);
+    if (product.type !== "cosmetic") {
+        return;
+    }
+    metaStore.setActiveSkin(product.effect.skinId);
+}
+
+function getTimedProductTimer(product: any): string {
+
+    if (product.type !== "timed_feature") {
+        return "";
+    }
+
+    const effect = metaStore.getTimedEffect(product.effect.feature);
+
+    if (!effect) {
+        return "";
+    }
+
+    const remainingSeconds = Math.floor((effect.expiresAt - Date.now()) / 1000);
+
+    const hours = Math.floor(remainingSeconds / 3600);
+    const minutes = Math.floor((remainingSeconds % 3600) / 60);
+    const seconds = remainingSeconds % 60;
+
+    return `${hours.toString().padStart(2, "0")}:${minutes.toString().padStart(2, "0")}:${seconds.toString().padStart(2, "0")}`;
+}
+
+function getUpgradeLevel(product: any): { level: number; maxLevel: number } | null {
+
+    if (product.type !== "upgrade") {
+        return null;
+    }
+
+    const level = metaStore.getUpgradeLevel(product.effect?.upgrade);
+    const maxLevel = metaStore.MAX_UPGRADES[product.effect?.upgrade];
+
+    if (level === null) {
+        return { level, maxLevel };
+    }
+
+    return { level, maxLevel };
+}
+
+function checkIfUpgradeMaxed(product: any): boolean {
+
+    if (product.type !== "upgrade") {
+        return false;
+    }
+
+    const upgradeInfo = getUpgradeLevel(product);
+
+    if (!upgradeInfo) {
+        return false;
+    }
+
+    return upgradeInfo.level >= upgradeInfo.maxLevel;
+}
+
+function getUpgradeLevelString(product: any): string {
+    if (product.type !== "upgrade") {
+        return "";
+    }
+
+    const upgradeInfo = getUpgradeLevel(product);
+    return `Уровень: ${upgradeInfo.level} / ${upgradeInfo.maxLevel}`;
 }
 
 function backButtonClick() {
@@ -483,6 +604,16 @@ onMounted(async () => {
     display: flex;
     flex-direction: column;
     width: 100%;
+}
+
+.card--owned {
+    background: rgba(0, 255, 179, 0.05);
+    // border-color: rgba(255, 255, 255, .1);
+}
+
+.card--applied {
+    background: rgba(255, 204, 0, 0.1);
+    // border-color: rgba(255, 255, 255, .1);
 }
 
 .card__image_placeholder {
@@ -706,5 +837,12 @@ onMounted(async () => {
     position: absolute;
     top: 0;
     left: 0;
+}
+
+.preview_timer {
+    margin-top: 1rem;
+    text-align: center;
+    font-size: 2rem;
+    color: rgba(255, 255, 255, .8);
 }
 </style>

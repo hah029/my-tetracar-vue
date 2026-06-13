@@ -61,7 +61,6 @@ export const useProgressStore = defineStore("progressStore", () => {
           isNewRecord.value = true;
           playerStore.addNewMsg("newRecord");
           soundManager.play("sfx_new_record");
-          //   oldHighScore.value = highScore.value; // запоминаем предыдущий рекорд
         }
         highScore.value = score.value;
       }
@@ -73,6 +72,19 @@ export const useProgressStore = defineStore("progressStore", () => {
 
     if (playerStore.isNitroEnabled) mplr *= MULTI_GROW_NITRO;
     // if (playerStore.isNitroEnabled) mplr *= 2;
+
+    console.log(
+      "[ProgressStore] metaStore.isFeatureActive('scoreMultiplier'):",
+      metaStore.isFeatureActive("scoreMultiplier"),
+    );
+
+    if (metaStore.isFeatureActive("scoreMultiplier")) {
+      console.log(
+        "[ProgressStore] metaStore.getTimedEffect('scoreMultiplier')?.value:",
+        metaStore.getTimedEffect("scoreMultiplier")?.value,
+      );
+      mplr *= metaStore.getTimedEffect("scoreMultiplier")?.value || 1;
+    }
 
     return mplr;
   }
