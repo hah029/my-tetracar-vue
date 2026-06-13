@@ -76,7 +76,8 @@ export class FlashEffectManager {
     const material = new THREE.ShaderMaterial({
       transparent: true,
       depthWrite: false,
-      blending: THREE.AdditiveBlending,
+      // blending: THREE.AdditiveBlending,
+      blending: THREE.NormalBlending,
 
       uniforms: {
         uTime: { value: 0 },
