@@ -188,10 +188,42 @@ export const useProgressStore = defineStore("progressStore", () => {
     return Math.floor(currentDistance.value);
   }
 
+  async function saveArmorAndAmmo(): Promise<void> {
+    try {
+      await platform.setPlayerStatByKey("armor", playerStore.armor);
+      await platform.setPlayerStatByKey("ammo", playerStore.ammo);
+    } catch (err) {
+      console.error("Failed to save armor/ammo:", err);
+    }
+  }
+
+  async function restoreArmorAndAmmo(): Promise<void> {
+    try {
+      const savedArmor = await platform.getPlayerStatByKey("armor");
+      if (savedArmor != null) {
+        const armorVal = Number(savedArmor);
+        for (let i = 0; i < armorVal; i++) {
+          playerStore.addArmor();
+        }
+      }
+
+      const savedAmmo = await platform.getPlayerStatByKey("ammo");
+      if (savedAmmo != null) {
+        const ammoVal = Number(savedAmmo);
+        for (let i = 0; i < ammoVal; i++) {
+          playerStore.addAmmo();
+        }
+      }
+    } catch (err) {
+      console.error("Failed to restore armor/ammo:", err);
+    }
+  }
+
   async function saveProgress(): Promise<void> {
     try {
       await metaStore.saveProgress();
       await saveHighScore();
+      await saveArmorAndAmmo();
     } catch (error) {
       console.error("Failed to save progress:", error);
     }
@@ -200,6 +232,7 @@ export const useProgressStore = defineStore("progressStore", () => {
   function restoreProgress(): void {
     restoreHighScore();
     metaStore.restoreProgress();
+    restoreArmorAndAmmo();
   }
   // #endregion
 
@@ -230,6 +263,8 @@ export const useProgressStore = defineStore("progressStore", () => {
     getDistance,
     getDistanceInCubes,
 
+    saveArmorAndAmmo,
+    restoreArmorAndAmmo,
     restoreProgress,
     saveProgress,
   };
