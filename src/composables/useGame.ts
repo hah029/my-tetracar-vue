@@ -143,6 +143,7 @@ export function useGame() {
 
     if (!playerStore.isShieldEnabled && playerStore.armor > 0) {
       // логика для случая, когда щит не активен и но броня есть
+      playerStore.enableShield();
       realCar.enableShield();
     }
   }
