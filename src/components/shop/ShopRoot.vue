@@ -75,105 +75,139 @@
 
             <!-- CONTENT -->
             <div class="shop_content" v-if="shopStore.activeCatalog.length > 0">
+                <!-- CONTENT -->
 
-                <!-- LEFT -->
-                <div class="cards">
+                <div class="shop_content" v-if="shopStore.activeCatalog.length > 0">
 
-                    <div v-for="(item, index) in shopStore.activeCatalog" :key="getItemId(item) + index" class="card"
-                        :class="[
-                            getCardClasses(item),
-                            {
-                                card_selected:
-                                    selectedItem &&
-                                    getItemId(selectedItem) === getItemId(item)
-                            }
-                        ]" @click="selectedItem = item">
+                    ```
+                    <!-- LEFT -->
+                    <div class="cards">
 
-                        <div class="card__image">
-                            <div class="card__image_placeholder">
-                                {{ getItemTitle(item).charAt(0) }}
+                        <div v-for="(item, index) in shopStore.activeCatalog" :key="getItemId(item) + index"
+                            class="card" :class="[
+                                getCardClasses(item),
+                                {
+                                    card_selected:
+                                        selectedItem &&
+                                        getItemId(selectedItem) === getItemId(item)
+                                }
+                            ]" @click="selectedItem = item">
+
+                            <div class="card__image">
+                                <div class="card__image_placeholder">
+                                    {{ getItemTitle(item).charAt(0) }}
+                                </div>
                             </div>
+
+                            <div class="card__content">
+
+                                <div class="card__top">
+
+                                    <div class="card__title">
+                                        {{ getItemTitle(item) }}
+                                    </div>
+
+                                    <div v-if="item.type === 'upgrade'" class="status_badge status_badge--upgrade">
+                                        {{ getUpgradeLevelString(item) }}
+                                    </div>
+
+                                    <div v-if="item.type === 'timed_feature'" class="status_badge status_badge--timer">
+                                        {{ getTimedProductTimer(item) }}
+                                    </div>
+
+                                </div>
+
+                                <div class="card__bottom">
+
+                                    <div v-if="getProductStatus(item) === 'owned'"
+                                        class="status_badge status_badge--owned">
+                                        OWNED
+                                    </div>
+
+                                    <div class="card__price_row">
+                                        {{ getItemPrice(item) }}
+                                        {{ getItemCurrency(item) }}
+                                    </div>
+
+                                </div>
+
+                            </div>
+
                         </div>
 
-                        <div class="card__content">
+                    </div>
 
-                            <div class="card__title">
-                                {{ getItemTitle(item) }}
-                            </div>
-                            <div class="card__title" v-if="item.type === 'timed_feature'">
-                                {{ getTimedProductTimer(item) }}
-                            </div>
-                            <div class="card__title" v-if="item.type === 'upgrade'">
-                                {{ checkIfUpgradeMaxed(item) ? "(макс)" : getUpgradeLevelString(item) }}
-                            </div>
-                            <div class="card__title">
-                                {{ getProductStatus(item) !== 'available' ? "(куплено)" : "" }}
+                    <!-- RIGHT -->
+                    <div v-if="selectedItem" class="preview">
+
+                        <div class="preview__header">
+
+                            <div class="preview__image">
+                                <div class="preview__image_placeholder">
+                                    {{ getItemTitle(selectedItem).charAt(0) }}
+                                </div>
                             </div>
 
-                            <div class="card__price_row">
-                                <span class="card__price">
-                                    {{ getItemPrice(item) }} {{ getItemCurrency(item) }}
-                                </span>
+                            <div class="preview__title">
+                                {{ getItemTitle(selectedItem) }}
                             </div>
+
+                            <div v-if="selectedItem.type === 'upgrade'" class="preview__meta">
+                                {{ getUpgradeLevelString(selectedItem) }}
+                            </div>
+
+                            <div v-if="selectedItem.type === 'timed_feature'" class="preview__meta">
+                                {{ getTimedProductTimer(selectedItem) }}
+                            </div>
+
                         </div>
 
-
-                    </div>
-
-                </div>
-
-                <!-- RIGHT -->
-                <div v-if="selectedItem" class="preview">
-
-                    <div class="preview__image">
-                        <div class="preview__image_placeholder">
-                            {{ getItemTitle(selectedItem).charAt(0) }}
-                        </div>
-                    </div>
-
-
-
-                    <div class="preview__title">
-                        {{ getItemTitle(selectedItem) }}
-                    </div>
-
-                    <div class="preview_timer">
-                        {{ getTimedProductTimer(selectedItem) }}
-                    </div>
-
-                    <div v-if="getItemDescription(selectedItem)" class="preview__description">
-                        {{ getItemDescription(selectedItem) }}
-                    </div>
-
-                    <div v-if="getProductStatus(selectedItem) !== 'available'">
-
-                        <button
-                            v-if="selectedItem.type == 'cosmetic' && selectedItem.effect.skinId !== metaStore.activeSkin"
-                            class="preview__buy_btn" @click="handleApplyClick(selectedItem)">
-                            Применить
-                        </button>
-
-                        <div v-else-if="selectedItem.type == 'cosmetic' && selectedItem.effect.skinId === metaStore.activeSkin"
-                            class="preview__status">
-                            {{ foo.makeText("shop.product.applied", "Applied") }}
+                        <div v-if="getItemDescription(selectedItem)" class="preview__description">
+                            {{ getItemDescription(selectedItem) }}
                         </div>
 
-                        <div v-else class="preview__status">
-                            {{
-                                foo.makeText(
-                                    getProductStatusLabel(selectedItem),
-                                    getProductStatus(selectedItem)
-                                )
-                            }}
+                        <div class="preview__footer">
+
+                            <div v-if="getProductStatus(selectedItem) === 'available'" class="preview__price">
+                                {{ getItemPrice(selectedItem) }}
+                                {{ getItemCurrency(selectedItem) }}
+                            </div>
+
+                            <div v-if="getProductStatus(selectedItem) !== 'available'">
+
+                                <button v-if="
+                                    selectedItem.type === 'cosmetic' &&
+                                    selectedItem.effect.skinId !== metaStore.activeSkin
+                                " class="preview__buy_btn" @click="handleApplyClick(selectedItem)">
+                                    APPLY
+                                </button>
+
+                                <div v-else-if="
+                                    selectedItem.type === 'cosmetic' &&
+                                    selectedItem.effect.skinId === metaStore.activeSkin
+                                " class="preview__status">
+                                    APPLIED
+                                </div>
+
+                                <div v-else class="preview__status">
+                                    {{
+                                        foo.makeText(
+                                            getProductStatusLabel(selectedItem),
+                                            getProductStatus(selectedItem)
+                                        )
+                                    }}
+                                </div>
+
+                            </div>
+
+                            <button v-else class="preview__buy_btn" @click="handleBuyClick(selectedItem)">
+                                BUY
+                            </button>
+
                         </div>
+
                     </div>
-
-
-                    <button v-else class="preview__buy_btn" @click="handleBuyClick(selectedItem)">
-                        <span>
-                            {{ getItemPrice(selectedItem) }} {{ getItemCurrency(selectedItem) }}
-                        </span>
-                    </button>
+                    ```
 
                 </div>
 
@@ -495,6 +529,7 @@ onUnmounted(() => {
     gap: 1.5rem;
 
     box-sizing: border-box;
+    min-height: 0;
 }
 
 .tabs {
@@ -530,31 +565,31 @@ onUnmounted(() => {
     color: #82c8e5;
 }
 
-.shop_content {
-    width: 90%;
-    flex: 1;
+// .shop_content {
+//     width: 90%;
+//     flex: 1;
 
-    display: flex;
-    gap: 2rem;
-    padding: 5rem;
+//     display: flex;
+//     gap: 2rem;
+//     padding: 5rem;
 
-    overflow: hidden;
-}
+//     overflow: hidden;
+// }
 
-.cards {
-    flex: 1;
+// .cards {
+//     flex: 1;
 
-    display: flex;
-    flex-wrap: wrap;
+//     display: flex;
+//     flex-wrap: wrap;
 
-    gap: 1rem;
+//     gap: 1rem;
 
-    overflow-y: auto;
-    padding-right: .5rem;
+//     overflow-y: auto;
+//     padding-right: .5rem;
 
-    scrollbar-width: thin;
-    scrollbar-color: #575757 #00000000;
-}
+//     scrollbar-width: thin;
+//     scrollbar-color: #575757 #00000000;
+// }
 
 .card {
     height: 16rem;
@@ -594,13 +629,14 @@ onUnmounted(() => {
 .card__image {
     display: flex;
     justify-content: center;
+    flex-shrink: 0;
 }
 
-.card__content {
-    display: flex;
-    flex-direction: column;
-    width: 100%;
-}
+// .card__content {
+//     display: flex;
+//     flex-direction: column;
+//     width: 100%;
+// }
 
 .card--owned {
     background: rgba(0, 255, 179, 0.05);
@@ -612,24 +648,24 @@ onUnmounted(() => {
     // border-color: rgba(255, 255, 255, .1);
 }
 
-.card__image_placeholder {
-    // width: 5rem;
-    // height: 5rem;
-    width: 150px;
+// .card__image_placeholder {
+//     // width: 5rem;
+//     // height: 5rem;
+//     width: 150px;
 
-    // border-radius: 50%;
+//     // border-radius: 50%;
 
-    display: flex;
-    justify-content: center;
-    align-items: center;
+//     display: flex;
+//     justify-content: center;
+//     align-items: center;
 
-    font-size: 1rem;
-    font-weight: 700;
+//     font-size: 1rem;
+//     font-weight: 700;
 
-    color: white;
+//     color: white;
 
-    background: rgba(255, 255, 255, .08);
-}
+//     background: rgba(255, 255, 255, .08);
+// }
 
 .card__title {
     text-align: start;
@@ -840,5 +876,304 @@ onUnmounted(() => {
     text-align: center;
     font-size: 2rem;
     color: rgba(255, 255, 255, .8);
+}
+
+.shop_content {
+    width: 90%;
+    flex: 1;
+
+    display: flex;
+    gap: 2rem;
+
+    overflow: hidden;
+    min-height: 0;
+
+}
+
+.cards {
+    flex: 1;
+
+    display: flex;
+    flex-direction: column;
+
+    gap: .75rem;
+
+    overflow-y: auto;
+
+    padding-right: .5rem;
+
+    scrollbar-width: thin;
+    scrollbar-color: #575757 transparent;
+
+    min-height: 0;
+
+}
+
+.card {
+    // min-height: 8rem;
+
+    display: flex;
+    align-items: center;
+
+    gap: 1rem;
+
+    padding: 1rem 1.25rem;
+
+    background: rgba(15, 20, 30, .35);
+
+    border: 1px solid rgba(255, 255, 255, .08);
+
+    transition: .2s;
+
+    cursor: pointer;
+
+    max-width: stretch;
+
+}
+
+.card:hover {
+    border-color: #72B3EE;
+}
+
+.card_selected {
+    border-left: 4px solid #72B3EE;
+
+    background:
+        linear-gradient(90deg,
+            rgba(114, 179, 238, .18),
+            rgba(15, 20, 30, .7));
+
+    box-shadow:
+        inset 0 0 40px rgba(114, 179, 238, .08);
+
+}
+
+.card--owned {
+    background:
+        linear-gradient(90deg,
+            rgba(94, 255, 177, .08),
+            rgba(15, 20, 30, .35));
+}
+
+.card--applied {
+    background:
+        linear-gradient(90deg,
+            rgba(255, 217, 92, .12),
+            rgba(15, 20, 30, .35));
+}
+
+.card__image_placeholder {
+    width: 96px;
+    height: 96px;
+
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
+    background: rgba(255, 255, 255, .06);
+
+    font-size: 2rem;
+
+    color: white;
+
+}
+
+.card__content {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 10rem;
+
+}
+
+.card__top {
+    display: flex;
+    align-items: center;
+    gap: .75rem;
+    flex-wrap: wrap;
+}
+
+.card__bottom {
+    margin-top: auto;
+
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: .5rem;
+
+}
+
+.card__title {
+    color: white;
+    font-size: 1.4rem;
+    font-family: 'jost-light';
+}
+
+.card__price_row {
+    font-family: 'vla_shu';
+
+    font-size: 2rem;
+
+    color: #FFD95C;
+
+}
+
+.status_badge {
+    padding: .25rem .75rem;
+
+    font-size: .85rem;
+
+    text-transform: uppercase;
+
+    border: 1px solid;
+
+}
+
+.status_badge--owned {
+    color: #5effb1;
+    border-color: #5effb1;
+}
+
+.status_badge--upgrade {
+    color: #FFD95C;
+    border-color: #FFD95C;
+}
+
+.status_badge--timer {
+    color: #72B3EE;
+    border-color: #72B3EE;
+}
+
+.preview {
+    width: 34rem;
+
+    flex-shrink: 0;
+
+    display: flex;
+    flex-direction: column;
+
+    background: rgba(15, 20, 30, .85);
+
+    border: 1px solid rgba(255, 255, 255, .08);
+
+    padding: 2rem;
+
+}
+
+.preview__header {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.preview__image_placeholder {
+    width: 240px;
+    height: 240px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    background: rgba(255, 255, 255, .05);
+
+    color: white;
+
+    font-size: 5rem;
+
+}
+
+.preview__title {
+    margin-top: 1rem;
+
+    text-align: center;
+
+    color: white;
+
+    font-size: 2.5rem;
+
+}
+
+.preview__meta {
+    margin-top: .75rem;
+
+    color: #72B3EE;
+
+    font-size: 1.25rem;
+
+}
+
+.preview__description {
+    margin-top: 2rem;
+
+    color: rgba(255, 255, 255, .85);
+
+    text-align: center;
+
+    line-height: 1.7;
+
+    font-size: 1.2rem;
+
+}
+
+.preview__footer {
+    margin-top: auto;
+
+    display: flex;
+    flex-direction: column;
+
+    gap: 1rem;
+
+}
+
+.preview__price {
+    text-align: center;
+
+    font-family: 'vla_shu';
+
+    font-size: 4rem;
+
+    color: #FFD95C;
+
+}
+
+.preview__status {
+    text-align: center;
+
+    font-size: 2rem;
+
+    color: #5effb1;
+
+}
+
+.preview__buy_btn {
+    height: 5rem;
+
+    border: 1px solid rgba(255, 255, 255, .15);
+
+    background:
+        linear-gradient(180deg,
+            #3fa9ff,
+            #0f6bb6);
+
+    color: white;
+
+    font-size: 1.6rem;
+
+    font-family: 'vla_shu';
+
+    cursor: pointer;
+
+    transition: .2s;
+
+}
+
+.preview__buy_btn:hover {
+    transform: translateY(-2px);
+
+    box-shadow:
+        0 0 35px rgba(63, 169, 255, .35);
+
 }
 </style>
