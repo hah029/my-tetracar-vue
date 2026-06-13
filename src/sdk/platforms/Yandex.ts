@@ -164,7 +164,12 @@ export class YandexPlatform implements IGamePlatform {
     const player = await this.sdk.getPlayer();
     let statsPromise = player.getStats([key]);
     if (!statsPromise) return null;
-    return Number(await statsPromise);
+    const stats = await statsPromise;
+    // SDK Яндекс.Игр возвращает объект вида { "goldens": 150 }, а не число
+    if (typeof stats === "object" && stats !== null && key in stats) {
+      return Number(stats[key]);
+    }
+    return Number(stats);
   }
 
   async getLeaderboardEntries(
