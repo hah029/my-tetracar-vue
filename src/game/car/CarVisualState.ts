@@ -78,8 +78,17 @@ export class CarVisualState {
   }
 
   enable(effect: CarVisualEffect) {
-    if (this.activeEffects.has(effect)) return;
+    if (this.activeEffects.has(effect)) {
+      console.log("[DEBUG CarVisualState.enable] already active:", effect);
+      return;
+    }
 
+    console.log(
+      "[DEBUG CarVisualState.enable] enabling:",
+      effect,
+      "activeEffects before:",
+      [...this.activeEffects],
+    );
     this.activeEffects.add(effect);
     this.updateVisual();
   }
@@ -103,6 +112,13 @@ export class CarVisualState {
     const defaultEmissiveColor =
       this.emissiveColors.get("default") || new THREE.Color(0x000000);
 
+    console.log(
+      "[DEBUG CarVisualState.updateVisual] activeEffects:",
+      [...this.activeEffects],
+      "meshes count:",
+      this.meshes.length,
+    );
+
     for (const mesh of this.meshes) {
       const tag = mesh.userData.name as CarVisualEffect | "default";
       const material = mesh.material as THREE.MeshStandardMaterial;
@@ -112,6 +128,11 @@ export class CarVisualState {
       let nextTexture = defaultTexture;
       if (tag !== "default" && this.activeEffects.has(tag)) {
         nextTexture = this.textures.get(tag) ?? defaultTexture;
+        // console.log(
+        //   "[DEBUG CarVisualState.updateVisual] mesh tag=%s, applying texture:",
+        //   tag,
+        //   nextTexture?.image?.src ?? "none",
+        // );
       }
       if (material.map !== nextTexture) {
         material.map = nextTexture || null;

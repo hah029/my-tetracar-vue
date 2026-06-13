@@ -405,6 +405,8 @@ function setBoosterTextColor(type_: string, notif_: string = 'undefined') {
     text-transform: uppercase;
     line-height: 1;
     letter-spacing: 0.06rem;
+
+    font-size: 2rem !important; // (32px)
 }
 
 .font_adaptation {
@@ -487,7 +489,7 @@ function setBoosterTextColor(type_: string, notif_: string = 'undefined') {
     justify-content: flex-end;
     align-items: center;
     gap: 0.625rem;
-    font-size: 1.375rem;
+    // font-size: 1.375rem;
 }
 
 .currency_value {
@@ -536,12 +538,12 @@ function setBoosterTextColor(type_: string, notif_: string = 'undefined') {
 }
 
 .x_sign {
-    font-size: 1.5625rem;
+    // font-size: 1.5625rem;
     text-transform: lowercase;
 }
 
 .x_number {
-    font-size: 2.1875rem;
+    // font-size: 2.1875rem;
     margin-bottom: -0.125rem;
 }
 
@@ -574,13 +576,13 @@ function setBoosterTextColor(type_: string, notif_: string = 'undefined') {
     gap: 0.3125rem;
 }
 
-.metrics_text {
-    font-size: 0.875rem;
-}
+// .metrics_text {
+//     font-size: 0.875rem;
+// }
 
-.metrics_number {
-    font-size: 1.75rem;
-}
+// .metrics_number {
+//     font-size: 1.75rem;
+// }
 
 .divider {
     height: 1.563rem;

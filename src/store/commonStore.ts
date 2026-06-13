@@ -108,7 +108,7 @@ export const useCommonStore = defineStore("common", () => {
   };
 
   const DANGER_DISTANCE = 30;
-  const COLLISION_COOLDOWN_MS = 2000;
+  const COLLISION_COOLDOWN_MS = 1000;
 
   const BASE_CUBE_MATERIAL_CONFIG = {
     textureUrl: null,
@@ -131,7 +131,7 @@ export const useCommonStore = defineStore("common", () => {
   const JUMP_HEIGHT = 1;
   const JUMP_DEPTH = 8;
 
-  const MOVING_OBSTACLE_SPEED = 0.005;
+  const MOVING_OBSTACLE_SPEED = 0.01;
 
   const YPOS = BASE_ITEM_YPOS;
   const ZPOS = 0;

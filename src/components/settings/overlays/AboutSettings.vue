@@ -56,7 +56,7 @@ onMounted(() => {
 @use "@/styles/animations.scss";
 
 .group_correction {
-    bottom: 19.57%;
+    position: static !important;
     width: max-content;
 
     &>*+* {

@@ -27,6 +27,10 @@ class UpgradeServiceClass {
       player.ammo = meta.maxAmmo;
     } else if (effect.refill === "armor") {
       player.armor = meta.maxArmor;
+      // Включаем флаг щита, чтобы броня работала при столкновениях
+      if (player.armor > 0) {
+        player.enableShield();
+      }
     }
   }
 }

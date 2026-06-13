@@ -25,7 +25,7 @@ type DropType =
 export class CubeObstacle extends BaseObstacle {
   private visualMesh?: THREE.Object3D;
   private destructionCells: DestructionCell[] = [];
-  private isDestroyed = false;
+  protected isDestroyed = false;
   private scene: THREE.Scene;
   private lane: number;
   private worldCollider = new THREE.Box3();

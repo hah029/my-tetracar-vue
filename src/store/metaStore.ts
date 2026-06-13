@@ -44,7 +44,7 @@ export const useMetaStore = defineStore("metaStore", () => {
   // ===== COMPUTED (формулы из shop.md п.8) =====
   const BASE_AMMO = 10;
   const BASE_ARMOR = 1;
-  const BASE_MAGNET_RADIUS = 5;
+  const BASE_MAGNET_RADIUS = 10;
 
   const maxAmmo = computed(() => BASE_AMMO + upgrades.value.ammoLevel * 2);
   const maxArmor = computed(() => BASE_ARMOR + upgrades.value.armorLevel);

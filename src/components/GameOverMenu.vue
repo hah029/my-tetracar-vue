@@ -130,7 +130,7 @@ onMounted(() => {
 }
 
 .header_correction {
-    font-size: 3.125rem; // (50px)
+    font-size: 4rem; // (50px)
     color: #F79CFF;
     text-shadow: 0px 0px 10px #F79CFF;
 }
@@ -148,10 +148,7 @@ onMounted(() => {
 }
 
 .group_correction {
-    // margin-top: 25rem;
-    position: relative;
-
-
+    position: static !important;
 
     &>*+* {
         margin-top: 2rem; // 25px - row-gap (между кнопками)

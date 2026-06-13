@@ -1,5 +1,13 @@
 <template>
     <div class="container">
+        <!-- MAIN MENU -->
+        <TransitionGroup name="buttons_group_showing" tag="div" class="buttons_group group_correction">
+            <button v-for="(btn, index) in menuButtons" v-if="isMainMenuEnabled" key="btn.id"
+                class="menu_btn btn_correction" :style="{ animationDelay: `${index * 0.06}s` }" @click="btn.action">
+                {{ btn.text }}
+            </button>
+        </TransitionGroup>
+
         <!-- SETTINGS -->
         <SettingsRoot v-if="gameStore.activeOverlay === 'settings'" />
 
@@ -9,13 +17,6 @@
         <!-- LEADERBOARDS -->
         <ShopRoot v-if="gameStore.activeOverlay === 'shop'" />
 
-        <!-- MAIN MENU -->
-        <TransitionGroup name="buttons_group_showing" tag="div" class="buttons_group group_correction">
-            <button v-for="(btn, index) in menuButtons" v-if="isMainMenuEnabled" key="btn.id"
-                class="menu_btn btn_correction" :style="{ animationDelay: `${index * 0.06}s` }" @click="btn.action">
-                {{ btn.text }}
-            </button>
-        </TransitionGroup>
     </div>
 </template>
 
@@ -92,14 +93,25 @@ onMounted(() => {
 @use "@/styles/animations.scss";
 
 .group_correction {
-    bottom: 19.57%;
+    // position: static !important;
 
-    &>*+* {
-        margin-top: 1.56rem; // 25px - row-gap (между кнопками)
-    }
+    // &>*+* {
+    //     margin-top: 1.56rem; // 25px - row-gap (между кнопками)
+    // }
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+
+    gap: 2rem;
 }
 
 .btn_correction {
-    font-size: 2.1875rem; // (35px)
+    font-size: 2.5rem; // (35px)
 }
 </style>

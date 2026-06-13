@@ -107,28 +107,28 @@
                                         {{ getItemTitle(item) }}
                                     </div>
 
-                                    <div v-if="item.type === 'upgrade'" class="status_badge status_badge--upgrade">
-                                        {{ getUpgradeLevelString(item) }}
-                                    </div>
-
-                                    <div v-if="item.type === 'timed_feature'" class="status_badge status_badge--timer">
-                                        {{ getTimedProductTimer(item) }}
-                                    </div>
-
-                                </div>
-
-                                <div class="card__bottom">
 
                                     <div v-if="getProductStatus(item) === 'owned'"
                                         class="status_badge status_badge--owned">
                                         OWNED
                                     </div>
 
+                                    <div v-if="item.type === 'upgrade'" class="status_badge status_badge--upgrade">
+                                        {{ getUpgradeLevelString(item) }}
+                                    </div>
+
+                                    <div v-if="item.type === 'timed_feature' && getTimedProductTimer(item)"
+                                        class="status_badge status_badge--timer">
+                                        {{ getTimedProductTimer(item) }}
+                                    </div>
+
+                                </div>
+
+                                <div class="card__bottom">
                                     <div class="card__price_row">
                                         {{ getItemPrice(item) }}
                                         {{ getItemCurrency(item) }}
                                     </div>
-
                                 </div>
 
                             </div>
@@ -928,6 +928,7 @@ onUnmounted(() => {
     cursor: pointer;
 
     max-width: stretch;
+    max-height: fit-content;
 
 }
 
@@ -983,7 +984,9 @@ onUnmounted(() => {
     min-width: 0;
     display: flex;
     flex-direction: column;
-    gap: 10rem;
+    // gap: 10rem;
+    justify-content: space-between;
+    height: stretch;
 
 }
 

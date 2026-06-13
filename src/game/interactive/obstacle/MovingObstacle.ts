@@ -41,6 +41,12 @@ export class MovingObstacle extends CubeObstacle {
     this.direction = direction;
   }
 
+  public update(dt: number, speed: number): boolean {
+    if (this.isDestroyed) return false;
+    this.updateNormalCubes(dt, speed);
+    return this.position.z > useCommonStore().ITEMS_REMOVING_ZPOS;
+  }
+
   protected updateNormalCubes(dt: number, speed: number) {
     this.position.z += dt * speed;
     // горизонтальное движение

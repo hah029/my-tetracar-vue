@@ -73,16 +73,16 @@ export const useProgressStore = defineStore("progressStore", () => {
     if (playerStore.isNitroEnabled) mplr *= MULTI_GROW_NITRO;
     // if (playerStore.isNitroEnabled) mplr *= 2;
 
-    console.log(
-      "[ProgressStore] metaStore.isFeatureActive('scoreMultiplier'):",
-      metaStore.isFeatureActive("scoreMultiplier"),
-    );
+    // console.log(
+    //   "[ProgressStore] metaStore.isFeatureActive('scoreMultiplier'):",
+    //   metaStore.isFeatureActive("scoreMultiplier"),
+    // );
 
     if (metaStore.isFeatureActive("scoreMultiplier")) {
-      console.log(
-        "[ProgressStore] metaStore.getTimedEffect('scoreMultiplier')?.value:",
-        metaStore.getTimedEffect("scoreMultiplier")?.value,
-      );
+      // console.log(
+      //   "[ProgressStore] metaStore.getTimedEffect('scoreMultiplier')?.value:",
+      //   metaStore.getTimedEffect("scoreMultiplier")?.value,
+      // );
       mplr *= metaStore.getTimedEffect("scoreMultiplier")?.value || 1;
     }
 

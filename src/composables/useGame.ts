@@ -140,6 +140,11 @@ export function useGame() {
     if (realCar.isDestroyed()) {
       car.value.cubes = realCar.getCubes();
     }
+
+    if (!playerStore.isShieldEnabled && playerStore.armor > 0) {
+      // логика для случая, когда щит не активен и но броня есть
+      realCar.enableShield();
+    }
   }
 
   function updateCity(deltaTime: number, speed: number) {
@@ -303,6 +308,10 @@ export function useGame() {
   }
 
   function reset() {
+    console.log(
+      "[DEBUG useGame.reset] called, carManager exists:",
+      !!carManager,
+    );
     if (!carManager || !obstacleManager || !roadManager || !sceneRef) {
       console.warn("[useGame.reset] missing managers:", {
         carManager: !!carManager,
@@ -313,6 +322,7 @@ export function useGame() {
       return;
     }
 
+    console.log("[DEBUG useGame.reset] calling carManager.resetCar()");
     carManager.resetCar();
     interactiveManager.reset();
     roadManager.clear();
@@ -352,6 +362,7 @@ export function useGame() {
     playerStore.disableNitro();
     playerStore.disableMagnet();
     playerStore.resetGameData();
+
     // reset progress
     progressStore.resetScore();
     progressStore.resetDistance();

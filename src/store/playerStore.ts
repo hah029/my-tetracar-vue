@@ -5,7 +5,6 @@ import { ref, computed } from "vue";
 import { useProgressStore } from "@/store/progressStore";
 import { useMetaStore } from "@/store/metaStore";
 import { useCommonStore } from "@/store/commonStore";
-import { useThree } from "@/composables/useThree";
 import type { GeometryConfig, MaterialConfig } from "@/game/cube/types";
 import type { TextureMap } from "@/game/car/CarVisualState";
 import { MODELS } from "@/assets/models";
@@ -134,20 +133,15 @@ export const usePlayerStore = defineStore("playerStore", () => {
   const NITRO_AFTER_IMAGE_PASS = 0.8;
   const NITRO_RGB_SHIFT = 0.003;
   const BASE_NITRO_TIMER = 5000;
+  const NITRO_ACCEL_IN_SPEED = 0.005;
+  const NITRO_ACCEL_OUT_SPEED = 0.001;
   const isNitroEnabled = ref(false);
+
   const nitroTimer = ref(BASE_NITRO_TIMER);
   const goldenNitroMultiplier = ref(2);
   const energonNitroMultiplier = ref(2);
   const nitroMultiplierCurrent = ref(1);
   const nitroMultiplierTarget = ref(1);
-  // const nitroAfterImagePassCurrent = ref(0);
-  // const nitroAfterImagePassTarget = ref(0);
-  // const nitroRGBShiftCurrent = ref(0);
-  // const nitroRGBShiftTarget = ref(0);
-  const NITRO_ACCEL_IN_SPEED = 0.005;
-  const NITRO_ACCEL_OUT_SPEED = 0.001;
-  // const NITRO_AFTER_IMAGE_PASS_TRANSITION = 0.01;
-  // const NITRO_RGB_SHIFT_TRANSITION = 1;
 
   // magnet
   const BASE_MAGNET_TIMER = 10000;
@@ -164,7 +158,7 @@ export const usePlayerStore = defineStore("playerStore", () => {
   const maxArmor = computed(() => metaStore.maxArmor);
 
   //ammo
-  const ammo = ref(10);
+  const ammo = ref(0);
   const maxAmmo = computed(() => metaStore.maxAmmo);
 
   // position
@@ -193,10 +187,7 @@ export const usePlayerStore = defineStore("playerStore", () => {
     }
 
     isNitroEnabled.value = true;
-
     nitroMultiplierTarget.value = NITRO_MULTIPLIER;
-    // nitroAfterImagePassTarget.value = NITRO_AFTER_IMAGE_PASS;
-    // nitroRGBShiftTarget.value = NITRO_RGB_SHIFT;
 
     if (renderInstance.value != null) {
       renderInstance.value.setAfterImagePassAmount(NITRO_AFTER_IMAGE_PASS);
@@ -208,10 +199,7 @@ export const usePlayerStore = defineStore("playerStore", () => {
     isNitroEnabled.value = false;
 
     nitroTimer.value = BASE_NITRO_TIMER;
-
     nitroMultiplierTarget.value = 1;
-    // nitroAfterImagePassTarget.value = 0;
-    // nitroRGBShiftTarget.value = 0;
 
     if (progressStore.currentMultiplier != 1) {
       progressStore.reduceMultiplier(2);
@@ -234,28 +222,6 @@ export const usePlayerStore = defineStore("playerStore", () => {
       nitroMultiplierTarget.value,
       delta * transitionSpeed,
     );
-
-    // nitroAfterImagePassCurrent.value = THREE.MathUtils.lerp(
-    //   nitroAfterImagePassCurrent.value,
-    //   nitroAfterImagePassTarget.value,
-    //   delta * NITRO_AFTER_IMAGE_PASS_TRANSITION,
-    // );
-
-    // nitroRGBShiftCurrent.value = THREE.MathUtils.lerp(
-    //   nitroRGBShiftCurrent.value,
-    //   nitroRGBShiftTarget.value,
-    //   delta * NITRO_RGB_SHIFT_TRANSITION,
-    // );
-
-    // renderInstance.value.setAfterImagePassAmount(
-    //   nitroAfterImagePassCurrent.value,
-    // );
-
-    // renderInstance.value.setRGBShiftAmount(nitroRGBShiftCurrent.value);
-
-    // console.log("nitroMultiplierCurrent", nitroMultiplierCurrent.value);
-    // console.log("nitroAfterImagePassCurrent", nitroAfterImagePassCurrent.value);
-    // console.log("nitroRGBShiftCurrent", nitroRGBShiftCurrent.value);
   }
   // #endregion
 

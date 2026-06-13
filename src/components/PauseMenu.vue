@@ -2,7 +2,7 @@
     <div class="container">
         <!-- SETTINGS OVERLAY -->
         <SettingsRoot v-if="gameStore.activeOverlay === 'settings'" :key="'settings'" />
-    
+
         <!-- PAUSE MENU -->
         <div v-if="gameStore.activeOverlay !== 'settings'" :key="'pause'" class="container container_correction">
             <!-- HEADER с анимацией -->
@@ -14,36 +14,22 @@
                     </div>
                 </div>
             </Transition>
-    
+
             <!-- Кнопки меню "Пауза" -->
-            <TransitionGroup v-if="gameStore.activeOverlay !== 'quitConfirm'"
-                name="buttons_group_showing" tag="div" class="buttons_group group_correction"
-            >
-                <button 
-                    v-for="(btn, index) in menuButtonsPause" 
-                    v-if="isButtonsShown" 
-                    :key="btn.id"
-                    class="menu_btn btn_correction" 
-                    :style="{ animationDelay: `${index * 0.06}s` }" 
-                    @click="btn.action"
-                >
+            <TransitionGroup v-if="gameStore.activeOverlay !== 'quitConfirm'" name="buttons_group_showing" tag="div"
+                class="buttons_group group_correction">
+                <button v-for="(btn, index) in menuButtonsPause" v-if="isButtonsShown" :key="btn.id"
+                    class="menu_btn btn_correction" :style="{ animationDelay: `${index * 0.06}s` }" @click="btn.action">
                     {{ btn.text }}
                 </button>
             </TransitionGroup>
-    
+
             <!-- Кнопки диалогового окна "Завершить игру?" -->
-            <TransitionGroup v-if="gameStore.activeOverlay === 'quitConfirm'"
-                name="buttons_group_showing" tag="div" class="buttons_group group_correction"
-            >
+            <TransitionGroup v-if="gameStore.activeOverlay === 'quitConfirm'" name="buttons_group_showing" tag="div"
+                class="buttons_group group_correction">
                 <span v-if="isWarningShown" class="warning">{{ foo.makeText('quitConfirm.warning', 'empty') }}</span>
-                <button 
-                    v-for="(btn, index) in menuButtonsQuitConfirm" 
-                    v-if="isConfirmButtonsShown" 
-                    :key="btn.id"
-                    class="menu_btn btn_correction" 
-                    :style="{ animationDelay: `${index * 0.06}s` }" 
-                    @click="btn.action"
-                >
+                <button v-for="(btn, index) in menuButtonsQuitConfirm" v-if="isConfirmButtonsShown" :key="btn.id"
+                    class="menu_btn btn_correction" :style="{ animationDelay: `${index * 0.06}s` }" @click="btn.action">
                     {{ btn.text }}
                 </button>
             </TransitionGroup>
@@ -53,162 +39,171 @@
 
 
 <script setup lang="ts">
-    import { onMounted, watch, computed, ref } from "vue";
-    import { useGameState } from "@/store/gameState";
-    import SettingsRoot from "./settings/SettingsRoot.vue";
-    import { GameStates } from "@/game/core/GameState";
-    import { createNewText } from '@/helpers/functions';
-    import { useProgressStore } from "@/store/progressStore";
+import { onMounted, watch, computed, ref } from "vue";
+import { useGameState } from "@/store/gameState";
+import SettingsRoot from "./settings/SettingsRoot.vue";
+import { GameStates } from "@/game/core/GameState";
+import { createNewText } from '@/helpers/functions';
+import { useProgressStore } from "@/store/progressStore";
 
-    const gameStore = useGameState();
-    const foo = createNewText();
+const gameStore = useGameState();
+const foo = createNewText();
 
-    const isHeaderShown = ref(false);
-    const isButtonsShown = ref(false);
-    const isConfirmButtonsShown = ref(false);
-    const isWarningShown = ref(false);
-    const progressStore = useProgressStore();
+const isHeaderShown = ref(false);
+const isButtonsShown = ref(false);
+const isConfirmButtonsShown = ref(false);
+const isWarningShown = ref(false);
+const progressStore = useProgressStore();
 
-    // кнопки меню "Пауза"
-    const menuButtonsPause = computed(() => [
-        { id: 1, text: foo.makeText("pauseMenu.menuList.resume"), action: resumeGame },
-        { id: 2, text: foo.makeText("pauseMenu.menuList.settings"), action: goToSettings },
-        { id: 3, text: foo.makeText("pauseMenu.menuList.menu"), action: showQuitConfirmMenu },
-    ]);
+// кнопки меню "Пауза"
+const menuButtonsPause = computed(() => [
+    { id: 1, text: foo.makeText("pauseMenu.menuList.resume"), action: resumeGame },
+    { id: 2, text: foo.makeText("pauseMenu.menuList.settings"), action: goToSettings },
+    { id: 3, text: foo.makeText("pauseMenu.menuList.menu"), action: showQuitConfirmMenu },
+]);
 
-    // кнопки диалогового окна "Завершить игру?"
-    const menuButtonsQuitConfirm = computed(() => [
-        { id: 1, text: foo.makeText("quitConfirm.menuList.stay"), action: hideQuitConfirmMenu },
-        { id: 2, text: foo.makeText("quitConfirm.menuList.quit"), action: goToMainMenu },
-    ]);
+// кнопки диалогового окна "Завершить игру?"
+const menuButtonsQuitConfirm = computed(() => [
+    { id: 1, text: foo.makeText("quitConfirm.menuList.stay"), action: hideQuitConfirmMenu },
+    { id: 2, text: foo.makeText("quitConfirm.menuList.quit"), action: goToMainMenu },
+]);
 
-    // генерируем фразу для титула
-    const dynamicTitleName = computed(() => {
-        if (gameStore.activeOverlay == 'quitConfirm') {
-            return foo.makeText("quitConfirm.title", 'empty');
-        } else {
-            return foo.makeText("pauseMenu.title", 'empty');
-        };
-    });
-
-    // показываем (анимацией) титул и все кнопки меню
-    function showHideAllPauseElements(type_, isQuitGame = false) {
-        isHeaderShown.value = type_;
-
-        if (isQuitGame) {
-            isWarningShown.value = false;
-            setTimeout(() => {
-                isConfirmButtonsShown.value = false;
-            }, 100);
-        };
-        
-        setTimeout(() => {
-            isButtonsShown.value = type_;
-        }, 100);
+// генерируем фразу для титула
+const dynamicTitleName = computed(() => {
+    if (gameStore.activeOverlay == 'quitConfirm') {
+        return foo.makeText("quitConfirm.title", 'empty');
+    } else {
+        return foo.makeText("pauseMenu.title", 'empty');
     };
+});
 
-    // продолжаем игру
-    function resumeGame() {
-        showHideAllPauseElements(false);
-        setTimeout(() => {
-            gameStore.setState(GameStates.Play);
-        }, 400);
-    };
+// показываем (анимацией) титул и все кнопки меню
+function showHideAllPauseElements(type_, isQuitGame = false) {
+    isHeaderShown.value = type_;
 
-    // показываем диалоговое окно с подтверждением выхода из игры
-    function showQuitConfirmMenu() {
-        isButtonsShown.value = false;
-        setTimeout(() => {
-            gameStore.activeOverlay = 'quitConfirm';
-        }, 400);
-        setTimeout(() => {
-            isWarningShown.value = true;
-        }, 450);
-        setTimeout(() => {
-            isConfirmButtonsShown.value = true;
-        }, 500);
-    };
-
-    // скрываем диалоговое окно с подтверждением выхода из игры
-    function hideQuitConfirmMenu () {
+    if (isQuitGame) {
         isWarningShown.value = false;
         setTimeout(() => {
             isConfirmButtonsShown.value = false;
         }, 100);
-        setTimeout(() => {
-            gameStore.activeOverlay = null;
-        }, 500);
     };
 
-    // переходим в главное меню
-    function goToMainMenu() {
-        showHideAllPauseElements(false, true);
-        setTimeout(() => {
-            // возвращаем назад старое значение рекорда, если игрок не доиграл до конца (заблаговременно вышел)
-            progressStore.restoreProgress();
-            gameStore.setState(GameStates.Menu);
-        }, 400);
-        setTimeout(() => {
-            gameStore.activeOverlay = null;
-        }, 500);
-    };
+    setTimeout(() => {
+        isButtonsShown.value = type_;
+    }, 100);
+};
 
-    // переходим в настройки
-    function goToSettings() {
-        isButtonsShown.value = false;
-        setTimeout(() => {
-            gameStore.openSettings();
-        }, 400);
-    };
+// продолжаем игру
+function resumeGame() {
+    showHideAllPauseElements(false);
+    setTimeout(() => {
+        gameStore.setState(GameStates.Play);
+    }, 400);
+};
 
-    // следим за стостоянием оверлея
-    watch(
-        () => gameStore.activeOverlay,
-        (newState) => {
-            if (newState === null) {
-                showHideAllPauseElements(true, true);
-            };
-        },
-    );
+// показываем диалоговое окно с подтверждением выхода из игры
+function showQuitConfirmMenu() {
+    isButtonsShown.value = false;
+    setTimeout(() => {
+        gameStore.activeOverlay = 'quitConfirm';
+    }, 400);
+    setTimeout(() => {
+        isWarningShown.value = true;
+    }, 450);
+    setTimeout(() => {
+        isConfirmButtonsShown.value = true;
+    }, 500);
+};
 
-    onMounted(() => {
-        showHideAllPauseElements(true);
-    });
+// скрываем диалоговое окно с подтверждением выхода из игры
+function hideQuitConfirmMenu() {
+    isWarningShown.value = false;
+    setTimeout(() => {
+        isConfirmButtonsShown.value = false;
+    }, 100);
+    setTimeout(() => {
+        gameStore.activeOverlay = null;
+    }, 500);
+};
+
+// переходим в главное меню
+function goToMainMenu() {
+    showHideAllPauseElements(false, true);
+    setTimeout(() => {
+        // возвращаем назад старое значение рекорда, если игрок не доиграл до конца (заблаговременно вышел)
+        progressStore.restoreProgress();
+        gameStore.setState(GameStates.Menu);
+    }, 400);
+    setTimeout(() => {
+        gameStore.activeOverlay = null;
+    }, 500);
+};
+
+// переходим в настройки
+function goToSettings() {
+    isButtonsShown.value = false;
+    setTimeout(() => {
+        gameStore.openSettings();
+    }, 400);
+};
+
+// следим за стостоянием оверлея
+watch(
+    () => gameStore.activeOverlay,
+    (newState) => {
+        if (newState === null) {
+            showHideAllPauseElements(true, true);
+        };
+    },
+);
+
+onMounted(() => {
+    showHideAllPauseElements(true);
+});
 </script>
 
 
 <style scoped lang="scss">
-    @use "@/styles/menu.scss";
-    @use "@/styles/animations.scss";
+@use "@/styles/menu.scss";
+@use "@/styles/animations.scss";
 
-    .warning {
-        font-family: 'jost-light';
-        text-transform: uppercase;
-        font-size: 1.375rem;
-        color: #F79CFF;
-        width: 25rem;
-        text-align: center;
-        margin-bottom: 1.563rem;
-    }
+.warning {
+    font-family: 'jost-light';
+    text-transform: uppercase;
+    font-size: 1.375rem;
+    color: #F79CFF;
+    width: 25rem;
+    text-align: center;
+    margin-bottom: 1.563rem;
+}
 
-    .container_correction {
-        justify-content: flex-start !important;
-        top: 19.75rem;
-    }
+.container_correction {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
 
-    .group_correction {
-        margin-top: 8.3125rem;
-        
-        &>*+* {
-            margin-top: 1.56rem; // 25px - row-gap (между кнопками)
-        }
-    }
-    
-    .header_correction {
-        font-size: 3.125rem; // (50px)
-    }
+    gap: 2.5rem;
+}
 
-    .btn_correction {
-        font-size: 1.875rem; // (30px)
+.group_correction {
+    position: static !important;
+
+    &>*+* {
+        margin-top: 1.56rem; // 25px - row-gap (между кнопками)
     }
+}
+
+.header_correction {
+    font-size: 3.125rem; // (50px)
+}
+
+.btn_correction {
+    font-size: 1.875rem; // (30px)
+}
 </style>

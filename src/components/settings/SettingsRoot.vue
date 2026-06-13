@@ -1,6 +1,6 @@
 <template>
     <!-- <div class="container correction"> -->
-    <div class="container" :class="setContainerPos()">
+    <div class="container container_correction" :class="setContainerPos()">
         <div class="settings_container">
 
             <!-- HEADER -->
@@ -29,14 +29,14 @@
             <ControlSettings v-else-if="currentView === SettingsView.Controls" :backStatus="isBackButtonClicked" />
             <AboutSettings v-else-if="currentView === SettingsView.About" :backStatus="isBackButtonClicked" />
 
-            <!-- BACK -->
-            <Transition name="header_footer_block_anim">
-                <button v-if="isBackButtonShown" class="menu_btn btn_correction" @click="backButtonClick">
-                    {{ foo_1.makeText("mainMenu.goBack") }}
-                </button>
-            </Transition>
-
         </div>
+
+        <!-- BACK -->
+        <Transition name="header_footer_block_anim">
+            <button v-if="isBackButtonShown" class="menu_btn btn_correction" @click="backButtonClick">
+                {{ foo_1.makeText("mainMenu.goBack") }}
+            </button>
+        </Transition>
     </div>
 </template>
 
@@ -179,13 +179,24 @@ onMounted(() => {
 @use "@/styles/menu.scss";
 @use "@/styles/animations.scss";
 
-.container_pos_main_menu {
-    justify-content: flex-end !important;
+.container {
+    position: fixed !important;
+    justify-content: center !important;
 }
 
-.container_pos_pause {
-    justify-content: flex-start !important;
-    top: 19.75rem !important;
+.container_correction {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+
+    gap: 2.5rem;
+
 }
 
 .header_pause {
@@ -194,17 +205,14 @@ onMounted(() => {
 
 .settings_container {
     position: relative;
-    height: 30rem;
     display: flex;
     flex-direction: column;
     align-items: center;
-    justify-content: space-between;
     box-sizing: border-box;
-    padding-bottom: 2.687rem;
 }
 
 .group_correction {
-    top: 8.75rem;
+    position: static !important;
 
     &>*+* {
         margin-top: 0.938rem; // 15px - row-gap (между кнопками)
