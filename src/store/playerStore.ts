@@ -178,14 +178,11 @@ export const usePlayerStore = defineStore("playerStore", () => {
   const eventCounter = ref(0);
   // #endregion
 
-  // сбрасываем все бустеры игрока при поражении / выходе из игры
+  // сбрасываем бустеры игрока при поражении / выходе из игры
   function resetPlayerAchievements() {
-    ammo.value = 0;
-    armor.value = 0;
     disableShield();
     disableNitro();
     disableMagnet();
-    console.log("all boosters reseted");
   }
 
   // #region - работаем с нитро

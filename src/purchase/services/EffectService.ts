@@ -14,6 +14,7 @@ class EffectServiceClass {
     const timedEffect: TimedEffect = {
       feature: effect.feature,
       value: effect.value,
+      durationHours: effect.durationHours,
       expiresAt: Date.now() + effect.durationHours * 60 * 60 * 1000,
     };
     meta.addTimedEffect(timedEffect);

@@ -99,6 +99,25 @@ export class PurchaseService {
         break;
       }
 
+      case "timed_feature": {
+        const feature = product.effect?.feature;
+        const durationHours = product.effect?.durationHours;
+
+        // Если есть permanent-версия — уже owned
+        if (feature && meta.hasPermanentFeature(feature)) {
+          return { available: false, reason: "already_owned" };
+        }
+
+        // Если есть активный timed-эффект с той же или большей длительностью
+        if (feature && durationHours) {
+          const activeTimed = meta.getTimedEffect(feature);
+          if (activeTimed && activeTimed.durationHours >= durationHours) {
+            return { available: false, reason: "already_owned" };
+          }
+        }
+        break;
+      }
+
       case "upgrade": {
         const upgradeKey = product.effect?.upgrade;
         if (upgradeKey) {

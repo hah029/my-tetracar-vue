@@ -175,13 +175,6 @@
                         </span>
                     </button>
 
-                    <!-- DEBUG: selectedItem status -->
-                    <div style="color:yellow;font-size:1.2rem;margin-top:0.5rem;text-align:center;">
-                        [DEBUG] status={{ getProductStatus(selectedItem) }},
-                        owned={{ shopStore.isProductOwned(selectedItem) }},
-                        type={{ selectedItem?.type }}
-                    </div>
-
                 </div>
 
             </div>
@@ -203,7 +196,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, ref, watch } from "vue";
+import { computed, onMounted, onUnmounted, ref, watch } from "vue";
 
 import { createNewText } from "@/helpers/functions";
 
@@ -220,6 +213,10 @@ const metaStore = useMetaStore();
 const foo = createNewText();
 
 const selectedItem = ref<any | null>(null);
+
+// Реактивный тик для обновления таймеров в реальном времени
+const tick = ref(0);
+let tickTimer: ReturnType<typeof setInterval> | null = null;
 
 const dynamicTitleName = computed(() => {
     return foo.makeText("shop.title", "Shop");
@@ -244,33 +241,13 @@ function getItemDescription(item: any): string {
 
 function getProductStatus(product: any): ProductStatus {
 
-    const isSelected = product === selectedItem.value || product?.id === selectedItem.value?.id;
-
     if (!product.type) {
-        if (isSelected) {
-            console.log(
-                "[DEBUG SELECTED getProductStatus] product.id=%s, NO TYPE, product keys=%s",
-                product.id,
-                Object.keys(product).join(","),
-            );
-        }
         return "available";
     }
 
     const p = product as PurchaseProduct;
 
-    const owned = shopStore.isProductOwned(p);
-    if (isSelected) {
-        console.log(
-            "[DEBUG SELECTED getProductStatus] product.id=%s, type=%s, isProductOwned=%s, canAfford=%s",
-            product.id,
-            product.type,
-            owned,
-            shopStore.canAfford(p),
-        );
-    }
-
-    if (owned) {
+    if (shopStore.isProductOwned(p)) {
         return "owned";
     }
 
@@ -369,6 +346,9 @@ function getTimedProductTimer(product: any): string {
         return "";
     }
 
+    // Используем tick для реактивности — Vue будет перевычислять при каждом тике
+    void tick.value;
+
     const effect = metaStore.getTimedEffect(product.effect.feature);
 
     if (!effect) {
@@ -376,6 +356,10 @@ function getTimedProductTimer(product: any): string {
     }
 
     const remainingSeconds = Math.floor((effect.expiresAt - Date.now()) / 1000);
+
+    if (remainingSeconds <= 0) {
+        return "";
+    }
 
     const hours = Math.floor(remainingSeconds / 3600);
     const minutes = Math.floor((remainingSeconds % 3600) / 60);
@@ -481,6 +465,18 @@ onMounted(async () => {
         shopStore.activeCatalog[0] ?? null;
 
     shopStore.show();
+
+    // Запускаем тикер для обновления таймеров каждую секунду
+    tickTimer = setInterval(() => {
+        tick.value++;
+    }, 1000);
+});
+
+onUnmounted(() => {
+    if (tickTimer !== null) {
+        clearInterval(tickTimer);
+        tickTimer = null;
+    }
 });
 </script>
 

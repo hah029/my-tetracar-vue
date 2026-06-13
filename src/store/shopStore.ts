@@ -75,20 +75,25 @@ export const useShopStore = defineStore("shopStore", () => {
       case "permanent_feature":
         return meta.hasPermanentFeature(product.effect?.feature);
 
-      case "timed_feature":
-        return meta.isTimedFeatureActive(product.effect?.feature);
+      case "timed_feature": {
+        const feature = product.effect?.feature;
+
+        // Иерархия: если есть permanent-версия этой фичи — timed считается owned
+        if (meta.hasPermanentFeature(feature)) return true;
+
+        // Иерархия: если есть активный timed-эффект с той же или большей длительностью
+        const activeTimed = meta.getTimedEffect(feature);
+        if (activeTimed && product.effect?.durationHours) {
+          return activeTimed.durationHours >= product.effect.durationHours;
+        }
+
+        return meta.isTimedFeatureActive(feature);
+      }
 
       case "upgrade": {
         const upgradeKey = product.effect?.upgrade;
         const currentLevel = meta.getUpgradeLevel(upgradeKey);
         const maxLevel = meta.MAX_UPGRADES[upgradeKey];
-        console.log(
-          "[DEBUG isProductOwned] upgradeKey=%s, currentLevel=%s, maxLevel=%s, product.effect?.upgrade.value=%s",
-          upgradeKey,
-          currentLevel,
-          maxLevel,
-          product.effect?.upgrade?.value,
-        );
         return currentLevel >= maxLevel;
       }
 

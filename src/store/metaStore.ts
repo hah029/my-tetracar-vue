@@ -6,6 +6,7 @@ import { Platform } from "@/sdk/Platform";
 export interface TimedEffect {
   feature: string;
   value?: number;
+  durationHours: number; // длительность в часах (для иерархии)
   expiresAt: number; // timestamp ms
 }
 
@@ -120,6 +121,10 @@ export const useMetaStore = defineStore("metaStore", () => {
     if (!permanentFeatures.value.includes(feature)) {
       permanentFeatures.value.push(feature);
     }
+    // При покупке permanent-версии — удаляем все timed-эффекты этой же фичи
+    activeTimedEffects.value = activeTimedEffects.value.filter(
+      (e) => e.feature !== feature,
+    );
   }
 
   function hasPermanentFeature(feature: string): boolean {
@@ -129,6 +134,23 @@ export const useMetaStore = defineStore("metaStore", () => {
   // ===== ВРЕМЕННЫЕ ЭФФЕКТЫ =====
 
   function addTimedEffect(effect: TimedEffect) {
+    // Если есть permanent-версия этой фичи — не добавляем timed (она не нужна)
+    if (permanentFeatures.value.includes(effect.feature)) {
+      return;
+    }
+    // Если уже есть timed-эффект с той же или большей длительностью — не добавляем
+    const existing = activeTimedEffects.value.find(
+      (e) =>
+        e.feature === effect.feature && e.durationHours >= effect.durationHours,
+    );
+    if (existing) {
+      return;
+    }
+    // Удаляем все эффекты той же фичи с меньшей длительностью (они теперь не нужны)
+    activeTimedEffects.value = activeTimedEffects.value.filter(
+      (e) =>
+        e.feature !== effect.feature || e.durationHours >= effect.durationHours,
+    );
     activeTimedEffects.value.push(effect);
   }
 
