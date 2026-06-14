@@ -104,9 +104,17 @@ export const useGameState = defineStore("gameState", () => {
 
   function onExit(state: GameStates, next: GameStates) {
     switch (state) {
-      case GameStates.Play:
+      case GameStates.Play: {
         console.log("⬅️ Exit Play");
+        // Сохраняем прогресс при выходе из игры (в т.ч. при переходе в меню)
+        const progress = useProgressStore();
+        progress
+          .saveProgress()
+          .catch((err) =>
+            console.error("Failed to save progress on exit play:", err),
+          );
         break;
+      }
 
       case GameStates.QuitConfirm:
         // При выходе из состояния подтверждения

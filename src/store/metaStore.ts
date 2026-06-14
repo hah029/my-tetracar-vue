@@ -156,11 +156,13 @@ export const useMetaStore = defineStore("metaStore", () => {
 
   function getActiveTimedEffects(): TimedEffect[] {
     const now = Date.now();
+    if (!Array.isArray(activeTimedEffects.value)) return [];
     return activeTimedEffects.value.filter((e) => e.expiresAt > now);
   }
 
   function isTimedFeatureActive(feature: string): boolean {
     const now = Date.now();
+    if (!Array.isArray(activeTimedEffects.value)) return false;
     return activeTimedEffects.value.some(
       (e) => e.feature === feature && e.expiresAt > now,
     );
@@ -172,9 +174,13 @@ export const useMetaStore = defineStore("metaStore", () => {
 
   function cleanupExpiredEffects() {
     const now = Date.now();
-    activeTimedEffects.value = activeTimedEffects.value.filter(
-      (e) => e.expiresAt > now,
-    );
+    if (Array.isArray(activeTimedEffects.value)) {
+      activeTimedEffects.value = activeTimedEffects.value.filter(
+        (e) => e.expiresAt > now,
+      );
+    } else {
+      activeTimedEffects.value = [];
+    }
   }
 
   function getTimedEffect(feature: string): TimedEffect | null {
@@ -184,77 +190,104 @@ export const useMetaStore = defineStore("metaStore", () => {
   // ===== СОХРАНЕНИЕ / ЗАГРУЗКА =====
 
   async function saveProgress(): Promise<void> {
-    try {
-      await platform.setPlayerStatByKey("goldens", goldens.value);
-      await platform.setPlayerStatByKey("energons", energons.value);
-      await platform.setPlayerStatByKey(
-        "ownedSkins",
-        JSON.stringify(ownedSkins.value),
-      );
-      await platform.setPlayerStatByKey("activeSkin", activeSkin.value ?? "");
-      await platform.setPlayerStatByKey(
-        "upgrades",
-        JSON.stringify(upgrades.value),
-      );
-      await platform.setPlayerStatByKey(
-        "permanentFeatures",
-        JSON.stringify(permanentFeatures.value),
-      );
-      await platform.setPlayerStatByKey(
-        "activeTimedEffects",
-        JSON.stringify(activeTimedEffects.value),
-      );
-    } catch (err) {
-      console.error("[MetaStore] saveProgress error:", err);
-    }
+    // Каждый вызов обёрнут в отдельный try/catch, чтобы ошибка в одном
+    // не прерывала сохранение остальных данных.
+    const saveStat = async (key: string, value: number) => {
+      try {
+        await platform.setPlayerStatByKey(key, value);
+      } catch (err) {
+        console.error(
+          `[MetaStore] saveProgress: ошибка setPlayerStatByKey("${key}"):`,
+          err,
+        );
+      }
+    };
+    const saveData = async (key: string, value: any) => {
+      try {
+        await platform.setPlayerDataByKey(key, value);
+      } catch (err) {
+        console.error(
+          `[MetaStore] saveProgress: ошибка setPlayerDataByKey("${key}"):`,
+          err,
+        );
+      }
+    };
+
+    // Числовые значения — через stats API (setStats принимает только числа)
+    await saveStat("goldens", goldens.value);
+    await saveStat("energons", energons.value);
+    // JSON-значения — через data API
+    await saveData("ownedSkins", JSON.stringify(ownedSkins.value));
+    await saveData("activeSkin", activeSkin.value ?? "");
+    await saveData("upgrades", JSON.stringify(upgrades.value));
+    await saveData(
+      "permanentFeatures",
+      JSON.stringify(permanentFeatures.value),
+    );
+    await saveData(
+      "activeTimedEffects",
+      JSON.stringify(activeTimedEffects.value),
+    );
   }
 
   async function restoreProgress(): Promise<void> {
     try {
+      // Числовые значения — через stats API
       const g = await platform.getPlayerStatByKey("goldens");
       if (g != null) goldens.value = Number(g);
 
       const e = await platform.getPlayerStatByKey("energons");
       if (e != null) energons.value = Number(e);
 
-      const skins = await platform.getPlayerStatByKey("ownedSkins");
+      // JSON-значения — через data API
+      const skins = await platform.getPlayerDataByKey("ownedSkins");
       if (skins != null) {
         try {
-          ownedSkins.value = JSON.parse(String(skins));
-        } catch {
-          ownedSkins.value = [];
-        }
-      }
-
-      const aSkin = await platform.getPlayerStatByKey("activeSkin");
-      if (aSkin != null && String(aSkin) !== "") {
-        activeSkin.value = String(aSkin);
-      }
-
-      const upg = await platform.getPlayerStatByKey("upgrades");
-      if (upg != null) {
-        try {
-          upgrades.value = { ...upgrades.value, ...JSON.parse(String(upg)) };
+          const parsed = JSON.parse(String(skins));
+          if (Array.isArray(parsed)) ownedSkins.value = parsed;
         } catch {
           // keep defaults
         }
       }
 
-      const perm = await platform.getPlayerStatByKey("permanentFeatures");
-      if (perm != null) {
+      const aSkin = await platform.getPlayerDataByKey("activeSkin");
+      if (aSkin != null && String(aSkin) !== "") {
+        activeSkin.value = String(aSkin);
+      }
+
+      const upg = await platform.getPlayerDataByKey("upgrades");
+      if (upg != null) {
         try {
-          permanentFeatures.value = JSON.parse(String(perm));
+          const parsed = JSON.parse(String(upg));
+          if (
+            typeof parsed === "object" &&
+            parsed !== null &&
+            !Array.isArray(parsed)
+          ) {
+            upgrades.value = { ...upgrades.value, ...parsed };
+          }
         } catch {
-          permanentFeatures.value = [];
+          // keep defaults
         }
       }
 
-      const timed = await platform.getPlayerStatByKey("activeTimedEffects");
+      const perm = await platform.getPlayerDataByKey("permanentFeatures");
+      if (perm != null) {
+        try {
+          const parsed = JSON.parse(String(perm));
+          if (Array.isArray(parsed)) permanentFeatures.value = parsed;
+        } catch {
+          // keep defaults
+        }
+      }
+
+      const timed = await platform.getPlayerDataByKey("activeTimedEffects");
       if (timed != null) {
         try {
-          activeTimedEffects.value = JSON.parse(String(timed));
+          const parsed = JSON.parse(String(timed));
+          if (Array.isArray(parsed)) activeTimedEffects.value = parsed;
         } catch {
-          activeTimedEffects.value = [];
+          // keep defaults
         }
       }
 

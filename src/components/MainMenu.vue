@@ -80,10 +80,16 @@ watch(
     },
 );
 
-onMounted(() => {
+onMounted(async () => {
+    console.log("🟢 MainMenu.onMounted: calling restoreProgress");
     isMainMenuEnabled.value = true;
 
-    progressStore.restoreProgress();
+    try {
+        await progressStore.restoreProgress();
+        console.log("🟢 MainMenu.onMounted: restoreProgress completed");
+    } catch (err) {
+        console.log("🔴 MainMenu.onMounted: restoreProgress error", err);
+    }
 });
 </script>
 

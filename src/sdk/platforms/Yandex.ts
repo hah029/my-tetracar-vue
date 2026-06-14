@@ -148,7 +148,27 @@ export class YandexPlatform implements IGamePlatform {
     const dataPromiseWriter = player.setData(data);
 
     if (!dataPromiseWriter) return null;
-    return await dataPromiseWriter;
+
+    try {
+      return await dataPromiseWriter;
+    } catch (err: any) {
+      // SDK Яндекс.Игр кидает "The data does not differ from the previous ones",
+      // когда setData вызывается с теми же данными, что и в предыдущем вызове.
+      // Это не критическая ошибка — данные уже сохранены.
+      if (
+        typeof err === "object" &&
+        err !== null &&
+        typeof err.message === "string" &&
+        err.message.includes("does not differ")
+      ) {
+        console.log(
+          `[Yandex] setPlayerDataByKey("${key}"): данные не изменились, пропускаем`,
+        );
+        return null;
+      }
+      // Все остальные ошибки пробрасываем
+      throw err;
+    }
   }
 
   async setPlayerStatByKey(stat: string, value: number) {
@@ -158,18 +178,84 @@ export class YandexPlatform implements IGamePlatform {
   }
 
   async getPlayerStatByKey(key: string | null) {
-    if (!this.sdk) return null;
-    if (!key) return null;
-
-    const player = await this.sdk.getPlayer();
-    let statsPromise = player.getStats([key]);
-    if (!statsPromise) return null;
-    const stats = await statsPromise;
-    // SDK Яндекс.Игр возвращает объект вида { "goldens": 150 }, а не число
-    if (typeof stats === "object" && stats !== null && key in stats) {
-      return Number(stats[key]);
+    console.log("🟡 Yandex.getPlayerStatByKey ENTER key=", key);
+    if (!this.sdk) {
+      console.log("🔴 Yandex.getPlayerStatByKey: no sdk");
+      return null;
     }
-    return Number(stats);
+    if (!key) {
+      console.log("🔴 Yandex.getPlayerStatByKey: no key");
+      return null;
+    }
+
+    let player;
+    try {
+      player = await this.sdk.getPlayer();
+    } catch (e) {
+      console.log("🔴 Yandex.getPlayerStatByKey: getPlayer error", e);
+      return null;
+    }
+    console.log("🟡 Yandex.getPlayerStatByKey: player=", player);
+    if (player == null) {
+      console.log("🔴 Yandex.getPlayerStatByKey: player is null");
+      return null;
+    }
+
+    let statsPromise;
+    try {
+      statsPromise = player.getStats([key]);
+    } catch (e) {
+      console.log("🔴 Yandex.getPlayerStatByKey: getStats error", e);
+      return null;
+    }
+    console.log("🟡 Yandex.getPlayerStatByKey: statsPromise=", statsPromise);
+    if (!statsPromise) {
+      console.log("🔴 Yandex.getPlayerStatByKey: no statsPromise");
+      return null;
+    }
+
+    let stats;
+    try {
+      stats = await statsPromise;
+    } catch (e) {
+      console.log("🔴 Yandex.getPlayerStatByKey: await stats error", e);
+      return null;
+    }
+    console.log(
+      "🟡 Yandex.getPlayerStatByKey: stats=",
+      stats,
+      "typeof=",
+      typeof stats,
+    );
+
+    // Если stats null/undefined — статистика ещё не установлена, возвращаем 0
+    if (stats == null) {
+      console.log(
+        "🟢 Yandex.getPlayerStatByKey: stats is null/undefined, return 0",
+      );
+      return 0;
+    }
+
+    // SDK Яндекс.Игр возвращает объект вида { "goldens": 150 }, а не число
+    if (typeof stats === "object") {
+      const val = key in stats ? stats[key] : 0;
+      console.log("🟢 Yandex.getPlayerStatByKey: from object, val=", val);
+      const result = typeof val === "number" && !isNaN(val) ? val : 0;
+      console.log("🟢 Yandex.getPlayerStatByKey: result=", result);
+      return result;
+    }
+
+    // Если stats — число, возвращаем как есть
+    if (typeof stats === "number" && !isNaN(stats)) {
+      console.log("🟢 Yandex.getPlayerStatByKey: from number, result=", stats);
+      return stats;
+    }
+
+    // Пытаемся привести к числу, но защищаемся от NaN
+    const num = Number(stats);
+    const result = isNaN(num) ? 0 : num;
+    console.log("🟢 Yandex.getPlayerStatByKey: from scalar, result=", result);
+    return result;
   }
 
   async getLeaderboardEntries(

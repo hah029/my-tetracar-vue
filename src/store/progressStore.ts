@@ -97,6 +97,12 @@ export const useProgressStore = defineStore("progressStore", () => {
     platform
       .getPlayerStatByKey("highScore")
       .then((value) => {
+        console.log(
+          `[ProgressStore.restoreHighScore] raw=`,
+          value,
+          `typeof=`,
+          typeof value,
+        );
         if (value) highScore.value = value;
         resetNewRecord();
       })
@@ -220,19 +226,30 @@ export const useProgressStore = defineStore("progressStore", () => {
   }
 
   async function saveProgress(): Promise<void> {
+    // Каждый вызов независим, чтобы ошибка в одном не прерывала другие
     try {
       await metaStore.saveProgress();
+    } catch (error) {
+      console.error("Failed to save meta progress:", error);
+    }
+    try {
       await saveHighScore();
+    } catch (error) {
+      console.error("Failed to save high score:", error);
+    }
+    try {
       await saveArmorAndAmmo();
     } catch (error) {
-      console.error("Failed to save progress:", error);
+      console.error("Failed to save armor/ammo:", error);
     }
   }
 
-  function restoreProgress(): void {
+  async function restoreProgress(): Promise<void> {
+    console.log("🟠 ProgressStore.restoreProgress ENTER");
     restoreHighScore();
-    metaStore.restoreProgress();
-    restoreArmorAndAmmo();
+    await metaStore.restoreProgress();
+    await restoreArmorAndAmmo();
+    console.log("🟠 ProgressStore.restoreProgress COMPLETE");
   }
   // #endregion
 
