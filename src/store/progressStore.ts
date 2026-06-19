@@ -70,9 +70,10 @@ export const useProgressStore = defineStore("progressStore", () => {
 
   async function restoreHighScore() {
     platform
-      .getPlayerStatByKey("highScore")
+      .getPlayerStats(["highScore"])
       .then((value) => {
-        if (value) highScore.value = value;
+        const savedHighScore = value?.highScore;
+        if (savedHighScore) highScore.value = savedHighScore;
         resetNewRecord();
       })
       .catch((err) => console.error("Failed to restore high score:", err));
@@ -153,8 +154,10 @@ export const useProgressStore = defineStore("progressStore", () => {
 
   async function saveArmorAndAmmo(): Promise<void> {
     try {
-      await platform.setPlayerStatByKey("armor", playerStore.armor);
-      await platform.setPlayerStatByKey("ammo", playerStore.ammo);
+      await platform.setPlayerStats({
+        armor: playerStore.armor,
+        ammo: playerStore.ammo,
+      });
     } catch (err) {
       console.error("Failed to save armor/ammo:", err);
     }
@@ -162,12 +165,13 @@ export const useProgressStore = defineStore("progressStore", () => {
 
   async function restoreArmorAndAmmo(): Promise<void> {
     try {
-      const savedArmor = await platform.getPlayerStatByKey("armor");
+      const stats = await platform.getPlayerStats(["armor", "ammo"]);
+      const savedArmor = stats?.armor;
       if (savedArmor != null) {
         const armorVal = Number(savedArmor);
         for (let i = 0; i < armorVal; i++) playerStore.addArmor();
       }
-      const savedAmmo = await platform.getPlayerStatByKey("ammo");
+      const savedAmmo = stats?.ammo;
       if (savedAmmo != null) {
         const ammoVal = Number(savedAmmo);
         for (let i = 0; i < ammoVal; i++) playerStore.addAmmo();

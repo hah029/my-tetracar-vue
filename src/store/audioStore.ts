@@ -42,15 +42,11 @@ export const useAudioStore = defineStore("audio", () => {
 
   // загрузка сохранённых настроек
   async function loadFromStorage() {
-    await storage
-      .getPlayerDataByKey("masterEnabled")
-      .then((v: boolean) => (masterEnabled.value = v ?? false));
-    await storage
-      .getPlayerDataByKey("musicEnabled")
-      .then((v: boolean) => (musicEnabled.value = v ?? false));
-    await storage
-      .getPlayerDataByKey("masterVolume")
-      .then((v: number) => (masterVolume.value = v ?? audio.default_volume));
+    const data = await storage.getPlayerData();
+
+    masterEnabled.value = data?.masterEnabled ?? false;
+    musicEnabled.value = data?.musicEnabled ?? false;
+    masterVolume.value = data?.masterVolume ?? audio.default_volume;
   }
 
   loadFromStorage();

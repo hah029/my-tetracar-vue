@@ -1,7 +1,7 @@
 import type { Product } from "ysdk";
 
 export interface IGamePlatform {
-  init(): void;
+  init(): Promise<void>;
 
   // #region - работа с рекламой
   showFullscreenAd(

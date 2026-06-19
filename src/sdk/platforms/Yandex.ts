@@ -23,14 +23,13 @@ type Payments = Awaited<ReturnType<SDK["getPayments"]>>;
 // ------------------------------------------------------------------
 export class YandexPlatform implements IGamePlatform {
   private sdk: SDK | null = null;
+  private player: Player | null = null;
+  private playerDataCache: PlayerDataSet | null = null;
+  private isPlayerDataCacheComplete = false;
 
-  init(): void {
-    YaGames.init()
-      .then((sdk) => {
-        this.sdk = sdk;
-        sdk.features.LoadingAPI?.ready();
-      })
-      .catch(console.error);
+  async init(): Promise<void> {
+    this.sdk = await YaGames.init();
+    this.sdk.features.LoadingAPI?.ready();
   }
 
   // ------------------------------------------------------------------
@@ -47,10 +46,30 @@ export class YandexPlatform implements IGamePlatform {
 
   private async getPlayerSafe(): Promise<Player | null> {
     try {
-      return await this.ensureSDK().getPlayer();
+      if (this.player != null) return this.player;
+
+      this.player = await this.ensureSDK().getPlayer();
+      return this.player;
     } catch {
       return null;
     }
+  }
+
+  private async ensurePlayerDataCache(): Promise<PlayerDataSet | null> {
+    if (this.playerDataCache) {
+      return this.playerDataCache;
+    }
+
+    const player = await this.getPlayerSafe();
+
+    if (!player) {
+      return null;
+    }
+
+    this.playerDataCache = await player.getData();
+    this.isPlayerDataCacheComplete = true;
+
+    return this.playerDataCache;
   }
 
   private async requirePlayer(): Promise<Player> {
@@ -164,10 +183,19 @@ export class YandexPlatform implements IGamePlatform {
       return null;
     }
 
-    return keys ? player.getStats(keys) : player.getStats();
+    try {
+      return keys ? player.getStats(keys) : player.getStats();
+    } catch (err) {
+      console.error("[YandexPlatform.getPlayerStats]", err);
+      return null;
+    }
   }
 
   async setPlayerStats(stats: Stats): Promise<void> {
+    if (!stats || Object.keys(stats).length === 0) {
+      return;
+    }
+
     const player = await this.requirePlayer();
 
     try {
@@ -186,22 +214,10 @@ export class YandexPlatform implements IGamePlatform {
       return 0;
     }
 
-    const player = await this.getPlayerSafe();
+    const stats = await this.getPlayerStats([key]);
+    const value = stats?.[key];
 
-    if (!player) {
-      return 0;
-    }
-
-    try {
-      const stats = await player.getStats([key]);
-
-      const value = stats?.[key];
-
-      return typeof value === "number" && !Number.isNaN(value) ? value : 0;
-    } catch (err) {
-      console.error("[YandexPlatform.getPlayerStatByKey]", err);
-      return 0;
-    }
+    return typeof value === "number" && !Number.isNaN(value) ? value : 0;
   }
 
   // ------------------------------------------------------------------
@@ -209,9 +225,7 @@ export class YandexPlatform implements IGamePlatform {
   // ------------------------------------------------------------------
 
   async getPlayerData(): Promise<PlayerDataSet | null> {
-    const player = await this.getPlayerSafe();
-
-    return player ? player.getData() : null;
+    return this.ensurePlayerDataCache();
   }
 
   async getPlayerDataByKey(key: string): Promise<PlayerData | null> {
@@ -221,36 +235,46 @@ export class YandexPlatform implements IGamePlatform {
       return null;
     }
 
-    const data = await player.getData();
+    if (this.playerDataCache && key in this.playerDataCache) {
+      return this.playerDataCache[key];
+    }
+
+    if (this.isPlayerDataCacheComplete) {
+      return null;
+    }
+
+    const data = await player.getData([key]);
+    this.playerDataCache = { ...(this.playerDataCache ?? {}), ...data };
 
     return key in data ? data[key] : null;
   }
 
   async setPlayerData(data: PlayerDataSet): Promise<void> {
+    if (!data || Object.keys(data).length === 0) {
+      return;
+    }
+
     const player = await this.requirePlayer();
-
-    await player.setData(data);
-  }
-
-  async setPlayerDataByKey(key: string, value: PlayerData): Promise<void> {
-    const player = await this.requirePlayer();
-
-    const data = await player.getData();
-
-    data[key] = value;
+    const currentData = await this.ensurePlayerDataCache();
+    const nextData = { ...(currentData ?? {}), ...data };
 
     try {
-      await player.setData(data);
+      await player.setData(nextData);
+      this.playerDataCache = nextData;
+      this.isPlayerDataCacheComplete = true;
     } catch (err: any) {
       if (err?.message?.includes("does not differ")) {
-        console.log(
-          `[Yandex] setPlayerDataByKey("${key}") skipped: data unchanged`,
-        );
+        this.playerDataCache = nextData;
+        this.isPlayerDataCacheComplete = true;
         return;
       }
 
       throw err;
     }
+  }
+
+  async setPlayerDataByKey(key: string, value: PlayerData): Promise<void> {
+    await this.setPlayerData({ [key]: value });
   }
 
   // ------------------------------------------------------------------

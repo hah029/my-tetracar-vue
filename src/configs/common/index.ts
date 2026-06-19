@@ -1,6 +1,15 @@
 import type { GeometryConfig, MaterialConfig } from "@/game/cube/types";
 import { MODELS } from "@/assets/models";
-import { TEXTURES } from "@/assets/textures";
+import {
+  baseCubeMaterialConfig,
+  bulletMaterialConfig,
+  goldenMaterialConfig,
+  magnetMaterialConfig,
+  nitroMaterialConfig,
+  shieldMaterialConfig,
+} from "./materials";
+import { basePhysics } from "./physics";
+import { boosterSpawnProbabilities, coinSpawnProbabilities } from "./spawn";
 
 export default {
   // Масштаб по XZ (базовый)
@@ -16,25 +25,13 @@ export default {
 
   // Монеты и бустеры
   baseCoinValue: 1,
-  coinSpawnProbabilities: {
-    energon: 5,
-    golden: 1000,
-  },
-  boosterSpawnProbabilities: {
-    nitro: 1,
-    shield: 0,
-    magnet: 1,
-    bullet: 0,
+  spawnProbabilities: {
+    coins: coinSpawnProbabilities,
+    boosters: boosterSpawnProbabilities,
   },
 
   // Физика
-  gravity: 30,
-  friction: 2.5,
-  bounceFactor: 0.4,
-  collisionFactor: 0.2,
-  removalHeight: 20,
-  explosionForce: 25,
-  explosionUpward: 20,
+  physics: basePhysics,
 
   // Пуля
   bulletDefaultSpeed: 0.15,
@@ -60,19 +57,6 @@ export default {
   dangerDistance: 30,
   collisionCooldownMs: 1000,
 
-  // Базовый материал куба
-  baseCubeMaterialConfig: {
-    textureUrl: null,
-    color: 0xffffff,
-    emissive: 0x000000,
-    emissiveIntensity: 1,
-    ior: 1,
-    transmission: 1,
-    metalness: 1,
-    roughness: 1,
-    thickness: 1,
-  },
-
   // Эффекты
   flashSizeDefault: 6,
   explosionSizeDefault: 6,
@@ -88,36 +72,14 @@ export default {
   movingObstacleSpeed: 0.01,
 
   // Материалы бустеров
-  magnetMaterialConfig: {
-    textureUrl: TEXTURES.cube.base,
-    emissive: 0x000000,
-    emissiveIntensity: 0.6,
-  } as MaterialConfig,
-
-  bulletMaterialConfig: {
-    textureUrl: TEXTURES.cube.bullet,
-    emissive: 0xdd0000,
-    emissiveIntensity: 0.6,
-  } as MaterialConfig,
-
-  nitroMaterialConfig: {
-    textureUrl: TEXTURES.cube.base,
-    emissive: 0x00dd00,
-    emissiveIntensity: 0.6,
-  } as MaterialConfig,
-
-  shieldMaterialConfig: {
-    textureUrl: TEXTURES.cube.base,
-    emissive: 0xffffff,
-    emissiveIntensity: 0.6,
-  } as MaterialConfig,
-
-  goldenMaterialConfig: {
-    textureUrl: TEXTURES.cube.golden,
-    emissive: 0xefbf04,
-    emissiveIntensity: 0.6,
-    metalness: 4.0,
-  } as MaterialConfig,
+  materials: {
+    base: baseCubeMaterialConfig,
+    magnet: magnetMaterialConfig,
+    bullet: bulletMaterialConfig,
+    nitro: nitroMaterialConfig,
+    shield: shieldMaterialConfig,
+    golden: goldenMaterialConfig,
+  },
 
   // Генераторы структур, зависящих от XZ_SCALING
   getBaseItemYpos(xzScaling: number) {

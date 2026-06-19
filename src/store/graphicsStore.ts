@@ -17,30 +17,16 @@ export const useGraphicsStore = defineStore("graphics", () => {
 
   // загрузка сохранённых настроек
   async function loadFromStorage() {
-    await storage
-      .getPlayerDataByKey("vfxEnabled")
-      .then((v: boolean) => (vfxEnabled.value = v ?? true));
-    await storage
-      .getPlayerDataByKey("bloomEnabled")
-      .then((v: boolean) => (bloomEnabled.value = v ?? false));
-    await storage
-      .getPlayerDataByKey("afterimageEnabled")
-      .then((v: boolean) => (afterimageEnabled.value = v ?? false));
-    await storage
-      .getPlayerDataByKey("fxaaEnabled")
-      .then((v: boolean) => (fxaaEnabled.value = v ?? true));
-    await storage
-      .getPlayerDataByKey("rgbShiftEnabled")
-      .then((v: boolean) => (rgbShiftEnabled.value = v ?? false));
-    await storage
-      .getPlayerDataByKey("nightMode")
-      .then((v: boolean) => (nightMode.value = v ?? true));
-    await storage
-      .getPlayerDataByKey("shadowEnabled")
-      .then((v: boolean) => (shadowEnabled.value = v ?? false));
-    await storage
-      .getPlayerDataByKey("shadowQuality")
-      .then((v: shadowQualityTypes) => (shadowQuality.value = v ?? "low"));
+    const data = await storage.getPlayerData();
+
+    vfxEnabled.value = data?.vfxEnabled ?? true;
+    bloomEnabled.value = data?.bloomEnabled ?? false;
+    afterimageEnabled.value = data?.afterimageEnabled ?? false;
+    fxaaEnabled.value = data?.fxaaEnabled ?? true;
+    rgbShiftEnabled.value = data?.rgbShiftEnabled ?? false;
+    nightMode.value = data?.nightMode ?? true;
+    shadowEnabled.value = data?.shadowEnabled ?? false;
+    shadowQuality.value = data?.shadowQuality ?? "low";
   }
 
   // переключение эффектов

@@ -31,16 +31,7 @@ export const useCommonStore = defineStore("common", () => {
 
   // Физический блок
   function getBasePhysics() {
-    return {
-      gravity: config.value.gravity,
-      friction: config.value.friction,
-      bounceFactor: config.value.bounceFactor,
-      collisionFactor: config.value.collisionFactor,
-      removalHeight: config.value.removalHeight,
-      explosionForce: config.value.explosionForce,
-      explosionUpward: config.value.explosionUpward,
-      cubeRotationSpeed: config.value.baseItemRotation,
-    };
+    return config.value.physics;
   }
 
   return {
@@ -71,13 +62,13 @@ export const useCommonStore = defineStore("common", () => {
     BOOSTER_SPAWN_PROBABILITIES: computed(
       () => config.value.boosterSpawnProbabilities,
     ),
-    GRAVITY: computed(() => config.value.gravity),
-    FRICTION: computed(() => config.value.friction),
-    BOUNCE_FACTOR: computed(() => config.value.bounceFactor),
-    EXPLOSION_FORCE: computed(() => config.value.explosionForce),
-    EXPLOSION_UPWARD: computed(() => config.value.explosionUpward),
-    COLLISION_FACTOR: computed(() => config.value.collisionFactor),
-    REMOVAL_HEIGHT: computed(() => config.value.removalHeight),
+    GRAVITY: computed(() => config.value.physics.gravity),
+    FRICTION: computed(() => config.value.physics.friction),
+    BOUNCE_FACTOR: computed(() => config.value.physics.bounceFactor),
+    EXPLOSION_FORCE: computed(() => config.value.physics.explosionForce),
+    EXPLOSION_UPWARD: computed(() => config.value.physics.explosionUpward),
+    COLLISION_FACTOR: computed(() => config.value.physics.collisionFactor),
+    REMOVAL_HEIGHT: computed(() => config.value.physics.removalHeight),
     DESTROYED_ROLLDROP_WEIGHTS: computed(
       () => config.value.destroyedRolldropWeights,
     ),
@@ -86,9 +77,7 @@ export const useCommonStore = defineStore("common", () => {
     BULLET_DEFAULT_SPEED: computed(() => config.value.bulletDefaultSpeed),
     BULLET_DEFAULT_MATERIAL: computed(() => config.value.bulletDefaultMaterial),
     BULLET_MAX_DISTANCE: computed(() => config.value.bulletMaxDistance),
-    BASE_CUBE_MATERIAL_CONFIG: computed(
-      () => config.value.baseCubeMaterialConfig,
-    ),
+
     FLASH_SIZE_DEFAULT: computed(() => config.value.flashSizeDefault),
     EXPLOSION_SIZE_DEFAULT: computed(() => config.value.explosionSizeDefault),
     FLASH_DURATION_DEFAULT: computed(() => config.value.flashDurationDefault),
@@ -99,11 +88,14 @@ export const useCommonStore = defineStore("common", () => {
     JUMP_HEIGHT: computed(() => config.value.jumpHeight),
     JUMP_DEPTH: computed(() => config.value.jumpDepth),
     MOVING_OBSTACLE_SPEED: computed(() => config.value.movingObstacleSpeed),
-    MAGNET_MATERIAL_CONFIG: computed(() => config.value.magnetMaterialConfig),
-    NITRO_MATERIAL_CONFIG: computed(() => config.value.nitroMaterialConfig),
-    SHIELD_MATERIAL_CONFIG: computed(() => config.value.shieldMaterialConfig),
-    BULLET_MATERIAL_CONFIG: computed(() => config.value.bulletMaterialConfig),
-    GOLDEN_MATERIAL_CONFIG: computed(() => config.value.goldenMaterialConfig),
+
+    BASE_CUBE_MATERIAL_CONFIG: computed(() => config.value.materials.base),
+
+    MAGNET_MATERIAL_CONFIG: computed(() => config.value.materials.magnet),
+    NITRO_MATERIAL_CONFIG: computed(() => config.value.materials.nitro),
+    SHIELD_MATERIAL_CONFIG: computed(() => config.value.materials.shield),
+    BULLET_MATERIAL_CONFIG: computed(() => config.value.materials.bullet),
+    GOLDEN_MATERIAL_CONFIG: computed(() => config.value.materials.golden),
 
     // методы
     getBasePhysics,
