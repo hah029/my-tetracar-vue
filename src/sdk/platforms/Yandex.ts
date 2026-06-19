@@ -11,21 +11,37 @@ type Stats = Record<string | number, number>;
 type PlayerData = Serializable | undefined;
 type PlayerDataSet = Record<string, PlayerData>;
 
+type Purchase = {
+  productID: string;
+  purchaseToken: string;
+};
+
+type Payments = Awaited<ReturnType<SDK["getPayments"]>>;
+
 // ------------------------------------------------------------------
 // YandexPlatform
 // ------------------------------------------------------------------
 export class YandexPlatform implements IGamePlatform {
   private sdk: SDK | null = null;
 
-  async init(): Promise<void> {
-    this.sdk = await YaGames.init();
+  init(): void {
+    YaGames.init()
+      .then((sdk) => {
+        this.sdk = sdk;
+        sdk.features.LoadingAPI?.ready();
+      })
+      .catch(console.error);
   }
 
-  // Приватные хелперы – единая точка проверки наличия SDK / игрока
+  // ------------------------------------------------------------------
+  // Helpers
+  // ------------------------------------------------------------------
+
   private ensureSDK(): SDK {
     if (!this.sdk) {
       throw new Error("SDK not initialized");
     }
+
     return this.sdk;
   }
 
@@ -37,47 +53,78 @@ export class YandexPlatform implements IGamePlatform {
     }
   }
 
+  private async requirePlayer(): Promise<Player> {
+    const player = await this.getPlayerSafe();
+
+    if (!player) {
+      throw new Error("Player not available");
+    }
+
+    return player;
+  }
+
+  private async requirePayments(): Promise<Payments> {
+    const payments = await this.ensureSDK().getPayments();
+
+    if (!payments) {
+      throw new Error("Payments not available");
+    }
+
+    return payments;
+  }
+
   // ------------------------------------------------------------------
-  // Реклама
+  // Ads
   // ------------------------------------------------------------------
-  async showFullscreenAd(
+
+  showFullscreenAd(
     callbackObject: any,
     openCallbackMethod?: Function,
     closeCallbackMethod?: Function,
-  ): Promise<void> {
-    const sdk = this.ensureSDK();
-    sdk.adv.showFullscreenAdv({
+  ): void {
+    this.ensureSDK().adv.showFullscreenAdv({
       callbacks: {
         onOpen: () => {
           console.log("Fullscreen Ad opened");
           openCallbackMethod?.(callbackObject);
         },
+
         onClose: () => {
           console.log("Fullscreen Ad closed");
           closeCallbackMethod?.(callbackObject);
         },
-        onError: () => closeCallbackMethod?.(callbackObject),
+
+        onError: (err) => {
+          console.error("Fullscreen Ad error:", err);
+          closeCallbackMethod?.(callbackObject);
+        },
       },
     });
   }
 
-  async showRewardedVideoAd(
+  showRewardedVideoAd(
     callbackObject: any,
     openCallbackMethod?: Function,
     rewardCallbackMethod?: Function,
     closeCallbackMethod?: Function,
-  ): Promise<void> {
-    const sdk = this.ensureSDK();
-    sdk.adv.showRewardedVideo({
+  ): void {
+    this.ensureSDK().adv.showRewardedVideo({
       callbacks: {
         onOpen: () => {
           console.log("Rewarded Ad opened");
           openCallbackMethod?.(callbackObject);
         },
-        onClose: () => console.log("Rewarded Ad closed"),
-        onRewarded: () => rewardCallbackMethod?.(callbackObject),
+
+        onRewarded: () => {
+          rewardCallbackMethod?.(callbackObject);
+        },
+
+        onClose: () => {
+          console.log("Rewarded Ad closed");
+        },
+
         onError: (err) => {
-          console.error("Rewarded Ad error", err);
+          console.error("Rewarded Ad error:", err);
           closeCallbackMethod?.(callbackObject);
         },
       },
@@ -85,114 +132,138 @@ export class YandexPlatform implements IGamePlatform {
   }
 
   // ------------------------------------------------------------------
-  // Игрок – авторизация, имя, id
+  // Player
   // ------------------------------------------------------------------
+
   async isPlayerAuthorized(): Promise<boolean | null> {
     const player = await this.getPlayerSafe();
+
     return player ? player.isAuthorized() : null;
   }
 
   async getPlayerId(): Promise<string | null> {
     const player = await this.getPlayerSafe();
+
     return player ? player.getUniqueID() : null;
   }
 
   async getPlayerName(): Promise<string | null> {
     const player = await this.getPlayerSafe();
+
     return player ? player.getName() : null;
   }
 
   // ------------------------------------------------------------------
-  // Статистика игрока
+  // Stats
   // ------------------------------------------------------------------
+
   async getPlayerStats(keys?: string[]): Promise<Partial<Stats> | null> {
     const player = await this.getPlayerSafe();
-    if (!player) return null;
+
+    if (!player) {
+      return null;
+    }
+
     return keys ? player.getStats(keys) : player.getStats();
   }
 
   async setPlayerStats(stats: Stats): Promise<void> {
-    const player = await this.getPlayerSafe();
-    if (!player) throw new Error("Player not available");
+    const player = await this.requirePlayer();
+
     try {
       await player.setStats(stats);
     } catch (err) {
-      console.error("[YandexPlatfrom.setPlayerStats]", err);
+      console.error("[YandexPlatform.setPlayerStats]", err);
     }
   }
 
-  async setPlayerStatByKey(stat: string, value: number): Promise<void> {
-    return this.setPlayerStats({ [stat]: value });
+  async setPlayerStatByKey(key: string, value: number): Promise<void> {
+    await this.setPlayerStats({ [key]: value });
   }
 
   async getPlayerStatByKey(key: string): Promise<number> {
-    if (!key) return 0;
+    if (!key) {
+      return 0;
+    }
+
     const player = await this.getPlayerSafe();
-    if (!player) return 0;
+
+    if (!player) {
+      return 0;
+    }
+
     try {
       const stats = await player.getStats([key]);
-      // stats – объект вида { [key]: number } или undefined
-      console.log("[YandexPlatform.getPlayerStatByKey.stats]", stats);
 
-      const val = stats?.[key];
-      return typeof val === "number" && !isNaN(val) ? val : 0;
-    } catch (e) {
-      console.error("getPlayerStatByKey error:", e);
+      const value = stats?.[key];
+
+      return typeof value === "number" && !Number.isNaN(value) ? value : 0;
+    } catch (err) {
+      console.error("[YandexPlatform.getPlayerStatByKey]", err);
       return 0;
     }
   }
 
   // ------------------------------------------------------------------
-  // Данные игрока
+  // Player Data
   // ------------------------------------------------------------------
+
   async getPlayerData(): Promise<PlayerDataSet | null> {
     const player = await this.getPlayerSafe();
+
     return player ? player.getData() : null;
   }
 
   async getPlayerDataByKey(key: string): Promise<PlayerData | null> {
     const player = await this.getPlayerSafe();
-    if (!player) return null;
+
+    if (!player) {
+      return null;
+    }
+
     const data = await player.getData();
+
     return key in data ? data[key] : null;
   }
 
   async setPlayerData(data: PlayerDataSet): Promise<void> {
-    const player = await this.getPlayerSafe();
-    if (!player) throw new Error("Player not available");
+    const player = await this.requirePlayer();
+
     await player.setData(data);
   }
 
   async setPlayerDataByKey(key: string, value: PlayerData): Promise<void> {
-    const player = await this.getPlayerSafe();
-    if (!player) throw new Error("Player not available");
+    const player = await this.requirePlayer();
+
     const data = await player.getData();
+
     data[key] = value;
+
     try {
       await player.setData(data);
     } catch (err: any) {
-      // Яндекс SDK может выбрасывать ошибку, если данные не изменились
       if (err?.message?.includes("does not differ")) {
         console.log(
-          `[Yandex] setPlayerDataByKey("${key}"): данные не изменились, пропускаем`,
+          `[Yandex] setPlayerDataByKey("${key}") skipped: data unchanged`,
         );
         return;
       }
+
       throw err;
     }
   }
 
   // ------------------------------------------------------------------
-  // Лидерборды
+  // Leaderboards
   // ------------------------------------------------------------------
+
   async getLeaderboardEntries(
     leaderboardName: string,
     quantityTop: number,
     includeUser: boolean,
     quantityAround: number,
   ): Promise<LeaderboardEntriesData | null> {
-    const sdk = this.ensureSDK();
-    return sdk.leaderboards.getEntries(leaderboardName, {
+    return this.ensureSDK().leaderboards.getEntries(leaderboardName, {
       quantityTop,
       includeUser,
       quantityAround,
@@ -203,13 +274,13 @@ export class YandexPlatform implements IGamePlatform {
     leaderboardName: string,
     score: number,
   ): Promise<void> {
-    const sdk = this.ensureSDK();
-    await sdk.leaderboards.setScore(leaderboardName, score);
+    await this.ensureSDK().leaderboards.setScore(leaderboardName, score);
   }
 
   // ------------------------------------------------------------------
-  // Язык и готовность игры
+  // Localization
   // ------------------------------------------------------------------
+
   getLocale(): string | undefined {
     return this.sdk?.environment.i18n.lang;
   }
@@ -219,54 +290,66 @@ export class YandexPlatform implements IGamePlatform {
   }
 
   // ------------------------------------------------------------------
-  // Платежи и покупки
+  // Payments
   // ------------------------------------------------------------------
-  async consumePrevPurchases(consumePurchaseCallback: Function): Promise<void> {
-    const sdk = this.ensureSDK();
-    const payments = await sdk.getPayments();
-    if (!payments) return;
 
-    const purchases = await payments.getPurchases(); // <-- было this.sdk.payments (ошибка)
+  async consumePrevPurchases(
+    consumePurchaseCallback: (purchase: Purchase) => void,
+  ): Promise<void> {
+    const payments = await this.requirePayments();
+
+    const purchases = (await payments.getPurchases()) as Purchase[];
+
     console.log("Purchases to consume:", purchases);
 
     for (const purchase of purchases) {
-      this.consumePurchaseCore(payments, purchase, consumePurchaseCallback);
+      await this.consumePurchaseCore(
+        payments,
+        purchase,
+        consumePurchaseCallback,
+      );
     }
   }
 
-  private consumePurchaseCore(
-    payments: any, // Payments API объект
-    purchase: any, // объект покупки { productID, purchaseToken, ... }
-    callback: Function,
-  ): void {
+  private async consumePurchaseCore(
+    payments: Payments,
+    purchase: Purchase,
+    callback?: (purchase: Purchase) => void,
+  ): Promise<void> {
     console.log("consumePurchase:", purchase);
-    callback?.(purchase); // игровая логика начисления предметов
-    payments.consumePurchase(purchase.purchaseToken);
+
+    callback?.(purchase);
+
+    await payments.consumePurchase(purchase.purchaseToken);
+
     console.log("consumePurchase completed:", purchase.purchaseToken);
   }
 
   async getShopCatalog(): Promise<Product[] | null> {
-    const sdk = this.ensureSDK();
-    const payments = await sdk.getPayments();
-    if (!payments) return null;
+    const payments = await this.requirePayments();
+
     const catalog = await payments.getCatalog();
+
     console.log("Catalog:", catalog);
+
     return catalog;
   }
 
   async buyShopItem(
     productId: string,
-    consumePurchase: Function,
+    consumePurchase: (purchase: Purchase) => void,
   ): Promise<void> {
-    const sdk = this.ensureSDK();
-    const payments = await sdk.getPayments();
-    if (!payments) throw new Error("Payments not available");
+    const payments = await this.requirePayments();
+
     try {
-      const purchase = await payments.purchase({ id: productId });
-      this.consumePurchaseCore(payments, purchase, consumePurchase);
+      const purchase = (await payments.purchase({
+        id: productId,
+      })) as Purchase;
+
+      await this.consumePurchaseCore(payments, purchase, consumePurchase);
     } catch (err) {
       console.error("Purchase error:", err);
-      throw err; // даём вызывающему коду обработать ошибку
+      throw err;
     }
   }
 }

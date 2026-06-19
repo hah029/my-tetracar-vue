@@ -3,6 +3,8 @@ import { defineStore } from "pinia";
 import { Platform } from "@/sdk/Platform";
 import { ref, computed } from "vue";
 
+import metaConfig from "@/configs/meta";
+
 import stuffJson from "@/configs/in_apps/stuff.json";
 import visualJson from "@/configs/in_apps/visual.json";
 import type { Product } from "@/sdk/types/Shop";
@@ -93,7 +95,7 @@ export const useShopStore = defineStore("shopStore", () => {
       case "upgrade": {
         const upgradeKey = product.effect?.upgrade;
         const currentLevel = meta.getUpgradeLevel(upgradeKey);
-        const maxLevel = meta.MAX_UPGRADES[upgradeKey];
+        const maxLevel = metaConfig.max_upgrades[upgradeKey];
         return currentLevel >= maxLevel;
       }
 

@@ -1,58 +1,34 @@
-// src/store/gameState.ts
 import { defineStore } from "pinia";
+import { ref } from "vue";
 import { useCommonStore } from "./commonStore";
 import type { RoadConfig } from "@/game/environment/road";
-import textureUrl from "@/assets/textures/road_tile.svg";
-import type { GeometryConfig, MaterialConfig } from "@/game/cube/types";
-import { MODELS } from "@/assets/models";
-import { TEXTURES } from "@/assets/textures";
+import environmentConfig from "@/configs/environment";
 
 export const useEnvironmentStore = defineStore("environmentStore", () => {
   const commonStore = useCommonStore();
-  const AXES_SIZE = 5;
+  const config = ref(environmentConfig);
 
-  const NIGHT_BACKGROUND = 0x222222;
-  const DAY_BACKGROUND = 0xdddddd;
-  const FOG_NEAR = 0.01;
-  const FOG_FAR = 200;
+  // Вычисляем lanes с учётом текущего XZ_SCALING
+  const defaultLanes = config.value.getDefaultLanes(commonStore.XZ_SCALING);
 
-  const DEFAULT_LANES = [
-    -(12 * commonStore.XZ_SCALING),
-    -(6 * commonStore.XZ_SCALING),
-    0,
-    6 * commonStore.XZ_SCALING,
-    12 * commonStore.XZ_SCALING,
-  ];
-
-  const DEFAULT_ROAD_CONFIG: RoadConfig = {
-    lanes: DEFAULT_LANES,
-    // width: 11, // Можно вычислять: (max lane - min lane) + edgeOffset*2
-    // width: 5.9,
-    length: 800,
-    color: 0xeeeeee,
-    emissive: 0xeeeeee,
-    opacity: 0.25,
-    yPosition: 0.0,
-    gap: 0,
-    edgeOffset: 0.3, // Отступ от крайних полос до границ
-    textureUrl: textureUrl,
-  };
-  const NEON_ROAD_CONFIG: RoadConfig = {
-    ...DEFAULT_ROAD_CONFIG,
-    color: 0xeeeeee,
-    emissive: 0xeeeeee,
-    opacity: 0.25,
-    emissiveIntensity: 0.1,
+  // Собираем полные конфиги дорог
+  const defaultRoadConfig: RoadConfig = {
+    ...config.value.defaultRoadBase,
+    lanes: defaultLanes,
   };
 
-  // Вспомогательная функция для вычисления ширины дороги
+  const neonRoadConfig: RoadConfig = {
+    ...defaultRoadConfig,
+    ...config.value.neonRoadExtras,
+  };
+
+  // Вспомогательные функции (зависят от XZ_SCALING)
   function calculateRoadWidth(lanes: number[]): number {
     const minLane = Math.min(...lanes);
     const maxLane = Math.max(...lanes);
     return maxLane - minLane + commonStore.XZ_SCALING * 10;
   }
 
-  // Вспомогательная функция для получения позиций границ
   function getEdgePositions(lanes: number[]): {
     left: number;
     right: number;
@@ -65,33 +41,10 @@ export const useEnvironmentStore = defineStore("environmentStore", () => {
     };
   }
 
-  const SIDE_OBJECT_GEOMETRY_CONFIG: GeometryConfig = {
-    scale: [
-      // commonStore.XZ_SCALING,
-      // commonStore.XZ_SCALING,
-      // commonStore.XZ_SCALING,
-      2, 2, 2,
-    ],
-    modelUrl: MODELS.cube,
-  };
-
-  const SIDE_OBJECT_MATERIAL_CONFIG: MaterialConfig = {
-    textureUrl: TEXTURES.cube.base,
-  };
-
   return {
-    AXES_SIZE,
-    DEFAULT_ROAD_CONFIG,
-    NEON_ROAD_CONFIG,
-    DEFAULT_LANES,
-    SIDE_OBJECT_GEOMETRY_CONFIG,
-    SIDE_OBJECT_MATERIAL_CONFIG,
-
-    NIGHT_BACKGROUND,
-    DAY_BACKGROUND,
-    FOG_NEAR,
-    FOG_FAR,
-
+    config, // единый реактивный конфиг
+    defaultRoadConfig,
+    neonRoadConfig,
     calculateRoadWidth,
     getEdgePositions,
   };

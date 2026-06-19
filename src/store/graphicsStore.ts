@@ -1,6 +1,8 @@
 import { defineStore } from "pinia";
 import { ref } from "vue";
 import { Platform } from "@/sdk/Platform";
+import type { shadowQualityTypes } from "@/configs/graphics";
+import graphics from "@/configs/graphics";
 
 export const useGraphicsStore = defineStore("graphics", () => {
   const vfxEnabled = ref(true); // общий рубильник эффектов
@@ -10,7 +12,7 @@ export const useGraphicsStore = defineStore("graphics", () => {
   const nightMode = ref(true); // false = день, true = ночь
   const shadowEnabled = ref(false);
   const rgbShiftEnabled = ref(false);
-  const shadowQuality = ref<"low" | "medium" | "high">("medium");
+  const shadowQuality = ref<shadowQualityTypes>("medium");
   const storage = Platform.getInstance();
 
   // загрузка сохранённых настроек
@@ -38,9 +40,7 @@ export const useGraphicsStore = defineStore("graphics", () => {
       .then((v: boolean) => (shadowEnabled.value = v ?? false));
     await storage
       .getPlayerDataByKey("shadowQuality")
-      .then(
-        (v: "low" | "medium" | "high") => (shadowQuality.value = v ?? "low"),
-      );
+      .then((v: shadowQualityTypes) => (shadowQuality.value = v ?? "low"));
   }
 
   // переключение эффектов
@@ -75,7 +75,7 @@ export const useGraphicsStore = defineStore("graphics", () => {
     shadowEnabled.value = !shadowEnabled.value;
     await storage.setPlayerDataByKey("shadowEnabled", shadowEnabled.value);
   }
-  async function setShadowQuality(quality: "low" | "medium" | "high") {
+  async function setShadowQuality(quality: shadowQualityTypes) {
     shadowQuality.value = quality;
     await storage.setPlayerDataByKey("shadowQuality", shadowQuality.value);
   }
@@ -88,11 +88,15 @@ export const useGraphicsStore = defineStore("graphics", () => {
 
   // меняем текущий pixel ratio
   function getPixelRatio(): number {
-    return vfxEnabled.value ? Math.min(window.devicePixelRatio, 1.0) : 0.8;
+    return vfxEnabled.value
+      ? Math.min(window.devicePixelRatio, graphics.pixel_ratio.enabled)
+      : graphics.pixel_ratio.disabled;
   }
 
   function getBloomStrength(): number {
-    return vfxEnabled.value ? 0.3 : 0.0;
+    return vfxEnabled.value
+      ? graphics.bloom_strength.enabled
+      : graphics.bloom_strength.disabled;
   }
 
   function getShadowQuality(): boolean {

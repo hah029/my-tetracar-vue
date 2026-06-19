@@ -4,140 +4,134 @@ import { atlas } from "@/assets/textures/TextureAtlas";
 // /game/road/SideObjectsInstanced.ts
 // import { loadCubeModel } from "@/game/cube/loadCube";
 
-
 export class SideObjectsInstanced {
-    private mesh!: THREE.InstancedMesh;
-    private positions: THREE.Vector3[] = [];
-    private dummy = new THREE.Object3D();
-    private spacing: number;
-    private count: number;
-    private scene: THREE.Scene;
-    private x: number;
+  private mesh!: THREE.InstancedMesh;
+  private positions: THREE.Vector3[] = [];
+  private dummy = new THREE.Object3D();
+  private spacing: number;
+  private count: number;
+  private scene: THREE.Scene;
+  private x: number;
 
-    constructor(
-        scene: THREE.Scene,
-        x: number,
-        spacing: number,
-        startZ: number,
-        endZ: number,
-    ) {
-        this.scene = scene;
-        this.x = x;
-        this.spacing = spacing;
-        this.count = Math.ceil((endZ - startZ) / spacing) + 2;
-        this.init(startZ).catch((e) =>
-            console.error("[SideObjectsInstanced] init error", e),
-        );
-    };
+  constructor(
+    scene: THREE.Scene,
+    x: number,
+    spacing: number,
+    startZ: number,
+    endZ: number,
+  ) {
+    this.scene = scene;
+    this.x = x;
+    this.spacing = spacing;
+    this.count = Math.ceil((endZ - startZ) / spacing) + 2;
+    this.init(startZ).catch((e) =>
+      console.error("[SideObjectsInstanced] init error", e),
+    );
+  }
 
-    private async init(startZ: number) {
-        // GEOMETRY
-        const geometry = new THREE.BoxGeometry(1, 1, 1);
+  private async init(startZ: number) {
+    // GEOMETRY
+    const geometry = new THREE.BoxGeometry(1, 1, 1);
 
-        // APPLY ATLAS UV
-        const sprite = atlas.getSprite("cube_base");
-        if (!sprite) throw new Error("Atlas sprite not found");
-        const uv = geometry.attributes.uv;
+    // APPLY ATLAS UV
+    const sprite = atlas.getSprite("cube_base");
+    if (!sprite) throw new Error("Atlas sprite not found");
+    const uv = geometry.attributes.uv;
 
-        for (let i = 0; i < uv.count; i++) {
-            const u = uv.getX(i);
-            const v = uv.getY(i);
+    for (let i = 0; i < uv.count; i++) {
+      const u = uv.getX(i);
+      const v = uv.getY(i);
 
-            uv.setXY(
-                i,
-                sprite.uvRect.u + u * sprite.uvRect.w,
-                sprite.uvRect.v + v * sprite.uvRect.h,
-            );
-            
-            // правки из коммита Артема (пока закомментировал)
-            // switch(i) {
-            //     // верхняя грань
-            //     case 8:
-            //     case 9:
-            //     case 10:
-            //     case 11:
-            //         uv.setXY(i, sprite.uvRect.u + u * sprite.uvRect.w * 0.5, sprite.uvRect.v + v * sprite.uvRect.h * 0.5);
-            //         break;
-                    
-            //     // все остальные грани (хак, т.к. текстуры боковушек в атласе одинаковые, а низ не видно)					 
-            //     default: 
-            //         uv.setXY(i, sprite.uvRect.u + sprite.uvRect.w * (0.5 + u * 0.5), sprite.uvRect.v + sprite.uvRect.h * (1 - v) * 0.25);
-            // };
-        };
+      uv.setXY(
+        i,
+        sprite.uvRect.u + u * sprite.uvRect.w,
+        sprite.uvRect.v + v * sprite.uvRect.h,
+      );
 
-        uv.needsUpdate = true;
+      // правки из коммита Артема (пока закомментировал)
+      // switch(i) {
+      //     // верхняя грань
+      //     case 8:
+      //     case 9:
+      //     case 10:
+      //     case 11:
+      //         uv.setXY(i, sprite.uvRect.u + u * sprite.uvRect.w * 0.5, sprite.uvRect.v + v * sprite.uvRect.h * 0.5);
+      //         break;
 
-        // TEXTURE
-        const atlasTexture = atlas.getAtlasTexture();
-        if (!atlasTexture) throw new Error("Atlas texture not loaded");
-        atlasTexture.flipY = false;
-        atlasTexture.colorSpace = THREE.SRGBColorSpace;
+      //     // все остальные грани (хак, т.к. текстуры боковушек в атласе одинаковые, а низ не видно)
+      //     default:
+      //         uv.setXY(i, sprite.uvRect.u + sprite.uvRect.w * (0.5 + u * 0.5), sprite.uvRect.v + sprite.uvRect.h * (1 - v) * 0.25);
+      // };
+    }
 
-        // MATERIAL
-        const material = new THREE.MeshStandardMaterial({
-            map: atlasTexture,
-            color: 0xffffff,
-        });
+    uv.needsUpdate = true;
 
-        // INSTANCED MESH
-        this.mesh = new THREE.InstancedMesh(geometry, material, this.count);
-        this.mesh.castShadow = true;
-        this.mesh.receiveShadow = true;
-        this.scene.add(this.mesh);
+    // TEXTURE
+    const atlasTexture = atlas.getAtlasTexture();
+    if (!atlasTexture) throw new Error("Atlas texture not loaded");
+    atlasTexture.flipY = false;
+    atlasTexture.colorSpace = THREE.SRGBColorSpace;
 
-        // SCALE
-        const scale = new THREE.Vector3(
-            // ...useEnvironmentStore().SIDE_OBJECT_GEOMETRY_CONFIG.scale,
-            1.75,
-            1.4,
-            1.75,
-        );
+    // MATERIAL
+    const material = new THREE.MeshStandardMaterial({
+      map: atlasTexture,
+      color: 0xffffff,
+    });
 
-        // CREATE INSTANCES
-        for (let i = 0; i < this.count; i++) {
-            const z = startZ - i * this.spacing;
-            const pos = new THREE.Vector3(this.x, 0.4, z);
-            this.positions.push(pos);
-            this.dummy.position.copy(pos);
-            this.dummy.scale.copy(scale);
-            this.dummy.updateMatrix();
-            this.mesh.setMatrixAt(i, this.dummy.matrix);
-        };
+    // INSTANCED MESH
+    this.mesh = new THREE.InstancedMesh(geometry, material, this.count);
+    this.mesh.castShadow = true;
+    this.mesh.receiveShadow = true;
+    this.scene.add(this.mesh);
 
-        this.mesh.instanceMatrix.needsUpdate = true;
-    };
+    // SCALE
+    const scale = new THREE.Vector3(1.75, 1.4, 1.75);
 
-    update(delta: number, speed: number) {
-        if (!this.mesh) return;
-        const move = delta * speed;
+    // CREATE INSTANCES
+    for (let i = 0; i < this.count; i++) {
+      const z = startZ - i * this.spacing;
+      const pos = new THREE.Vector3(this.x, 0.4, z);
+      this.positions.push(pos);
+      this.dummy.position.copy(pos);
+      this.dummy.scale.copy(scale);
+      this.dummy.updateMatrix();
+      this.mesh.setMatrixAt(i, this.dummy.matrix);
+    }
 
-        for (let i = 0; i < this.count; i++) {
-            const pos = this.positions[i];
+    this.mesh.instanceMatrix.needsUpdate = true;
+  }
 
-            if (!pos) continue;
-            pos.z += move;
+  update(delta: number, speed: number) {
+    if (!this.mesh) return;
+    const move = delta * speed;
 
-            if (pos.z > useCommonStore().ITEMS_REMOVING_ZPOS) {
-                pos.z -= this.count * this.spacing;
-            };
+    for (let i = 0; i < this.count; i++) {
+      const pos = this.positions[i];
 
-            this.dummy.position.copy(pos);
-            this.dummy.updateMatrix();
-            this.mesh.setMatrixAt(i, this.dummy.matrix);
-        };
-        this.mesh.instanceMatrix.needsUpdate = true;
-    };
+      if (!pos) continue;
+      pos.z += move;
 
-    dispose() {
-        if (!this.mesh) return;
+      if (pos.z > useCommonStore().ITEMS_REMOVING_ZPOS) {
+        pos.z -= this.count * this.spacing;
+      }
 
-        this.scene.remove(this.mesh);
-        this.mesh.geometry.dispose();
+      this.dummy.position.copy(pos);
+      this.dummy.updateMatrix();
+      this.mesh.setMatrixAt(i, this.dummy.matrix);
+    }
+    this.mesh.instanceMatrix.needsUpdate = true;
+  }
 
-        if (Array.isArray(this.mesh.material)) {
-            this.mesh.material.forEach((m) => m.dispose());
-        } else {
-            this.mesh.material.dispose();
-        };
-    };
-};
+  dispose() {
+    if (!this.mesh) return;
+
+    this.scene.remove(this.mesh);
+    this.mesh.geometry.dispose();
+
+    if (Array.isArray(this.mesh.material)) {
+      this.mesh.material.forEach((m) => m.dispose());
+    } else {
+      this.mesh.material.dispose();
+    }
+  }
+}

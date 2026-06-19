@@ -239,6 +239,7 @@ import { useShopStore } from "@/store/shopStore";
 import { useMetaStore } from "@/store/metaStore";
 
 import type { Product as PurchaseProduct } from "@/purchase/types/Product";
+import meta from "@/configs/meta";
 
 const gameState = useGameState();
 const shopStore = useShopStore();
@@ -409,7 +410,7 @@ function getUpgradeLevel(product: any): { level: number; maxLevel: number } | nu
     }
 
     const level = metaStore.getUpgradeLevel(product.effect?.upgrade);
-    const maxLevel = metaStore.MAX_UPGRADES[product.effect?.upgrade];
+    const maxLevel = meta.max_upgrades[product.effect?.upgrade];
 
     if (level === null) {
         return { level, maxLevel };
@@ -439,7 +440,7 @@ function getUpgradeLevelString(product: any): string {
     }
 
     const upgradeInfo = getUpgradeLevel(product);
-    return `Уровень: ${upgradeInfo.level} / ${upgradeInfo.maxLevel}`;
+    return `Уровень: ${upgradeInfo!.level} / ${upgradeInfo!.maxLevel}`;
 }
 
 function backButtonClick() {

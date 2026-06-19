@@ -1,9 +1,9 @@
 import * as THREE from "three";
 import type { RoadLaneConfig } from "./types";
 
-import vertexShader from "@/game/shaders/roadLane/vertex.glsl";
-import fragmentShader from "@/game/shaders/roadLane/fragment.glsl";
-import { useEnvironmentStore } from "@/store/environmentStore";
+// import vertexShader from "@/game/shaders/roadLane/vertex.glsl";
+// import fragmentShader from "@/game/shaders/roadLane/fragment.glsl";
+// import { useEnvironmentStore } from "@/store/environmentStore";
 
 export class RoadLane extends THREE.Mesh {
   public material: THREE.MeshBasicMaterial | THREE.ShaderMaterial;

@@ -3,6 +3,8 @@ import { defineStore } from "pinia";
 import { ref, computed } from "vue";
 import { Platform } from "@/sdk/Platform";
 
+import meta from "@/configs/meta";
+
 export interface TimedEffect {
   feature: string;
   value?: number;
@@ -29,11 +31,6 @@ export const useMetaStore = defineStore("metaStore", () => {
     armorLevel: 0,
     magnetRadiusLevel: 0,
   });
-  const MAX_UPGRADES = Object.freeze({
-    ammoLevel: 3,
-    armorLevel: 3,
-    magnetRadiusLevel: 3,
-  });
 
   // Постоянные возможности
   const permanentFeatures = ref<string[]>([]);
@@ -42,14 +39,14 @@ export const useMetaStore = defineStore("metaStore", () => {
   const activeTimedEffects = ref<TimedEffect[]>([]);
 
   // ===== COMPUTED (формулы из shop.md п.8) =====
-  const BASE_AMMO = 10;
-  const BASE_ARMOR = 1;
-  const BASE_MAGNET_RADIUS = 10;
-
-  const maxAmmo = computed(() => BASE_AMMO + upgrades.value.ammoLevel * 2);
-  const maxArmor = computed(() => BASE_ARMOR + upgrades.value.armorLevel);
+  const maxAmmo = computed(
+    () => meta.base_counts.ammo + upgrades.value.ammoLevel * 2,
+  );
+  const maxArmor = computed(
+    () => meta.base_counts.shield + upgrades.value.armorLevel,
+  );
   const magnetRadius = computed(
-    () => BASE_MAGNET_RADIUS + upgrades.value.magnetRadiusLevel * 5,
+    () => meta.base_counts.magnetRadius + upgrades.value.magnetRadiusLevel * 5,
   );
 
   // ===== ВАЛЮТА =====
@@ -110,7 +107,7 @@ export const useMetaStore = defineStore("metaStore", () => {
     if (!(key in upgrades.value)) {
       upgrades.value[key] = 0;
     }
-    if (upgrades.value[key] < MAX_UPGRADES[key]) {
+    if (upgrades.value[key] < meta.max_upgrades[key]) {
       upgrades.value[key] += amount;
     }
   }
@@ -313,8 +310,6 @@ export const useMetaStore = defineStore("metaStore", () => {
     upgrades,
     permanentFeatures,
     activeTimedEffects,
-
-    MAX_UPGRADES,
 
     // computed
     maxAmmo,

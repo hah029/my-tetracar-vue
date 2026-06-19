@@ -1,21 +1,21 @@
 import type { Product } from "ysdk";
 
 export interface IGamePlatform {
-  init(): Promise<void>;
+  init(): void;
 
   // #region - работа с рекламой
   showFullscreenAd(
     object: any,
     openCallbackMethod: Function,
     closeCallback: Function,
-  ): Promise<void>;
+  ): void;
 
   showRewardedVideoAd(
     object: any,
     openCallbackMethod: Function,
     rewardCallback: Function,
     closeCallback: Function,
-  ): Promise<void>;
+  ): void;
   // #endregion
 
   // #region - работа с Player

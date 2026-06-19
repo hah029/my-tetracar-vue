@@ -79,7 +79,7 @@ export function useGame() {
 
     // === Инициализация менеджеров ===
     roadManager = RoadManager.getInstance();
-    roadManager.initialize(useEnvironmentStore().DEFAULT_ROAD_CONFIG, scene);
+    roadManager.initialize(useEnvironmentStore().defaultRoadConfig, scene);
 
     cityManager = CityManager.getInstance();
     cityManager.initialize(scene);

@@ -1,4 +1,5 @@
-import type { IGamePlatform, LeaderboardEntriesData } from "../IGamePlatform";
+import type { LeaderboardEntriesData } from "ysdk";
+import type { IGamePlatform } from "../IGamePlatform";
 
 type Stats = Record<string | number, number>;
 type PlayerData = import("ysdk").Serializable | undefined;
@@ -55,7 +56,7 @@ export class LocalStoragePlatform implements IGamePlatform {
     return this.storage;
   }
 
-  private getPlayer(): LocalPlayer {
+  private getPlayer(): LocalPlayer | null {
     const raw = this.ensureStorage().getItem(this.PLAYER_KEY);
     return raw ? JSON.parse(raw) : null;
   }
@@ -111,42 +112,42 @@ export class LocalStoragePlatform implements IGamePlatform {
   }
 
   async getPlayerId(): Promise<string> {
-    return this.getPlayer().id;
+    return this.getPlayer()!.id;
   }
 
   async getPlayerName(): Promise<string> {
-    return this.getPlayer().name;
+    return this.getPlayer()!.name;
   }
 
   // ------------------------------------------------------------------
   // Данные игрока
   // ------------------------------------------------------------------
   async getPlayerData(): Promise<PlayerDataSet> {
-    return this.getPlayer().data;
+    return this.getPlayer()!.data;
   }
 
   async getPlayerDataByKey(key: string): Promise<PlayerData | null> {
-    const data = this.getPlayer().data;
+    const data = this.getPlayer()!.data;
     return key in data ? data[key] : null;
   }
 
   async setPlayerData(data: PlayerDataSet): Promise<void> {
     const player = this.getPlayer();
-    player.data = data;
-    this.savePlayer(player);
+    player!.data = data;
+    this.savePlayer(player!);
   }
 
   async setPlayerDataByKey(key: string, value: PlayerData): Promise<void> {
     const player = this.getPlayer();
-    player.data[key] = value;
-    this.savePlayer(player);
+    player!.data[key] = value;
+    this.savePlayer(player!);
   }
 
   // ------------------------------------------------------------------
   // Статистика игрока
   // ------------------------------------------------------------------
   async getPlayerStats(keys?: string[]): Promise<Partial<Stats>> {
-    const stats = this.getPlayer().stats;
+    const stats = this.getPlayer()!.stats;
     if (!keys) return { ...stats };
     const filtered: Partial<Stats> = {};
     for (const key of keys) {
@@ -157,8 +158,8 @@ export class LocalStoragePlatform implements IGamePlatform {
 
   async setPlayerStats(stats: Stats): Promise<void> {
     const player = this.getPlayer();
-    player.stats = { ...player.stats, ...stats };
-    this.savePlayer(player);
+    player!.stats = { ...player!.stats, ...stats };
+    this.savePlayer(player!);
   }
 
   async setPlayerStatByKey(stat: string, value: number): Promise<void> {
@@ -166,7 +167,7 @@ export class LocalStoragePlatform implements IGamePlatform {
   }
 
   async getPlayerStatByKey(key: string): Promise<number> {
-    const stats = this.getPlayer().stats;
+    const stats = this.getPlayer()!.stats;
     const val = stats[key];
     return typeof val === "number" && !isNaN(val) ? val : 0;
   }
@@ -186,14 +187,14 @@ export class LocalStoragePlatform implements IGamePlatform {
     }
 
     const board = boards[leaderboardName];
-    const existing = board.find((entry) => entry.playerId === player.id);
+    const existing = board.find((entry) => entry.playerId === player!.id);
 
     if (existing) {
       if (score > existing.score) existing.score = score;
     } else {
       board.push({
-        playerId: player.id,
-        playerName: player.name,
+        playerId: player!.id,
+        playerName: player!.name,
         score,
       });
     }
@@ -225,7 +226,9 @@ export class LocalStoragePlatform implements IGamePlatform {
     // Поиск записи текущего пользователя
     let userEntry = null;
     if (includeUser) {
-      const userRank = board.findIndex((entry) => entry.playerId === player.id);
+      const userRank = board.findIndex(
+        (entry) => entry.playerId === player!.id,
+      );
       if (userRank !== -1) {
         userEntry = {
           rank: userRank + 1,

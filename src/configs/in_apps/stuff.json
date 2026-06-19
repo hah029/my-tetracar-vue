@@ -1,5 +1,31 @@
 [
     {
+        "id": "bulletMaximizing",
+        "type": "consumable",
+        "title": "Пополнение патронов",
+        "description": "Полностью пополняет текущий запас патронов",
+        "price": {
+            "value": 1000,
+            "currency": "golden"
+        },
+        "effect": {
+            "refill": "ammo"
+        }
+    },
+    {
+        "id": "shieldMaximizing",
+        "type": "consumable",
+        "title": "Пополнение брони",
+        "description": "Полностью пополняет текущий запас брони",
+        "price": {
+            "value": 1000,
+            "currency": "golden"
+        },
+        "effect": {
+            "refill": "armor"
+        }
+    },
+    {
         "id": "24hourAdOff",
         "type": "timed_feature",
         "title": "Отключение рекламы на 24 часа",
@@ -82,32 +108,6 @@
         "effect": {
             "upgrade": "armorLevel",
             "value": 1,
-            "refill": "armor"
-        }
-    },
-    {
-        "id": "bulletMaximizing",
-        "type": "consumable",
-        "title": "Пополнение патронов",
-        "description": "Полностью пополняет текущий запас патронов",
-        "price": {
-            "value": 1000,
-            "currency": "golden"
-        },
-        "effect": {
-            "refill": "ammo"
-        }
-    },
-    {
-        "id": "shieldMaximizing",
-        "type": "consumable",
-        "title": "Пополнение брони",
-        "description": "Полностью пополняет текущий запас брони",
-        "price": {
-            "value": 1000,
-            "currency": "golden"
-        },
-        "effect": {
             "refill": "armor"
         }
     },

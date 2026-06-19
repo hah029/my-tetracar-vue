@@ -28,7 +28,7 @@ export class RoadManager {
   private scene!: THREE.Scene;
 
   public initialize(config: RoadConfig, scene: THREE.Scene) {
-    this.config = { ...useEnvironmentStore().NEON_ROAD_CONFIG, ...config };
+    this.config = { ...useEnvironmentStore().neonRoadConfig, ...config };
     this.scene = scene;
   }
 

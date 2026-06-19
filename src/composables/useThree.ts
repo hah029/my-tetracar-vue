@@ -87,28 +87,18 @@ export function useThree(container: Ref<HTMLElement | null>) {
   function updateLightingMode() {
     if (!scene) return;
 
-    useEnvironmentStore().DAY_BACKGROUND;
+    const cfg = useEnvironmentStore().config;
 
     const graphics = useGraphicsStore();
     const isNight = graphics.nightMode;
 
     // Фон и туман
     if (isNight) {
-      scene.background = new THREE.Color(
-        useEnvironmentStore().NIGHT_BACKGROUND,
-      );
-      scene.fog = new THREE.Fog(
-        useEnvironmentStore().NIGHT_BACKGROUND,
-        useEnvironmentStore().FOG_NEAR,
-        useEnvironmentStore().FOG_FAR,
-      );
+      scene.background = new THREE.Color(cfg.nightBackground);
+      scene.fog = new THREE.Fog(cfg.nightBackground, cfg.fog.near, cfg.fog.far);
     } else {
-      scene.background = new THREE.Color(useEnvironmentStore().DAY_BACKGROUND);
-      scene.fog = new THREE.Fog(
-        useEnvironmentStore().DAY_BACKGROUND,
-        useEnvironmentStore().FOG_NEAR,
-        useEnvironmentStore().FOG_FAR,
-      );
+      scene.background = new THREE.Color(cfg.dayBackground);
+      scene.fog = new THREE.Fog(cfg.dayBackground, cfg.fog.near, cfg.fog.far);
     }
 
     // Освещение (если сохранено в scene.userData.lights)
@@ -152,7 +142,9 @@ export function useThree(container: Ref<HTMLElement | null>) {
 
     // Отладочные оси
     if (useGameState().isDebug) {
-      const axesHelper = new THREE.AxesHelper(useEnvironmentStore().AXES_SIZE);
+      const axesHelper = new THREE.AxesHelper(
+        useEnvironmentStore().config.axesSize,
+      );
       scene.add(axesHelper);
     }
 

@@ -3,15 +3,15 @@ import { defineStore } from "pinia";
 import { ref } from "vue";
 import { SoundManager } from "@/game/sound/SoundManager";
 import { Platform } from "@/sdk/Platform";
+import audio from "@/configs/audio";
 
 export const useAudioStore = defineStore("audio", () => {
   const storage = Platform.getInstance();
-  const DEFAULT_VOLUME = 0.3;
 
   const masterEnabled = ref(false);
   const musicEnabled = ref(false);
   const sfxEnabled = ref(false);
-  const masterVolume = ref(DEFAULT_VOLUME);
+  const masterVolume = ref(audio.default_volume);
 
   const soundManager = SoundManager.getInstance();
 
@@ -50,7 +50,7 @@ export const useAudioStore = defineStore("audio", () => {
       .then((v: boolean) => (musicEnabled.value = v ?? false));
     await storage
       .getPlayerDataByKey("masterVolume")
-      .then((v: number) => (masterVolume.value = v ?? DEFAULT_VOLUME));
+      .then((v: number) => (masterVolume.value = v ?? audio.default_volume));
   }
 
   loadFromStorage();
