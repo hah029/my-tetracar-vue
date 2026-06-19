@@ -33,7 +33,7 @@ export interface IGamePlatform {
 
   setPlayerDataByKey(key: string, value: any): any | null;
 
-  getPlayerStats(keys: Array<string> | null): any | null;
+  getPlayerStats(keys?: string[]): Promise<Partial<Stats> | null>;
 
   getPlayerStatByKey(key: string): any | null;
 

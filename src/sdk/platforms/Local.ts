@@ -1,164 +1,179 @@
-import type { IGamePlatform } from "../IGamePlatform";
+import type { IGamePlatform, LeaderboardEntriesData } from "../IGamePlatform";
 
-type PlayerData = {
+type Stats = Record<string | number, number>;
+type PlayerData = import("ysdk").Serializable | undefined;
+type PlayerDataSet = Record<string, PlayerData>;
+
+interface LocalPlayer {
   id: string;
   name: string;
-  stats: Record<string, any>;
-  data: Record<string, any>;
-};
+  stats: Stats;
+  data: PlayerDataSet;
+}
 
-type LeaderboardEntry = {
+interface LocalLeaderboardEntry {
   playerId: string;
   playerName: string;
   score: number;
-};
+}
 
 export class LocalStoragePlatform implements IGamePlatform {
   private storage: Storage | null = null;
 
-  private PLAYER_KEY = "dev_player";
-  private LEADERBOARD_KEY = "dev_leaderboards";
-  private LANG_KEY = "lang";
+  private readonly PLAYER_KEY = "dev_player";
+  private readonly LEADERBOARD_KEY = "dev_leaderboards";
+  private readonly LANG_KEY = "lang";
 
   async init(): Promise<void> {
     this.storage = localStorage;
 
+    // Инициализация игрока
     if (!this.storage.getItem(this.PLAYER_KEY)) {
-      const player: PlayerData = {
+      const defaultPlayer: LocalPlayer = {
         id: "local_player_1",
         name: "Developer",
         stats: {},
         data: {},
       };
-
-      this.storage.setItem(this.PLAYER_KEY, JSON.stringify(player));
+      this.storage.setItem(this.PLAYER_KEY, JSON.stringify(defaultPlayer));
     }
 
+    // Инициализация таблиц лидеров
     if (!this.storage.getItem(this.LEADERBOARD_KEY)) {
       this.storage.setItem(this.LEADERBOARD_KEY, JSON.stringify({}));
     }
 
+    // Язык по умолчанию
     if (!this.storage.getItem(this.LANG_KEY)) {
       this.storage.setItem(this.LANG_KEY, "ru");
     }
   }
 
-  private getPlayer(): PlayerData {
-    return JSON.parse(this.storage!.getItem(this.PLAYER_KEY)!);
+  // Приватные хелперы для работы с localStorage
+  private ensureStorage(): Storage {
+    if (!this.storage) throw new Error("LocalStorage not initialized");
+    return this.storage;
   }
 
-  private savePlayer(player: PlayerData) {
-    this.storage!.setItem(this.PLAYER_KEY, JSON.stringify(player));
+  private getPlayer(): LocalPlayer {
+    const raw = this.ensureStorage().getItem(this.PLAYER_KEY);
+    return raw ? JSON.parse(raw) : null;
   }
 
-  private getLeaderboards(): Record<string, LeaderboardEntry[]> {
-    return JSON.parse(this.storage!.getItem(this.LEADERBOARD_KEY)!);
+  private savePlayer(player: LocalPlayer): void {
+    this.ensureStorage().setItem(this.PLAYER_KEY, JSON.stringify(player));
   }
 
-  private saveLeaderboards(data: Record<string, LeaderboardEntry[]>) {
-    this.storage!.setItem(this.LEADERBOARD_KEY, JSON.stringify(data));
+  private getLeaderboards(): Record<string, LocalLeaderboardEntry[]> {
+    const raw = this.ensureStorage().getItem(this.LEADERBOARD_KEY);
+    return raw ? JSON.parse(raw) : {};
   }
 
+  private saveLeaderboards(
+    data: Record<string, LocalLeaderboardEntry[]>,
+  ): void {
+    this.ensureStorage().setItem(this.LEADERBOARD_KEY, JSON.stringify(data));
+  }
+
+  // ------------------------------------------------------------------
+  // Реклама (имитация)
+  // ------------------------------------------------------------------
   async showFullscreenAd(
-    object: any,
-    openCallbackMethod: Function,
-    closeCallbackMethod: Function,
+    callbackObject: any,
+    openCallbackMethod?: Function,
+    closeCallbackMethod?: Function,
   ): Promise<void> {
     console.log("DEV Fullscreen Ad");
-
-    openCallbackMethod?.(object);
-
+    openCallbackMethod?.(callbackObject);
     setTimeout(() => {
-      closeCallbackMethod?.(object);
+      closeCallbackMethod?.(callbackObject);
     }, 1000);
   }
 
   async showRewardedVideoAd(
-    object: any,
-    openCallbackMethod: Function,
-    rewardCallbackMethod: Function,
+    callbackObject: any,
+    openCallbackMethod?: Function,
+    rewardCallbackMethod?: Function,
+    closeCallbackMethod?: Function,
   ): Promise<void> {
     console.log("DEV Rewarded Ad");
-
-    openCallbackMethod?.(object);
-
+    openCallbackMethod?.(callbackObject);
     setTimeout(() => {
-      rewardCallbackMethod?.(object);
+      rewardCallbackMethod?.(callbackObject);
     }, 1500);
   }
 
-  async isPlayerAuthorized() {
-    return true;
+  // ------------------------------------------------------------------
+  // Игрок – авторизация, имя, id
+  // ------------------------------------------------------------------
+  async isPlayerAuthorized(): Promise<boolean> {
+    return true; // В dev‑режиме всегда авторизован
   }
 
-  async getPlayerId() {
+  async getPlayerId(): Promise<string> {
     return this.getPlayer().id;
   }
 
-  async getPlayerName() {
+  async getPlayerName(): Promise<string> {
     return this.getPlayer().name;
   }
 
-  async getPlayerDataByKey(key: string) {
-    return key in this.getPlayer().data ? this.getPlayer().data[key] : null;
-  }
-
-  async getPlayerData() {
+  // ------------------------------------------------------------------
+  // Данные игрока
+  // ------------------------------------------------------------------
+  async getPlayerData(): Promise<PlayerDataSet> {
     return this.getPlayer().data;
   }
 
-  async setPlayerData(data: any) {
+  async getPlayerDataByKey(key: string): Promise<PlayerData | null> {
+    const data = this.getPlayer().data;
+    return key in data ? data[key] : null;
+  }
+
+  async setPlayerData(data: PlayerDataSet): Promise<void> {
     const player = this.getPlayer();
     player.data = data;
     this.savePlayer(player);
-    return data;
   }
 
-  async setPlayerDataByKey(key: string, value: any) {
+  async setPlayerDataByKey(key: string, value: PlayerData): Promise<void> {
     const player = this.getPlayer();
     player.data[key] = value;
     this.savePlayer(player);
-
-    return player.data;
   }
 
-  async getPlayerStats(keys: string[] | null) {
+  // ------------------------------------------------------------------
+  // Статистика игрока
+  // ------------------------------------------------------------------
+  async getPlayerStats(keys?: string[]): Promise<Partial<Stats>> {
     const stats = this.getPlayer().stats;
-
-    if (!keys) return stats;
-
-    const filtered: Record<string, any> = {};
-
-    keys.forEach((key) => {
+    if (!keys) return { ...stats };
+    const filtered: Partial<Stats> = {};
+    for (const key of keys) {
       if (key in stats) filtered[key] = stats[key];
-    });
-
+    }
     return filtered;
   }
 
-  async setPlayerStats(stats: any) {
+  async setPlayerStats(stats: Stats): Promise<void> {
     const player = this.getPlayer();
-    player.stats = {
-      ...player.stats,
-      ...stats,
-    };
-
+    player.stats = { ...player.stats, ...stats };
     this.savePlayer(player);
-    return player.stats;
   }
 
-  async getPlayerStatByKey(key: string) {
-    return key in this.getPlayer().stats ? this.getPlayer().stats[key] : null;
+  async setPlayerStatByKey(stat: string, value: number): Promise<void> {
+    await this.setPlayerStats({ [stat]: value });
   }
 
-  async setPlayerStatByKey(key: string, value: any) {
-    const player = this.getPlayer();
-    player.stats[key] = value;
-    this.savePlayer(player);
-
-    return player.stats;
+  async getPlayerStatByKey(key: string): Promise<number> {
+    const stats = this.getPlayer().stats;
+    const val = stats[key];
+    return typeof val === "number" && !isNaN(val) ? val : 0;
   }
 
+  // ------------------------------------------------------------------
+  // Лидерборды
+  // ------------------------------------------------------------------
   async setLeaderboardScore(
     leaderboardName: string,
     score: number,
@@ -171,13 +186,10 @@ export class LocalStoragePlatform implements IGamePlatform {
     }
 
     const board = boards[leaderboardName];
-
-    const existing = board.find((x) => x.playerId === player.id);
+    const existing = board.find((entry) => entry.playerId === player.id);
 
     if (existing) {
-      if (score > existing.score) {
-        existing.score = score;
-      }
+      if (score > existing.score) existing.score = score;
     } else {
       board.push({
         playerId: player.id,
@@ -187,7 +199,6 @@ export class LocalStoragePlatform implements IGamePlatform {
     }
 
     board.sort((a, b) => b.score - a.score);
-
     this.saveLeaderboards(boards);
   }
 
@@ -196,36 +207,70 @@ export class LocalStoragePlatform implements IGamePlatform {
     quantityTop: number,
     includeUser: boolean,
     quantityAround: number,
-  ) {
+  ): Promise<LeaderboardEntriesData> {
     const boards = this.getLeaderboards();
-
     const board = boards[leaderboardName] || [];
+    const player = this.getPlayer();
+
+    // Топ‑N записей
+    const topEntries = board.slice(0, quantityTop).map((entry, index) => ({
+      rank: index + 1,
+      score: entry.score,
+      player: {
+        publicName: entry.playerName,
+        uniqueID: entry.playerId,
+      },
+    }));
+
+    // Поиск записи текущего пользователя
+    let userEntry = null;
+    if (includeUser) {
+      const userRank = board.findIndex((entry) => entry.playerId === player.id);
+      if (userRank !== -1) {
+        userEntry = {
+          rank: userRank + 1,
+          score: board[userRank].score,
+          player: {
+            publicName: board[userRank].playerName,
+            uniqueID: board[userRank].playerId,
+          },
+        };
+      }
+    }
 
     return {
-      entries: board.slice(0, quantityTop).map((item, index) => ({
-        rank: index + 1,
-        score: item.score,
-        player: {
-          publicName: item.playerName,
-          uniqueID: item.playerId,
-        },
-      })),
-    };
+      entries: topEntries,
+      userEntry,
+      pages: 1, // Заглушка
+    } as LeaderboardEntriesData;
   }
 
-  consumePrevPurchases(consumePurchase: Function) {}
-
-  async buyShopItem(productId: string, consumePurchase: Function) {}
-
-  async getShopCatalog() {
-    return null;
+  // ------------------------------------------------------------------
+  // Язык и готовность
+  // ------------------------------------------------------------------
+  getLocale(): string {
+    return this.ensureStorage().getItem(this.LANG_KEY) || "ru";
   }
 
-  getLocale() {
-    return this.storage?.getItem(this.LANG_KEY) || "ru";
-  }
-
-  gameReady() {
+  gameReady(): void {
     console.log("DEV SDK READY");
+  }
+
+  // ------------------------------------------------------------------
+  // Платежи (не поддерживаются в локальной версии)
+  // ------------------------------------------------------------------
+  async consumePrevPurchases(consumePurchase: Function): Promise<void> {
+    // Ничего не делаем
+  }
+
+  async buyShopItem(
+    productId: string,
+    consumePurchase: Function,
+  ): Promise<void> {
+    console.log(`DEV покупка "${productId}" невозможна`);
+  }
+
+  async getShopCatalog(): Promise<null> {
+    return null;
   }
 }

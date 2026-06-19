@@ -192,42 +192,48 @@ export const useMetaStore = defineStore("metaStore", () => {
   async function saveProgress(): Promise<void> {
     // Каждый вызов обёрнут в отдельный try/catch, чтобы ошибка в одном
     // не прерывала сохранение остальных данных.
-    const saveStat = async (key: string, value: number) => {
-      try {
-        await platform.setPlayerStatByKey(key, value);
-      } catch (err) {
-        console.error(
-          `[MetaStore] saveProgress: ошибка setPlayerStatByKey("${key}"):`,
-          err,
-        );
-      }
-    };
-    const saveData = async (key: string, value: any) => {
-      try {
-        await platform.setPlayerDataByKey(key, value);
-      } catch (err) {
-        console.error(
-          `[MetaStore] saveProgress: ошибка setPlayerDataByKey("${key}"):`,
-          err,
-        );
-      }
-    };
+    // const saveStat = async (key: string, value: number) => {
+    //   try {
+    //     await platform.setPlayerStats({ [key]: value });
+    //   } catch (err) {
+    //     console.error(
+    //       `[MetaStore] saveProgress: ошибка setPlayerStatByKey("${key}"):`,
+    //       err,
+    //     );
+    //   }
+    // };
+    // const saveData = async (key: string, value: any) => {
+    //   try {
+    //     await platform.setPlayerDataByKey(key, value);
+    //   } catch (err) {
+    //     console.error(
+    //       `[MetaStore] saveProgress: ошибка setPlayerDataByKey("${key}"):`,
+    //       err,
+    //     );
+    //   }
+    // };
 
     // Числовые значения — через stats API (setStats принимает только числа)
-    await saveStat("goldens", goldens.value);
-    await saveStat("energons", energons.value);
+    // await saveStat("goldens", goldens.value);
+    // await saveStat("energons", energons.value);
+
+    await platform.setPlayerStats({
+      goldens: goldens.value,
+      energons: energons.value,
+    });
+
     // JSON-значения — через data API
-    await saveData("ownedSkins", JSON.stringify(ownedSkins.value));
-    await saveData("activeSkin", activeSkin.value ?? "");
-    await saveData("upgrades", JSON.stringify(upgrades.value));
-    await saveData(
-      "permanentFeatures",
-      JSON.stringify(permanentFeatures.value),
-    );
-    await saveData(
-      "activeTimedEffects",
-      JSON.stringify(activeTimedEffects.value),
-    );
+    // await saveData("ownedSkins", JSON.stringify(ownedSkins.value));
+    // await saveData("activeSkin", activeSkin.value ?? "");
+    // await saveData("upgrades", JSON.stringify(upgrades.value));
+    // await saveData(
+    //   "permanentFeatures",
+    //   JSON.stringify(permanentFeatures.value),
+    // );
+    // await saveData(
+    //   "activeTimedEffects",
+    //   JSON.stringify(activeTimedEffects.value),
+    // );
   }
 
   async function restoreProgress(): Promise<void> {
