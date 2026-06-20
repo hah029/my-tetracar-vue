@@ -14,8 +14,18 @@ export type Product = {
   price: {
     value: number;
 
-    currency: "USD" | "EUR" | "golden" | "energon";
+    currency: "USD" | "EUR" | "RUB" | "YAN" | "golden" | "energon";
   };
 
   effect: any;
+
+  description?: string;
+
+  titleEn?: string;
+
+  descriptionEn?: string;
+
+  platformPriceLabel?: string;
+
+  imageURI?: string;
 };

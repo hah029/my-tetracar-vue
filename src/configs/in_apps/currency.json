@@ -1,0 +1,98 @@
+[
+    {
+        "id": "10Kgoldens",
+        "type": "currency",
+        "title": "10к голденов",
+        "titleEn": "10k goldens",
+        "description": "",
+        "descriptionEn": "",
+        "price": {
+            "value": 99,
+            "currency": "RUB"
+        },
+        "effect": {
+            "currency": "golden",
+            "amount": 10000
+        }
+    },
+    {
+        "id": "40Kgoldens",
+        "type": "currency",
+        "title": "40к голденов",
+        "titleEn": "40k goldens",
+        "description": "",
+        "descriptionEn": "",
+        "price": {
+            "value": 499,
+            "currency": "RUB"
+        },
+        "effect": {
+            "currency": "golden",
+            "amount": 40000
+        }
+    },
+    {
+        "id": "90Kgoldens",
+        "type": "currency",
+        "title": "90к голденов",
+        "titleEn": "90k goldens",
+        "description": "",
+        "descriptionEn": "",
+        "price": {
+            "value": 899,
+            "currency": "RUB"
+        },
+        "effect": {
+            "currency": "golden",
+            "amount": 90000
+        }
+    },
+    {
+        "id": "5energons",
+        "type": "currency",
+        "title": "5 энергонов",
+        "titleEn": "5 energons",
+        "description": "",
+        "descriptionEn": "",
+        "price": {
+            "value": 99,
+            "currency": "RUB"
+        },
+        "effect": {
+            "currency": "energon",
+            "amount": 5
+        }
+    },
+    {
+        "id": "30energons",
+        "type": "currency",
+        "title": "30 энергонов",
+        "titleEn": "30 energons",
+        "description": "",
+        "descriptionEn": "",
+        "price": {
+            "value": 499,
+            "currency": "RUB"
+        },
+        "effect": {
+            "currency": "energon",
+            "amount": 30
+        }
+    },
+    {
+        "id": "100energons",
+        "type": "currency",
+        "title": "100 энергонов",
+        "titleEn": "100 energons",
+        "description": "",
+        "descriptionEn": "",
+        "price": {
+            "value": 1490,
+            "currency": "RUB"
+        },
+        "effect": {
+            "currency": "energon",
+            "amount": 100
+        }
+    }
+]

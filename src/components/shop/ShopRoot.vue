@@ -79,7 +79,6 @@
 
                 <div class="shop_content" v-if="shopStore.activeCatalog.length > 0">
 
-                    ```
                     <!-- LEFT -->
                     <div class="cards">
 
@@ -207,8 +206,6 @@
                         </div>
 
                     </div>
-                    ```
-
                 </div>
 
             </div>
@@ -231,6 +228,7 @@
 
 <script setup lang="ts">
 import { computed, onMounted, onUnmounted, ref, watch } from "vue";
+import { useTranslation } from "i18next-vue";
 
 import { createNewText } from "@/helpers/functions";
 
@@ -246,6 +244,7 @@ const shopStore = useShopStore();
 const metaStore = useMetaStore();
 
 const foo = createNewText();
+const { i18next } = useTranslation();
 
 const selectedItem = ref<any | null>(null);
 
@@ -267,10 +266,18 @@ function getItemId(item: any): string {
 }
 
 function getItemTitle(item: any): string {
+    if (i18next.language === "en" && item.titleEn) {
+        return item.titleEn;
+    }
+
     return item.title ?? "Unknown";
 }
 
 function getItemDescription(item: any): string {
+    if (i18next.language === "en" && item.descriptionEn) {
+        return item.descriptionEn;
+    }
+
     return item.description ?? "";
 }
 
@@ -323,6 +330,9 @@ function getCardClasses(product: any) {
 }
 
 function getItemPrice(item: any): string {
+    if (item.platformPriceLabel) {
+        return item.platformPriceLabel;
+    }
 
     if (
         typeof item.price === "object" &&
@@ -335,19 +345,37 @@ function getItemPrice(item: any): string {
 }
 
 function getItemCurrency(item: any): string {
+    if (item.platformPriceLabel) {
+        return "";
+    }
 
     if (
         typeof item.price === "object" &&
         item.price !== null
     ) {
-        return item.price.currency;
+        return getCurrencyLabel(item.price.currency);
     }
 
-    return (
+    return getCurrencyLabel(
         item.currency ??
         item.priceCurrencyCode ??
         ""
     );
+}
+
+function getCurrencyLabel(currency: string): string {
+    switch (currency) {
+        case "RUB":
+            return "₽";
+        case "USD":
+            return "$";
+        case "EUR":
+            return "€";
+        case "YAN":
+            return "YAN";
+        default:
+            return currency;
+    }
 }
 
 function handleBuyClick(product: any) {

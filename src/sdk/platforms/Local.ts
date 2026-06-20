@@ -270,7 +270,7 @@ export class LocalStoragePlatform implements IGamePlatform {
     productId: string,
     consumePurchase: Function,
   ): Promise<void> {
-    console.log(`DEV покупка "${productId}" невозможна`);
+    console.log(`DEV покупка "${productId}" симулирована`);
   }
 
   async getShopCatalog(): Promise<null> {

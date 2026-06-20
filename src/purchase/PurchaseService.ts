@@ -47,10 +47,7 @@ export class PurchaseService {
       this.processedTransactions.add(transaction.id);
 
       // 5. consume для SDK purchases
-      if (
-        product.price.currency === "USD" ||
-        product.price.currency === "EUR"
-      ) {
+      if (this.isExternalCurrency(product.price.currency)) {
         await this.platform.consumePrevPurchases(() => {
           console.log(`[PurchaseService] Consumed purchase: ${transaction.id}`);
         });
@@ -140,8 +137,8 @@ export class PurchaseService {
   private async processPayment(product: Product): Promise<PurchaseTransaction> {
     const currency = product.price.currency;
 
-    // Real money purchase
-    if (currency === "USD" || currency === "EUR") {
+    // External platform purchase
+    if (this.isExternalCurrency(currency)) {
       const sdkTransaction = await this.platform.buyShopItem(
         product.id,
         (purchase: any) => {
@@ -178,5 +175,9 @@ export class PurchaseService {
 
       createdAt: Date.now(),
     };
+  }
+
+  private isExternalCurrency(currency: Product["price"]["currency"]): boolean {
+    return currency !== "golden" && currency !== "energon";
   }
 }

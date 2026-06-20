@@ -5,9 +5,10 @@ import { ref, computed } from "vue";
 
 import metaConfig from "@/configs/meta";
 
+import currencyJson from "@/configs/in_apps/currency.json";
 import stuffJson from "@/configs/in_apps/stuff.json";
 import visualJson from "@/configs/in_apps/visual.json";
-import type { Product } from "@/sdk/types/Shop";
+import type { Product as SdkProduct } from "@/sdk/types/Shop";
 import type { Product as PurchaseProduct } from "@/purchase/types/Product";
 import { PurchaseService } from "@/purchase/PurchaseService";
 import { useMetaStore } from "@/store/metaStore";
@@ -17,7 +18,7 @@ export const useShopStore = defineStore("shopStore", () => {
   const purchaseService = new PurchaseService();
 
   // ===== CATALOGS =====
-  const currencyInAppCatalog = ref<Product[]>([]);
+  const currencyInAppCatalog = ref<PurchaseProduct[]>([]);
   const stuffInAppCatalog = ref<PurchaseProduct[]>([]);
   const visualInAppCatalog = ref<PurchaseProduct[]>([]);
 
@@ -44,14 +45,20 @@ export const useShopStore = defineStore("shopStore", () => {
 
   // ===== CATALOG LOADING =====
   async function loadCatalogs() {
+    let sdkCatalog: SdkProduct[] = [];
+
     try {
       const data = await platform.getShopCatalog();
       if (data) {
-        currencyInAppCatalog.value = data;
+        sdkCatalog = data;
       }
     } catch (err) {
       console.error("currencyInAppCatalog loading error: ", err);
     }
+
+    currencyInAppCatalog.value = (currencyJson as PurchaseProduct[]).map(
+      (product) => mergeCurrencyWithSdkProduct(product, sdkCatalog),
+    );
 
     try {
       stuffInAppCatalog.value = stuffJson as PurchaseProduct[];
@@ -64,6 +71,31 @@ export const useShopStore = defineStore("shopStore", () => {
     } catch (err) {
       console.error("visualInAppCatalog loading error: ", err);
     }
+  }
+
+  function mergeCurrencyWithSdkProduct(
+    product: PurchaseProduct,
+    sdkCatalog: SdkProduct[],
+  ): PurchaseProduct {
+    const sdkProduct = sdkCatalog.find((item) => item.id === product.id);
+
+    if (!sdkProduct) {
+      return product;
+    }
+
+    return {
+      ...product,
+      title: product.title || sdkProduct.title,
+      description: product.description || sdkProduct.description || "",
+      price: {
+        value: Number(sdkProduct.priceValue ?? product.price.value),
+        currency:
+          (sdkProduct.priceCurrencyCode as PurchaseProduct["price"]["currency"]) ??
+          product.price.currency,
+      },
+      platformPriceLabel: sdkProduct.price,
+      imageURI: sdkProduct.imageURI,
+    };
   }
 
   // ===== PRODUCT HELPERS =====
