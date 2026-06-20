@@ -1,13 +1,12 @@
 <template>
     <!-- <div class="container correction"> -->
-    <div class="container" :class="setContainerPos()">
+    <div class="container">
         <div class="leaderboards_container">
 
             <!-- HEADER -->
             <Transition :name="gameState.currentState == 'menu' ? 'header_footer_block_anim' : ''">
                 <div v-if="isHeaderShown" class="header_block">
                     <div class="header_text" :class="setHeaderSize()">{{ dynamicTitleName }}</div>
-                    <!-- <div class="header_text" :class="setHeaderSize()">Рекорды</div> -->
                     <div class="header_image">
                         <img class="image" src="@/assets/images/title_line_image.svg" />
                     </div>
@@ -28,21 +27,33 @@
             </Transition>
 
             <!-- CONTENT -->
-            <TransitionGroup name="buttons_group_showing" tag="div" class="buttons_group group_correction">
-                <button v-for="(record, index) in leaderBoard" :key="record.player.uniqueId ?? record.rank"
-                    class="menu_btn btn_font_size_30" :style="{ animationDelay: `${index * 0.06}s` }">
-                    {{ record.rank }} - {{ record.player.publicName }} - {{ record.score }}
-                </button>
-            </TransitionGroup>
+            <div class="records_container">
+                <TransitionGroup name="buttons_group_showing" tag="div">
+                    <!-- <button v-for="(record, index) in leaderBoard" :key="record.player.uniqueId ?? record.rank"
+                        class="menu_btn btn_font_size_30" :style="{ animationDelay: `${index * 0.06}s` }">
+                        {{ record.rank }} - {{ record.player.publicName }} - {{ record.score }}
+                    </button> -->
 
-            <!-- BACK -->
-            <Transition name="header_footer_block_anim">
-                <button v-if="isBackButtonShown" class="menu_btn btn_font_size_30" @click="backButtonClick">
-                    {{ foo.makeText("mainMenu.goBack") }}
-                </button>
-            </Transition>
+                    <div v-for="(record, index) in leaderBoard" :key="record.player.uniqueId ?? record.rank"
+                        class="leaderboard_row" :style="{ animationDelay: `${index * 0.06}s` }">
+                        <span>{{ record.rank }}</span>
+                        <span>{{ record.player.publicName }}</span>
+                        <span>{{ record.score }}</span>
+                    </div>
+                </TransitionGroup>
+            </div>
 
         </div>
+
+
+        <!-- BACK -->
+        <Transition name="header_footer_block_anim">
+            <button v-if="isBackButtonShown" class="menu_btn btn_font_size_30" @click="backButtonClick">
+                {{ foo.makeText("mainMenu.goBack") }}
+            </button>
+
+
+        </Transition>
     </div>
 </template>
 
@@ -53,7 +64,8 @@ import { createNewText } from '@/helpers/functions';
 import { useGameState } from "@/store/gameState";
 
 import { Platform } from "@/sdk/Platform";
-import type { LeaderBoard, LeaderBoardRecord } from "@/sdk/IGamePlatform";
+import type { LeaderBoard, LeaderBoardRecord } from "@/sdk/types/Leaderboard";
+// import type { LeaderBoard, LeaderBoardRecord } from "@/sdk/IGamePlatform";
 
 enum SettingsView {
     MyLeaderBoard,
@@ -111,13 +123,13 @@ function backButtonClick() {
     }, 500);
 };
 
-function setContainerPos() {
-    if (gameState.currentState == 'menu') {
-        return 'container_pos_main_menu';
-    } else if (gameState.currentState == 'pause') {
-        return 'container_pos_pause';
-    };
-};
+// function setContainerPos() {
+//     if (gameState.currentState == 'menu') {
+//         return 'container_pos_main_menu';
+//     } else if (gameState.currentState == 'pause') {
+//         return 'container_pos_pause';
+//     };
+// };
 function setHeaderSize() {
     if (gameState.currentState == 'pause') {
         return 'header_pause';
@@ -154,7 +166,7 @@ onUpdated(() => {
 
 .tabs {
     position: relative;
-    width: 34.625rem;
+    width: min(34.625rem, 90vw);
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -165,7 +177,7 @@ onUpdated(() => {
 .cube_divider {
     position: absolute;
     left: 16.8366rem;
-    width: 0.9375rem;
+    width: min(0.9375rem, 90vw);
     display: flex;
     align-items: center;
 }
@@ -185,13 +197,14 @@ onUpdated(() => {
 
 .leaderboards_container {
     position: relative;
-    height: 33.375rem;
+
     display: flex;
     flex-direction: column;
     align-items: center;
-    justify-content: space-between;
+
+    gap: 1.5rem;
+
     box-sizing: border-box;
-    padding-bottom: 2.687rem;
 }
 
 .group_correction {
@@ -206,10 +219,55 @@ onUpdated(() => {
 .btn_font_size_30 {
     font-size: 1.875rem; // (30px)
     cursor: default;
+    position: fixed;
+    bottom: 2rem;
 }
 
 .btn_font_size_26 {
     font-size: 1.625rem; // (26px)
+}
+
+
+.records_container {
+    width: min(40rem, 90vw);
+
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.leaderboard_row {
+    width: 100%;
+
+    display: grid;
+    grid-template-columns: 4rem 1fr auto;
+    align-items: center;
+
+    padding: 0.5rem 1rem;
+
+    font-family: "jost-light";
+    font-size: min(1.5rem, 20px);
+
+    color: #FDFFE3;
+}
+
+.leaderboard_row:nth-child(odd) {
+    background: rgba(255, 255, 255, 0.04);
+}
+
+.container {
+    justify-content: center !important;
+}
+
+.tabs {
+    display: flex;
+    justify-content: center;
+    gap: 1rem;
+}
+
+.cube_divider {
+    position: static;
+    width: 1rem;
 }
 
 /* we will explain what these classes do next! */

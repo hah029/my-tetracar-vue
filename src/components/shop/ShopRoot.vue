@@ -109,7 +109,7 @@
 
                                     <div v-if="getProductStatus(item) === 'owned'"
                                         class="status_badge status_badge--owned">
-                                        OWNED
+                                        {{ foo.makeText("shop.ownedBadge") }}
                                     </div>
 
                                     <div v-if="item.type === 'upgrade'" class="status_badge status_badge--upgrade">
@@ -178,14 +178,14 @@
                                     selectedItem.type === 'cosmetic' &&
                                     selectedItem.effect.skinId !== metaStore.activeSkin
                                 " class="preview__buy_btn" @click="handleApplyClick(selectedItem)">
-                                    APPLY
+                                    {{ foo.makeText("shop.previewBtn.apply") }}
                                 </button>
 
                                 <div v-else-if="
                                     selectedItem.type === 'cosmetic' &&
                                     selectedItem.effect.skinId === metaStore.activeSkin
                                 " class="preview__status">
-                                    APPLIED
+                                    {{ foo.makeText("shop.previewBtn.applied") }}
                                 </div>
 
                                 <div v-else class="preview__status">
@@ -200,7 +200,7 @@
                             </div>
 
                             <button v-else class="preview__buy_btn" @click="handleBuyClick(selectedItem)">
-                                BUY
+                                {{ foo.makeText("shop.previewBtn.buy") }}
                             </button>
 
                         </div>
@@ -364,18 +364,25 @@ function getItemCurrency(item: any): string {
 }
 
 function getCurrencyLabel(currency: string): string {
+    let _c = ""
     switch (currency) {
         case "RUB":
-            return "₽";
+            _c = "rub";
+            break;
         case "USD":
-            return "$";
+            _c = "usd";
+            break;
         case "EUR":
-            return "€";
+            _c = "euro";
+            break;
         case "YAN":
-            return "YAN";
+            _c = "yan";
+            break;
         default:
-            return currency;
+            _c = currency;
     }
+
+    return foo.makeText(`currency.${_c}`)
 }
 
 function handleBuyClick(product: any) {
@@ -559,6 +566,8 @@ onUnmounted(() => {
 
     box-sizing: border-box;
     min-height: 0;
+
+    background-color: rgba(0, 0, 0, 0.8);
 }
 
 .tabs {
@@ -705,18 +714,6 @@ onUnmounted(() => {
     align-self: flex-start;
 }
 
-.card__price_row {
-    margin-top: auto;
-
-    display: flex;
-    justify-content: center;
-    // gap: .5rem;
-    font-size: 3rem;
-
-    color: white;
-
-    align-self: flex-end;
-}
 
 .preview {
     width: 50%;
@@ -763,10 +760,17 @@ onUnmounted(() => {
     color: white;
 }
 
+// .preview__title {
+//     font-size: min(2rem, 24px);
+//     color: white;
+//     text-align: center;
+// }
 .preview__title {
-    font-size: 3rem;
-    color: white;
+    margin-top: min(1rem, 10px);
     text-align: center;
+    color: white;
+    font-size: min(2rem, 24px);
+
 }
 
 .preview__description {
@@ -797,20 +801,6 @@ onUnmounted(() => {
     font-size: 4rem;
 }
 
-.preview__buy_btn {
-    margin-top: auto;
-    padding: 2rem;
-    border: none;
-    font-size: 4rem;
-    color: white;
-    cursor: pointer;
-    background: rgba(0, 157, 255, 0.3);
-    transition: .2s;
-
-    &:hover {
-        background: rgba(0, 157, 255, 0.5);
-    }
-}
 
 .notification {
     position: fixed;
@@ -912,11 +902,12 @@ onUnmounted(() => {
     flex: 1;
 
     display: flex;
-    gap: 2rem;
+    // gap: 2rem;
 
     overflow: hidden;
     min-height: 0;
 
+    background: rgba(0, 0, 0, 0.8);
 }
 
 .cards {
@@ -1046,11 +1037,18 @@ onUnmounted(() => {
 .card__price_row {
     font-family: 'vla_shu';
 
-    font-size: 2rem;
+    font-size: min(1.5rem, 16px);
 
     color: #FFD95C;
 
+    margin-top: auto;
+
+    display: flex;
+    justify-content: center;
+
+    align-self: flex-end;
 }
+
 
 .status_badge {
     padding: .25rem .75rem;
@@ -1079,7 +1077,8 @@ onUnmounted(() => {
 }
 
 .preview {
-    width: 34rem;
+    // width: 34rem;
+    width: min(34rem, 34vw);
 
     flex-shrink: 0;
 
@@ -1101,8 +1100,8 @@ onUnmounted(() => {
 }
 
 .preview__image_placeholder {
-    width: 240px;
-    height: 240px;
+    width: min(18rem, 90vw);
+    height: min(18rem, 90vw);
 
     display: flex;
     align-items: center;
@@ -1112,20 +1111,10 @@ onUnmounted(() => {
 
     color: white;
 
-    font-size: 5rem;
+    font-size: min(5rem, 90vw);
 
 }
 
-.preview__title {
-    margin-top: 1rem;
-
-    text-align: center;
-
-    color: white;
-
-    font-size: 2.5rem;
-
-}
 
 .preview__meta {
     margin-top: .75rem;
@@ -1137,7 +1126,7 @@ onUnmounted(() => {
 }
 
 .preview__description {
-    margin-top: 2rem;
+    // margin-top: min(2rem, 10px);
 
     color: rgba(255, 255, 255, .85);
 
@@ -1145,7 +1134,7 @@ onUnmounted(() => {
 
     line-height: 1.7;
 
-    font-size: 1.2rem;
+    font-size: min(1.2rem, 16px);
 
 }
 
@@ -1164,7 +1153,7 @@ onUnmounted(() => {
 
     font-family: 'vla_shu';
 
-    font-size: 4rem;
+    font-size: min(4rem, 24px);
 
     color: #FFD95C;
 
@@ -1173,39 +1162,30 @@ onUnmounted(() => {
 .preview__status {
     text-align: center;
 
-    font-size: 2rem;
+    font-size: min(2rem, 10px);
 
     color: #5effb1;
 
 }
 
 .preview__buy_btn {
-    height: 5rem;
-
     border: 1px solid rgba(255, 255, 255, .15);
-
     background:
         linear-gradient(180deg,
             #3fa9ff,
             #0f6bb6);
 
     color: white;
-
-    font-size: 1.6rem;
-
+    font-size: min(1.6rem, 20px);
     font-family: 'vla_shu';
-
     cursor: pointer;
-
     transition: .2s;
+    padding: 1rem;
 
-}
-
-.preview__buy_btn:hover {
-    transform: translateY(-2px);
-
-    box-shadow:
-        0 0 35px rgba(63, 169, 255, .35);
-
+    &:hover {
+        transform: translateY(-2px);
+        box-shadow:
+            0 0 35px rgba(63, 169, 255, .35);
+    }
 }
 </style>

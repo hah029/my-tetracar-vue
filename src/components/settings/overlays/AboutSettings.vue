@@ -65,6 +65,6 @@ onMounted(() => {
 }
 
 .btn_correction {
-    font-size: 1.875rem; // (30px)
+    font-size: min(1.875rem, 22px);
 }
 </style>

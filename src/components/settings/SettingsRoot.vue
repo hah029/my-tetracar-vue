@@ -209,6 +209,7 @@ onMounted(() => {
     flex-direction: column;
     align-items: center;
     box-sizing: border-box;
+    gap: 1rem;
 }
 
 .group_correction {
@@ -220,7 +221,7 @@ onMounted(() => {
 }
 
 .btn_correction {
-    font-size: 1.875rem; // (30px)
+    font-size: min(1.875rem, 22px);
 }
 
 /* we will explain what these classes do next! */

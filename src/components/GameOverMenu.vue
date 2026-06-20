@@ -144,7 +144,7 @@ onMounted(() => {
 }
 
 .btn_correction {
-    font-size: 16px;
+    font-size: min(1.875rem, 22px);
 }
 
 .group_correction {
@@ -156,7 +156,7 @@ onMounted(() => {
 }
 
 .score_container {
-    width: 25rem;
+    width: min(25rem, 90vw);
     // margin: 2.5rem;
     gap: 1rem;
     display: flex;

@@ -1,5 +1,5 @@
 .settings_sub_container {
-    width: 25rem;
+    width: min(25rem, 90vw);
     display: flex;
     flex-direction: column;
     

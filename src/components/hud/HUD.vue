@@ -137,6 +137,459 @@
     </div>
 </template>
 
+<style lang='scss' scoped>
+@use "@/styles/menu.scss" as *;
+@use "@/styles/animations.scss";
+
+// #region - general
+.game_hud {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    z-index: z("ui_component");
+    font-family: 'jost-light';
+    text-transform: uppercase;
+    line-height: 1;
+    letter-spacing: 0.06rem;
+
+    font-size: 2rem !important; // (32px)
+}
+
+.font_adaptation {
+    min-width: 3ch;
+    font-feature-settings: "tnum";
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+    transition: width 0.1s ease; // Плавное расширение
+}
+
+// #endregion
+
+// #region - top_panel_left_group
+.top_panel {
+    width: 100%;
+    position: absolute;
+    box-sizing: border-box;
+    top: 1.875rem;
+    padding: 0rem 2.5rem;
+    display: flex;
+    justify-content: space-between;
+}
+
+.buttons_left_group {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    justify-content: flex-start;
+    gap: 1rem;
+}
+
+.pause_btn_container {
+    width: 4.063rem;
+    transition: all 0.1s ease-in-out;
+
+    &:hover .icon {
+        filter: drop-shadow(0 0 10px rgb(64, 163, 255));
+        transition: all 0.1s ease-in-out;
+        transform: translateY(-2px);
+    }
+}
+
+.icon {
+    width: 100%;
+}
+
+.icon_abs {
+    position: absolute;
+    top: 0;
+    left: 0;
+}
+
+.is_clickable {
+    cursor: pointer;
+    pointer-events: auto;
+    transition: all 0.1s ease-in-out;
+}
+
+// #endregion
+
+// #region - top_panel_right_group  
+.buttons_right_group {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 1.067rem;
+}
+
+.currency_block {
+    display: flex;
+    justify-content: flex-start;
+    align-items: center;
+    gap: 0.25rem;
+    // gap: 1.563rem;
+}
+
+.currency_subblock {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    gap: 0.625rem;
+    // font-size: 1.375rem;
+}
+
+.currency_value {
+    text-align: right;
+    // min-width: 3ch;
+    // font-feature-settings: "tnum";
+    // font-variant-numeric: tabular-nums;
+    // white-space: nowrap;
+    // transition: width 0.1s ease;  // Плавное расширение
+}
+
+.currency_image_container {
+    width: min(2.3125rem, 90vw);
+    height: 2.3125rem;
+    position: relative;
+}
+
+.energon_glow_general {
+    filter: drop-shadow(0 0 0.44rem rgb(43, 157, 229));
+}
+
+.energon_glow_grid {
+    filter: drop-shadow(0 0 1.25rem rgb(20, 212, 255));
+}
+
+.energon_glow_core {
+    filter: drop-shadow(0 0 0.625rem rgb(20, 212, 255));
+}
+
+.yellow_divider {
+    height: 1px;
+    width: min(11.5rem, 90vw);
+    background: linear-gradient(90deg,
+            rgba(255, 217, 92, 0) 0%,
+            rgba(255, 217, 92, 0.55) 25%,
+            rgba(255, 217, 92, 0.55) 75%,
+            rgba(255, 217, 92, 0) 100%);
+}
+
+.multiply_block {
+    display: flex;
+    justify-content: center;
+    align-items: flex-end;
+    gap: 0.125rem;
+    margin-top: -0.3125rem;
+}
+
+.x_sign {
+    // font-size: 1.5625rem;
+    text-transform: lowercase;
+}
+
+.x_number {
+    // font-size: 2.1875rem;
+    margin-bottom: -0.125rem;
+}
+
+// #endregion
+
+// #region - central_panel
+.central_panel {
+    position: absolute;
+    top: 1.875rem;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    align-items: center;
+    gap: 1.5625rem;
+}
+
+.metrics_group {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 1.875rem;
+}
+
+.metrics_block {
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    align-items: center;
+    gap: 0.3125rem;
+}
+
+// .metrics_text {
+//     font-size: 0.875rem;
+// }
+
+// .metrics_number {
+//     font-size: 1.75rem;
+// }
+
+.divider {
+    height: 1.563rem;
+    width: 1px;
+    background-color: rgba(255, 255, 255, 0.4);
+}
+
+// #endregion
+
+// #region - notifications
+.notifications_container {
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    align-items: center;
+    gap: 0.5rem;
+    pointer-events: none;
+}
+
+.notifications_block {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    gap: 1.25rem;
+    font-size: 1.125rem;
+}
+
+.new_record_msg {
+    font-size: 2.25rem;
+}
+
+// #endregion
+
+// #region - bottom_panel
+.bottom_panel {
+    width: 100%;
+    height: 50px;
+    position: absolute;
+    bottom: 0;
+    display: flex;
+    justify-content: center;
+}
+
+.bottom_subpanel {
+    width: min(87.5rem, 90vw);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 1.875rem;
+    background: linear-gradient(90deg,
+            rgba(0, 0, 0, 0) 0%,
+            /* 0% - полностью прозрачный */
+            rgba(0, 0, 0, 0.55) 10%,
+            /* 10% - полностью непрозрачный */
+            rgba(0, 0, 0, 0.55) 90%,
+            /* 90% - полностью непрозрачный */
+            rgba(0, 0, 0, 0) 100%
+            /* 100% - полностью прозрачный */
+        );
+}
+
+.boosters_image_container {
+    width: min(1.875rem, 90vw);
+    height: 1.875rem;
+    position: relative;
+}
+
+.flash_container {
+    width: min(5.5rem, 90vw);
+    height: 5.5rem;
+    position: relative;
+}
+
+.boosters_divider {
+    height: 1.375rem;
+    width: 1px;
+    background-color: rgba(255, 255, 255, 0.3);
+}
+
+.with_shadow {
+    filter: drop-shadow(0 2px 15px rgba(0, 0, 0, 0.35));
+}
+
+.with_illumination {
+    filter: drop-shadow(0 0px 20px rgba(255, 255, 255, 1));
+}
+
+.with_white_glow {
+    filter: drop-shadow(0 0px 10px rgba(255, 255, 255, 0.2));
+}
+
+// #endregion
+
+// #region - анимации при поимке бустеров / энергонов
+.effects_container {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    z-index: z("ui_component") + 1;
+}
+
+.effects_group {
+    position: absolute;
+    width: min(2.813rem, 90vw);
+    height: 2.813rem;
+    bottom: 13.125rem;
+    left: 59.063rem;
+}
+
+.energon_mooving {
+    animation: energonMovingAnim 2.1s cubic-bezier(0.41, 0, 0.04, 0.99) forwards;
+}
+
+@keyframes energonMovingAnim {
+    0% {
+        bottom: 13.125rem;
+    }
+
+    100% {
+        bottom: 53.125rem;
+        left: 115rem;
+    }
+}
+
+.bullet_mooving {
+    animation: bulletMovingAnim 0.6s cubic-bezier(0.42, 0, 1, 1) forwards;
+}
+
+@keyframes bulletMovingAnim {
+    0% {
+        bottom: 13.125rem;
+    }
+
+    100% {
+        bottom: 0.3125rem;
+        left: 48.88rem;
+    }
+}
+
+.armor_mooving {
+    animation: armorMovingAnim 0.6s cubic-bezier(0.42, 0, 1, 1) forwards;
+}
+
+@keyframes armorMovingAnim {
+    0% {
+        bottom: 13.125rem;
+    }
+
+    100% {
+        bottom: 0.3125rem;
+        left: 55.62rem;
+    }
+}
+
+.nitro_mooving {
+    animation: nitroMovingAnim 0.6s cubic-bezier(0.42, 0, 1, 1) forwards;
+}
+
+@keyframes nitroMovingAnim {
+    0% {
+        bottom: 13.125rem;
+    }
+
+    100% {
+        bottom: 0.3125rem;
+        left: 63.125rem;
+    }
+}
+
+.magnet_mooving {
+    animation: magnetMovingAnim 0.6s cubic-bezier(0.42, 0, 1, 1) forwards;
+}
+
+@keyframes magnetMovingAnim {
+    0% {
+        bottom: 13.125rem;
+    }
+
+    100% {
+        bottom: 0.3125rem;
+        left: 70.62rem;
+    }
+}
+
+// #endregion
+
+
+
+/* ПРИНЦИП РАЗДЕЛЕНИЯ ЗОН: Левая область для свайпов, Правая для кнопок */
+.controls-container {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    z-index: 10;
+    pointer-events: auto;
+    /* Важно: разрешаем взаимодействие с контролами */
+}
+
+/* Левая половина экрана (свайпы) */
+.swipe-zone {
+    flex: 2;
+    background: rgba(0, 255, 255, 0.05);
+    /* Едва заметная подсветка для понимания зоны (можно убрать) */
+    touch-action: none;
+    /* Говорим браузеру: всю обработку жестов здесь отдаем JS */
+}
+
+/* Правая половина экрана (кнопки) */
+.buttons-zone {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    gap: 30px;
+    background: rgba(255, 255, 255, 0.02);
+    touch-action: manipulation;
+    /* Кнопкам мешать не будем */
+}
+
+/* Стили кнопок */
+.action-btn {
+    width: 120px;
+    padding: 18px 0;
+    font-size: 1.8rem;
+    font-weight: bold;
+    border: none;
+    border-radius: 60px;
+    background: rgba(255, 255, 255, 0.2);
+    backdrop-filter: blur(12px);
+    color: white;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+    transition: transform 0.1s ease, background 0.2s;
+    cursor: pointer;
+    touch-action: manipulation;
+    font-family: monospace;
+    letter-spacing: 2px;
+}
+
+.action-btn:active {
+    transform: scale(0.94);
+    background: rgba(255, 255, 255, 0.5);
+}
+
+.touch-zone {
+    position: absolute;
+    inset: 0;
+
+    z-index: 10;
+
+    pointer-events: auto;
+
+    touch-action: none;
+
+    background: transparent;
+}
+</style>
+
 
 <script setup lang="ts">
 import { computed, watch, ref, onMounted, onUnmounted, inject } from "vue";
@@ -398,457 +851,3 @@ function setBoosterTextColor(type_: string, notif_: string = 'undefined') {
     };
 };
 </script>
-
-
-<style lang='scss' scoped>
-@use "@/styles/menu.scss" as *;
-@use "@/styles/animations.scss";
-
-// #region - general
-.game_hud {
-    position: absolute;
-    inset: 0;
-    pointer-events: none;
-    z-index: z("ui_component");
-    font-family: 'jost-light';
-    text-transform: uppercase;
-    line-height: 1;
-    letter-spacing: 0.06rem;
-
-    font-size: 2rem !important; // (32px)
-}
-
-.font_adaptation {
-    min-width: 3ch;
-    font-feature-settings: "tnum";
-    font-variant-numeric: tabular-nums;
-    white-space: nowrap;
-    transition: width 0.1s ease; // Плавное расширение
-}
-
-// #endregion
-
-// #region - top_panel_left_group
-.top_panel {
-    width: 100%;
-    position: absolute;
-    box-sizing: border-box;
-    top: 1.875rem;
-    padding: 0rem 2.5rem;
-    display: flex;
-    justify-content: space-between;
-}
-
-.buttons_left_group {
-    display: flex;
-    flex-direction: column;
-    align-items: flex-start;
-    justify-content: flex-start;
-    gap: 1rem;
-}
-
-.pause_btn_container {
-    width: 4.063rem;
-    transition: all 0.1s ease-in-out;
-
-    &:hover .icon {
-        filter: drop-shadow(0 0 10px rgb(64, 163, 255));
-        transition: all 0.1s ease-in-out;
-        transform: translateY(-2px);
-    }
-}
-
-.icon {
-    width: 100%;
-}
-
-.icon_abs {
-    position: absolute;
-    top: 0;
-    left: 0;
-}
-
-.is_clickable {
-    cursor: pointer;
-    pointer-events: auto;
-    transition: all 0.1s ease-in-out;
-}
-
-// #endregion
-
-// #region - top_panel_right_group  
-.buttons_right_group {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: flex-start;
-    gap: 1.067rem;
-}
-
-.currency_block {
-    display: flex;
-    justify-content: flex-start;
-    align-items: center;
-    gap: 0.25rem;
-    // gap: 1.563rem;
-}
-
-.currency_subblock {
-    display: flex;
-    justify-content: flex-end;
-    align-items: center;
-    gap: 0.625rem;
-    // font-size: 1.375rem;
-}
-
-.currency_value {
-    text-align: right;
-    // min-width: 3ch;
-    // font-feature-settings: "tnum";
-    // font-variant-numeric: tabular-nums;
-    // white-space: nowrap;
-    // transition: width 0.1s ease;  // Плавное расширение
-}
-
-.currency_image_container {
-    width: 2.3125rem;
-    height: 2.3125rem;
-    position: relative;
-}
-
-.energon_glow_general {
-    filter: drop-shadow(0 0 0.44rem rgb(43, 157, 229));
-}
-
-.energon_glow_grid {
-    filter: drop-shadow(0 0 1.25rem rgb(20, 212, 255));
-}
-
-.energon_glow_core {
-    filter: drop-shadow(0 0 0.625rem rgb(20, 212, 255));
-}
-
-.yellow_divider {
-    height: 1px;
-    width: 11.5rem;
-    background: linear-gradient(90deg,
-            rgba(255, 217, 92, 0) 0%,
-            rgba(255, 217, 92, 0.55) 25%,
-            rgba(255, 217, 92, 0.55) 75%,
-            rgba(255, 217, 92, 0) 100%);
-}
-
-.multiply_block {
-    display: flex;
-    justify-content: center;
-    align-items: flex-end;
-    gap: 0.125rem;
-    margin-top: -0.3125rem;
-}
-
-.x_sign {
-    // font-size: 1.5625rem;
-    text-transform: lowercase;
-}
-
-.x_number {
-    // font-size: 2.1875rem;
-    margin-bottom: -0.125rem;
-}
-
-// #endregion
-
-// #region - central_panel
-.central_panel {
-    position: absolute;
-    top: 1.875rem;
-    width: 100%;
-    display: flex;
-    flex-direction: column;
-    justify-content: flex-start;
-    align-items: center;
-    gap: 1.5625rem;
-}
-
-.metrics_group {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    gap: 1.875rem;
-}
-
-.metrics_block {
-    display: flex;
-    flex-direction: column;
-    justify-content: flex-start;
-    align-items: center;
-    gap: 0.3125rem;
-}
-
-// .metrics_text {
-//     font-size: 0.875rem;
-// }
-
-// .metrics_number {
-//     font-size: 1.75rem;
-// }
-
-.divider {
-    height: 1.563rem;
-    width: 1px;
-    background-color: rgba(255, 255, 255, 0.4);
-}
-
-// #endregion
-
-// #region - notifications
-.notifications_container {
-    display: flex;
-    flex-direction: column;
-    justify-content: flex-start;
-    align-items: center;
-    gap: 0.5rem;
-    pointer-events: none;
-}
-
-.notifications_block {
-    display: flex;
-    justify-content: flex-end;
-    align-items: center;
-    gap: 1.25rem;
-    font-size: 1.125rem;
-}
-
-.new_record_msg {
-    font-size: 2.25rem;
-}
-
-// #endregion
-
-// #region - bottom_panel
-.bottom_panel {
-    width: 100%;
-    height: 50px;
-    position: absolute;
-    bottom: 0;
-    display: flex;
-    justify-content: center;
-}
-
-.bottom_subpanel {
-    width: 87.5rem;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    gap: 1.875rem;
-    background: linear-gradient(90deg,
-            rgba(0, 0, 0, 0) 0%,
-            /* 0% - полностью прозрачный */
-            rgba(0, 0, 0, 0.55) 10%,
-            /* 10% - полностью непрозрачный */
-            rgba(0, 0, 0, 0.55) 90%,
-            /* 90% - полностью непрозрачный */
-            rgba(0, 0, 0, 0) 100%
-            /* 100% - полностью прозрачный */
-        );
-}
-
-.boosters_image_container {
-    width: 1.875rem;
-    height: 1.875rem;
-    position: relative;
-}
-
-.flash_container {
-    width: 5.5rem;
-    height: 5.5rem;
-    position: relative;
-}
-
-.boosters_divider {
-    height: 1.375rem;
-    width: 1px;
-    background-color: rgba(255, 255, 255, 0.3);
-}
-
-.with_shadow {
-    filter: drop-shadow(0 2px 15px rgba(0, 0, 0, 0.35));
-}
-
-.with_illumination {
-    filter: drop-shadow(0 0px 20px rgba(255, 255, 255, 1));
-}
-
-.with_white_glow {
-    filter: drop-shadow(0 0px 10px rgba(255, 255, 255, 0.2));
-}
-
-// #endregion
-
-// #region - анимации при поимке бустеров / энергонов
-.effects_container {
-    position: absolute;
-    inset: 0;
-    pointer-events: none;
-    z-index: z("ui_component") + 1;
-}
-
-.effects_group {
-    position: absolute;
-    width: 2.813rem;
-    height: 2.813rem;
-    bottom: 13.125rem;
-    left: 59.063rem;
-}
-
-.energon_mooving {
-    animation: energonMovingAnim 2.1s cubic-bezier(0.41, 0, 0.04, 0.99) forwards;
-}
-
-@keyframes energonMovingAnim {
-    0% {
-        bottom: 13.125rem;
-    }
-
-    100% {
-        bottom: 53.125rem;
-        left: 115rem;
-    }
-}
-
-.bullet_mooving {
-    animation: bulletMovingAnim 0.6s cubic-bezier(0.42, 0, 1, 1) forwards;
-}
-
-@keyframes bulletMovingAnim {
-    0% {
-        bottom: 13.125rem;
-    }
-
-    100% {
-        bottom: 0.3125rem;
-        left: 48.88rem;
-    }
-}
-
-.armor_mooving {
-    animation: armorMovingAnim 0.6s cubic-bezier(0.42, 0, 1, 1) forwards;
-}
-
-@keyframes armorMovingAnim {
-    0% {
-        bottom: 13.125rem;
-    }
-
-    100% {
-        bottom: 0.3125rem;
-        left: 55.62rem;
-    }
-}
-
-.nitro_mooving {
-    animation: nitroMovingAnim 0.6s cubic-bezier(0.42, 0, 1, 1) forwards;
-}
-
-@keyframes nitroMovingAnim {
-    0% {
-        bottom: 13.125rem;
-    }
-
-    100% {
-        bottom: 0.3125rem;
-        left: 63.125rem;
-    }
-}
-
-.magnet_mooving {
-    animation: magnetMovingAnim 0.6s cubic-bezier(0.42, 0, 1, 1) forwards;
-}
-
-@keyframes magnetMovingAnim {
-    0% {
-        bottom: 13.125rem;
-    }
-
-    100% {
-        bottom: 0.3125rem;
-        left: 70.62rem;
-    }
-}
-
-// #endregion
-
-
-
-/* ПРИНЦИП РАЗДЕЛЕНИЯ ЗОН: Левая область для свайпов, Правая для кнопок */
-.controls-container {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    display: flex;
-    z-index: 10;
-    pointer-events: auto;
-    /* Важно: разрешаем взаимодействие с контролами */
-}
-
-/* Левая половина экрана (свайпы) */
-.swipe-zone {
-    flex: 2;
-    background: rgba(0, 255, 255, 0.05);
-    /* Едва заметная подсветка для понимания зоны (можно убрать) */
-    touch-action: none;
-    /* Говорим браузеру: всю обработку жестов здесь отдаем JS */
-}
-
-/* Правая половина экрана (кнопки) */
-.buttons-zone {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    gap: 30px;
-    background: rgba(255, 255, 255, 0.02);
-    touch-action: manipulation;
-    /* Кнопкам мешать не будем */
-}
-
-/* Стили кнопок */
-.action-btn {
-    width: 120px;
-    padding: 18px 0;
-    font-size: 1.8rem;
-    font-weight: bold;
-    border: none;
-    border-radius: 60px;
-    background: rgba(255, 255, 255, 0.2);
-    backdrop-filter: blur(12px);
-    color: white;
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
-    transition: transform 0.1s ease, background 0.2s;
-    cursor: pointer;
-    touch-action: manipulation;
-    font-family: monospace;
-    letter-spacing: 2px;
-}
-
-.action-btn:active {
-    transform: scale(0.94);
-    background: rgba(255, 255, 255, 0.5);
-}
-
-.touch-zone {
-    position: absolute;
-    inset: 0;
-
-    z-index: 10;
-
-    pointer-events: auto;
-
-    touch-action: none;
-
-    background: transparent;
-}
-</style>

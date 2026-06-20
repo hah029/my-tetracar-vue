@@ -21,6 +21,34 @@
 </template>
 
 
+<style lang="scss" scoped>
+@use "@/styles/menu.scss";
+@use "@/styles/animations.scss";
+
+.group_correction {
+    // position: static !important;
+
+    // &>*+* {
+    //     margin-top: 1.56rem; // 25px - row-gap (между кнопками)
+    // }
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+
+    gap: 2rem;
+}
+
+.btn_correction {
+    font-size: min(1.875rem, 22px);
+}
+</style>
+
 <script setup lang="ts">
 import { watch, ref, computed, onMounted } from "vue";
 import { useGameState } from "@/store/gameState";
@@ -92,32 +120,3 @@ onMounted(async () => {
     }
 });
 </script>
-
-
-<style lang="scss" scoped>
-@use "@/styles/menu.scss";
-@use "@/styles/animations.scss";
-
-.group_correction {
-    // position: static !important;
-
-    // &>*+* {
-    //     margin-top: 1.56rem; // 25px - row-gap (между кнопками)
-    // }
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-
-    gap: 2rem;
-}
-
-.btn_correction {
-    font-size: 2.5rem; // (35px)
-}
-</style>

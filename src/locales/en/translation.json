@@ -196,6 +196,21 @@
         "balance": {
             "golden": "golden",
             "energon": "energon"
-        }
+        },
+        "ownedBadge": "owned",
+        "previewBtn": {
+            "applied": "applied",
+            "apply": "apply",
+            "buy": "buy"
+        },
+        "noItems": "пусто"
+    },
+    "currency": {
+        "golden": "golden",
+        "energon": "energon",
+        "rub": "rub",
+        "usd": "usd",
+        "euro": "euro",
+        "yan": "yan"
     }
 }

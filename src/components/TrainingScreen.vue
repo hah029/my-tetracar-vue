@@ -1,7 +1,7 @@
 <template>
     <div class="training_screen">
         <div class="info_container">
-            
+
             <!-- Блок "Набирай" -->
             <div class="info_block">
                 <span class="title">{{ title1 }}</span>
@@ -29,8 +29,10 @@
                     <div class="composition">
                         <div class="image_container energon_glow_general">
                             <img class='icon icon_abs' src="@/assets/images/hud/cube_energon_grid_backward.svg" />
-                            <img class='icon icon_abs energon_glow_core' src="@/assets/images/hud/cube_energon_core.svg" />
-                            <img class='icon icon_abs energon_glow_grid' src="@/assets/images/hud/cube_energon_grid_frontal.svg" />
+                            <img class='icon icon_abs energon_glow_core'
+                                src="@/assets/images/hud/cube_energon_core.svg" />
+                            <img class='icon icon_abs energon_glow_grid'
+                                src="@/assets/images/hud/cube_energon_grid_frontal.svg" />
                         </div>
                         <span class="text color_blue_light">{{ text2_2 }}</span>
                     </div>
@@ -76,173 +78,188 @@
 
 
 <script setup lang="ts">
-    import { computed } from "vue";
-    import { useGameState } from "@/store/gameState";
-    import { Platform } from "@/sdk/Platform";
-    import { createNewText } from '@/helpers/functions';
-    
-    const foo = createNewText();
-    const goMessage = computed(() => foo.makeText("trainingScreen.startButton"));
-    const gameStore = useGameState();
+import { computed } from "vue";
+import { useGameState } from "@/store/gameState";
+import { Platform } from "@/sdk/Platform";
+import { createNewText } from '@/helpers/functions';
 
-    const title1 = computed(() => foo.makeText("trainingScreen.earn.title", 'empty'));
-    const title2 = computed(() => foo.makeText("trainingScreen.collect.title", 'empty'));
-    const title3 = computed(() => foo.makeText("trainingScreen.use.title", 'empty'));
+const foo = createNewText();
+const goMessage = computed(() => foo.makeText("trainingScreen.startButton"));
+const gameStore = useGameState();
 
-    const text1_1 = computed(() => foo.getElementFromArray('trainingScreen.earn.text', 0));
-    const text1_2 = computed(() => foo.getElementFromArray('trainingScreen.earn.text', 1));
+const title1 = computed(() => foo.makeText("trainingScreen.earn.title", 'empty'));
+const title2 = computed(() => foo.makeText("trainingScreen.collect.title", 'empty'));
+const title3 = computed(() => foo.makeText("trainingScreen.use.title", 'empty'));
 
-    const text2_1 = computed(() => foo.getElementFromArray('trainingScreen.collect.text', 0));
-    const text2_2 = computed(() => foo.getElementFromArray('trainingScreen.collect.text', 1));
+const text1_1 = computed(() => foo.getElementFromArray('trainingScreen.earn.text', 0));
+const text1_2 = computed(() => foo.getElementFromArray('trainingScreen.earn.text', 1));
 
-    const text3_1 = computed(() => foo.getElementFromArray('trainingScreen.use.text', 0));
-    const text3_2 = computed(() => foo.getElementFromArray('trainingScreen.use.text', 1));
-    const text3_3 = computed(() => foo.getElementFromArray('trainingScreen.use.text', 2));
-    const text3_4 = computed(() => foo.getElementFromArray('trainingScreen.use.text', 3));
+const text2_1 = computed(() => foo.getElementFromArray('trainingScreen.collect.text', 0));
+const text2_2 = computed(() => foo.getElementFromArray('trainingScreen.collect.text', 1));
 
-    async function goMessageAction() {
-        await Platform.getInstance().setPlayerDataByKey("isFirstEnter", false);
-        gameStore.setFirstGameIndicator(false);
-        gameStore.activeOverlay = null;
-    };
+const text3_1 = computed(() => foo.getElementFromArray('trainingScreen.use.text', 0));
+const text3_2 = computed(() => foo.getElementFromArray('trainingScreen.use.text', 1));
+const text3_3 = computed(() => foo.getElementFromArray('trainingScreen.use.text', 2));
+const text3_4 = computed(() => foo.getElementFromArray('trainingScreen.use.text', 3));
+
+async function goMessageAction() {
+    await Platform.getInstance().setPlayerDataByKey("isFirstEnter", false);
+    gameStore.setFirstGameIndicator(false);
+    gameStore.activeOverlay = null;
+};
 </script>
 
 
 <style lang="scss" scoped>
-    @use "@/styles/menu.scss";
+@use "@/styles/menu.scss";
 
-    .training_screen {
-        position: fixed;
-        inset: 0;
-        width: 100%;
-        height: 100%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        background: linear-gradient(to bottom, rgba(0, 0, 0, 0.7) 0%, rgba(0, 0, 0, 0.7) 50%, rgba(0, 0, 0, 1) 100%);
-        font-family: 'jost-light';
-        text-transform: uppercase;
-        
-    }
+.training_screen {
+    position: fixed;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(to bottom, rgba(0, 0, 0, 0.7) 0%, rgba(0, 0, 0, 0.7) 50%, rgba(0, 0, 0, 1) 100%);
+    font-family: 'jost-light';
+    text-transform: uppercase;
 
-    .info_container {
-        position: absolute;
-        width: 100%;
-        top: 18.75rem;
-        display: flex;
-        justify-content: center;
-        align-items: flex-start;
-        gap: 11.4375rem;
-    }
-    .info_block {
-        display: flex;
-        flex-direction: column;
-        justify-content: flex-start;
-        align-items: center;
-        gap: 2.125rem;
-    }
-    .title {
-        font-size: 2.1875rem;
-        color: #FDFFE3;
-    }
-    .text {
-        font-size: 1.5625rem;
-    }
-    .highscore_table {
-        display: flex;
-        align-items: center;
-        justify-content: flex-start;
-        gap: 1.25rem;
-    }
-    .highscore_image_container {
-        width: 8.5rem;
-        height: 5.1875rem;
-    }
-    .text_block {
-        display: flex;
-        flex-direction: column;
-        justify-content: center;
-        align-items: flex-start;
-        gap: 0.3125rem;
-    }
+}
 
-    .composition_block {
-        display: flex;
-        justify-content: center;
-        align-items: flex-start;
-        gap: 3.75rem;
-    }
-    .composition {
-        display: flex;
-        flex-direction: column;
-        justify-content: flex-start;
-        align-items: center;
-        gap: 1.25rem;
-    }
+.info_container {
+    position: absolute;
+    width: 100%;
+    top: 18.75rem;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    gap: 11.4375rem;
+}
 
-    .image_container {
-        width: 4.625rem;
-        height: 4.625rem;
-        position: relative;
-    }
-    .icon {
-        width: 100%; 
-    }
-    .icon_abs {
-        position: absolute;
-        top: 0;
-        left: 0;
-    }
+.info_block {
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    align-items: center;
+    gap: 2.125rem;
+}
 
+.title {
+    font-size: 2.1875rem;
+    color: #FDFFE3;
+}
 
+.text {
+    font-size: 1.5625rem;
+}
 
-    .energon_glow_general {
-        filter: drop-shadow(0 0 0.44rem rgb(43, 157, 229));
-    }
-    .energon_glow_grid {
-        filter: drop-shadow(0 0 1.25rem rgb(20, 212, 255));
-    }
-    .energon_glow_core {
-        filter: drop-shadow(0 0 0.625rem rgb(20, 212, 255));
-    }
+.highscore_table {
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 1.25rem;
+}
+
+.highscore_image_container {
+    width: min(8.5rem, 90vw);
+    height: 5.1875rem;
+}
+
+.text_block {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: flex-start;
+    gap: 0.3125rem;
+}
+
+.composition_block {
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    gap: 3.75rem;
+}
+
+.composition {
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    align-items: center;
+    gap: 1.25rem;
+}
+
+.image_container {
+    width: min(4.625rem, 90vw);
+    height: 4.625rem;
+    position: relative;
+}
+
+.icon {
+    width: 100%;
+}
+
+.icon_abs {
+    position: absolute;
+    top: 0;
+    left: 0;
+}
 
 
 
+.energon_glow_general {
+    filter: drop-shadow(0 0 0.44rem rgb(43, 157, 229));
+}
 
+.energon_glow_grid {
+    filter: drop-shadow(0 0 1.25rem rgb(20, 212, 255));
+}
 
-    .btn_container {
-        position: absolute;
-        width: 100%;
-        bottom: 10rem;
-        display: flex;
-        justify-content: center;
-    }
-    .btn_correction {
-        font-size: 3.125rem;
-    }
+.energon_glow_core {
+    filter: drop-shadow(0 0 0.625rem rgb(20, 212, 255));
+}
 
 
 
 
 
+.btn_container {
+    position: absolute;
+    width: 100%;
+    bottom: 10rem;
+    display: flex;
+    justify-content: center;
+}
 
-    .msgGo {
-        font-size: 5.625rem;
-    }
+.btn_correction {
+    font-size: min(3.125rem, 16px);
+}
 
-    .countdown_anim-enter-active {
-        transition: all 0.25s ease-out;
-        transition-delay: 0.1s;
-    }
-    .countdown_anim-leave-active {
-        transition: all 0.2s ease-out;
-    }
-    .countdown_anim-enter-from {
-        opacity: 0;
-        transform: scale(0.7);
-    }
-    .countdown_anim-leave-to {
-        opacity: 0;
-        transform: scale(2);
-    }
+
+
+
+
+
+.msgGo {
+    font-size: 5.625rem;
+}
+
+.countdown_anim-enter-active {
+    transition: all 0.25s ease-out;
+    transition-delay: 0.1s;
+}
+
+.countdown_anim-leave-active {
+    transition: all 0.2s ease-out;
+}
+
+.countdown_anim-enter-from {
+    opacity: 0;
+    transform: scale(0.7);
+}
+
+.countdown_anim-leave-to {
+    opacity: 0;
+    transform: scale(2);
+}
 </style>

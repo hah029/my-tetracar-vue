@@ -10,6 +10,92 @@
     <DebugPanel />
 </template>
 
+<style lang='scss'>
+@use "@/styles/menu.scss" as *;
+
+@font-face {
+    font-family: 'vla_shu';
+    src: url('./assets/fonts/VlaShu.ttf')
+}
+
+@font-face {
+    font-family: 'jost-light';
+    src: url('./assets/fonts/Jost-Light.ttf')
+}
+
+@font-face {
+    font-family: 'jost-regular';
+    src: url('./assets/fonts/Jost-Regular.ttf')
+}
+
+html,
+body,
+#app {
+    margin: 0;
+    width: 100%;
+    height: 100%;
+    overflow-x: hidden;
+    // font-size: 0.833vw;
+    font-size: clamp(12px, 0.8vw, 14px);
+}
+
+img {
+    pointer-events: none;
+}
+
+button,
+input,
+label,
+span {
+    user-select: none;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+}
+
+.three_js__root,
+.ui_components_root {
+    position: relative;
+    width: 100%;
+    height: 100%;
+}
+
+.three_js__root {
+    z-index: z("canvas");
+}
+
+.ui_components_root {
+    z-index: z("ui_component");
+}
+
+.menu_layout {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+
+    gap: -10rem;
+
+    width: 100%;
+    max-width: 900px;
+    padding: 2rem;
+}
+
+.background {
+    /* position: absolute; */
+    /* left: 0; */
+    /* width: 100%; */
+    /* height: 200%; */
+    background: linear-gradient(to bottom,
+            #000000 0%,
+            /* Черный цвет вверху */
+            #000000bb 100%,
+            /* Черный цвет до середины */
+            rgba(204, 183, 183, 0) 100%
+            /* Прозрачность внизу */
+        );
+}
+</style>
 
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted, computed } from "vue";
@@ -139,90 +225,3 @@ onUnmounted(() => {
     console.log('onUnmounted');
 });
 </script>
-
-
-<style lang='scss'>
-@use "@/styles/menu.scss" as *;
-
-@font-face {
-    font-family: 'vla_shu';
-    src: url('./assets/fonts/VlaShu.ttf')
-}
-
-@font-face {
-    font-family: 'jost-light';
-    src: url('./assets/fonts/Jost-Light.ttf')
-}
-
-@font-face {
-    font-family: 'jost-regular';
-    src: url('./assets/fonts/Jost-Regular.ttf')
-}
-
-html,
-body,
-#app {
-    margin: 0;
-    width: 100%;
-    height: 100%;
-    overflow: hidden;
-    font-size: 0.833vw;
-}
-
-img {
-    pointer-events: none;
-}
-
-button,
-input,
-label,
-span {
-    user-select: none;
-    -webkit-user-select: none;
-    -moz-user-select: none;
-    -ms-user-select: none;
-}
-
-.three_js__root,
-.ui_components_root {
-    position: relative;
-    width: 100%;
-    height: 100%;
-}
-
-.three_js__root {
-    z-index: z("canvas");
-}
-
-.ui_components_root {
-    z-index: z("ui_component");
-}
-
-.menu_layout {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-
-    gap: -10rem;
-
-    width: 100%;
-    max-width: 900px;
-    padding: 2rem;
-}
-
-.background {
-    /* position: absolute; */
-    /* left: 0; */
-    /* width: 100%; */
-    /* height: 200%; */
-    background: linear-gradient(to bottom,
-            #000000 0%,
-            /* Черный цвет вверху */
-            #000000bb 100%,
-            /* Черный цвет до середины */
-            rgba(204, 183, 183, 0) 100%
-            /* Прозрачность внизу */
-        );
-}
-</style>

@@ -196,6 +196,21 @@
         "balance": {
             "golden": "голдены",
             "energon": "энергоны"
-        }
+        },
+        "ownedBadge": "куплено",
+        "previewBtn": {
+            "applied": "применено",
+            "apply": "применить",
+            "buy": "купить"
+        },
+        "noItems": "пусто"
+    },
+    "currency": {
+        "golden": "голд",
+        "energon": "энерг",
+        "rub": "руб",
+        "usd": "долл",
+        "euro": "евро",
+        "yan": "ян"
     }
 }

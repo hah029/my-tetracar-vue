@@ -172,8 +172,9 @@ const backgroundClass = computed(() => {
 // #region - буквенный логотип
 .logo_group {
     position: absolute;
-    width: 81.25%;
-    height: 49.13%;
+    width: min(81.25%, 1200px);
+    aspect-ratio: 3 / 1;
+    height: auto;
     display: flex;
     align-items: center;
     justify-content: space-between;

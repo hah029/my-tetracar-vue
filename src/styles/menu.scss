@@ -47,7 +47,7 @@ $z-layers: (
         -webkit-user-select: none;
         -moz-user-select: none;
         -ms-user-select: none;
-        width: 100rem;
+        width: min(100rem, 90vw);
     }
     .header_text {
         font-family: 'vla_shu';
@@ -57,7 +57,7 @@ $z-layers: (
         line-height: 1;
     }
     .header_image {
-        width: 34.625rem;
+        width: min(34.625rem, 90vw);
     }
     .image {
         width: 100%;

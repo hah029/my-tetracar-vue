@@ -172,7 +172,7 @@ onMounted(() => {
     text-transform: uppercase;
     font-size: 1.375rem;
     color: #F79CFF;
-    width: 25rem;
+    width: min(25rem, 90vw);
     text-align: center;
     margin-bottom: 1.563rem;
 }
@@ -204,6 +204,6 @@ onMounted(() => {
 }
 
 .btn_correction {
-    font-size: 1.875rem; // (30px)
+    font-size: min(1.875rem, 22px);
 }
 </style>
