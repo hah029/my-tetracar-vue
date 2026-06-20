@@ -5,6 +5,7 @@ import { ref } from "vue";
 import { SoundManager } from "@/game/sound/SoundManager";
 import { Platform } from "@/sdk/Platform";
 import progressConfig from "@/configs/progress";
+import { fill } from "three/src/extras/TextureUtils.js";
 
 export const useProgressStore = defineStore("progressStore", () => {
   const platform = Platform.getInstance();
@@ -205,6 +206,17 @@ export const useProgressStore = defineStore("progressStore", () => {
     await restoreArmorAndAmmo();
   }
 
+  function checkFullFilling(fillType: string): boolean {
+    switch (fillType) {
+      case "armor":
+        return playerStore.armor >= metaStore.maxArmor;
+      case "ammo":
+        return playerStore.ammo >= metaStore.maxAmmo;
+      default:
+        return false;
+    }
+  }
+
   return {
     currentDistance,
     currentGoldens,
@@ -236,5 +248,6 @@ export const useProgressStore = defineStore("progressStore", () => {
     restoreArmorAndAmmo,
     restoreProgress,
     saveProgress,
+    checkFullFilling,
   };
 });

@@ -18,8 +18,8 @@ export const useMetaStore = defineStore("metaStore", () => {
   // ===== STATE =====
 
   // Валюта
-  const goldens = ref(1e6);
-  const energons = ref(1e6);
+  const goldens = ref(0);
+  const energons = ref(0);
 
   // Скины
   const ownedSkins = ref<string[]>([]);
@@ -48,6 +48,12 @@ export const useMetaStore = defineStore("metaStore", () => {
   const magnetRadius = computed(
     () => meta.base_counts.magnetRadius + upgrades.value.magnetRadiusLevel * 5,
   );
+  // Апгрейды (уровни)
+  const maxUpgrades = ref<Record<string, any>>({
+    ammoLevel: maxAmmo,
+    armorLevel: maxArmor,
+    magnetRadiusLevel: magnetRadius,
+  });
 
   // ===== ВАЛЮТА =====
 
@@ -283,6 +289,7 @@ export const useMetaStore = defineStore("metaStore", () => {
     maxAmmo,
     maxArmor,
     magnetRadius,
+    maxUpgrades,
 
     // валюта
     addGolden,

@@ -1,8 +1,8 @@
 // Этот файл генерируется автоматически. Не редактировать вручную!
 
-export const APP_VERSION = '0.0.31';
-export const BUILD_TIME = '2026-06-20T08:23:13.294Z';
-export const BUILD_TIMESTAMP = 1781943793295;
+export const APP_VERSION = '0.0.32';
+export const BUILD_TIME = '2026-06-20T08:53:03.500Z';
+export const BUILD_TIMESTAMP = 1781945583500;
 
 export const VERSION_INFO = {
   version: APP_VERSION,

@@ -6,6 +6,7 @@ import { RewardProcessor } from "./RewardProcessor";
 import { useMetaStore } from "@/store/metaStore";
 
 import type { Product, PurchaseTransaction } from "./types";
+import { useProgressStore } from "@/store/progressStore";
 
 export class PurchaseService {
   private platform = Platform.getInstance();
@@ -78,6 +79,7 @@ export class PurchaseService {
     reason?: string;
   } {
     const meta = useMetaStore();
+    const progress = useProgressStore();
 
     switch (product.type) {
       case "cosmetic": {
@@ -118,13 +120,22 @@ export class PurchaseService {
       case "upgrade": {
         const upgradeKey = product.effect?.upgrade;
         if (upgradeKey) {
-          // Можно задать максимальный уровень, если нужно
-          // const maxLevel = 10;
-          // if (meta.getUpgradeLevel(upgradeKey) >= maxLevel) {
-          //   return { available: false, reason: "max_level" };
-          // }
+          if (
+            meta.getUpgradeLevel(upgradeKey) >= meta.maxUpgrades[upgradeKey]
+          ) {
+            return { available: false, reason: "max_level" };
+          }
         }
         break;
+      }
+
+      case "consumable": {
+        const refillType = product.effect?.refill;
+        if (refillType) {
+          if (progress.checkFullFilling(refillType)) {
+            return { available: false, reason: "max_fill" };
+          }
+        }
       }
     }
 
