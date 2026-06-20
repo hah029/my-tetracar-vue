@@ -64,6 +64,8 @@ export interface IGamePlatform {
   // #endregion
 
   gameReady(); // дёргаем, когда всё загрузилось и игра полностью готова к геймплею
+  gameStart();
+  gameStop();
 }
 
 // export type UserData = {

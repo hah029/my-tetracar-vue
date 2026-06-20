@@ -14,25 +14,7 @@
                         <img class="image" src="@/assets/images/title_line_image.svg" />
                     </div>
 
-                    <!-- BALANCE -->
-                    <div class="balance_block">
-                        <div class="balance_subblock">
-                            <div class="balance_value font_adaptation color_yellow_light">{{ metaStore.goldens }}</div>
-                            <div class="balance_image_container">
-                                <img class='icon' src="@/assets/images/hud/cube_golden.svg" />
-                            </div>
-                        </div>
-                        <div class="balance_subblock">
-                            <div class="balance_value font_adaptation color_blue_light">{{ metaStore.energons }}</div>
-                            <div class="balance_image_container energon_glow_general">
-                                <img class='icon icon_abs' src="@/assets/images/hud/cube_energon_grid_backward.svg" />
-                                <img class='icon icon_abs energon_glow_core'
-                                    src="@/assets/images/hud/cube_energon_core.svg" />
-                                <img class='icon icon_abs energon_glow_grid'
-                                    src="@/assets/images/hud/cube_energon_grid_frontal.svg" />
-                            </div>
-                        </div>
-                    </div>
+
 
                     <!-- TABS -->
                     <div class="tabs">

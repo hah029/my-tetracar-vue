@@ -1,28 +1,30 @@
 <template>
-    <div ref="touchZoneRef" class="touch-zone"></div>
-    <div class="game_hud">
+    <TouchZone />
 
+    <div class="game_hud">
+        <!-- Верхняя панель -->
         <div class="top_panel">
             <div class="buttons_left_group">
                 <div class="pause_btn_container" @click="goToPause()">
-                    <img class='icon is_clickable' src="@/assets/images/hud/btn_pause.svg" />
+                    <img class="icon is_clickable" src="@/assets/images/hud/btn_pause.svg" />
                 </div>
             </div>
+
             <div class="buttons_right_group">
                 <div class="currency_block">
                     <div class="currency_subblock">
                         <div class="currency_value font_adaptation color_yellow_light">{{ goldens }}</div>
                         <div class="currency_image_container">
-                            <img class='icon' src="@/assets/images/hud/cube_golden.svg" />
+                            <img class="icon" src="@/assets/images/hud/cube_golden.svg" />
                         </div>
                     </div>
                     <div class="currency_subblock">
                         <div class="currency_value font_adaptation color_blue_light">{{ energons }}</div>
                         <div class="currency_image_container energon_glow_general">
-                            <img class='icon icon_abs' src="@/assets/images/hud/cube_energon_grid_backward.svg" />
-                            <img class='icon icon_abs energon_glow_core'
+                            <img class="icon icon_abs" src="@/assets/images/hud/cube_energon_grid_backward.svg" />
+                            <img class="icon icon_abs energon_glow_core"
                                 src="@/assets/images/hud/cube_energon_core.svg" />
-                            <img class='icon icon_abs energon_glow_grid'
+                            <img class="icon icon_abs energon_glow_grid"
                                 src="@/assets/images/hud/cube_energon_grid_frontal.svg" />
                         </div>
                     </div>
@@ -35,17 +37,12 @@
             </div>
         </div>
 
+        <!-- Центральная панель -->
         <div class="central_panel">
-            <!-- Основные статы (прогресс, макс. прогресс, скорость) -->
             <div class="metrics_group">
                 <div class="metrics_block color_yellow_light">
                     <div class="metrics_text">{{ foo.makeText('gamePlay.keyStats.progress', 'empty') }}</div>
-                    <div class="font_adaptation metrics_number">{{ score }}</div>
-                </div>
-                <div class="divider"></div>
-                <div class="metrics_block color_yellow_light">
-                    <div class="metrics_text">{{ foo.makeText('gamePlay.keyStats.maxProgress', 'empty') }}</div>
-                    <div class="font_adaptation metrics_number">{{ highScore }}</div>
+                    <div class="font_adaptation metrics_number">{{ score }} / {{ highScore }}</div>
                 </div>
                 <div class="divider"></div>
                 <div class="metrics_block color_blue">
@@ -53,93 +50,37 @@
                     <div class="font_adaptation metrics_number">{{ currentSpeed }}</div>
                 </div>
             </div>
-
-            <!-- Уведомления -->
-            <TransitionGroup name="notification_anim" tag="div" class="notifications_container">
-                <div v-for="(notif, index) in notificationsList" :key="notif.id" class="notifications_block">
-                    <div v-if="notif.message == 'newRecord'" class="flash_container">
-                        <img class='icon' src="@/assets/images/flashes/flash_golden.svg" />
-                    </div>
-                    <div :class="setBoosterTextColor('detection', notif.message)">{{ makeNotification(notif.message) }}
-                    </div>
-                    <div v-if="notif.message == 'newRecord'" class="flash_container">
-                        <img class='icon' src="@/assets/images/flashes/flash_golden.svg" />
-                    </div>
-                    <div v-else class="boosters_image_container">
-                        <img v-if="getCubeType(notif.message) == 'ammo'" class='icon'
-                            src="@/assets/images/hud/cube_bullet.svg" />
-                        <img v-else-if="getCubeType(notif.message) == 'armor'" class='icon'
-                            src="@/assets/images/hud/cube_armor.svg" />
-                        <img v-else-if="getCubeType(notif.message) == 'nitro'" class='icon'
-                            src="@/assets/images/hud/cube_nitro.svg" />
-                        <img v-else-if="getCubeType(notif.message) == 'magnet'" class='icon'
-                            src="@/assets/images/hud/cube_magnet.svg" />
-                    </div>
-                </div>
-            </TransitionGroup>
+            <HudNotifications />
         </div>
 
+        <!-- Нижняя панель (бустеры) -->
         <div class="bottom_panel">
             <div class="bottom_subpanel">
-                <div class="currency_subblock">
-                    <div :class="setBoosterTextColor('bullet')">{{ bulletsCount }}</div>
+                <div v-for="booster in boosters" :key="booster.key" class="currency_subblock">
+                    <div :class="booster.textColorClass">{{ booster.displayValue }}</div>
                     <div class="boosters_image_container">
-                        <!-- <img v-if="cubeIlluminations == 'addBullet'" class='icon with_illumination' src="@/assets/images/hud/cube_luminous.svg" /> -->
-                        <img v-if="bulletsCount > 0" class='icon with_shadow'
-                            src="@/assets/images/hud/cube_bullet.svg" />
-                        <img v-else class='icon with_white_glow' src="@/assets/images/hud/cube_booster_empty.svg" />
+                        <img v-if="booster.isActive" class="icon with_shadow" :src="booster.activeIcon" />
+                        <img v-else class="icon with_white_glow" src="@/assets/images/hud/cube_booster_empty.svg" />
                     </div>
-                </div>
-                <div class="boosters_divider"></div>
-                <div class="currency_subblock">
-                    <div :class="setBoosterTextColor('armor')">{{ armorsCount }}</div>
-                    <div class="boosters_image_container">
-                        <img v-if="isShieldActive" class='icon with_shadow' src="@/assets/images/hud/cube_armor.svg" />
-                        <img v-else class='icon with_white_glow' src="@/assets/images/hud/cube_booster_empty.svg" />
-                    </div>
-                </div>
-                <div class="boosters_divider"></div>
-                <div class="currency_subblock">
-                    <div :class="setBoosterTextColor('nitro')">{{ nitroTimer }}</div>
-                    <div class="boosters_image_container">
-                        <img v-if="isNitroActive" class='icon with_shadow' src="@/assets/images/hud/cube_nitro.svg" />
-                        <img v-else class='icon with_white_glow' src="@/assets/images/hud/cube_booster_empty.svg" />
-                    </div>
-                </div>
-                <div class="boosters_divider"></div>
-                <div class="currency_subblock">
-                    <div :class="setBoosterTextColor('magnet')">{{ magnetTimer }}</div>
-                    <div class="boosters_image_container">
-                        <img v-if="isMagnetActive" class='icon with_shadow' src="@/assets/images/hud/cube_magnet.svg" />
-                        <img v-else class='icon with_white_glow' src="@/assets/images/hud/cube_booster_empty.svg" />
-                    </div>
+                    <div v-if="booster.key !== 'magnet'" class="boosters_divider"></div>
                 </div>
             </div>
         </div>
 
-        <!-- FX эффекты при поимке бустеров / монет -->
-        <div class="effects_container">
-            <div v-for="effect in effectsList" :key="effect.id" class="effects_group"
-                :class="setBoosterAnimation(effect.type)">
-                <div v-if="effect.type == 'addEnergon'" class="currency_image_container energon_glow_general">
-                    <img class='icon icon_abs' src="@/assets/images/hud/cube_energon_grid_backward.svg" />
-                    <img class='icon icon_abs energon_glow_core' src="@/assets/images/hud/cube_energon_core.svg" />
-                    <img class='icon icon_abs energon_glow_grid'
-                        src="@/assets/images/hud/cube_energon_grid_frontal.svg" />
-                </div>
-                <img v-if="effect.type == 'addBullet'" class='icon' src="@/assets/images/hud/cube_bullet.svg" />
-                <img v-if="effect.type == 'addArmor'" class='icon' src="@/assets/images/hud/cube_armor.svg" />
-                <img v-if="effect.type == 'addNitro'" class='icon' src="@/assets/images/hud/cube_nitro.svg" />
-                <img v-if="effect.type == 'addMagnet'" class='icon' src="@/assets/images/hud/cube_magnet.svg" />
-            </div>
-        </div>
-
+        <!-- FX-эффекты -->
+        <HudEffects />
     </div>
 </template>
 
-<style lang='scss' scoped>
+<style lang="scss" scoped>
 @use "@/styles/menu.scss" as *;
 @use "@/styles/animations.scss";
+
+// Переменные
+$booster-divider-color: rgba(255, 255, 255, 0.3);
+$panel-horizontal-padding: 2.5rem;
+$icon-size: 2.3125rem;
+$booster-icon-size: 1.875rem;
 
 // #region - general
 .game_hud {
@@ -151,7 +92,6 @@
     text-transform: uppercase;
     line-height: 1;
     letter-spacing: 0.06rem;
-
     font-size: 2rem !important; // (32px)
 }
 
@@ -160,18 +100,18 @@
     font-feature-settings: "tnum";
     font-variant-numeric: tabular-nums;
     white-space: nowrap;
-    transition: width 0.1s ease; // Плавное расширение
+    transition: width 0.1s ease;
 }
 
 // #endregion
 
-// #region - top_panel_left_group
+// #region - top_panel
 .top_panel {
     width: 100%;
     position: absolute;
     box-sizing: border-box;
     top: 1.875rem;
-    padding: 0rem 2.5rem;
+    padding: 0 $panel-horizontal-padding;
     display: flex;
     justify-content: space-between;
 }
@@ -213,7 +153,7 @@
 
 // #endregion
 
-// #region - top_panel_right_group  
+// #region - top_panel_right_group
 .buttons_right_group {
     display: flex;
     flex-direction: column;
@@ -224,10 +164,11 @@
 
 .currency_block {
     display: flex;
-    justify-content: flex-start;
-    align-items: center;
-    gap: 0.25rem;
-    // gap: 1.563rem;
+    justify-content: flex-end;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 1rem;
+    font-size: min(1.5rem, 24px);
 }
 
 .currency_subblock {
@@ -235,21 +176,15 @@
     justify-content: flex-end;
     align-items: center;
     gap: 0.625rem;
-    // font-size: 1.375rem;
 }
 
 .currency_value {
     text-align: right;
-    // min-width: 3ch;
-    // font-feature-settings: "tnum";
-    // font-variant-numeric: tabular-nums;
-    // white-space: nowrap;
-    // transition: width 0.1s ease;  // Плавное расширение
 }
 
 .currency_image_container {
-    width: min(2.3125rem, 90vw);
-    height: 2.3125rem;
+    width: min($icon-size, 90vw);
+    height: $icon-size;
     position: relative;
 }
 
@@ -284,12 +219,10 @@
 }
 
 .x_sign {
-    // font-size: 1.5625rem;
     text-transform: lowercase;
 }
 
 .x_number {
-    // font-size: 2.1875rem;
     margin-bottom: -0.125rem;
 }
 
@@ -297,21 +230,21 @@
 
 // #region - central_panel
 .central_panel {
-    position: absolute;
-    top: 1.875rem;
+    position: fixed;
+    top: 30px;
     width: 100%;
     display: flex;
     flex-direction: column;
     justify-content: flex-start;
     align-items: center;
-    gap: 1.5625rem;
+    gap: 2rem;
 }
 
 .metrics_group {
     display: flex;
     justify-content: center;
     align-items: center;
-    gap: 1.875rem;
+    gap: 3rem;
 }
 
 .metrics_block {
@@ -319,16 +252,16 @@
     flex-direction: column;
     justify-content: flex-start;
     align-items: center;
-    gap: 0.3125rem;
+    gap: 1rem;
 }
 
-// .metrics_text {
-//     font-size: 0.875rem;
-// }
+.metrics_text {
+    font-size: min(1rem, 24px);
+}
 
-// .metrics_number {
-//     font-size: 1.75rem;
-// }
+.metrics_number {
+    font-size: min(2.5rem, 24px);
+}
 
 .divider {
     height: 1.563rem;
@@ -338,34 +271,10 @@
 
 // #endregion
 
-// #region - notifications
-.notifications_container {
-    display: flex;
-    flex-direction: column;
-    justify-content: flex-start;
-    align-items: center;
-    gap: 0.5rem;
-    pointer-events: none;
-}
-
-.notifications_block {
-    display: flex;
-    justify-content: flex-end;
-    align-items: center;
-    gap: 1.25rem;
-    font-size: 1.125rem;
-}
-
-.new_record_msg {
-    font-size: 2.25rem;
-}
-
-// #endregion
-
-// #region - bottom_panel
+// #region - bottom_panel (boosters)
 .bottom_panel {
     width: 100%;
-    height: 50px;
+    height: min(8rem, 100px);
     position: absolute;
     bottom: 0;
     display: flex;
@@ -380,40 +289,25 @@
     gap: 1.875rem;
     background: linear-gradient(90deg,
             rgba(0, 0, 0, 0) 0%,
-            /* 0% - полностью прозрачный */
             rgba(0, 0, 0, 0.55) 10%,
-            /* 10% - полностью непрозрачный */
             rgba(0, 0, 0, 0.55) 90%,
-            /* 90% - полностью непрозрачный */
-            rgba(0, 0, 0, 0) 100%
-            /* 100% - полностью прозрачный */
-        );
+            rgba(0, 0, 0, 0) 100%);
 }
 
 .boosters_image_container {
-    width: min(1.875rem, 90vw);
-    height: 1.875rem;
-    position: relative;
-}
-
-.flash_container {
-    width: min(5.5rem, 90vw);
-    height: 5.5rem;
+    width: min($booster-icon-size, 90vw);
+    height: $booster-icon-size;
     position: relative;
 }
 
 .boosters_divider {
     height: 1.375rem;
     width: 1px;
-    background-color: rgba(255, 255, 255, 0.3);
+    background-color: $booster-divider-color;
 }
 
 .with_shadow {
     filter: drop-shadow(0 2px 15px rgba(0, 0, 0, 0.35));
-}
-
-.with_illumination {
-    filter: drop-shadow(0 0px 20px rgba(255, 255, 255, 1));
 }
 
 .with_white_glow {
@@ -421,235 +315,18 @@
 }
 
 // #endregion
-
-// #region - анимации при поимке бустеров / энергонов
-.effects_container {
-    position: absolute;
-    inset: 0;
-    pointer-events: none;
-    z-index: z("ui_component") + 1;
-}
-
-.effects_group {
-    position: absolute;
-    width: min(2.813rem, 90vw);
-    height: 2.813rem;
-    bottom: 13.125rem;
-    left: 59.063rem;
-}
-
-.energon_mooving {
-    animation: energonMovingAnim 2.1s cubic-bezier(0.41, 0, 0.04, 0.99) forwards;
-}
-
-@keyframes energonMovingAnim {
-    0% {
-        bottom: 13.125rem;
-    }
-
-    100% {
-        bottom: 53.125rem;
-        left: 115rem;
-    }
-}
-
-.bullet_mooving {
-    animation: bulletMovingAnim 0.6s cubic-bezier(0.42, 0, 1, 1) forwards;
-}
-
-@keyframes bulletMovingAnim {
-    0% {
-        bottom: 13.125rem;
-    }
-
-    100% {
-        bottom: 0.3125rem;
-        left: 48.88rem;
-    }
-}
-
-.armor_mooving {
-    animation: armorMovingAnim 0.6s cubic-bezier(0.42, 0, 1, 1) forwards;
-}
-
-@keyframes armorMovingAnim {
-    0% {
-        bottom: 13.125rem;
-    }
-
-    100% {
-        bottom: 0.3125rem;
-        left: 55.62rem;
-    }
-}
-
-.nitro_mooving {
-    animation: nitroMovingAnim 0.6s cubic-bezier(0.42, 0, 1, 1) forwards;
-}
-
-@keyframes nitroMovingAnim {
-    0% {
-        bottom: 13.125rem;
-    }
-
-    100% {
-        bottom: 0.3125rem;
-        left: 63.125rem;
-    }
-}
-
-.magnet_mooving {
-    animation: magnetMovingAnim 0.6s cubic-bezier(0.42, 0, 1, 1) forwards;
-}
-
-@keyframes magnetMovingAnim {
-    0% {
-        bottom: 13.125rem;
-    }
-
-    100% {
-        bottom: 0.3125rem;
-        left: 70.62rem;
-    }
-}
-
-// #endregion
-
-
-
-/* ПРИНЦИП РАЗДЕЛЕНИЯ ЗОН: Левая область для свайпов, Правая для кнопок */
-.controls-container {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    display: flex;
-    z-index: 10;
-    pointer-events: auto;
-    /* Важно: разрешаем взаимодействие с контролами */
-}
-
-/* Левая половина экрана (свайпы) */
-.swipe-zone {
-    flex: 2;
-    background: rgba(0, 255, 255, 0.05);
-    /* Едва заметная подсветка для понимания зоны (можно убрать) */
-    touch-action: none;
-    /* Говорим браузеру: всю обработку жестов здесь отдаем JS */
-}
-
-/* Правая половина экрана (кнопки) */
-.buttons-zone {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    gap: 30px;
-    background: rgba(255, 255, 255, 0.02);
-    touch-action: manipulation;
-    /* Кнопкам мешать не будем */
-}
-
-/* Стили кнопок */
-.action-btn {
-    width: 120px;
-    padding: 18px 0;
-    font-size: 1.8rem;
-    font-weight: bold;
-    border: none;
-    border-radius: 60px;
-    background: rgba(255, 255, 255, 0.2);
-    backdrop-filter: blur(12px);
-    color: white;
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
-    transition: transform 0.1s ease, background 0.2s;
-    cursor: pointer;
-    touch-action: manipulation;
-    font-family: monospace;
-    letter-spacing: 2px;
-}
-
-.action-btn:active {
-    transform: scale(0.94);
-    background: rgba(255, 255, 255, 0.5);
-}
-
-.touch-zone {
-    position: absolute;
-    inset: 0;
-
-    z-index: 10;
-
-    pointer-events: auto;
-
-    touch-action: none;
-
-    background: transparent;
-}
 </style>
 
-
 <script setup lang="ts">
-import { computed, watch, ref, onMounted, onUnmounted, inject } from "vue";
-import { useGameState } from "@/store/gameState";
-import { usePlayerStore } from "@/store/playerStore";
-import { useProgressStore } from "@/store/progressStore";
+import { computed } from 'vue';
+import { useGameState } from '@/store/gameState';
+import { usePlayerStore } from '@/store/playerStore';
+import { useProgressStore } from '@/store/progressStore';
+import { useMetaStore } from '@/store/metaStore';
 import { createNewText } from '@/helpers/functions';
-import { useMetaStore } from "@/store/metaStore";
-
-
-
-// Получаем игровой экземпляр через inject (нужно настроить в родительском компоненте)
-// Если game не предоставлен через provide, используем другой способ
-const game = inject<any>('game');
-
-// Реф для зоны свайпов
-// const swipeZoneRef = ref<HTMLElement | null>(null);
-const touchZoneRef = ref<HTMLElement | null>(null);
-
-// Функция для обработки выстрела
-const handleShoot = () => {
-    if (game && typeof game.shoot === 'function') {
-        game.shoot();
-    }
-};
-
-// Регистрируем зону свайпов если доступен controls composable
-// Этот блок нужно будет адаптировать под вашу архитектуру
-// onMounted(() => {
-//     // Если game имеет controls и registerSwipeZone
-//     if (game && game.controls && typeof game.controls.registerSwipeZone === 'function') {
-//         game.controls.registerSwipeZone(swipeZoneRef.value);
-//     }
-// });
-
-// onUnmounted(() => {
-//     if (game && game.controls && typeof game.controls.cleanup === 'function') {
-//         game.controls.cleanup();
-//     }
-// });
-onMounted(() => {
-    if (
-        game &&
-        game.controls &&
-        typeof game.controls.registerTouchZone === "function"
-    ) {
-        game.controls.registerTouchZone(touchZoneRef.value);
-    }
-});
-
-onUnmounted(() => {
-    if (
-        game &&
-        game.controls &&
-        typeof game.controls.cleanup === "function"
-    ) {
-        game.controls.cleanup();
-    }
-});
-
+import TouchZone from './panels/TouchZone.vue';
+import HudNotifications from './panels/HudNotifications.vue';
+import HudEffects from './panels/HudEffects.vue';
 
 const gameStore = useGameState();
 const playerStore = usePlayerStore();
@@ -657,197 +334,77 @@ const progressStore = useProgressStore();
 const metaStore = useMetaStore();
 const foo = createNewText();
 
-// работаем с валютой (голдены / энергоны)
+// Валюты
 const goldens = computed(() => metaStore.goldens);
 const energons = computed(() => metaStore.energons);
 const score = computed(() => Math.floor(progressStore.score));
 const highScore = computed(() => Math.floor(progressStore.highScore));
-const newNotification = computed(() => playerStore.notificationMsg);
-const eventCounter = computed(() => playerStore.eventCounter);
 const currentMultiplier = computed(() => progressStore.currentMultiplier);
 const currentSpeed = computed(() => (playerStore.getCurrentSpeed() * 100).toFixed(1));
 
-// #region - работаем с уведомлениями
-interface NotificationItem {
-    id: number;
-    message: string;
-};
-let notificationsList = ref<NotificationItem[]>([]);
-let nextId = ref(0);
-
-watch(
-    () => newNotification.value,
-    (newState) => {
-        if (newState != '') {
-            const newNotificationItem: NotificationItem = {
-                id: nextId.value++,
-                message: newState
-            };
-
-            notificationsList.value.unshift(newNotificationItem);
-
-            setTimeout(() => {
-                playerStore.addNewMsg('');
-            }, 100);
-
-            setTimeout(() => {
-                const index = notificationsList.value.findIndex(n => n.id === newNotificationItem.id);
-                if (index !== -1) {
-                    notificationsList.value.splice(index, 1);
-                };
-            }, 3000);
-        };
-    },
-);
-
-// генерируем текст уведомления
-function makeNotification(notificationMessage: string) {
-    return foo.makeText('gamePlay.notificationsList.' + notificationMessage, 'empty');
+// Цветовые классы для уведомлений/бустеров
+const colorMap: Record<string, string> = {
+    armor: 'color_white',
+    bullet: 'color_red_light',
+    nitro: 'color_green_light',
+    magnet: 'color_ultramarine',
+    default: 'color_gray',
+    newrecord: 'color_yellow new_record_msg'
 };
 
-// определяем какой кубик рисовать в уведомлениях
-function getCubeType(notificationMessage: string) {
-    let str = notificationMessage.toLowerCase();
-    if (str.includes('armor')) {
-        return 'armor';
-    } else if (str.includes('ammo')) {
-        return 'ammo';
-    } else if (str.includes('nitro')) {
-        return 'nitro';
-    } else if (str.includes('magnet')) {
-        return 'magnet';
-    };
-    return '';
-};
-// #endregion
+function getBoosterColorClass(type: string, isActive: boolean, countOrTimer: number): string {
+    if (type === 'bullet' || type === 'armor') {
+        return isActive ? colorMap[type] : colorMap.default;
+    }
+    // nitro, magnet – таймер должен быть > 0
+    return isActive && countOrTimer > 0 ? colorMap[type] : colorMap.default;
+}
 
-// #region - работаем с событиями поимки бустеров (для включения анимаций)
-// добавляем интерфейс для эффектов
-interface EffectItem {
-    id: number;
-    type: string;  // 'addEnergon', 'addBullet', 'addArmor', 'addNitro', 'addMagnet'
-};
+// Конфигурация бустеров для рендеринга
+const boosters = computed(() => {
+    const isShield = playerStore.isShieldEnabled;
+    const armorCount = playerStore.armor;
+    const isNitro = playerStore.isNitroEnabled;
+    const nitroVal = isNitro ? Math.ceil(playerStore.nitroTimer / 1000) : 0;
+    const isMagnet = playerStore.isMagnetEnabled;
+    const magnetVal = isMagnet ? Math.ceil(playerStore.magnetTimer / 1000) : 0;
+    const bulletsCount = playerStore.ammo;
 
-// массив активных эффектов
-let effectsList = ref<EffectItem[]>([]);
-let effectNextId = ref(0);
-// let cubeIlluminations = ref('');
-
-// следим за событием
-watch(
-    () => eventCounter.value,
-    () => {
-        const currentEvent = playerStore.eventType;
-        if (currentEvent != '') {
-
-            const newEffectItem: EffectItem = {
-                id: effectNextId.value++,
-                type: currentEvent
-            };
-
-            effectsList.value.push(newEffectItem);
-
-            // // подсвечиваем спрайт кубика на время
-            // if (currentEvent == 'addBullet') {
-            //     setTimeout(() => {
-            //         cubeIlluminations.value = 'addBullet';
-            //     }, 1000);
-            //     setTimeout(() => {
-            //         cubeIlluminations.value = '';
-            //     }, 1500);
-            // }
-
-            // удаляем эффект
-            let animDuration = currentEvent == 'addEnergon' ? 1800 : 600;
-            setTimeout(() => {
-                const index = effectsList.value.findIndex(e => e.id === newEffectItem.id);
-                if (index !== -1) {
-                    effectsList.value.splice(index, 1);
-                };
-            }, animDuration);
-
-        };
-    },
-);
-
-// назначаем тип анимации при поимке бустера / энергона
-function setBoosterAnimation(type_) {
-    if (type_ == 'addEnergon') {
-        return 'energon_mooving';
-    } else if (type_ == 'addBullet') {
-        return 'bullet_mooving';
-    } else if (type_ == 'addArmor') {
-        return 'armor_mooving';
-    } else if (type_ == 'addNitro') {
-        return 'nitro_mooving';
-    } else if (type_ == 'addMagnet') {
-        return 'magnet_mooving';
-    };
-};
-// #end region
-
-// работаем с Патронами
-const bulletsCount = computed(() => playerStore.ammo);
-
-// работаем с Броней
-const isShieldActive = computed(() => playerStore.isShieldEnabled);
-const armorsCount = computed(() => playerStore.armor);
-
-// работаем с Нитро
-const isNitroActive = computed(() => playerStore.isNitroEnabled);
-const nitroTimer = computed(() => {
-    if (!playerStore.isNitroEnabled || playerStore.nitroTimer <= 0) {
-        return 0;
-    } else {
-        const ratio = playerStore.nitroTimer / 1000;
-        return Math.ceil(ratio);
-    };
+    const items = [
+        {
+            key: 'bullet',
+            displayValue: bulletsCount,
+            isActive: bulletsCount > 0,
+            activeIcon: new URL('@/assets/images/hud/cube_bullet.svg', import.meta.url).href,
+            textColorClass: getBoosterColorClass('bullet', bulletsCount > 0, bulletsCount)
+        },
+        {
+            key: 'armor',
+            displayValue: armorCount,
+            isActive: isShield,
+            activeIcon: new URL('@/assets/images/hud/cube_armor.svg', import.meta.url).href,
+            textColorClass: getBoosterColorClass('armor', isShield, armorCount)
+        },
+        {
+            key: 'nitro',
+            displayValue: nitroVal,
+            isActive: isNitro && nitroVal > 0,
+            activeIcon: new URL('@/assets/images/hud/cube_nitro.svg', import.meta.url).href,
+            textColorClass: getBoosterColorClass('nitro', isNitro, nitroVal)
+        },
+        {
+            key: 'magnet',
+            displayValue: magnetVal,
+            isActive: isMagnet && magnetVal > 0,
+            activeIcon: new URL('@/assets/images/hud/cube_magnet.svg', import.meta.url).href,
+            textColorClass: getBoosterColorClass('magnet', isMagnet, magnetVal)
+        }
+    ];
+    return items;
 });
 
-// работаем с Магнитом
-const isMagnetActive = computed(() => playerStore.isMagnetEnabled);
-const magnetTimer = computed(() => {
-    if (!playerStore.isMagnetEnabled || playerStore.magnetTimer <= 0) {
-        return 0;
-    } else {
-        const ratio = playerStore.magnetTimer / 1000;
-        return Math.ceil(ratio);
-    };
-});
-
-// переходим в паузу при клике по кнопке на интерфейсе
+// Пауза
 function goToPause() {
     gameStore.pauseGame();
-};
-
-// красим текст цифр у бустеров в нужный цвет
-function setBoosterTextColor(type_: string, notif_: string = 'undefined') {
-    if (type_ == 'nitro') {
-        return !playerStore.isNitroEnabled || playerStore.nitroTimer <= 0 ? 'color_gray' : 'color_green_light';
-
-    } else if (type_ == 'magnet') {
-        return !playerStore.isMagnetEnabled || playerStore.magnetTimer <= 0 ? 'color_gray' : 'color_ultramarine';
-
-    } else if (type_ == 'armor') {
-        return isShieldActive.value ? 'color_white' : 'color_gray';
-
-    } else if (type_ == 'bullet') {
-        return bulletsCount.value > 0 ? 'color_red_light' : 'color_gray';
-
-    } else if (type_ == 'detection') {
-        let str = notif_.toLowerCase();
-
-        if (str.includes('armor')) {
-            return 'color_white';
-        } else if (str.includes('ammo')) {
-            return 'color_red_light';
-        } else if (str.includes('nitro')) {
-            return 'color_green_light';
-        } else if (str.includes('magnet')) {
-            return 'color_ultramarine';
-        } else if (str.includes('newrecord')) {
-            return 'color_yellow new_record_msg';
-        };
-    };
-};
+}
 </script>

@@ -4,6 +4,7 @@
 
     <!-- UI -->
     <GameLogo />
+    <HUD v-if="showHUD" />
     <component :is="getUIComponent" class="ui_components_root" />
     <RightsPanel />
     <TeamLogo />
@@ -150,10 +151,19 @@ const getUIComponent = computed(() => {
             return PauseMenu;
         case GameStates.Gameover:
             return GameOverMenu;
-        case GameStates.Play:
-            return HUD;
         case GameStates.Countdown:   // ←
             return Countdown;
+    };
+});
+const showHUD = computed(() => {
+    switch (gameState.currentState) {
+        case GameStates.Play:
+        case GameStates.Pause:
+        case GameStates.Gameover:
+        case GameStates.Countdown:
+            return true
+        default:
+            return false;
     };
 });
 

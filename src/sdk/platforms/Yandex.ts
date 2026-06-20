@@ -313,6 +313,14 @@ export class YandexPlatform implements IGamePlatform {
     this.sdk?.features.LoadingAPI.ready();
   }
 
+  gameStart(): void {
+    this.sdk?.features.GameplayAPI.start();
+  }
+
+  gameStop(): void {
+    this.sdk?.features.GameplayAPI.stop();
+  }
+
   // ------------------------------------------------------------------
   // Payments
   // ------------------------------------------------------------------

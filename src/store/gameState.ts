@@ -6,6 +6,7 @@ import { usePlayerStore } from "@/store/playerStore";
 import { useProgressStore } from "./progressStore";
 import { GameStates } from "@/game/core/GameState";
 import { SoundManager } from "@/game/sound/SoundManager";
+import { Platform } from "@/sdk";
 
 type UIOverlay =
   | null
@@ -24,6 +25,7 @@ export const useGameState = defineStore("gameState", () => {
   const activeOverlay = ref<UIOverlay>(null);
   const previousState = ref<GameStates>(GameStates.Preloader); // Запоминаем предыдущее состояние
   const playerStore = usePlayerStore();
+  const platform = Platform.getInstance();
 
   let resetCallback: (() => void) | null = null;
 
@@ -80,6 +82,7 @@ export const useGameState = defineStore("gameState", () => {
 
       case GameStates.Play:
         sound.playMusic("music_background", true);
+        platform.gameStart();
         break;
 
       case GameStates.Gameover:
@@ -90,6 +93,7 @@ export const useGameState = defineStore("gameState", () => {
             console.error("Failed to save progress on gameover:", err),
           );
         sound.playMusic("music_gameover");
+        platform.gameStop();
         break;
 
       case GameStates.QuitConfirm:
@@ -113,6 +117,8 @@ export const useGameState = defineStore("gameState", () => {
           .catch((err) =>
             console.error("Failed to save progress on exit play:", err),
           );
+
+        platform.gameStop();
         break;
       }
 

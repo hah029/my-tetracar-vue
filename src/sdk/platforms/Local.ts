@@ -259,6 +259,14 @@ export class LocalStoragePlatform implements IGamePlatform {
     console.log("DEV SDK READY");
   }
 
+  gameStart(): void {
+    console.log("DEV SDK GAME START");
+  }
+
+  gameStop(): void {
+    console.log("DEV SDK GAME STOP");
+  }
+
   // ------------------------------------------------------------------
   // Платежи (не поддерживаются в локальной версии)
   // ------------------------------------------------------------------
