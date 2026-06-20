@@ -13,23 +13,30 @@ export class CubeBuilder {
     geomConfig: GeometryConfig;
     useTexture?: boolean;
     materialConfig?: MaterialConfig;
-    existingMaterial?: THREE.Material;  // 👈 НОВЫЙ ПАРАМЕТР
+    existingMaterial?: THREE.Material; // 👈 НОВЫЙ ПАРАМЕТР
   }): Promise<THREE.Object3D> {
-    const { index, geomConfig, useGLB, materialConfig, useTexture, existingMaterial } = params;
+    const {
+      index,
+      geomConfig,
+      useGLB,
+      materialConfig,
+      useTexture,
+      existingMaterial,
+    } = params;
 
     let cube: THREE.Object3D;
 
-    const commonStore = useCommonStore();
+    const cfg = useCommonStore().config.materials.base;
     const _materialConfig: MaterialConfig = {
-        color: commonStore.BASE_CUBE_MATERIAL_CONFIG.color ?? 0xffffff,
-        emissive: commonStore.BASE_CUBE_MATERIAL_CONFIG.emissive ?? 0x000000,
-        emissiveIntensity: commonStore.BASE_CUBE_MATERIAL_CONFIG.emissiveIntensity ?? 1,
-        ior: commonStore.BASE_CUBE_MATERIAL_CONFIG.ior ?? 1,
-        transmission: commonStore.BASE_CUBE_MATERIAL_CONFIG.transmission ?? 1,
-        metalness: commonStore.BASE_CUBE_MATERIAL_CONFIG.metalness ?? 1,
-        roughness: commonStore.BASE_CUBE_MATERIAL_CONFIG.roughness ?? 1,
-        thickness: commonStore.BASE_CUBE_MATERIAL_CONFIG.thickness ?? 1,
-        ...materialConfig,
+      color: cfg.color ?? 0xffffff,
+      emissive: cfg.emissive ?? 0x000000,
+      emissiveIntensity: cfg.emissiveIntensity ?? 1,
+      ior: cfg.ior ?? 1,
+      transmission: cfg.transmission ?? 1,
+      metalness: cfg.metalness ?? 1,
+      roughness: cfg.roughness ?? 1,
+      thickness: cfg.thickness ?? 1,
+      ...materialConfig,
     };
 
     //

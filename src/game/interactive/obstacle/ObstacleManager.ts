@@ -31,7 +31,7 @@ export class ObstacleManager {
 
   public spawnStaticObstacle(
     lane: number,
-    z = useCommonStore().BASE_SEGMENTS_ZPOS,
+    z = useCommonStore().config.baseSegmentsZpos,
     formIndex?: number,
   ): StaticObstacle | null {
     const index =
@@ -39,11 +39,11 @@ export class ObstacleManager {
 
     let obstacle: StaticObstacle;
 
-    const formBase = useCommonStore().OPTIMIZED_OBSTACLE_FORMS[index];
+    const formBase = useCommonStore().optimizedObstacleForms[index];
     if (!formBase) {
       return null;
     }
-    const formDetailed = useCommonStore().FULL_OBSTACLE_FORMS[index];
+    const formDetailed = useCommonStore().fullObstacleForms[index];
     obstacle = new StaticObstacle(
       lane,
       z,
@@ -62,20 +62,20 @@ export class ObstacleManager {
 
   private getRandomObstacleIndex(): number {
     return Math.floor(
-      Math.random() * useCommonStore().OPTIMIZED_OBSTACLE_FORMS.length,
+      Math.random() * useCommonStore().optimizedObstacleForms.length,
     );
   }
 
   public spawnMovingObstacle(
     startLane: number,
-    z = useCommonStore().BASE_SEGMENTS_ZPOS,
+    z = useCommonStore().config.baseSegmentsZpos,
     width = 1,
     formIndex?: number,
   ) {
     const lanes = RoadManager.getInstance().getLanesCount();
     const index =
       formIndex !== undefined ? formIndex : this.getRandomObstacleIndex();
-    const form = useCommonStore().OPTIMIZED_OBSTACLE_FORMS[index];
+    const form = useCommonStore().optimizedObstacleForms[index];
     if (!form) {
       return;
     }
@@ -96,7 +96,10 @@ export class ObstacleManager {
     this.obstacles.push(obstacle);
   }
 
-  public spawnEnemyCar(lane: number, z = useCommonStore().BASE_SEGMENTS_ZPOS) {
+  public spawnEnemyCar(
+    lane: number,
+    z = useCommonStore().config.baseSegmentsZpos,
+  ) {
     const form = usePlayerStore().CAR_CUBES_CONFIG;
     const obstacle = new EnemyCar(
       lane,
@@ -114,7 +117,7 @@ export class ObstacleManager {
 
   public spawnJump(
     lane: number,
-    z = useCommonStore().BASE_SEGMENTS_ZPOS,
+    z = useCommonStore().config.baseSegmentsZpos,
   ): Jump | null {
     const jump = new Jump(lane, this.scene, z);
     this.jumps.push(jump);

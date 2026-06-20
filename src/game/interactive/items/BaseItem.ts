@@ -6,23 +6,23 @@ import type { ItemType } from "./types";
 import type { MaterialConfig } from "@/game/cube/types";
 import { CubeBuilder } from "@/game/cube/Cube";
 import { useCommonStore } from "@/store/commonStore";
-import { MaterialPool } from "@/helpers/MaterialPool";  // 👈 ДОБАВИТЬ ИМПОРТ
+import { MaterialPool } from "@/helpers/MaterialPool"; // 👈 ДОБАВИТЬ ИМПОРТ
 
 export class BaseItem extends THREE.Group {
   public collider: THREE.Sphere;
   public itemType!: ItemType;
   protected cube: THREE.Object3D = new THREE.Object3D();
-  protected rotationYDiff = useCommonStore().BASE_ITEM_ROTATION;
+  protected rotationYDiff = useCommonStore().config.baseItemRotation;
   protected initialPosition: THREE.Vector3;
-  protected existingMaterial?: THREE.Material;  // 👈 НОВОЕ ПОЛЕ
+  protected existingMaterial?: THREE.Material; // 👈 НОВОЕ ПОЛЕ
 
   constructor(
     zPos: number,
     laneIndex?: number,
     xPos?: number,
-    yPos: number = useCommonStore().BASE_ITEM_YPOS,
+    yPos: number = useCommonStore().baseItemYpos,
     material: MaterialConfig | null = null,
-    existingMaterial?: THREE.Material,  // 👈 НОВЫЙ ПАРАМЕТР
+    existingMaterial?: THREE.Material, // 👈 НОВЫЙ ПАРАМЕТР
   ) {
     super();
     this.userData = {
@@ -45,7 +45,7 @@ export class BaseItem extends THREE.Group {
     this.position.copy(this.initialPosition);
     this.cube.position.set(0, 0, 0);
     this.collider = new THREE.Sphere(this.position.clone(), 0.45);
-    this.existingMaterial = existingMaterial;  // 👈 СОХРАНЯЕМ
+    this.existingMaterial = existingMaterial; // 👈 СОХРАНЯЕМ
     this.build(material).catch((err) => {
       console.error("[Coin] build failed:", err);
     });
@@ -54,10 +54,10 @@ export class BaseItem extends THREE.Group {
   async build(material: MaterialConfig | null = null): Promise<void> {
     const config = {
       useGLB: true,
-      geomConfig: useCommonStore().ITEM_GEOMETRY_CONFIG,
+      geomConfig: useCommonStore().itemGeometryConfig,
       useTexture: material != null,
       materialConfig: material != null ? material : undefined,
-      existingMaterial: this.existingMaterial,  // ПЕРЕДАЁМ ГОТОВЫЙ МАТЕРИАЛ
+      existingMaterial: this.existingMaterial, // ПЕРЕДАЁМ ГОТОВЫЙ МАТЕРИАЛ
     };
 
     try {
@@ -74,6 +74,6 @@ export class BaseItem extends THREE.Group {
     this.position.z += deltaTime * speed;
     this.cube.rotation.y += this.rotationYDiff;
     this.collider.center.copy(this.position);
-    return this.position.z > useCommonStore().ITEMS_REMOVING_ZPOS;
+    return this.position.z > useCommonStore().config.itemsRemovingZpos;
   }
 }

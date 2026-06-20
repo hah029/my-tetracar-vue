@@ -28,8 +28,8 @@ export class InteractiveItemsManager {
   private coinManager!: CoinManager;
   private boosterManager!: BoosterManager;
   private segmentQueue!: SegmentQueue;
-  private worldFrontZ = useCommonStore().BASE_SEGMENTS_ZPOS;
-  private difficultyStep = useCommonStore().BASE_SEGMENT_DIFFICULTY_STEP;
+  private worldFrontZ = useCommonStore().config.baseSegmentsZpos;
+  private difficultyStep = useCommonStore().config.baseSegmentDifficultyStep;
   private nitroEnabledTimer = 0;
   private magnetEnabledTimer = 0;
   private magnetSystem = MagnetSystem.getInstance();
@@ -127,7 +127,7 @@ export class InteractiveItemsManager {
     const MAX_SPAWNS_PER_FRAME = 1;
     let spawned = 0;
 
-    const minZ = useCommonStore().BASE_SEGMENTS_ZPOS * 1.2;
+    const minZ = useCommonStore().config.baseSegmentsZpos * 1.2;
 
     this.worldFrontZ += speed * deltaTime;
 
@@ -143,14 +143,14 @@ export class InteractiveItemsManager {
     const segment = this.segmentQueue.getNext();
     const isReversed = segment.canReversed ? Math.random() < 0.5 : false;
 
-    const commonStore = useCommonStore();
+    const cfg = useCommonStore().config;
 
     const baseMultiplier = 30;
     // const baseMultiplier = 20;
 
     const segmentRowLength =
-      commonStore.SEGMENT_ROW_BODY_LENGTH +
-      commonStore.SEGMENT_ROW_SPACING_LENGTH *
+      useCommonStore().segmentRowLengths.body +
+      useCommonStore().segmentRowLengths.spacing *
         ((baseMultiplier * speed) / usePlayerStore().maxSpeed);
 
     // console.log("segmentRowLength", segmentRowLength);
@@ -346,7 +346,7 @@ export class InteractiveItemsManager {
     const trajectory = simulateJumpTrajectory({
       startY: 0.5, // высота машины при прыжке
       jumpHeight: usePlayerStore().JUMP_HEIGHT,
-      gravity: useCommonStore().GRAVITY,
+      gravity: useCommonStore().config.physics.gravity,
       deltaTime: deltaTime,
       forwardSpeed: speed,
     });
@@ -406,7 +406,7 @@ export class InteractiveItemsManager {
 
     this.segmentQueue.reset();
 
-    this.worldFrontZ = useCommonStore().BASE_SEGMENTS_ZPOS;
+    this.worldFrontZ = useCommonStore().config.baseSegmentsZpos;
     this.nitroEnabledTimer = 0;
     this.magnetEnabledTimer = 0;
   }

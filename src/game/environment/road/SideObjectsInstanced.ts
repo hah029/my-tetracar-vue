@@ -111,7 +111,7 @@ export class SideObjectsInstanced {
       if (!pos) continue;
       pos.z += move;
 
-      if (pos.z > useCommonStore().ITEMS_REMOVING_ZPOS) {
+      if (pos.z > useCommonStore().config.itemsRemovingZpos) {
         pos.z -= this.count * this.spacing;
       }
 

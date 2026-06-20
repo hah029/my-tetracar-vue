@@ -7,7 +7,7 @@ import { CubeObstacle } from "./CubeObstacle";
 import { useCommonStore } from "@/store/commonStore";
 
 export class MovingObstacle extends CubeObstacle {
-  private speedX = useCommonStore().MOVING_OBSTACLE_SPEED;
+  private speedX = useCommonStore().config.movingObstacleSpeed;
   private direction: 1 | -1;
   private minX: number;
   private maxX: number;
@@ -30,7 +30,7 @@ export class MovingObstacle extends CubeObstacle {
       scene,
       useGLB,
       undefined,
-      useCommonStore().FULL_OBSTACLE_FORMS[0],
+      useCommonStore().fullObstacleForms[0],
       materialConfig,
     );
 
@@ -44,7 +44,7 @@ export class MovingObstacle extends CubeObstacle {
   public update(dt: number, speed: number): boolean {
     if (this.isDestroyed) return false;
     this.updateNormalCubes(dt, speed);
-    return this.position.z > useCommonStore().ITEMS_REMOVING_ZPOS;
+    return this.position.z > useCommonStore().config.itemsRemovingZpos;
   }
 
   protected updateNormalCubes(dt: number, speed: number) {

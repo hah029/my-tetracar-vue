@@ -16,15 +16,15 @@ export class Jump extends THREE.Mesh {
   constructor(
     laneIndex: number,
     scene: THREE.Scene,
-    zPos: number = useCommonStore().BASE_SEGMENTS_ZPOS,
+    zPos: number = useCommonStore().config.baseSegmentsZpos,
   ) {
     const commonStore = useCommonStore();
 
     // create rotated box
     const geometry = new THREE.BoxGeometry(
-      commonStore.JUMP_WIDTH,
-      commonStore.JUMP_HEIGHT,
-      commonStore.JUMP_DEPTH,
+      commonStore.config.jumpWidth,
+      commonStore.config.jumpHeight,
+      commonStore.config.jumpDepth,
     );
     geometry.rotateX(Math.PI / 12);
 
@@ -39,7 +39,7 @@ export class Jump extends THREE.Mesh {
 
     // Позиция по полосе через RoadManager
     const x = RoadManager.getInstance().getLanePosition(laneIndex);
-    this.position.set(x, commonStore.BASE_ITEM_YPOS, zPos);
+    this.position.set(x, commonStore.baseItemYpos, zPos);
 
     this.collider = new THREE.Box3().setFromObject(this);
     scene.add(this);
@@ -49,7 +49,7 @@ export class Jump extends THREE.Mesh {
   public update(deltaTime: number, speed: number): boolean {
     this.position.z += deltaTime * speed;
     this.collider.setFromObject(this);
-    return this.position.z > useCommonStore().ITEMS_REMOVING_ZPOS;
+    return this.position.z > useCommonStore().config.itemsRemovingZpos;
   }
 
   public getBoundingBox(): THREE.Box3 {

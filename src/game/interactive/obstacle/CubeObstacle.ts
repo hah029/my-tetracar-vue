@@ -138,7 +138,7 @@ export class CubeObstacle extends BaseObstacle {
 
     const dz = dt * speed;
     this.position.z += dz;
-    return this.position.z > useCommonStore().ITEMS_REMOVING_ZPOS;
+    return this.position.z > useCommonStore().config.itemsRemovingZpos;
   }
 
   // =========================================================

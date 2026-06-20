@@ -15,13 +15,17 @@ export const usePlayerStore = defineStore("playerStore", () => {
   const renderInstance = ref();
 
   // Вычисляемые геометрические параметры
-  const cols = computed(() => config.value.getCols(commonStore.XZ_SCALING));
-  const rows = computed(() => config.value.getRows(commonStore.XZ_SCALING));
+  const cols = computed(() =>
+    config.value.getCols(commonStore.config.xzScaling),
+  );
+  const rows = computed(() =>
+    config.value.getRows(commonStore.config.xzScaling),
+  );
   const height = computed(() =>
-    config.value.getHeight(commonStore.BASE_ITEM_YPOS),
+    config.value.getHeight(commonStore.baseItemYpos),
   );
   const glbScales = computed(() =>
-    config.value.getGlbScales(commonStore.XZ_SCALING),
+    config.value.getGlbScales(commonStore.config.xzScaling),
   );
   const carCubesConfig = computed(() =>
     config.value.getCarCubesConfig(
@@ -223,7 +227,7 @@ export const usePlayerStore = defineStore("playerStore", () => {
   function getDefaultCarConfig() {
     return {
       startLane: 2,
-      startPosition: new THREE.Vector3(0, commonStore.BASE_ITEM_YPOS, 0),
+      startPosition: new THREE.Vector3(0, commonStore.baseItemYpos, 0),
       ...getColliderOptions(),
       ...getRuleOptions(),
       ...getJumpOptions(),

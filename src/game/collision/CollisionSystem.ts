@@ -51,7 +51,7 @@ export class CollisionSystem {
     // если на кулдауне — проверяем только трамплины, препятствия не трогаем
     if (
       currentTime - this.lastCollisionTime <
-      useCommonStore().COLLISION_COOLDOWN_MS
+      useCommonStore().config.collisionCooldownMs
     ) {
       return null;
     }
@@ -62,7 +62,9 @@ export class CollisionSystem {
 
       if (collides) {
         this.lastCollisionTime = currentTime;
-        car.startShieldCooldown(useCommonStore().COLLISION_COOLDOWN_MS / 1000);
+        car.startShieldCooldown(
+          useCommonStore().config.collisionCooldownMs / 1000,
+        );
         return {
           impactSubject: obstacle,
           impactPoint: obstacle.position.clone(),
@@ -113,11 +115,12 @@ export class CollisionSystem {
       const zDiff = Math.abs(obstaclePos.z - carPos.z);
       const xDiff = Math.abs(obstaclePos.x - carPos.x);
 
-      if (zDiff > useCommonStore().DANGER_DISTANCE * 2 || xDiff > 1.0) continue;
+      if (zDiff > useCommonStore().config.dangerDistance * 2 || xDiff > 1.0)
+        continue;
 
       const dangerByZ = Math.max(
         0,
-        1 - zDiff / useCommonStore().DANGER_DISTANCE,
+        1 - zDiff / useCommonStore().config.dangerDistance,
       );
       const dangerByX = Math.max(0, 1 - xDiff / 1.0);
 

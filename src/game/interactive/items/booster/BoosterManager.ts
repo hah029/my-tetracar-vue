@@ -26,7 +26,7 @@ export class BoosterManager {
     yPos?: number,
   ) {
     let choice = makeWeightedChoice(
-      useCommonStore().BOOSTER_SPAWN_PROBABILITIES,
+      useCommonStore().config.spawnProbabilities.boosters,
     );
 
     switch (choice) {

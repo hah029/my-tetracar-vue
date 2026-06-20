@@ -3,14 +3,14 @@ import * as THREE from "three";
 
 export class Bullet extends THREE.Mesh {
   protected lane: number;
-  protected speed = useCommonStore().BULLET_DEFAULT_SPEED;
+  protected speed = useCommonStore().config.bulletDefaultSpeed;
   protected collider = new THREE.Box3();
 
   constructor(lane: number) {
     const geo = new THREE.BoxGeometry(...useCommonStore().getBulletGeometry());
 
     const mat = new THREE.MeshStandardMaterial(
-      useCommonStore().BULLET_DEFAULT_MATERIAL,
+      useCommonStore().config.bulletDefaultMaterial,
     );
 
     super(geo, mat);

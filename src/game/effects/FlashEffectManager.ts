@@ -68,8 +68,8 @@ export class FlashEffectManager {
   spawnFlash(
     type: FlashType,
     position: THREE.Vector3,
-    size = useCommonStore().FLASH_SIZE_DEFAULT,
-    duration = useCommonStore().FLASH_DURATION_DEFAULT,
+    size = useCommonStore().config.flashSizeDefault,
+    duration = useCommonStore().config.flashDurationDefault,
   ) {
     if (!this.scene) return;
 
@@ -107,8 +107,8 @@ export class FlashEffectManager {
   spawnExplosion(
     type: FlashType,
     position: THREE.Vector3,
-    size = useCommonStore().EXPLOSION_SIZE_DEFAULT,
-    duration = useCommonStore().EXPLOSION_DURATION_DEFAULT,
+    size = useCommonStore().config.explosionSizeDefault,
+    duration = useCommonStore().config.explosionDurationDefault,
   ) {
     if (!this.scene) return;
 

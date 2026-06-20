@@ -19,7 +19,7 @@ export class RoadManager {
   private roadLanes: RoadLane[] = [];
   private speedLines: SpeedLine[] = [];
   private edges: THREE.Mesh[] = [];
-  private sideObjectSpacing = useCommonStore().XZ_SCALING * 4;
+  private sideObjectSpacing = useCommonStore().config.xzScaling * 4;
   private leftSideObjects: SideObjectsInstanced | null = null;
   private rightSideObjects: SideObjectsInstanced | null = null;
   private carManager = CarManager.getInstance();
@@ -68,7 +68,7 @@ export class RoadManager {
     const leftX = left - offset;
     const rightX = right + offset;
 
-    const startZ = useCommonStore().ITEMS_REMOVING_ZPOS;
+    const startZ = useCommonStore().config.itemsRemovingZpos;
     const endZ = this.config.length;
 
     this.leftSideObjects = new SideObjectsInstanced(

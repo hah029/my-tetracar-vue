@@ -10,7 +10,7 @@ export class Energon extends CoinItem {
     laneIndex?: number,
     xPos?: number,
     yPos?: number,
-    value: number = useCommonStore().BASE_COIN_VALUE,
+    value: number = useCommonStore().config.baseCoinValue,
   ) {
     // Передаём готовый материал из пула
     super(zPos, laneIndex, xPos, yPos, null, MaterialPool.getEnergonMaterial());

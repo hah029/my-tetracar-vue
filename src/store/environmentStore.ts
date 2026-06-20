@@ -9,7 +9,9 @@ export const useEnvironmentStore = defineStore("environmentStore", () => {
   const config = ref(environmentConfig);
 
   // Вычисляем lanes с учётом текущего XZ_SCALING
-  const defaultLanes = config.value.getDefaultLanes(commonStore.XZ_SCALING);
+  const defaultLanes = config.value.getDefaultLanes(
+    commonStore.config.xzScaling,
+  );
 
   // Собираем полные конфиги дорог
   const defaultRoadConfig: RoadConfig = {
@@ -26,7 +28,7 @@ export const useEnvironmentStore = defineStore("environmentStore", () => {
   function calculateRoadWidth(lanes: number[]): number {
     const minLane = Math.min(...lanes);
     const maxLane = Math.max(...lanes);
-    return maxLane - minLane + commonStore.XZ_SCALING * 10;
+    return maxLane - minLane + commonStore.config.xzScaling * 10;
   }
 
   function getEdgePositions(lanes: number[]): {
@@ -36,8 +38,8 @@ export const useEnvironmentStore = defineStore("environmentStore", () => {
     const minLane = Math.min(...lanes);
     const maxLane = Math.max(...lanes);
     return {
-      left: minLane - commonStore.XZ_SCALING * 3.5,
-      right: maxLane + commonStore.XZ_SCALING * 3.5,
+      left: minLane - commonStore.config.xzScaling * 3.5,
+      right: maxLane + commonStore.config.xzScaling * 3.5,
     };
   }
 

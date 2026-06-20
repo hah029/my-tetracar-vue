@@ -25,7 +25,9 @@ export class CoinManager {
     yPos?: number,
     value?: number,
   ) {
-    let choice = makeWeightedChoice(useCommonStore().COIN_SPAWN_PROBABILITIES);
+    let choice = makeWeightedChoice(
+      useCommonStore().config.spawnProbabilities.coins,
+    );
 
     switch (choice) {
       case CoinTypes.Energon:

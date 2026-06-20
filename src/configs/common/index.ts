@@ -31,7 +31,7 @@ export default {
   },
 
   // Физика
-  physics: basePhysics,
+  physics: { ...basePhysics, cubeRotationSpeed: 0.03 },
 
   // Пуля
   bulletDefaultSpeed: 0.15,

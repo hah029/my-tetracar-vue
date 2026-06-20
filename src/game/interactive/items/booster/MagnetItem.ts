@@ -1,5 +1,4 @@
 // /nitro/Magnet.ts
-import { useCommonStore } from "@/store/commonStore";
 import { CoinItem } from "../coin/CoinItem";
 import { BoosterItem } from "./BoosterItem";
 import { MaterialPool } from "@/helpers/MaterialPool";
