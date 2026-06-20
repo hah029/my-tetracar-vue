@@ -1,12 +1,5 @@
 <template>
-    <!-- <div class="controls-container">
-        <div class="buttons-zone">
-            <button id="btnAction1" class="action-btn" @click="handleShoot" @touchstart.prevent="handleShoot">💥
-                Стрельба</button>
-        </div>
-        <div ref="swipeZoneRef" class="swipe-zone"></div>
-    </div> -->
-
+    <div ref="touchZoneRef" class="touch-zone"></div>
     <div class="game_hud">
 
         <div class="top_panel">
@@ -160,7 +153,8 @@ import { useMetaStore } from "@/store/metaStore";
 const game = inject<any>('game');
 
 // Реф для зоны свайпов
-const swipeZoneRef = ref<HTMLElement | null>(null);
+// const swipeZoneRef = ref<HTMLElement | null>(null);
+const touchZoneRef = ref<HTMLElement | null>(null);
 
 // Функция для обработки выстрела
 const handleShoot = () => {
@@ -171,22 +165,37 @@ const handleShoot = () => {
 
 // Регистрируем зону свайпов если доступен controls composable
 // Этот блок нужно будет адаптировать под вашу архитектуру
+// onMounted(() => {
+//     // Если game имеет controls и registerSwipeZone
+//     if (game && game.controls && typeof game.controls.registerSwipeZone === 'function') {
+//         game.controls.registerSwipeZone(swipeZoneRef.value);
+//     }
+// });
+
+// onUnmounted(() => {
+//     if (game && game.controls && typeof game.controls.cleanup === 'function') {
+//         game.controls.cleanup();
+//     }
+// });
 onMounted(() => {
-    // Если game имеет controls и registerSwipeZone
-    if (game && game.controls && typeof game.controls.registerSwipeZone === 'function') {
-        game.controls.registerSwipeZone(swipeZoneRef.value);
+    if (
+        game &&
+        game.controls &&
+        typeof game.controls.registerTouchZone === "function"
+    ) {
+        game.controls.registerTouchZone(touchZoneRef.value);
     }
 });
 
 onUnmounted(() => {
-    if (game && game.controls && typeof game.controls.cleanup === 'function') {
+    if (
+        game &&
+        game.controls &&
+        typeof game.controls.cleanup === "function"
+    ) {
         game.controls.cleanup();
     }
 });
-
-
-
-
 
 
 const gameStore = useGameState();
@@ -828,5 +837,18 @@ function setBoosterTextColor(type_: string, notif_: string = 'undefined') {
 .action-btn:active {
     transform: scale(0.94);
     background: rgba(255, 255, 255, 0.5);
+}
+
+.touch-zone {
+    position: absolute;
+    inset: 0;
+
+    z-index: 10;
+
+    pointer-events: auto;
+
+    touch-action: none;
+
+    background: transparent;
 }
 </style>
