@@ -32,13 +32,15 @@ export const useGameState = defineStore("gameState", () => {
   // ===== FSM: allowed transitions =====
   const transitions: Record<GameStates, GameStates[]> = {
     [GameStates.Preloader]: [GameStates.Menu],
-    [GameStates.Menu]: [GameStates.Countdown],
+    [GameStates.Menu]: [GameStates.LevelSelect],
+    [GameStates.LevelSelect]: [GameStates.Menu, GameStates.Countdown],
     [GameStates.Countdown]: [GameStates.Play],
     [GameStates.Play]: [GameStates.Pause, GameStates.Gameover],
     [GameStates.Pause]: [GameStates.Play, GameStates.Menu],
     [GameStates.Gameover]: [GameStates.Menu, GameStates.Countdown],
     [GameStates.QuitConfirm]: [
       GameStates.Menu,
+      GameStates.LevelSelect,
       GameStates.Play,
       GameStates.Pause,
       GameStates.Gameover,
@@ -72,6 +74,9 @@ export const useGameState = defineStore("gameState", () => {
         if (prev === GameStates.Gameover || prev === GameStates.Pause) {
           resetCallback?.();
         }
+        break;
+
+      case GameStates.LevelSelect:
         break;
 
       case GameStates.Countdown:
@@ -164,6 +169,10 @@ export const useGameState = defineStore("gameState", () => {
   // ===== PUBLIC API =====
 
   function startGame() {
+    setState(GameStates.LevelSelect);
+  }
+
+  function confirmLevelSelection() {
     setState(GameStates.Countdown);
   }
 
@@ -246,6 +255,7 @@ export const useGameState = defineStore("gameState", () => {
 
     // API
     startGame,
+    confirmLevelSelection,
     startCountdown,
     pauseGame,
     resumeGame,

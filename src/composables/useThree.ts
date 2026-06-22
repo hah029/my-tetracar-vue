@@ -8,6 +8,9 @@ import { RenderPass } from "three/examples/jsm/postprocessing/RenderPass.js";
 import { useGameState } from "@/store/gameState";
 import { useEnvironmentStore } from "@/store/environmentStore";
 import { useGraphicsStore } from "@/store/graphicsStore";
+import { useLevelStore } from "@/store/levelStore";
+import { useCameraStore } from "@/store/cameraStore";
+import { applyLevelLights } from "@/game/light/setupLight";
 import { ShaderPass } from "three/examples/jsm/postprocessing/ShaderPass.js";
 import { FXAAShader } from "three/examples/jsm/shaders/FXAAShader.js";
 import { RGBShiftShader } from "three/examples/jsm/shaders/RGBShiftShader.js";
@@ -76,46 +79,31 @@ export function useThree(container: Ref<HTMLElement | null>) {
     rgbShiftPass.enabled = vfxOn && graphics.rgbShiftEnabled;
     afterimagePass.enabled = vfxOn && graphics.afterimageEnabled;
 
-    // 5. Режим день/ночь (фон, туман, освещение)
-    updateLightingMode();
+    // 5. Настройки визуала текущего уровня
+    applyLevelVisualSettings();
 
     // 6. Принудительная перерисовка
     forceRender();
   }
 
-  // Смена дня и ночи
-  function updateLightingMode() {
+  function applyLevelVisualSettings() {
     if (!scene) return;
 
-    const cfg = useEnvironmentStore().config;
+    const environmentStore = useEnvironmentStore();
+    const renderConfig = environmentStore.currentRender;
 
-    const graphics = useGraphicsStore();
-    const isNight = graphics.nightMode;
+    scene.background = new THREE.Color(renderConfig.backgroundColor);
+    scene.fog = new THREE.Fog(
+      renderConfig.fogColor,
+      renderConfig.fogNear,
+      renderConfig.fogFar,
+    );
 
-    // Фон и туман
-    if (isNight) {
-      scene.background = new THREE.Color(cfg.nightBackground);
-      scene.fog = new THREE.Fog(cfg.nightBackground, cfg.fog.near, cfg.fog.far);
-    } else {
-      scene.background = new THREE.Color(cfg.dayBackground);
-      scene.fog = new THREE.Fog(cfg.dayBackground, cfg.fog.near, cfg.fog.far);
+    if (renderer) {
+      renderer.toneMappingExposure = renderConfig.toneMappingExposure;
     }
 
-    // Освещение (если сохранено в scene.userData.lights)
-    const lights = scene.userData.lights;
-    if (!lights) return;
-
-    if (isNight) {
-      lights.ambientLight.intensity = 0.3;
-      lights.dirLight.intensity = 2.0;
-      lights.dirLight.color.setHex("#aaccff");
-      lights.fillLight.intensity = 2.0;
-    } else {
-      lights.ambientLight.intensity = 0.1;
-      lights.dirLight.intensity = 2.0;
-      lights.dirLight.color.setHex("#ffeedd");
-      lights.fillLight.intensity = 2.5;
-    }
+    applyLevelLights(scene);
   }
 
   function setRGBShiftAmount(amount: number) {
@@ -138,7 +126,12 @@ export function useThree(container: Ref<HTMLElement | null>) {
 
     // ---- Camera ----
     const aspect = container.value.clientWidth / container.value.clientHeight;
-    camera = new THREE.PerspectiveCamera(75, aspect, 0.1, 10000000);
+    camera = new THREE.PerspectiveCamera(
+      useCameraStore().config.fov.min,
+      aspect,
+      0.1,
+      10000000,
+    );
 
     // Отладочные оси
     if (useGameState().isDebug) {
@@ -157,7 +150,8 @@ export function useThree(container: Ref<HTMLElement | null>) {
     renderer.setSize(container.value.clientWidth, container.value.clientHeight);
     renderer.outputColorSpace = THREE.SRGBColorSpace;
     renderer.toneMapping = THREE.ACESFilmicToneMapping;
-    renderer.toneMappingExposure = 0.9;
+    renderer.toneMappingExposure =
+      useEnvironmentStore().currentRender.toneMappingExposure;
     // Начальные значения (перезапишутся в applyGraphicsSettings)
     renderer.shadowMap.enabled = false;
     renderer.shadowMap.type = THREE.PCFSoftShadowMap;
@@ -207,13 +201,21 @@ export function useThree(container: Ref<HTMLElement | null>) {
         useGraphicsStore().vfxEnabled,
         useGraphicsStore().bloomEnabled,
         useGraphicsStore().fxaaEnabled,
-        useGraphicsStore().nightMode,
         useGraphicsStore().shadowEnabled,
         useGraphicsStore().shadowQuality,
         useGraphicsStore().rgbShiftEnabled,
+        useGraphicsStore().afterimageEnabled,
       ],
       () => {
         applyGraphicsSettings();
+      },
+    );
+
+    watch(
+      () => useLevelStore().currentLevelId,
+      () => {
+        applyLevelVisualSettings();
+        forceRender();
       },
     );
   }

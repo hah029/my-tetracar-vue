@@ -1,20 +1,21 @@
 import * as THREE from "three";
 import { defineStore } from "pinia";
-import { ref, computed } from "vue";
+import { computed, ref, watch } from "vue";
 import { useProgressStore } from "@/store/progressStore";
 import { useMetaStore } from "@/store/metaStore";
 import { useCommonStore } from "@/store/commonStore";
+import { useLevelStore } from "@/store/levelStore";
 import playerConfig from "@/configs/player";
+import type { GameplayConfig } from "@/levels/types";
 
 export const usePlayerStore = defineStore("playerStore", () => {
   const progressStore = useProgressStore();
   const metaStore = useMetaStore();
   const commonStore = useCommonStore();
-  const config = ref(playerConfig); // реактивный конфиг
-
+  const levelStore = useLevelStore();
+  const config = ref(playerConfig);
   const renderInstance = ref();
 
-  // Вычисляемые геометрические параметры
   const cols = computed(() =>
     config.value.getCols(commonStore.config.xzScaling),
   );
@@ -36,7 +37,7 @@ export const usePlayerStore = defineStore("playerStore", () => {
     ),
   );
 
-  // Состояние
+  const startSpeed = ref(config.value.baseSpeed);
   const speed = ref(config.value.baseSpeed);
   const baseSpeed = ref(config.value.baseSpeed);
   const maxSpeed = ref(config.value.maxSpeed);
@@ -73,7 +74,34 @@ export const usePlayerStore = defineStore("playerStore", () => {
   const eventType = ref("");
   const eventCounter = ref(0);
 
-  // Вспомогательные функции, использующие конфиг
+  function applyGameplayConfig(gameplay: GameplayConfig) {
+    startSpeed.value = gameplay.startSpeed;
+    maxSpeed.value = gameplay.maxSpeed;
+    acceleration.value = gameplay.speedIncreaseRate;
+
+    if (
+      baseSpeed.value < startSpeed.value ||
+      baseSpeed.value === config.value.baseSpeed
+    ) {
+      baseSpeed.value = startSpeed.value;
+    }
+
+    if (
+      speed.value < startSpeed.value ||
+      speed.value === config.value.baseSpeed
+    ) {
+      speed.value = startSpeed.value;
+    }
+  }
+
+  watch(
+    () => levelStore.currentGameplay,
+    (gameplay) => {
+      applyGameplayConfig(gameplay);
+    },
+    { immediate: true },
+  );
+
   function resetPlayerAchievements() {
     disableShield();
     disableNitro();
@@ -147,8 +175,8 @@ export const usePlayerStore = defineStore("playerStore", () => {
   }
 
   function resetGameData() {
-    baseSpeed.value = config.value.baseSpeed;
-    speed.value = config.value.baseSpeed;
+    baseSpeed.value = startSpeed.value;
+    speed.value = startSpeed.value;
     isNitroEnabled.value = false;
     currentLane.value = 1;
   }
@@ -167,10 +195,9 @@ export const usePlayerStore = defineStore("playerStore", () => {
     const ratio = currentSpeed / maxSpeed.value;
     if (accelerationType.value === "exponential") {
       return acceleration.value * (1 - ratio);
-    } else {
-      const logFactor = maxSpeed.value / (currentSpeed + 1);
-      return acceleration.value * logFactor * (1 - ratio);
     }
+    const logFactor = maxSpeed.value / (currentSpeed + 1);
+    return acceleration.value * logFactor * (1 - ratio);
   }
 
   function setAccelerationType(type: "exponential" | "logarithmic") {
@@ -235,16 +262,11 @@ export const usePlayerStore = defineStore("playerStore", () => {
   }
 
   return {
-    // конфиг (при необходимости)
     config,
-
-    // вычисляемые конфигурации
     CAR_CUBES_CONFIG: carCubesConfig,
     CAR_MATERIAL_CONFIG: config.value.carMaterialConfig,
     CAR_MATERIAL_CONFIG_EXTRA: config.value.carMaterialConfigExtra,
     CAR_EMISSION_CONFIG_EXTRA: config.value.carEmissionConfigExtra,
-
-    // константы для совместимости (можно оставить для удобства)
     NITRO_MULTIPLIER: config.value.nitro.multiplier,
     BASE_NITRO_TIMER: config.value.nitro.baseTimer,
     BASE_MAGNET_TIMER: config.value.magnet.baseTimer,
@@ -254,9 +276,8 @@ export const usePlayerStore = defineStore("playerStore", () => {
     DEFAULT_EMISSION_INTENSITY: config.value.defaultEmissionIntensity,
     DEFAULT_BLINK_DURATION: config.value.defaultBlinkDuration,
     DEFAULT_BLINK_SPEED: config.value.defaultBlinkSpeed,
-
-    // состояние
     speed,
+    startSpeed,
     baseSpeed,
     isNitroEnabled,
     isShieldEnabled,
@@ -283,8 +304,6 @@ export const usePlayerStore = defineStore("playerStore", () => {
     magnetMaxTargets,
     magnetTypes,
     forceJump,
-
-    // методы
     resetPlayerAchievements,
     enableNitro,
     disableNitro,
@@ -294,6 +313,7 @@ export const usePlayerStore = defineStore("playerStore", () => {
     enableMagnet,
     disableMagnet,
     resetGameData,
+    applyGameplayConfig,
     getCurrentSpeed,
     getCurrentSpeedInCubesPerHour,
     getCurrentAcceleration,
@@ -306,7 +326,6 @@ export const usePlayerStore = defineStore("playerStore", () => {
     makeEventHappened,
     addNewMsg,
     getDefaultCarConfig,
-
     renderInstance,
   };
 });

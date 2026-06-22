@@ -108,6 +108,7 @@ import { useControls } from "./composables/useControls";
 import { GameLoop } from "./composables/useAnimate";
 // components
 import MainMenu from "./components/MainMenu.vue";
+import LevelSelect from "./components/LevelSelect.vue";
 import Preloader from "./components/Preloader.vue";
 import PauseMenu from "./components/PauseMenu.vue";
 import HUD from "./components/hud/HUD.vue";
@@ -147,6 +148,8 @@ const getUIComponent = computed(() => {
             return Preloader;
         case GameStates.Menu:
             return MainMenu;
+        case GameStates.LevelSelect:
+            return LevelSelect;
         case GameStates.Pause:
             return PauseMenu;
         case GameStates.Gameover:

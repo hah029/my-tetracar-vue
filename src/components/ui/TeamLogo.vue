@@ -37,6 +37,7 @@
 
                 // ===== MENU =====
                 case GameStates.Menu:
+                case GameStates.LevelSelect:
                     setTimeout(() => {
                         isRightPanelShown.value = true;                   
                     }, 400);

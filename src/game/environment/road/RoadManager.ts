@@ -100,13 +100,27 @@ export class RoadManager {
     if (!this.road) return;
 
     const { left, right } = this.road.getEdgePositions();
-    const height = 10;
+    const environmentStore = useEnvironmentStore();
+    const edgeConfig = environmentStore.currentRoad.edges;
+    const color = environmentStore.colorToNumber(edgeConfig.color);
 
-    const leftEdge = new RoadEdge(left, height, this.config.length);
+    const leftEdge = new RoadEdge(
+      left,
+      edgeConfig.height,
+      this.config.length,
+      color,
+      edgeConfig.opacity,
+    );
     this.scene.add(leftEdge);
     this.edges.push(leftEdge);
 
-    const rightEdge = new RoadEdge(right, height, this.config.length);
+    const rightEdge = new RoadEdge(
+      right,
+      edgeConfig.height,
+      this.config.length,
+      color,
+      edgeConfig.opacity,
+    );
     this.scene.add(rightEdge);
     this.edges.push(rightEdge);
   }

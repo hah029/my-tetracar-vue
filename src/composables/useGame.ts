@@ -1,6 +1,6 @@
 // src/composables/useGame.ts
 import * as THREE from "three";
-import { ref } from "vue";
+import { ref, watch } from "vue";
 // managers
 import { type CollisionResult } from "@/game/collision/CollisionSystem";
 import { type FlashType } from "@/game/effects/FlashEffectManager";
@@ -18,6 +18,7 @@ import { UpdateMode } from "@/game/core/UpdateMode";
 // stores
 import { useProgressStore } from "@/store/progressStore";
 import { usePlayerStore } from "@/store/playerStore";
+import { useLevelStore } from "@/store/levelStore";
 // objects
 import type { CarRef } from "@/game/car";
 import { CameraSystem } from "@/game/camera/CameraSystem";
@@ -38,6 +39,7 @@ import { useEnvironmentStore } from "@/store/environmentStore";
 export function useGame() {
   const playerStore = usePlayerStore();
   const progressStore = useProgressStore();
+  const levelStore = useLevelStore();
   const car = ref<CarRef>({
     mesh: new THREE.Group(),
     targetX: 0,
@@ -79,7 +81,7 @@ export function useGame() {
 
     // === Инициализация менеджеров ===
     roadManager = RoadManager.getInstance();
-    roadManager.initialize(useEnvironmentStore().defaultRoadConfig, scene);
+    roadManager.initialize(useEnvironmentStore().getLevelRoadConfig(), scene);
 
     cityManager = CityManager.getInstance();
     cityManager.initialize(scene);
@@ -108,6 +110,14 @@ export function useGame() {
 
     // === Создание дороги и машины ===
     roadManager.createRoad();
+    watch(
+      () => levelStore.currentLevelId,
+      () => {
+        if (!roadManager) return;
+        roadManager.updateConfig(useEnvironmentStore().getLevelRoadConfig());
+      },
+    );
+
     const newCar = carManager.createCar();
     car.value.mesh = newCar;
     car.value.targetX = 0;

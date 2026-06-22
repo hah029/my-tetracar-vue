@@ -100,8 +100,8 @@ export function GameLoop(
       let currentSpeed = playerStore.getCurrentSpeed();
 
       if (!isGameOver) {
-        if (playerStore.baseSpeed < playerStore.BASE_SPEED)
-          playerStore.baseSpeed = playerStore.BASE_SPEED;
+        if (playerStore.baseSpeed < playerStore.startSpeed)
+          playerStore.baseSpeed = playerStore.startSpeed;
         playerStore.baseSpeed += playerStore.getCurrentAcceleration();
         if (playerStore.baseSpeed > playerStore.maxSpeed)
           playerStore.baseSpeed = playerStore.maxSpeed;

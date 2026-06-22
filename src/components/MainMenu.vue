@@ -14,23 +14,16 @@
         <!-- LEADERBOARDS -->
         <LeaderBoardsRoot v-if="gameStore.activeOverlay === 'leaderBoards'" />
 
-        <!-- LEADERBOARDS -->
+        <!-- SHOP -->
         <ShopRoot v-if="gameStore.activeOverlay === 'shop'" />
-
     </div>
 </template>
-
 
 <style lang="scss" scoped>
 @use "@/styles/menu.scss";
 @use "@/styles/animations.scss";
 
 .group_correction {
-    // position: static !important;
-
-    // &>*+* {
-    //     margin-top: 1.56rem; // 25px - row-gap (между кнопками)
-    // }
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -40,7 +33,6 @@
     left: 0;
     width: 100%;
     height: 100%;
-
     gap: 2rem;
 }
 
@@ -53,20 +45,15 @@
 import { watch, ref, computed, onMounted } from "vue";
 import { useGameState } from "@/store/gameState";
 import { GameStates } from "@/game/core/GameState";
-import { createNewText } from '@/helpers/functions';
+import { createNewText } from "@/helpers/functions";
 import SettingsRoot from "./settings/SettingsRoot.vue";
 import LeaderBoardsRoot from "./leaderboards/LeaderBoardsRoot.vue";
 import ShopRoot from "./shop/ShopRoot.vue";
-
 import { useProgressStore } from "@/store/progressStore";
 
 const progressStore = useProgressStore();
-
 const foo = createNewText();
-
-// подключаем store
 const gameStore = useGameState();
-
 const isMainMenuEnabled = ref(false);
 
 const menuButtons = computed(() => [
@@ -77,34 +64,36 @@ const menuButtons = computed(() => [
 ]);
 
 function startGame() {
-    gameStore.setState(GameStates.Countdown);
-};
+    gameStore.setState(GameStates.LevelSelect);
+}
 
 function goToShop() {
     isMainMenuEnabled.value = false;
     setTimeout(() => {
         gameStore.openShop();
     }, 300);
-};
+}
 
 function goToSettings() {
     isMainMenuEnabled.value = false;
     setTimeout(() => {
         gameStore.openSettings();
     }, 300);
-};
+}
 
 function goToLeaderBoards() {
     isMainMenuEnabled.value = false;
     setTimeout(() => {
         gameStore.openLeaderBoards();
     }, 300);
-};
+}
 
 watch(
     () => gameStore.activeOverlay,
     (newState) => {
-        ['settings', 'leaderBoards', 'shop'].includes(newState as string) ? "" : isMainMenuEnabled.value = true;
+        if (!["settings", "leaderBoards", "shop"].includes(newState as string)) {
+            isMainMenuEnabled.value = true;
+        }
     },
 );
 

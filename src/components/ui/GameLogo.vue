@@ -30,90 +30,74 @@
     </Transition>
 </template>
 
-
 <script setup lang="ts">
 import { ref, watch, computed } from "vue";
 import { useGameState } from "@/store/gameState";
 import { GameStates } from "@/game/core/GameState";
 
-// подключаем store
 const gameState = useGameState();
 
-// ===== UI STATE =====
 const isWholeLogoShown = ref(true);
 const isLettersShown = ref(false);
 const isLettersMovedToTop = ref(false);
 const isLinesShown = ref(false);
 
-// ===== STATE MACHINE =====
-// (сценарии работы с логотипом)
 watch(
     () => gameState.currentState,
-    (state, _) => {
+    (state) => {
         switch (state) {
-
-            // ===== PRELOADER =====
             case GameStates.Preloader:
-                // выводим логотип при загрузке игры
                 setTimeout(() => {
                     isLettersShown.value = true;
                 }, 200);
                 setTimeout(() => {
-                    isLinesShown.value = true;  // вводим мерцанием левую (а потом правую) часть неоновых линий
+                    isLinesShown.value = true;
                 }, 1000);
                 break;
 
-            // ===== MENU =====
             case GameStates.Menu:
+            case GameStates.LevelSelect:
                 if (gameState.activeOverlay !== null) {
                     isWholeLogoShown.value = false;
                     break;
                 }
                 isWholeLogoShown.value = true;
+                isLettersMovedToTop.value = true;
+                isLettersShown.value = true;
+                isLinesShown.value = true;
                 break;
 
-            // ===== START GAME =====
             case GameStates.Countdown:
             case GameStates.Play:
-                // стартуем гонку
                 isWholeLogoShown.value = false;
                 break;
 
-            // ===== PAUSE =====
             case GameStates.Pause:
-                isWholeLogoShown.value = true;
-                isLettersShown.value = false;
-                break;
-
-            // // ===== GAME OVER =====
             case GameStates.Gameover:
                 isWholeLogoShown.value = true;
                 isLettersShown.value = false;
                 break;
         }
     },
-    { immediate: true }
+    { immediate: true },
 );
 
-// смещаем логотип при переходе из Прелоадера в Главное меню
 const logoMoveClass = computed(() => {
-    return gameState.currentState == 'menu' && isLettersMovedToTop.value
+    return (gameState.currentState === GameStates.Menu || gameState.currentState === GameStates.LevelSelect)
+        && isLettersMovedToTop.value
         ? "logo_mooving"
         : "";
 });
 
-// определяем местоположение логотипа (относ. верхн. границы экрана)
 const logoStyle = computed(() => {
-    let myPos = gameState.isPreloaderShown ? 18.47 : 13.04;
+    const myPos = gameState.isPreloaderShown ? 18.47 : 13.04;
     return { top: `${myPos}%` };
 });
 
-// активируем анимацию мерцания ламп логотипа в зависимости от сценария
 const neonClass = computed(() => {
     return gameState.isPreloaderShown ? "neon_glow" : "";
 });
 
-// динамические стили темного фона на заднем плане (фон поднимается вверх)
 const backgroundClass = computed(() => {
     return gameState.isPreloaderShown
         ? "fading_background"
@@ -121,12 +105,10 @@ const backgroundClass = computed(() => {
 });
 </script>
 
-
 <style lang='scss' scoped>
 @use "@/styles/menu.scss" as *;
 @use "@/styles/animations.scss";
 
-// #region - фон
 .game_logo__root {
     position: absolute;
     inset: 0;
@@ -154,7 +136,7 @@ const backgroundClass = computed(() => {
 
 .fading_background {
     top: 0%;
-    animation: fading_keys 3s forwards; // (лежит в animations.scss)
+    animation: fading_keys 3s forwards;
     animation-delay: 3.2s;
 }
 
@@ -167,9 +149,6 @@ const backgroundClass = computed(() => {
     z-index: z("gradient");
 }
 
-// #endregion
-
-// #region - буквенный логотип
 .logo_group {
     position: absolute;
     width: min(81.25%, 1200px);
@@ -179,11 +158,6 @@ const backgroundClass = computed(() => {
     align-items: center;
     justify-content: space-between;
     z-index: z("logo");
-
-    // position: relative;
-    // width: 100%;
-    // aspect-ratio: 3 / 1; // подгони под свой SVG
-    // width: min(80vw, 700px); // 🔥 ограничение ширины
 }
 
 .logo_left {
@@ -206,6 +180,4 @@ const backgroundClass = computed(() => {
 .neon_pink {
     filter: drop-shadow(0 0 20px rgba(237, 37, 255, 1));
 }
-
-// #endregion
 </style>

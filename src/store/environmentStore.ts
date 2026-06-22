@@ -1,30 +1,57 @@
 import { defineStore } from "pinia";
-import { ref } from "vue";
+import { computed, ref } from "vue";
 import { useCommonStore } from "./commonStore";
+import { useLevelStore } from "@/store/levelStore";
 import type { RoadConfig } from "@/game/environment/road";
 import environmentConfig from "@/configs/environment";
 
 export const useEnvironmentStore = defineStore("environmentStore", () => {
   const commonStore = useCommonStore();
+  const levelStore = useLevelStore();
   const config = ref(environmentConfig);
 
-  // Вычисляем lanes с учётом текущего XZ_SCALING
-  const defaultLanes = config.value.getDefaultLanes(
-    commonStore.config.xzScaling,
+  const defaultLanes = computed(() =>
+    config.value.getDefaultLanes(commonStore.config.xzScaling),
   );
 
-  // Собираем полные конфиги дорог
-  const defaultRoadConfig: RoadConfig = {
+  const defaultRoadConfig = computed<RoadConfig>(() => ({
     ...config.value.defaultRoadBase,
-    lanes: defaultLanes,
-  };
+    lanes: defaultLanes.value,
+  }));
 
-  const neonRoadConfig: RoadConfig = {
-    ...defaultRoadConfig,
+  const neonRoadConfig = computed<RoadConfig>(() => ({
+    ...defaultRoadConfig.value,
     ...config.value.neonRoadExtras,
-  };
+  }));
 
-  // Вспомогательные функции (зависят от XZ_SCALING)
+  const currentRender = computed(() => levelStore.currentLevel.visual.render);
+  const currentLighting = computed(
+    () => levelStore.currentLevel.visual.lighting,
+  );
+  const currentRoad = computed(() => levelStore.currentLevel.environment.road);
+
+  function colorToNumber(color: string): number {
+    return Number.parseInt(color.replace("#", ""), 16);
+  }
+
+  function getLevelRoadConfig(): RoadConfig {
+    const road = currentRoad.value;
+    const lanes =
+      "lanes" in road && Array.isArray(road.lanes)
+        ? (road.lanes as number[])
+        : defaultLanes.value;
+
+    return {
+      ...neonRoadConfig.value,
+      lanes,
+      length: road.length,
+      color: colorToNumber(road.color),
+      emissive: colorToNumber(road.emissiveColor),
+      emissiveIntensity: road.emissiveIntensity,
+      opacity: road.opacity,
+    };
+  }
+
   function calculateRoadWidth(lanes: number[]): number {
     const minLane = Math.min(...lanes);
     const maxLane = Math.max(...lanes);
@@ -44,10 +71,15 @@ export const useEnvironmentStore = defineStore("environmentStore", () => {
   }
 
   return {
-    config, // единый реактивный конфиг
+    config,
     defaultRoadConfig,
     neonRoadConfig,
+    currentRender,
+    currentLighting,
+    currentRoad,
     calculateRoadWidth,
     getEdgePositions,
+    colorToNumber,
+    getLevelRoadConfig,
   };
 });
