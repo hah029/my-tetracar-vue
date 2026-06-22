@@ -174,16 +174,7 @@ export class Car extends THREE.Group {
     this.state.cubes = this.cubes;
     this.visualState = new CarVisualState(this.cubes);
 
-    this.visualState.preloadTextures(
-      usePlayerStore().CAR_MATERIAL_CONFIG_EXTRA,
-    );
-    Object.entries(usePlayerStore().CAR_EMISSION_CONFIG_EXTRA).forEach(
-      ([k, v]) => {
-        if (k !== "default") {
-          this.visualState?.setEmissiveColor(k as any, v);
-        }
-      },
-    );
+    this.applyVisualConfig();
 
     // Добавляем камеру обратно
     this.add(cameraTarget);
@@ -279,6 +270,19 @@ export class Car extends THREE.Group {
       this.remove(cube);
     });
     this.cubes = [];
+  }
+
+  public applyVisualConfig(): void {
+    if (!this.visualState) return;
+
+    const playerStore = usePlayerStore();
+    this.visualState.preloadTextures(playerStore.CAR_MATERIAL_CONFIG_EXTRA);
+
+    Object.entries(playerStore.CAR_EMISSION_CONFIG_EXTRA).forEach(([k, v]) => {
+      this.visualState?.setEmissiveColor(k as CarVisualEffect, v);
+    });
+
+    this.visualState.refresh();
   }
 
   // Геттеры

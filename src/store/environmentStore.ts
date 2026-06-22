@@ -29,6 +29,9 @@ export const useEnvironmentStore = defineStore("environmentStore", () => {
     () => levelStore.currentLevel.visual.lighting,
   );
   const currentRoad = computed(() => levelStore.currentLevel.environment.road);
+  const currentScenery = computed(
+    () => levelStore.currentLevel.environment.scenery,
+  );
 
   function colorToNumber(color: string): number {
     return Number.parseInt(color.replace("#", ""), 16);
@@ -40,6 +43,21 @@ export const useEnvironmentStore = defineStore("environmentStore", () => {
       "lanes" in road && Array.isArray(road.lanes)
         ? (road.lanes as number[])
         : defaultLanes.value;
+    const sideObjects = road.sideObjects
+      ? {
+          enabled: road.sideObjects.enabled,
+          color: colorToNumber(road.sideObjects.color),
+          emissive: road.sideObjects.emissiveColor
+            ? colorToNumber(road.sideObjects.emissiveColor)
+            : undefined,
+          emissiveIntensity: road.sideObjects.emissiveIntensity,
+          opacity: road.sideObjects.opacity,
+          spacing: road.sideObjects.spacing,
+          offset: road.sideObjects.offset,
+          y: road.sideObjects.y,
+          scale: road.sideObjects.scale,
+        }
+      : undefined;
 
     return {
       ...neonRoadConfig.value,
@@ -47,8 +65,10 @@ export const useEnvironmentStore = defineStore("environmentStore", () => {
       length: road.length,
       color: colorToNumber(road.color),
       emissive: colorToNumber(road.emissiveColor),
+      laneColor: colorToNumber(road.laneColor),
       emissiveIntensity: road.emissiveIntensity,
       opacity: road.opacity,
+      sideObjects,
     };
   }
 
@@ -77,6 +97,7 @@ export const useEnvironmentStore = defineStore("environmentStore", () => {
     currentRender,
     currentLighting,
     currentRoad,
+    currentScenery,
     calculateRoadWidth,
     getEdgePositions,
     colorToNumber,

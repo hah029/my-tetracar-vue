@@ -77,6 +77,10 @@ export class CarVisualState {
     this.emissiveColors.set(effect, new THREE.Color(color));
   }
 
+  refresh() {
+    this.updateVisual();
+  }
+
   enable(effect: CarVisualEffect) {
     if (this.activeEffects.has(effect)) {
       console.log("[DEBUG CarVisualState.enable] already active:", effect);

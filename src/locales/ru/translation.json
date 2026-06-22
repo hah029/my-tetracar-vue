@@ -119,7 +119,6 @@
             "rgbShiftEnabled": "RGB смещение",
             "shadowEnabled": "тени",
             "shadowQuality": "качество теней",
-            "nightMode": "ночь",
             "musicEnabled": "музыка",
             "sfxEnabled": "звуки",
             "volumeLevel": "громкость"

@@ -13,11 +13,13 @@ import { SegmentQueue } from "./segments/SegmentQueue";
 import { usePlayerStore } from "@/store/playerStore";
 import { useProgressStore } from "@/store/progressStore";
 import { useCommonStore } from "@/store/commonStore";
+import { useLevelStore } from "@/store/levelStore";
 import type { BaseItem } from "./items/BaseItem";
 import type { BaseObstacle } from "./obstacle/BaseObstacle";
 import { MagnetSystem } from "../magnet/MagnetSystem";
 import { DestructionManager } from "./DestructionManager";
 import { simulateJumpTrajectory } from "../physics/JumpSimulator";
+import { resolveLanePatternBySpawnRules } from "@/levels/spawnRules";
 
 export class InteractiveItemsManager {
   private static instance: InteractiveItemsManager | null = null;
@@ -142,6 +144,7 @@ export class InteractiveItemsManager {
   public spawnSegment(dt: number, speed: number, baseZ: number) {
     const segment = this.segmentQueue.getNext();
     const isReversed = segment.canReversed ? Math.random() < 0.5 : false;
+    const spawnRules = useLevelStore().getCurrentSpawnRules();
 
     const cfg = useCommonStore().config;
 
@@ -163,7 +166,12 @@ export class InteractiveItemsManager {
         row_ = row_.reverse();
       }
 
-      row_.forEach((value, lane) => {
+      row_.forEach((rawValue, lane) => {
+        const value = resolveLanePatternBySpawnRules(
+          rawValue,
+          spawnRules,
+        );
+
         switch (value) {
           case LanePattern.Obstacle:
             this.obstacleManager.spawnStaticObstacle(lane, z, 2);
@@ -196,7 +204,7 @@ export class InteractiveItemsManager {
             this.spawnJumpWithCoins(lane, dt, speed, z);
             break;
           case LanePattern.Coin:
-            this.spawnSingleCoin(z, lane);
+            this.spawnSingleCoin(z, lane, undefined, spawnRules.coinTypes);
             break;
           case LanePattern.Energon:
             this.spawnEnergonCoin(z, lane);
@@ -205,7 +213,7 @@ export class InteractiveItemsManager {
             this.spawnCoinLine(z, lane);
             break;
           case LanePattern.Booster:
-            this.spawnBooster(z, lane);
+            this.spawnBooster(z, lane, undefined, spawnRules.boosterTypes);
             break;
           case LanePattern.Nitro:
             this.spawnNitroBooster(z, lane);
@@ -233,11 +241,19 @@ export class InteractiveItemsManager {
   }
 
   // спавн объектов
-  public spawnSingleCoin(baseZ: number, laneIndex?: number, posX?: number) {
+  public spawnSingleCoin(
+    baseZ: number,
+    laneIndex?: number,
+    posX?: number,
+    allowedTypes?: ("golden" | "energon")[],
+  ) {
     const item = this.coinManager.spawnRandom(
       baseZ,
       laneIndex,
       posX,
+      undefined,
+      undefined,
+      allowedTypes,
     ) as BaseItem;
     if (item) {
       this.addItem(item);
@@ -289,8 +305,19 @@ export class InteractiveItemsManager {
     }
   }
 
-  public spawnBooster(baseZ: number, laneIndex?: number, xPos?: number) {
-    const item = this.boosterManager.spawnRandom(baseZ, laneIndex, xPos);
+  public spawnBooster(
+    baseZ: number,
+    laneIndex?: number,
+    xPos?: number,
+    allowedTypes?: ("nitro" | "shield" | "magnet" | "bullet")[],
+  ) {
+    const item = this.boosterManager.spawnRandom(
+      baseZ,
+      laneIndex,
+      xPos,
+      undefined,
+      allowedTypes,
+    );
     if (item) {
       this.addItem(item);
       return item;

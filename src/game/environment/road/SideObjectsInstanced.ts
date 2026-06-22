@@ -1,6 +1,7 @@
 import * as THREE from "three";
 import { useCommonStore } from "@/store/commonStore";
 import { atlas } from "@/assets/textures/TextureAtlas";
+import type { RoadSideObjectsConfig } from "./types";
 // /game/road/SideObjectsInstanced.ts
 // import { loadCubeModel } from "@/game/cube/loadCube";
 
@@ -12,24 +13,29 @@ export class SideObjectsInstanced {
   private count: number;
   private scene: THREE.Scene;
   private x: number;
+  private config: RoadSideObjectsConfig;
+  private disposed = false;
 
   constructor(
     scene: THREE.Scene,
     x: number,
-    spacing: number,
     startZ: number,
     endZ: number,
+    config: RoadSideObjectsConfig,
   ) {
     this.scene = scene;
     this.x = x;
-    this.spacing = spacing;
-    this.count = Math.ceil((endZ - startZ) / spacing) + 2;
+    this.config = config;
+    this.spacing = config.spacing;
+    this.count = Math.ceil((endZ - startZ) / this.spacing) + 2;
     this.init(startZ).catch((e) =>
       console.error("[SideObjectsInstanced] init error", e),
     );
   }
 
   private async init(startZ: number) {
+    if (this.disposed) return;
+
     // GEOMETRY
     const geometry = new THREE.BoxGeometry(1, 1, 1);
 
@@ -75,8 +81,18 @@ export class SideObjectsInstanced {
     // MATERIAL
     const material = new THREE.MeshStandardMaterial({
       map: atlasTexture,
-      color: 0xffffff,
+      color: this.config.color,
+      emissive: this.config.emissive ?? 0x000000,
+      emissiveIntensity: this.config.emissiveIntensity ?? 0,
+      transparent: (this.config.opacity ?? 1) < 1,
+      opacity: this.config.opacity ?? 1,
     });
+
+    if (this.disposed) {
+      geometry.dispose();
+      material.dispose();
+      return;
+    }
 
     // INSTANCED MESH
     this.mesh = new THREE.InstancedMesh(geometry, material, this.count);
@@ -85,12 +101,12 @@ export class SideObjectsInstanced {
     this.scene.add(this.mesh);
 
     // SCALE
-    const scale = new THREE.Vector3(1.75, 1.4, 1.75);
+    const scale = new THREE.Vector3(...this.config.scale);
 
     // CREATE INSTANCES
     for (let i = 0; i < this.count; i++) {
       const z = startZ - i * this.spacing;
-      const pos = new THREE.Vector3(this.x, 0.4, z);
+      const pos = new THREE.Vector3(this.x, this.config.y, z);
       this.positions.push(pos);
       this.dummy.position.copy(pos);
       this.dummy.scale.copy(scale);
@@ -123,6 +139,7 @@ export class SideObjectsInstanced {
   }
 
   dispose() {
+    this.disposed = true;
     if (!this.mesh) return;
 
     this.scene.remove(this.mesh);

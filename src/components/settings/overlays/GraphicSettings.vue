@@ -76,18 +76,6 @@
                 {{ shadowQualityLabel }}
             </button>
         </div>
-
-        <!-- Ночной режим -->
-        <div v-if="rowView[7]" class="settings_row">
-            <span>{{ foo.makeText("settings.vfxAndMusic.nightMode", "Ночной режим") }}</span>
-            <button class="toggle_btn" :class="{ 'toggle_btn--active': graphicsStore.nightMode }"
-                @click="toggleNightMode">
-                {{ graphicsStore.nightMode ?
-                    foo.makeText("settings.toggleOn", "empty") :
-                    foo.makeText("settings.toggleOff", "empty")
-                }}
-            </button>
-        </div>
     </TransitionGroup>
 </template>
 
@@ -98,7 +86,7 @@ import { createNewText } from '@/helpers/functions';
 import { useGraphicsStore } from "@/store/graphicsStore";
 
 const graphicsStore = useGraphicsStore();
-const rowView = ref(Array(9).fill(false)); // 9 строк
+const rowView = ref(Array(7).fill(false));
 
 const foo = createNewText();
 
@@ -128,9 +116,6 @@ function toggleShadows() {
 }
 function cycleShadowQuality() {
     graphicsStore.cycleShadowQuality();
-}
-function toggleNightMode() {
-    graphicsStore.toggleNightMode();
 }
 function toggleRGBShift() {
     graphicsStore.toggleRGBShift();

@@ -119,7 +119,6 @@
             "rgbShiftEnabled": "RGB shift",
             "shadowEnabled": "shadows",
             "shadowQuality": "shadows quality",
-            "nightMode": "night",
             "musicEnabled": "music",
             "sfxEnabled": "sounds",
             "volumeLevel": "volume"

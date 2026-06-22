@@ -5,9 +5,6 @@ import { TEXTURES } from "@/assets/textures";
 export default {
   axesSize: 5,
 
-  nightBackground: 0x222222,
-  dayBackground: 0xdddddd,
-
   fog: {
     near: 0.01,
     far: 200,

@@ -103,6 +103,12 @@ export function useThree(container: Ref<HTMLElement | null>) {
       renderer.toneMappingExposure = renderConfig.toneMappingExposure;
     }
 
+    if (bloomPass) {
+      bloomPass.strength = renderConfig.bloomStrength ?? 1.0;
+      bloomPass.radius = renderConfig.bloomRadius ?? 0;
+      bloomPass.threshold = renderConfig.bloomThreshold ?? 1.2;
+    }
+
     applyLevelLights(scene);
   }
 

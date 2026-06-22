@@ -69,6 +69,8 @@ export class RoadLane extends THREE.Mesh {
   }
 
   update(deltaTime: number) {
-    this.material.uniforms.uTime.value += deltaTime;
+    if (this.material instanceof THREE.ShaderMaterial) {
+      this.material.uniforms.uTime.value += deltaTime;
+    }
   }
 }

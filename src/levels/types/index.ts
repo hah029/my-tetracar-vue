@@ -109,6 +109,21 @@ export interface RenderConfig {
    * Экспозиция tone mapping
    */
   toneMappingExposure: number;
+
+  /**
+   * Сила bloom-постобработки.
+   */
+  bloomStrength?: number;
+
+  /**
+   * Радиус bloom-постобработки.
+   */
+  bloomRadius?: number;
+
+  /**
+   * Порог bloom-постобработки.
+   */
+  bloomThreshold?: number;
 }
 
 export interface LightingConfig {
@@ -128,6 +143,11 @@ export interface LightingConfig {
   directionalLightColor: string;
 
   /**
+   * Позиция directional света
+   */
+  directionalLightPosition?: Vector3Tuple;
+
+  /**
    * Интенсивность directional света
    */
   directionalLightIntensity: number;
@@ -136,6 +156,11 @@ export interface LightingConfig {
    * Цвет заполняющего света
    */
   fillLightColor: string;
+
+  /**
+   * Позиция заполняющего света
+   */
+  fillLightPosition?: Vector3Tuple;
 
   /**
    * Интенсивность заполняющего света
@@ -148,10 +173,17 @@ export interface LightingConfig {
   backAccentLightColor: string;
 
   /**
+   * Позиция акцентного света
+   */
+  backAccentLightPosition?: Vector3Tuple;
+
+  /**
    * Интенсивность акцентного света
    */
   backAccentLightIntensity: number;
 }
+
+export type Vector3Tuple = [number, number, number];
 
 export interface EnvironmentConfig {
   /**
@@ -205,12 +237,29 @@ export interface RoadEnvironmentConfig {
    * Бортики дороги.
    */
   edges: RoadEdgeConfig;
+
+  /**
+   * Боковые объекты вдоль дороги.
+   */
+  sideObjects?: RoadSideObjectsConfig;
 }
 
 export interface RoadEdgeConfig {
   color: string;
   height: number;
   opacity: number;
+}
+
+export interface RoadSideObjectsConfig {
+  enabled: boolean;
+  color: string;
+  emissiveColor?: string;
+  emissiveIntensity?: number;
+  opacity?: number;
+  spacing: number;
+  offset: number;
+  y: number;
+  scale: [number, number, number];
 }
 
 export interface SceneryConfig {
@@ -228,18 +277,42 @@ export interface SceneryConfig {
    * Дополнительные декоративные объекты
    */
   decorations: string[];
+
+  /**
+   * Слои instanced-окружения. Сейчас используется для нижнего города.
+   */
+  layers?: SceneryLayerConfig[];
+}
+
+export interface SceneryLayerConfig {
+  type: "city";
+  xMin: number;
+  xMax: number;
+  zStart: number;
+  zEnd: number;
+  spacing: number;
+  speedFactor: number;
+  minHeight: number;
+  maxHeight: number;
+  minWidth: number;
+  maxWidth: number;
+  y: number;
+  color: string;
+  emissiveColor?: string;
+  emissiveIntensity?: number;
+  opacity?: number;
 }
 
 export interface InteractiveConfig {
   /**
    * Набор монет/валюты.
    */
-  coinSets: string[];
+  coinSets: CoinSetId[];
 
   /**
    * Набор бустеров.
    */
-  boosterSets: string[];
+  boosterSets: BoosterSetId[];
 
   /**
    * Набор препятствий.
@@ -264,6 +337,15 @@ export interface InteractiveConfig {
   obstacleDensity: number;
 }
 
+export type CoinSetId = "default" | "golden" | "energon";
+
+export type BoosterSetId =
+  | "default"
+  | "nitro"
+  | "shield"
+  | "magnet"
+  | "bullet";
+
 export interface PlayerConfig {
   /**
    * Набор визуала машинки.
@@ -274,6 +356,31 @@ export interface PlayerConfig {
    * Набор эффектов игрока: нитро, щит, магнит и т.д.
    */
   effectSet: string;
+
+  /**
+   * Визуальные параметры машинки и ее эффектов.
+   */
+  visual?: PlayerVisualConfig;
+}
+
+export interface PlayerVisualConfig {
+  defaultEmissionIntensity?: number;
+  defaultBlinkDuration?: number;
+  defaultBlinkSpeed?: number;
+  emissiveColors?: Partial<Record<PlayerVisualEffect, string>>;
+  nitroTrail?: NitroTrailVisualConfig;
+}
+
+export type PlayerVisualEffect = "default" | "nitro" | "shield" | "damage";
+
+export interface NitroTrailVisualConfig {
+  color: string;
+  width: number;
+  height: number;
+  offsetX: number;
+  offsetY: number;
+  offsetZ: number;
+  timeScale: number;
 }
 
 export interface GameplayConfig {

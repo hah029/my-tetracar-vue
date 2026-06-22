@@ -9,7 +9,6 @@ export const useGraphicsStore = defineStore("graphics", () => {
   const bloomEnabled = ref(false); // по умолчанию выключен
   const afterimageEnabled = ref(false); // по умолчанию выключен
   const fxaaEnabled = ref(true); // по умолчанию включен
-  const nightMode = ref(true); // false = день, true = ночь
   const shadowEnabled = ref(false);
   const rgbShiftEnabled = ref(false);
   const shadowQuality = ref<shadowQualityTypes>("medium");
@@ -24,7 +23,6 @@ export const useGraphicsStore = defineStore("graphics", () => {
     afterimageEnabled.value = data?.afterimageEnabled ?? false;
     fxaaEnabled.value = data?.fxaaEnabled ?? true;
     rgbShiftEnabled.value = data?.rgbShiftEnabled ?? false;
-    nightMode.value = data?.nightMode ?? true;
     shadowEnabled.value = data?.shadowEnabled ?? false;
     shadowQuality.value = data?.shadowQuality ?? "low";
   }
@@ -52,10 +50,6 @@ export const useGraphicsStore = defineStore("graphics", () => {
   async function toggleRGBShift() {
     rgbShiftEnabled.value = !rgbShiftEnabled.value;
     await storage.setPlayerDataByKey("rgbShiftEnabled", rgbShiftEnabled.value);
-  }
-  async function toggleNightMode() {
-    nightMode.value = !nightMode.value;
-    await storage.setPlayerDataByKey("nightMode", nightMode.value);
   }
   async function toggleShadow() {
     shadowEnabled.value = !shadowEnabled.value;
@@ -96,7 +90,6 @@ export const useGraphicsStore = defineStore("graphics", () => {
     vfxEnabled,
     bloomEnabled,
     fxaaEnabled,
-    nightMode,
     shadowEnabled,
     shadowQuality,
     rgbShiftEnabled,
@@ -104,7 +97,6 @@ export const useGraphicsStore = defineStore("graphics", () => {
     toggleVfx,
     toggleBloom,
     toggleFxaa,
-    toggleNightMode,
     toggleShadow,
     setShadowQuality,
     cycleShadowQuality,

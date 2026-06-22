@@ -1,4 +1,5 @@
 export interface CityLayerConfig {
+  type: "city";
   xMin: number;
   xMax: number;
   zStart: number;
@@ -9,5 +10,9 @@ export interface CityLayerConfig {
   maxHeight: number;
   minWidth: number;
   maxWidth: number;
+  y: number;
   color: number;
+  emissive?: number;
+  emissiveIntensity?: number;
+  opacity?: number;
 }

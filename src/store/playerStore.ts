@@ -6,7 +6,17 @@ import { useMetaStore } from "@/store/metaStore";
 import { useCommonStore } from "@/store/commonStore";
 import { useLevelStore } from "@/store/levelStore";
 import playerConfig from "@/configs/player";
-import type { GameplayConfig } from "@/levels/types";
+import type { GameplayConfig, NitroTrailVisualConfig } from "@/levels/types";
+
+const DEFAULT_NITRO_TRAIL: NitroTrailVisualConfig = {
+  color: "#66ff66",
+  width: 2.2,
+  height: 0.8,
+  offsetX: 0.85,
+  offsetY: 0.25,
+  offsetZ: 2,
+  timeScale: 4,
+};
 
 export const usePlayerStore = defineStore("playerStore", () => {
   const progressStore = useProgressStore();
@@ -36,6 +46,31 @@ export const usePlayerStore = defineStore("playerStore", () => {
       glbScales.value,
     ),
   );
+  const currentPlayerConfig = computed(() => levelStore.currentLevel.player);
+  const currentPlayerVisual = computed(() => currentPlayerConfig.value.visual);
+  const carEmissionConfigExtra = computed(() => ({
+    ...config.value.carEmissionConfigExtra,
+    ...currentPlayerVisual.value?.emissiveColors,
+  }));
+  const defaultEmissionIntensity = computed(
+    () =>
+      currentPlayerVisual.value?.defaultEmissionIntensity ??
+      config.value.defaultEmissionIntensity,
+  );
+  const defaultBlinkDuration = computed(
+    () =>
+      currentPlayerVisual.value?.defaultBlinkDuration ??
+      config.value.defaultBlinkDuration,
+  );
+  const defaultBlinkSpeed = computed(
+    () =>
+      currentPlayerVisual.value?.defaultBlinkSpeed ??
+      config.value.defaultBlinkSpeed,
+  );
+  const nitroTrailConfig = computed(() => ({
+    ...DEFAULT_NITRO_TRAIL,
+    ...currentPlayerVisual.value?.nitroTrail,
+  }));
 
   const startSpeed = ref(config.value.baseSpeed);
   const speed = ref(config.value.baseSpeed);
@@ -251,6 +286,10 @@ export const usePlayerStore = defineStore("playerStore", () => {
     };
   }
 
+  function getNitroTrailConfig(): NitroTrailVisualConfig {
+    return nitroTrailConfig.value;
+  }
+
   function getDefaultCarConfig() {
     return {
       startLane: 2,
@@ -266,16 +305,16 @@ export const usePlayerStore = defineStore("playerStore", () => {
     CAR_CUBES_CONFIG: carCubesConfig,
     CAR_MATERIAL_CONFIG: config.value.carMaterialConfig,
     CAR_MATERIAL_CONFIG_EXTRA: config.value.carMaterialConfigExtra,
-    CAR_EMISSION_CONFIG_EXTRA: config.value.carEmissionConfigExtra,
+    CAR_EMISSION_CONFIG_EXTRA: carEmissionConfigExtra,
     NITRO_MULTIPLIER: config.value.nitro.multiplier,
     BASE_NITRO_TIMER: config.value.nitro.baseTimer,
     BASE_MAGNET_TIMER: config.value.magnet.baseTimer,
     BASE_SPEED: config.value.baseSpeed,
     FORCED_JUMP_MULTIPLIER: config.value.forcedJumpMultiplier,
     JUMP_HEIGHT: config.value.jumpHeight,
-    DEFAULT_EMISSION_INTENSITY: config.value.defaultEmissionIntensity,
-    DEFAULT_BLINK_DURATION: config.value.defaultBlinkDuration,
-    DEFAULT_BLINK_SPEED: config.value.defaultBlinkSpeed,
+    DEFAULT_EMISSION_INTENSITY: defaultEmissionIntensity,
+    DEFAULT_BLINK_DURATION: defaultBlinkDuration,
+    DEFAULT_BLINK_SPEED: defaultBlinkSpeed,
     speed,
     startSpeed,
     baseSpeed,
@@ -318,6 +357,7 @@ export const usePlayerStore = defineStore("playerStore", () => {
     getCurrentSpeedInCubesPerHour,
     getCurrentAcceleration,
     setAccelerationType,
+    getNitroTrailConfig,
     addAmmo,
     consumeAmmo,
     addArmor,

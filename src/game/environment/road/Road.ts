@@ -46,8 +46,9 @@ export class Road extends THREE.Mesh {
       });
     } else {
       material = new THREE.MeshStandardMaterial({
-        color: 0xffffff,
-        emissiveIntensity: 0.8,
+        color: tmpConfig.color ?? 0xffffff,
+        emissive: tmpConfig.emissive ?? tmpConfig.color ?? 0xffffff,
+        emissiveIntensity: tmpConfig.emissiveIntensity ?? 0.8,
         transparent: true,
         opacity: tmpConfig.opacity ?? 0.2,
       });

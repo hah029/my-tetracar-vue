@@ -19,7 +19,6 @@ export class RoadManager {
   private roadLanes: RoadLane[] = [];
   private speedLines: SpeedLine[] = [];
   private edges: THREE.Mesh[] = [];
-  private sideObjectSpacing = useCommonStore().config.xzScaling * 4;
   private leftSideObjects: SideObjectsInstanced | null = null;
   private rightSideObjects: SideObjectsInstanced | null = null;
   private carManager = CarManager.getInstance();
@@ -60,10 +59,13 @@ export class RoadManager {
 
   private addSideObjects(): void {
     if (!this.road) return;
+    const sideObjects = this.config.sideObjects;
+
+    if (!sideObjects?.enabled) return;
 
     const { left, right } = this.road.getEdgePositions();
 
-    const offset = 0.6;
+    const offset = sideObjects.offset;
 
     const leftX = left - offset;
     const rightX = right + offset;
@@ -74,17 +76,23 @@ export class RoadManager {
     this.leftSideObjects = new SideObjectsInstanced(
       this.scene,
       leftX,
-      this.sideObjectSpacing,
       startZ,
       endZ,
+      {
+        ...sideObjects,
+        spacing: sideObjects.spacing * useCommonStore().config.xzScaling,
+      },
     );
 
     this.rightSideObjects = new SideObjectsInstanced(
       this.scene,
       rightX,
-      this.sideObjectSpacing,
       startZ,
       endZ,
+      {
+        ...sideObjects,
+        spacing: sideObjects.spacing * useCommonStore().config.xzScaling,
+      },
     );
   }
 
@@ -133,6 +141,7 @@ export class RoadManager {
       throw new Error();
     }
     const lanes = this.road.getLanePositions();
+    const lineColor = this.config.laneColor ?? this.config.emissive ?? 0x888888;
 
     for (let i = 0; i < lanes.length - 1; i++) {
       const prev_ = lanes[i];
@@ -144,6 +153,8 @@ export class RoadManager {
         x,
         z: -length / 2,
         length,
+        color: lineColor,
+        emissive: lineColor,
       });
       this.roadLines.push(line);
       this.scene.add(line);
@@ -159,18 +170,20 @@ export class RoadManager {
     const lanes = this.road.lanes;
 
     const width = this.road.width / lanes.length;
+    const laneColor = this.config.laneColor ?? this.config.emissive ?? 0x66ccff;
 
     console.log("lanes", lanes);
 
     for (let i = 0; i < lanes.length; i++) {
       const laneX = lanes[i];
 
-      // if (laneX == undefined) continue;
+      if (laneX == undefined) continue;
       const lane = new RoadLane({
         x: laneX,
         z: -length / 2,
         length,
         width,
+        color: laneColor,
       });
       this.roadLanes.push(lane);
       this.scene.add(lane);

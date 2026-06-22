@@ -4,6 +4,7 @@ export interface RoadLineConfig {
   z: number;
   color?: number;
   emissive?: number;
+  emissiveIntensity?: number;
   opacity?: number;
   length?: number;
 }
@@ -24,12 +25,26 @@ export interface RoadConfig {
   length: number;
   color?: number;
   emissive?: number;
+  laneColor?: number;
   emissiveIntensity?: number;
   opacity?: number;
   yPosition?: number;
   gap?: number;
   edgeOffset?: number;
   textureUrl?: string;
+  sideObjects?: RoadSideObjectsConfig;
+}
+
+export interface RoadSideObjectsConfig {
+  enabled: boolean;
+  color: number;
+  emissive?: number;
+  emissiveIntensity?: number;
+  opacity?: number;
+  spacing: number;
+  offset: number;
+  y: number;
+  scale: [number, number, number];
 }
 
 export interface SpeedLineConfig {

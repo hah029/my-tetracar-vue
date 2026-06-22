@@ -5,6 +5,8 @@ import { BulletItem } from "./BulletItem";
 import { makeWeightedChoice } from "@/helpers/functions";
 import { useCommonStore } from "@/store/commonStore";
 
+type BoosterType = "nitro" | "shield" | "magnet" | "bullet";
+
 export class BoosterManager {
   private static instance: BoosterManager | null = null;
 
@@ -24,10 +26,9 @@ export class BoosterManager {
     laneIndex?: number,
     xPos?: number,
     yPos?: number,
+    allowedTypes?: BoosterType[],
   ) {
-    let choice = makeWeightedChoice(
-      useCommonStore().config.spawnProbabilities.boosters,
-    );
+    let choice = this.pickBoosterType(allowedTypes);
 
     switch (choice) {
       case "nitro":
@@ -77,5 +78,24 @@ export class BoosterManager {
     yPos?: number,
   ) {
     return new BulletItem(zPos, laneIndex, xPos, yPos);
+  }
+
+  private pickBoosterType(allowedTypes?: BoosterType[]): string {
+    const weights = useCommonStore().config.spawnProbabilities.boosters;
+    const activeTypes = allowedTypes?.length
+      ? allowedTypes
+      : (Object.keys(weights) as BoosterType[]);
+
+    const filteredWeights = Object.fromEntries(
+      Object.entries(weights).filter(([type]) =>
+        activeTypes.includes(type as BoosterType),
+      ),
+    );
+
+    if (Object.values(filteredWeights).some((weight) => weight > 0)) {
+      return makeWeightedChoice(filteredWeights);
+    }
+
+    return activeTypes[0] ?? "shield";
   }
 }

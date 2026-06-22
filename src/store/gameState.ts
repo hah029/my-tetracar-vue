@@ -4,6 +4,7 @@ import { ref } from "vue";
 
 import { usePlayerStore } from "@/store/playerStore";
 import { useProgressStore } from "./progressStore";
+import { useLevelStore } from "@/store/levelStore";
 import { GameStates } from "@/game/core/GameState";
 import { SoundManager } from "@/game/sound/SoundManager";
 import { Platform } from "@/sdk";
@@ -50,6 +51,7 @@ export const useGameState = defineStore("gameState", () => {
   // ===== HOOKS =====
   function onEnter(state: GameStates, prev: GameStates) {
     const progress = useProgressStore();
+    const levelStore = useLevelStore();
     const sound = SoundManager.getInstance();
 
     switch (state) {
@@ -58,7 +60,14 @@ export const useGameState = defineStore("gameState", () => {
         break;
 
       case GameStates.Menu:
-        sound.playMusicSequence("music_intro", "music_background");
+        if (levelStore.currentMusic.menuTrack) {
+          sound.playMusicSequence(
+            levelStore.currentMusic.menuTrack,
+            levelStore.currentMusic.gameTrack,
+          );
+        } else {
+          sound.playMusic(levelStore.currentMusic.gameTrack, true);
+        }
 
         // Сохраняем прогресс только если данные уже были восстановлены
         // (при первом входе Preloader → Menu restoreProgress() ещё не вызывался,
@@ -80,13 +89,21 @@ export const useGameState = defineStore("gameState", () => {
         break;
 
       case GameStates.Countdown:
-        if (prev === GameStates.Gameover || prev === GameStates.Pause) {
+        if (
+          prev === GameStates.LevelSelect ||
+          prev === GameStates.Gameover ||
+          prev === GameStates.Pause
+        ) {
           resetCallback?.();
         }
+
+        playerStore.applyGameplayConfig(levelStore.currentGameplay);
+        playerStore.resetPlayerAchievements();
+        playerStore.resetGameData();
         break;
 
       case GameStates.Play:
-        sound.playMusic("music_background", true);
+        sound.playMusic(levelStore.currentMusic.gameTrack, true);
         platform.gameStart();
         break;
 
