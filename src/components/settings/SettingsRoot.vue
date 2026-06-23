@@ -192,15 +192,19 @@ onMounted(() => {
     position: fixed;
     top: 0;
     left: 0;
+    right: 0;
+    bottom: 0;
     width: 100%;
     height: 100%;
+    background-color: rgba(0, 0, 0, 0.72);
+    backdrop-filter: blur(2px);
 
-    gap: 2.5rem;
+    gap: clamp(1.2rem, 3vmin, 2.5rem);
 
 }
 
 .header_pause {
-    font-size: 3.125rem; // (50px)
+    font-size: clamp(2rem, 4vmin, 3.125rem);
 }
 
 .settings_container {
@@ -214,6 +218,11 @@ onMounted(() => {
 
 .group_correction {
     position: static !important;
+    min-height: 10.25rem;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    align-items: center;
 
     &>*+* {
         margin-top: 0.938rem; // 15px - row-gap (между кнопками)
@@ -221,7 +230,7 @@ onMounted(() => {
 }
 
 .btn_correction {
-    font-size: min(1.875rem, 22px);
+    font-size: clamp(1.25rem, 2.4vmin, 1.875rem);
 }
 
 /* we will explain what these classes do next! */

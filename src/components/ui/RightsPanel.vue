@@ -9,7 +9,7 @@
 
 
 <script setup lang="ts">
-    import { ref, computed, watch } from "vue";
+    import { computed } from "vue";
     import { useGameState } from "@/store/gameState";
     import { GameStates } from "@/game/core/GameState";
     import { createNewText } from '@/helpers/functions';
@@ -17,46 +17,15 @@
     import { APP_VERSION, APP_NAME, CURRENT_YEAR} from "@/gameConfig";
 
     const gameState = useGameState();
-    const isRightPanelShown = ref(true);
     const foo = createNewText();
+    const isRightPanelShown = computed(() => {
+        return gameState.currentState === GameStates.Menu && gameState.activeOverlay === null;
+    });
 
     // получаем рандомную фразу "Все права защищены" в нужном переводе
     const randomRightsPhrase = computed(() => {
         return foo.getRandomFromArray('rightsList');
     });
-
-    // ===== STATE MACHINE =====
-    // (сценарии работы с логотипом)
-    watch(
-        () => gameState.currentState,
-        (state, _) => {
-            switch (state) {
-
-                // ===== PRELOADER =====
-                case GameStates.Preloader:
-                    isRightPanelShown.value = false;
-                    break;
-
-                // ===== MENU =====
-                case GameStates.Menu:
-                case GameStates.LevelSelect:
-                    setTimeout(async () => {
-                        isRightPanelShown.value = true;
-                    }, 400);
-                    break;
-
-                // ===== START GAME =====
-                case GameStates.Countdown:
-                case GameStates.Play:
-                    // стартуем гонку
-                    setTimeout(() => {
-                        isRightPanelShown.value = false;
-                    }, 400);
-                    break;
-            }
-        },
-        { immediate: true }
-    );
 </script>
 
 

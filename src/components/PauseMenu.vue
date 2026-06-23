@@ -170,7 +170,7 @@ onMounted(() => {
 .warning {
     font-family: 'jost-light';
     text-transform: uppercase;
-    font-size: 1.375rem;
+    font-size: clamp(1rem, 2vmin, 1.375rem);
     color: #F79CFF;
     width: min(25rem, 90vw);
     text-align: center;
@@ -185,14 +185,23 @@ onMounted(() => {
     position: fixed;
     top: 0;
     left: 0;
+    right: 0;
+    bottom: 0;
     width: 100%;
     height: 100%;
+    background-color: rgba(0, 0, 0, 0.72);
+    backdrop-filter: blur(2px);
 
     gap: 2.5rem;
 }
 
 .group_correction {
     position: static !important;
+    min-height: 10rem;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    align-items: center;
 
     &>*+* {
         margin-top: 1.56rem; // 25px - row-gap (между кнопками)
@@ -200,10 +209,10 @@ onMounted(() => {
 }
 
 .header_correction {
-    font-size: 3.125rem; // (50px)
+    font-size: clamp(2rem, 4vmin, 3.125rem);
 }
 
 .btn_correction {
-    font-size: min(1.875rem, 22px);
+    font-size: clamp(1.25rem, 2.4vmin, 1.875rem);
 }
 </style>

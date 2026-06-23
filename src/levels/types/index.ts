@@ -195,6 +195,11 @@ export interface EnvironmentConfig {
    * Нижний/боковой мир вокруг дороги: город, холмы, океан и т.д.
    */
   scenery: SceneryConfig;
+
+  /**
+   * Атмосферные эффекты уровня: дождь, молнии и т.п.
+   */
+  weather?: WeatherConfig;
 }
 
 export interface RoadEnvironmentConfig {
@@ -285,7 +290,7 @@ export interface SceneryConfig {
 }
 
 export interface SceneryLayerConfig {
-  type: "city" | "hills" | "ocean";
+  type: "city" | "hills" | "ocean" | "water_surface";
   xMin: number;
   xMax: number;
   zStart: number;
@@ -301,6 +306,39 @@ export interface SceneryLayerConfig {
   emissiveColor?: string;
   emissiveIntensity?: number;
   opacity?: number;
+  waveAmplitude?: number;
+  waveFrequency?: number;
+  waveSpeed?: number;
+  secondaryColor?: string;
+}
+
+export interface WeatherConfig {
+  rain?: RainWeatherConfig;
+  lightning?: LightningWeatherConfig;
+}
+
+export interface RainWeatherConfig {
+  enabled: boolean;
+  count: number;
+  color: string;
+  opacity: number;
+  areaWidth: number;
+  areaDepth: number;
+  height: number;
+  dropLength: number;
+  fallSpeed: number;
+  windX?: number;
+  windZ?: number;
+}
+
+export interface LightningWeatherConfig {
+  enabled: boolean;
+  color: string;
+  minInterval: number;
+  maxInterval: number;
+  duration: number;
+  intensity: number;
+  position?: Vector3Tuple;
 }
 
 export interface InteractiveConfig {

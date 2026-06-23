@@ -122,15 +122,19 @@ onMounted(() => {
     position: fixed;
     top: 0;
     left: 0;
+    right: 0;
+    bottom: 0;
     width: 100%;
     height: 100%;
+    background-color: rgba(0, 0, 0, 0.72);
+    backdrop-filter: blur(2px);
 
     gap: 2.5rem;
 
 }
 
 .header_correction {
-    font-size: 4rem; // (50px)
+    font-size: clamp(2.4rem, 5vmin, 4rem);
     color: #F79CFF;
     text-shadow: 0px 0px 10px #F79CFF;
 }
@@ -144,11 +148,16 @@ onMounted(() => {
 }
 
 .btn_correction {
-    font-size: min(1.875rem, 22px);
+    font-size: clamp(1.25rem, 2.4vmin, 1.875rem);
 }
 
 .group_correction {
     position: static !important;
+    min-height: 5.75rem;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    align-items: center;
 
     &>*+* {
         margin-top: 2rem; // 25px - row-gap (между кнопками)
@@ -166,7 +175,7 @@ onMounted(() => {
 
     font-family: 'jost-light';
     text-transform: uppercase;
-    font-size: 1.375rem;
+    font-size: clamp(1rem, 2vmin, 1.375rem);
     color: #F79CFF;
 }
 
@@ -179,7 +188,7 @@ onMounted(() => {
 }
 
 .score-value {
-    font-size: 20px;
+    font-size: clamp(1rem, 1.8vmin, 1.25rem);
 
     &.gold {
         color: #ffd700;
@@ -187,7 +196,7 @@ onMounted(() => {
 
     &.newRecord {
         color: #ffd900bc;
-        font-size: 16px;
+        font-size: clamp(0.9rem, 1.55vmin, 1rem);
     }
 }
 </style>

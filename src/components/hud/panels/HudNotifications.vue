@@ -158,7 +158,8 @@ function getNotificationColor(message: string) {
     flex-direction: column;
     justify-content: flex-start;
     align-items: center;
-    gap: 0.5rem;
+    gap: clamp(0.35rem, 1.3vmin, 0.5rem);
+    max-width: min(34rem, 92vw);
 
     pointer-events: none;
 }
@@ -167,23 +168,28 @@ function getNotificationColor(message: string) {
     display: flex;
     justify-content: flex-end;
     align-items: center;
-    gap: 1.25rem;
+    gap: clamp(0.5rem, 2vmin, 1.25rem);
+    max-width: 100%;
 
-    font-size: 1.125rem;
+    font-size: clamp(0.82rem, 1.8vmin, 1.125rem);
+    line-height: 1.15;
+    text-align: center;
 }
 
 .boosters_image_container {
-    width: 1.875rem;
-    height: 1.875rem;
+    width: clamp(1.25rem, 3vmin, 1.875rem);
+    height: clamp(1.25rem, 3vmin, 1.875rem);
 
     position: relative;
+    flex: 0 0 auto;
 }
 
 .flash_container {
-    width: 5.5rem;
-    height: 5.5rem;
+    width: clamp(2.75rem, 8vmin, 5.5rem);
+    height: clamp(2.75rem, 8vmin, 5.5rem);
 
     position: relative;
+    flex: 0 0 auto;
 }
 
 .icon {
@@ -191,6 +197,17 @@ function getNotificationColor(message: string) {
 }
 
 .new_record_msg {
-    font-size: 2.25rem;
+    font-size: clamp(1.25rem, 4vmin, 2.25rem);
+}
+
+@media (max-width: 460px), (max-height: 520px) {
+    .notifications_container {
+        max-width: calc(100vw - 1.25rem);
+    }
+
+    .notifications_block {
+        gap: 0.45rem;
+        font-size: clamp(0.72rem, 3vmin, 0.86rem);
+    }
 }
 </style>

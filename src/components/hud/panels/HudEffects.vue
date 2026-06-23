@@ -92,12 +92,16 @@ function getAnimationClass(type: string) {
 }
 
 .effects_group {
+    --effect-start-x: 50%;
+    --effect-start-y: clamp(5rem, 18vmin, 13.125rem);
+    --effect-end-y: clamp(0.25rem, 1vmin, 0.5rem);
     position: absolute;
-    width: min(2.813rem, 90vw);
-    height: 2.813rem;
+    width: clamp(1.75rem, 5vmin, 2.813rem);
+    height: clamp(1.75rem, 5vmin, 2.813rem);
 
-    bottom: 13.125rem;
-    left: 59.063rem;
+    bottom: var(--effect-start-y);
+    left: var(--effect-start-x);
+    transform: translateX(-50%);
 }
 
 .icon {
@@ -136,12 +140,13 @@ function getAnimationClass(type: string) {
 
 @keyframes energonMovingAnim {
     0% {
-        bottom: 13.125rem;
+        bottom: var(--effect-start-y);
+        left: var(--effect-start-x);
     }
 
     100% {
-        bottom: 53.125rem;
-        left: 115rem;
+        bottom: calc(100% - clamp(4rem, 9vmin, 6.25rem));
+        left: calc(100% - clamp(2rem, 6vmin, 4rem));
     }
 }
 
@@ -153,12 +158,13 @@ function getAnimationClass(type: string) {
 
 @keyframes bulletMovingAnim {
     0% {
-        bottom: 13.125rem;
+        bottom: var(--effect-start-y);
+        left: var(--effect-start-x);
     }
 
     100% {
-        bottom: 0.3125rem;
-        left: 48.88rem;
+        bottom: var(--effect-end-y);
+        left: calc(50% - clamp(9rem, 18vw, 19rem));
     }
 }
 
@@ -170,12 +176,13 @@ function getAnimationClass(type: string) {
 
 @keyframes armorMovingAnim {
     0% {
-        bottom: 13.125rem;
+        bottom: var(--effect-start-y);
+        left: var(--effect-start-x);
     }
 
     100% {
-        bottom: 0.3125rem;
-        left: 55.62rem;
+        bottom: var(--effect-end-y);
+        left: calc(50% - clamp(3rem, 6vw, 6.5rem));
     }
 }
 
@@ -187,12 +194,13 @@ function getAnimationClass(type: string) {
 
 @keyframes nitroMovingAnim {
     0% {
-        bottom: 13.125rem;
+        bottom: var(--effect-start-y);
+        left: var(--effect-start-x);
     }
 
     100% {
-        bottom: 0.3125rem;
-        left: 63.125rem;
+        bottom: var(--effect-end-y);
+        left: calc(50% + clamp(3rem, 6vw, 6.5rem));
     }
 }
 
@@ -204,12 +212,19 @@ function getAnimationClass(type: string) {
 
 @keyframes magnetMovingAnim {
     0% {
-        bottom: 13.125rem;
+        bottom: var(--effect-start-y);
+        left: var(--effect-start-x);
     }
 
     100% {
-        bottom: 0.3125rem;
-        left: 70.62rem;
+        bottom: var(--effect-end-y);
+        left: calc(50% + clamp(9rem, 18vw, 19rem));
+    }
+}
+
+@media (max-width: 460px), (max-height: 520px) {
+    .effects_group {
+        --effect-start-y: clamp(4rem, 15vmin, 5rem);
     }
 }
 </style>

@@ -27,17 +27,18 @@
     display: flex;
     flex-direction: column;
     align-items: center;
-    justify-content: center;
+    justify-content: flex-start;
     position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
+    top: 50%;
+    left: 50%;
+    width: min(28rem, 90vw);
+    min-height: 14rem;
+    transform: translate(-50%, -50%);
     gap: 2rem;
 }
 
 .btn_correction {
-    font-size: min(1.875rem, 22px);
+    font-size: clamp(1.35rem, 2.8vmin, 1.875rem);
 }
 </style>
 

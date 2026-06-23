@@ -33,11 +33,32 @@ html,
 body,
 #app {
     margin: 0;
-    width: 100%;
-    height: 100%;
-    overflow-x: hidden;
+    width: 100dvw;
+    height: 100dvh;
+    min-width: 320px;
+    overflow: hidden;
+    background: #222222;
     // font-size: 0.833vw;
-    font-size: clamp(12px, 0.8vw, 14px);
+    font-size: clamp(12px, 0.72vw, 15px);
+}
+
+html {
+    position: fixed;
+    inset: 0;
+}
+
+body {
+    position: fixed;
+    inset: 0;
+    display: block;
+}
+
+#app {
+    position: fixed;
+    inset: 0;
+    max-width: none;
+    padding: 0;
+    text-align: initial;
 }
 
 img {
@@ -56,13 +77,21 @@ span {
 
 .three_js__root,
 .ui_components_root {
-    position: relative;
-    width: 100%;
-    height: 100%;
+    position: absolute;
+    inset: 0;
+    width: 100dvw;
+    height: 100dvh;
+    overflow: hidden;
 }
 
 .three_js__root {
     z-index: z("canvas");
+
+    canvas {
+        display: block;
+        width: 100% !important;
+        height: 100% !important;
+    }
 }
 
 .ui_components_root {

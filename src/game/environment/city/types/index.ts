@@ -1,5 +1,5 @@
 export interface CityLayerConfig {
-  type: "city" | "hills" | "ocean";
+  type: "city" | "hills" | "ocean" | "water_surface";
   xMin: number;
   xMax: number;
   zStart: number;
@@ -15,4 +15,8 @@ export interface CityLayerConfig {
   emissive?: number;
   emissiveIntensity?: number;
   opacity?: number;
+  waveAmplitude?: number;
+  waveFrequency?: number;
+  waveSpeed?: number;
+  secondaryColor?: number;
 }

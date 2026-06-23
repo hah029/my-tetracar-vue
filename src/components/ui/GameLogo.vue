@@ -43,10 +43,11 @@ const isLettersMovedToTop = ref(false);
 const isLinesShown = ref(false);
 
 watch(
-    () => gameState.currentState,
-    (state) => {
+    () => [gameState.currentState, gameState.activeOverlay] as const,
+    ([state, activeOverlay]) => {
         switch (state) {
             case GameStates.Preloader:
+                isWholeLogoShown.value = true;
                 setTimeout(() => {
                     isLettersShown.value = true;
                 }, 200);
@@ -56,15 +57,14 @@ watch(
                 break;
 
             case GameStates.Menu:
-            case GameStates.LevelSelect:
-                if (gameState.activeOverlay !== null) {
-                    isWholeLogoShown.value = false;
-                    break;
-                }
-                isWholeLogoShown.value = true;
+                isWholeLogoShown.value = activeOverlay === null;
                 isLettersMovedToTop.value = true;
                 isLettersShown.value = true;
                 isLinesShown.value = true;
+                break;
+
+            case GameStates.LevelSelect:
+                isWholeLogoShown.value = false;
                 break;
 
             case GameStates.Countdown:
@@ -74,7 +74,7 @@ watch(
 
             case GameStates.Pause:
             case GameStates.Gameover:
-                isWholeLogoShown.value = true;
+                isWholeLogoShown.value = false;
                 isLettersShown.value = false;
                 break;
         }
@@ -83,7 +83,7 @@ watch(
 );
 
 const logoMoveClass = computed(() => {
-    return (gameState.currentState === GameStates.Menu || gameState.currentState === GameStates.LevelSelect)
+    return gameState.currentState === GameStates.Menu
         && isLettersMovedToTop.value
         ? "logo_mooving"
         : "";
@@ -112,6 +112,7 @@ const backgroundClass = computed(() => {
 .game_logo__root {
     position: absolute;
     inset: 0;
+    overflow: hidden;
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -123,6 +124,7 @@ const backgroundClass = computed(() => {
 
 .background_animated {
     position: absolute;
+    top: 0;
     left: 0;
     width: 100%;
     height: 200%;

@@ -119,6 +119,7 @@ export class Car extends THREE.Group {
       this.position.x,
       targetX,
       this.rotation.y,
+      dt,
     );
 
     this.position.x = newX;

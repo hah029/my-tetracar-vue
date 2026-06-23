@@ -32,6 +32,9 @@ export const useEnvironmentStore = defineStore("environmentStore", () => {
   const currentScenery = computed(
     () => levelStore.currentLevel.environment.scenery,
   );
+  const currentWeather = computed(
+    () => levelStore.currentLevel.environment.weather,
+  );
 
   function colorToNumber(color: string): number {
     return Number.parseInt(color.replace("#", ""), 16);
@@ -98,6 +101,7 @@ export const useEnvironmentStore = defineStore("environmentStore", () => {
     currentLighting,
     currentRoad,
     currentScenery,
+    currentWeather,
     calculateRoadWidth,
     getEdgePositions,
     colorToNumber,

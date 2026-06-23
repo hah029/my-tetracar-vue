@@ -55,145 +55,174 @@
                 </div>
             </Transition>
 
+            <div class="inventory_panel">
+                <div class="inventory_item">
+                    <div class="inventory_item__value color_yellow_light">{{ metaStore.goldens }}</div>
+                    <div class="inventory_item__icon">
+                        <img class="icon" src="@/assets/images/hud/cube_golden.svg" />
+                    </div>
+                </div>
+
+                <div class="inventory_item">
+                    <div class="inventory_item__value color_blue_light">{{ metaStore.energons }}</div>
+                    <div class="inventory_item__icon energon_glow_general">
+                        <img class="icon icon_abs" src="@/assets/images/hud/cube_energon_grid_backward.svg" />
+                        <img class="icon icon_abs energon_glow_core" src="@/assets/images/hud/cube_energon_core.svg" />
+                        <img class="icon icon_abs energon_glow_grid"
+                            src="@/assets/images/hud/cube_energon_grid_frontal.svg" />
+                    </div>
+                </div>
+
+                <div class="inventory_divider"></div>
+
+                <div class="inventory_item">
+                    <div class="inventory_item__value color_red_light">{{ playerStore.ammo }} / {{ metaStore.maxAmmo }}
+                    </div>
+                    <div class="inventory_item__icon">
+                        <img class="icon" src="@/assets/images/hud/cube_bullet.svg" />
+                    </div>
+                </div>
+
+                <div class="inventory_item">
+                    <div class="inventory_item__value color_white">{{ playerStore.armor }} / {{ metaStore.maxArmor }}
+                    </div>
+                    <div class="inventory_item__icon">
+                        <img class="icon" src="@/assets/images/hud/cube_armor.svg" />
+                    </div>
+                </div>
+            </div>
+
             <!-- CONTENT -->
             <div class="shop_content" v-if="shopStore.activeCatalog.length > 0">
-                <!-- CONTENT -->
 
-                <div class="shop_content" v-if="shopStore.activeCatalog.length > 0">
+                <!-- LEFT -->
+                <div class="cards">
 
-                    <!-- LEFT -->
-                    <div class="cards">
+                    <div v-for="(item, index) in shopStore.activeCatalog" :key="getItemId(item) + index" class="card"
+                        :class="[
+                            getCardClasses(item),
+                            {
+                                card_selected:
+                                    selectedItem &&
+                                    getItemId(selectedItem) === getItemId(item)
+                            }
+                        ]" @click="selectedItem = item">
 
-                        <div v-for="(item, index) in shopStore.activeCatalog" :key="getItemId(item) + index"
-                            class="card" :class="[
-                                getCardClasses(item),
-                                {
-                                    card_selected:
-                                        selectedItem &&
-                                        getItemId(selectedItem) === getItemId(item)
-                                }
-                            ]" @click="selectedItem = item">
+                        <div class="card__image">
+                            <div class="card__image_placeholder">
+                                {{ getItemTitle(item).charAt(0) }}
+                            </div>
+                        </div>
 
-                            <div class="card__image">
-                                <div class="card__image_placeholder">
-                                    {{ getItemTitle(item).charAt(0) }}
+                        <div class="card__content">
+
+                            <div class="card__top">
+
+                                <div class="card__title">
+                                    {{ getItemTitle(item) }}
                                 </div>
+
+                                <div v-if="getProductStatus(item) === 'owned'" class="status_badge status_badge--owned">
+                                    {{ foo.makeText("shop.ownedBadge") }}
+                                </div>
+
+                                <div v-if="item.type === 'upgrade'" class="status_badge status_badge--upgrade">
+                                    {{ getUpgradeLevelString(item) }}
+                                </div>
+
+                                <div v-if="item.type === 'timed_feature' && getTimedProductTimer(item)"
+                                    class="status_badge status_badge--timer">
+                                    {{ getTimedProductTimer(item) }}
+                                </div>
+
                             </div>
 
-                            <div class="card__content">
-
-                                <div class="card__top">
-
-                                    <div class="card__title">
-                                        {{ getItemTitle(item) }}
-                                    </div>
-
-
-                                    <div v-if="getProductStatus(item) === 'owned'"
-                                        class="status_badge status_badge--owned">
-                                        {{ foo.makeText("shop.ownedBadge") }}
-                                    </div>
-
-                                    <div v-if="item.type === 'upgrade'" class="status_badge status_badge--upgrade">
-                                        {{ getUpgradeLevelString(item) }}
-                                    </div>
-
-                                    <div v-if="item.type === 'timed_feature' && getTimedProductTimer(item)"
-                                        class="status_badge status_badge--timer">
-                                        {{ getTimedProductTimer(item) }}
-                                    </div>
-
+                            <div class="card__bottom">
+                                <div class="card__price_row">
+                                    {{ getItemPrice(item) }}
+                                    {{ getItemCurrency(item) }}
                                 </div>
-
-                                <div class="card__bottom">
-                                    <div class="card__price_row">
-                                        {{ getItemPrice(item) }}
-                                        {{ getItemCurrency(item) }}
-                                    </div>
-                                </div>
-
                             </div>
 
                         </div>
 
                     </div>
 
-                    <!-- RIGHT -->
-                    <div v-if="selectedItem" class="preview">
+                </div>
 
-                        <div class="preview__header">
+                <!-- RIGHT -->
+                <div v-if="selectedItem" class="preview">
 
-                            <div class="preview__image">
-                                <div class="preview__image_placeholder">
-                                    {{ getItemTitle(selectedItem).charAt(0) }}
-                                </div>
+                    <div class="preview__header">
+
+                        <div class="preview__image">
+                            <div class="preview__image_placeholder">
+                                {{ getItemTitle(selectedItem).charAt(0) }}
                             </div>
-
-                            <div class="preview__title">
-                                {{ getItemTitle(selectedItem) }}
-                            </div>
-
-                            <div v-if="selectedItem.type === 'upgrade'" class="preview__meta">
-                                {{ getUpgradeLevelString(selectedItem) }}
-                            </div>
-
-                            <div v-if="selectedItem.type === 'timed_feature'" class="preview__meta">
-                                {{ getTimedProductTimer(selectedItem) }}
-                            </div>
-
                         </div>
 
-                        <div v-if="getItemDescription(selectedItem)" class="preview__description">
-                            {{ getItemDescription(selectedItem) }}
+                        <div class="preview__title">
+                            {{ getItemTitle(selectedItem) }}
                         </div>
 
-                        <div class="preview__footer">
+                        <div v-if="selectedItem.type === 'upgrade'" class="preview__meta">
+                            {{ getUpgradeLevelString(selectedItem) }}
+                        </div>
 
-                            <div v-if="getProductStatus(selectedItem) === 'available'" class="preview__price">
-                                {{ getItemPrice(selectedItem) }}
-                                {{ getItemCurrency(selectedItem) }}
-                            </div>
+                        <div v-if="selectedItem.type === 'timed_feature'" class="preview__meta">
+                            {{ getTimedProductTimer(selectedItem) }}
+                        </div>
 
-                            <div v-if="getProductStatus(selectedItem) !== 'available'">
+                    </div>
 
-                                <button v-if="
-                                    selectedItem.type === 'cosmetic' &&
-                                    selectedItem.effect.skinId !== metaStore.activeSkin
-                                " class="preview__buy_btn" @click="handleApplyClick(selectedItem)">
-                                    {{ foo.makeText("shop.previewBtn.apply") }}
-                                </button>
+                    <div v-if="getItemDescription(selectedItem)" class="preview__description">
+                        {{ getItemDescription(selectedItem) }}
+                    </div>
 
-                                <div v-else-if="
-                                    selectedItem.type === 'cosmetic' &&
-                                    selectedItem.effect.skinId === metaStore.activeSkin
-                                " class="preview__status">
-                                    {{ foo.makeText("shop.previewBtn.applied") }}
-                                </div>
+                    <div class="preview__footer">
 
-                                <div v-else class="preview__status">
-                                    {{
-                                        foo.makeText(
-                                            getProductStatusLabel(selectedItem),
-                                            getProductStatus(selectedItem)
-                                        )
-                                    }}
-                                </div>
+                        <div v-if="getProductStatus(selectedItem) === 'available'" class="preview__price">
+                            {{ getItemPrice(selectedItem) }}
+                            {{ getItemCurrency(selectedItem) }}
+                        </div>
 
-                            </div>
+                        <div v-if="getProductStatus(selectedItem) !== 'available'">
 
-                            <button v-else class="preview__buy_btn" @click="handleBuyClick(selectedItem)">
-                                {{ foo.makeText("shop.previewBtn.buy") }}
+                            <button v-if="
+                                selectedItem.type === 'cosmetic' &&
+                                selectedItem.effect.skinId !== metaStore.activeSkin
+                            " class="preview__buy_btn" @click="handleApplyClick(selectedItem)">
+                                {{ foo.makeText("shop.previewBtn.apply") }}
                             </button>
 
+                            <div v-else-if="
+                                selectedItem.type === 'cosmetic' &&
+                                selectedItem.effect.skinId === metaStore.activeSkin
+                            " class="preview__status">
+                                {{ foo.makeText("shop.previewBtn.applied") }}
+                            </div>
+
+                            <div v-else class="preview__status">
+                                {{
+                                    foo.makeText(
+                                        getProductStatusLabel(selectedItem),
+                                        getProductStatus(selectedItem)
+                                    )
+                                }}
+                            </div>
+
                         </div>
+
+                        <button v-else class="preview__buy_btn" @click="handleBuyClick(selectedItem)">
+                            {{ foo.makeText("shop.previewBtn.buy") }}
+                        </button>
 
                     </div>
                 </div>
 
             </div>
 
-            <div v-else class="shop_content"
-                style="justify-content: center; align-items: center; width: 100%;  font-size: 2rem; color: white;">
+            <div v-else class="shop_content shop_content--empty">
                 {{ foo.makeText("shop.noItems", "No items available") }}
             </div>
 
@@ -217,6 +246,7 @@ import { createNewText } from "@/helpers/functions";
 import { useGameState } from "@/store/gameState";
 import { useShopStore } from "@/store/shopStore";
 import { useMetaStore } from "@/store/metaStore";
+import { usePlayerStore } from "@/store/playerStore";
 
 import type { Product as PurchaseProduct } from "@/purchase/types/Product";
 import meta from "@/configs/meta";
@@ -224,6 +254,7 @@ import meta from "@/configs/meta";
 const gameState = useGameState();
 const shopStore = useShopStore();
 const metaStore = useMetaStore();
+const playerStore = usePlayerStore();
 
 const foo = createNewText();
 const { i18next } = useTranslation();
@@ -536,267 +567,62 @@ onUnmounted(() => {
 @use "@/styles/menu.scss";
 @use "@/styles/animations.scss";
 
-.shop_container {
-    width: 100%;
-    height: 100%;
-    padding: 2rem;
+.container {
+    background-color: rgba(0, 0, 0, 0.72);
+    backdrop-filter: blur(2px);
+}
 
+.shop_container {
+    width: min(86rem, 100%);
+    height: 100%;
+    padding: clamp(1rem, 3vmin, 2rem);
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 1.5rem;
-
+    gap: clamp(0.8rem, 2vmin, 1.5rem);
     box-sizing: border-box;
     min-height: 0;
-
-    background-color: rgba(0, 0, 0, 0.8);
 }
 
 .tabs {
     display: flex;
-    gap: 2rem;
-    margin-top: 1rem;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: clamp(0.75rem, 2.2vmin, 2rem);
+    margin-top: clamp(0.5rem, 1.4vmin, 1rem);
+}
+
+.btn_font_size_26 {
+    font-size: clamp(1rem, 2.2vmin, 1.625rem);
+}
+
+.btn_font_size_30 {
+    font-size: clamp(1.2rem, 2.5vmin, 1.875rem);
 }
 
 .tab_active {
     color: #72b3ee;
 }
 
-.balance_row {
-    display: flex;
-    gap: 2rem;
-    margin-top: 1rem;
-
-    font-size: 2rem;
-}
-
-.balance_item {
-    display: flex;
-    gap: .5rem;
-    align-items: center;
-    color: white;
-}
-
-.balance_icon--golden {
-    color: #efbf04;
-}
-
-.balance_icon--energon {
-    color: #82c8e5;
-}
-
-// .shop_content {
-//     width: 90%;
-//     flex: 1;
-
-//     display: flex;
-//     gap: 2rem;
-//     padding: 5rem;
-
-//     overflow: hidden;
-// }
-
-// .cards {
-//     flex: 1;
-
-//     display: flex;
-//     flex-wrap: wrap;
-
-//     gap: 1rem;
-
-//     overflow-y: auto;
-//     padding-right: .5rem;
-
-//     scrollbar-width: thin;
-//     scrollbar-color: #575757 #00000000;
-// }
-
-.card {
-    height: 16rem;
-    width: 100%;
-    font-family: 'jost-light';
-
-    display: flex;
-    flex-direction: row;
-
-    gap: 1rem;
-
-    padding: 1rem;
-
-    // border-radius: 16px;
-
-    background: rgba(15, 20, 30, .3);
-
-    border: 1px solid rgba(255, 255, 255, .1);
-
-    cursor: pointer;
-
-    transition: .2s;
-}
-
-.card:hover {
-    border-color: #72b3ee;
-}
-
-.card_selected {
-    border-color: #72b3ee;
-    background: rgba(13, 58, 99, 0.9);
-
-    box-shadow:
-        0 0 20px rgba(114, 179, 238, .5);
-}
-
-.card__image {
-    display: flex;
-    justify-content: center;
-    flex-shrink: 0;
-}
-
-// .card__content {
-//     display: flex;
-//     flex-direction: column;
-//     width: 100%;
-// }
-
-.card--owned {
-    background: rgba(0, 255, 179, 0.05);
-    // border-color: rgba(255, 255, 255, .1);
-}
-
-.card--applied {
-    background: rgba(255, 204, 0, 0.1);
-    // border-color: rgba(255, 255, 255, .1);
-}
-
-// .card__image_placeholder {
-//     // width: 5rem;
-//     // height: 5rem;
-//     width: 150px;
-
-//     // border-radius: 50%;
-
-//     display: flex;
-//     justify-content: center;
-//     align-items: center;
-
-//     font-size: 1rem;
-//     font-weight: 700;
-
-//     color: white;
-
-//     background: rgba(255, 255, 255, .08);
-// }
-
-.card__title {
-    text-align: start;
-    color: white;
-    font-weight: 700;
-    font-size: 1.5rem;
-
-    align-self: flex-start;
-}
-
-
-.preview {
-    width: 50%;
-    font-family: 'jost-light';
-
-    flex-shrink: 0;
-
-    display: flex;
-    flex-direction: column;
-
-    padding: 2rem;
-
-    // border-radius: 20px;
-
-    background: rgba(15, 20, 30, .85);
-
-    border: 1px solid rgba(255, 255, 255, .1);
-}
-
-.preview__image {
-    display: flex;
-    justify-content: center;
-
-    margin-bottom: 2rem;
-}
-
-.preview__image_placeholder {
-    // width: 12rem;
-    // height: 12rem;
-
-
-    // border-radius: 50%;
-    width: 250px;
-    height: 250px;
-
-    display: flex;
-    justify-content: center;
-    align-items: center;
-
-    font-size: 5rem;
-
-    // background: rgba(255, 255, 255, .08);
-
-    color: white;
-}
-
-// .preview__title {
-//     font-size: min(2rem, 24px);
-//     color: white;
-//     text-align: center;
-// }
 .preview__title {
-    margin-top: min(1rem, 10px);
     text-align: center;
     color: white;
-    font-size: min(2rem, 24px);
-
+    font-size: clamp(1.25rem, 2.5vmin, 2rem);
+    font-family: 'vla_shu';
+    line-height: 1.1;
 }
-
-.preview__description {
-    margin: 3rem;
-    color: rgba(255, 255, 255, .8);
-    text-align: center;
-    font-size: 1.5rem;
-    line-height: 1.5;
-}
-
-.preview__price {
-    // margin-top: 2rem;
-
-    display: flex;
-    justify-content: center;
-    gap: .5rem;
-
-    font-size: 5rem;
-    color: white;
-}
-
-.preview__status {
-    margin-top: auto;
-
-    text-align: center;
-
-    color: #5effb1;
-    font-size: 4rem;
-}
-
 
 .notification {
     position: fixed;
-
-    top: 2rem;
+    top: clamp(1rem, 3vmin, 2rem);
     left: 50%;
-
     transform: translateX(-50%);
-
-    padding: 1rem 2rem;
-
-    border-radius: 10px;
-
+    padding: 0.75rem 1.25rem;
     color: white;
+    font-family: 'jost-light';
+    font-size: clamp(0.9rem, 1.8vmin, 1.2rem);
+    text-transform: uppercase;
+    z-index: 1001;
 }
 
 .notification--success {
@@ -807,37 +633,64 @@ onUnmounted(() => {
     background: rgba(255, 0, 0, .8);
 }
 
-.balance_block {
+.inventory_panel {
+    width: min(76rem, 94vw);
     display: flex;
-    justify-content: flex-start;
+    justify-content: center;
     align-items: center;
-    // gap: 0.25rem;
-    gap: 5rem;
-    padding: 0.5rem 1rem;
+    flex-wrap: wrap;
+    gap: clamp(0.55rem, 1.8vmin, 1.2rem);
+    padding: clamp(0.45rem, 1.2vmin, 0.7rem) clamp(0.75rem, 2vmin, 1.25rem);
+    box-sizing: border-box;
+    background: linear-gradient(90deg,
+            rgba(0, 0, 0, 0) 0%,
+            rgba(0, 0, 0, 0.42) 12%,
+            rgba(0, 0, 0, 0.42) 88%,
+            rgba(0, 0, 0, 0) 100%);
 }
 
-.balance_subblock {
+.inventory_item {
     display: flex;
-    justify-content: flex-end;
     align-items: center;
-    gap: 1rem;
-    font-size: 1.6rem;
-}
-
-.balance_value {
-    text-align: right;
+    justify-content: center;
+    gap: clamp(0.35rem, 1.2vmin, 0.6rem);
+    min-width: 0;
     font-family: 'jost-light';
-    // min-width: 3ch;
-    // font-feature-settings: "tnum";
-    // font-variant-numeric: tabular-nums;
-    // white-space: nowrap;
-    // transition: width 0.1s ease;  // Плавное расширение
+    font-size: clamp(0.95rem, 1.8vmin, 1.25rem);
+    line-height: 1;
+    text-transform: uppercase;
 }
 
-.balance_image_container {
-    width: 2.3125rem;
-    height: 2.3125rem;
+.inventory_item__value {
+    min-width: 3ch;
+    white-space: nowrap;
+    font-variant-numeric: tabular-nums;
+    font-feature-settings: "tnum";
+}
+
+.inventory_item__icon {
+    width: clamp(1.35rem, 3.2vmin, 2rem);
+    height: clamp(1.35rem, 3.2vmin, 2rem);
     position: relative;
+    flex: 0 0 auto;
+}
+
+.inventory_divider {
+    width: 1px;
+    height: clamp(1.4rem, 3vmin, 2rem);
+    background: linear-gradient(180deg,
+            rgba(255, 255, 255, 0) 0%,
+            rgba(255, 255, 255, 0.38) 50%,
+            rgba(255, 255, 255, 0) 100%);
+}
+
+.icon {
+    width: 100%;
+}
+
+.icon_abs {
+    position: absolute;
+    inset: 0;
 }
 
 .energon_glow_general {
@@ -852,86 +705,51 @@ onUnmounted(() => {
     filter: drop-shadow(0 0 0.625rem rgb(20, 212, 255));
 }
 
-.yellow_divider {
-    height: 1px;
-    width: 11.5rem;
-    background: linear-gradient(90deg,
-            rgba(255, 217, 92, 0) 0%,
-            rgba(255, 217, 92, 0.55) 25%,
-            rgba(255, 217, 92, 0.55) 75%,
-            rgba(255, 217, 92, 0) 100%);
-}
-
-.icon {
-    width: 100%;
-}
-
-.icon_abs {
-    position: absolute;
-    top: 0;
-    left: 0;
-}
-
-.preview_timer {
-    margin-top: 1rem;
-    text-align: center;
-    font-size: 2rem;
-    color: rgba(255, 255, 255, .8);
-}
-
 .shop_content {
-    width: 90%;
+    width: min(76rem, 94vw);
     flex: 1;
-
-    display: flex;
-    // gap: 2rem;
-
+    display: grid;
+    grid-template-columns: minmax(20rem, 1fr) minmax(18rem, 0.82fr);
+    gap: clamp(1rem, 2.4vmin, 2rem);
     overflow: hidden;
     min-height: 0;
+    box-sizing: border-box;
+}
 
-    background: rgba(0, 0, 0, 0.8);
+.shop_content--empty {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: min(76rem, 94vw);
+    color: white;
+    font-family: 'jost-light';
+    font-size: clamp(1.1rem, 2.5vmin, 2rem);
+    text-align: center;
 }
 
 .cards {
-    flex: 1;
-
+    min-width: 0;
+    min-height: 0;
     display: flex;
     flex-direction: column;
-
-    gap: .75rem;
-
+    gap: clamp(0.6rem, 1.4vmin, 0.85rem);
     overflow-y: auto;
-
-    padding-right: .5rem;
-
+    padding-right: 0.5rem;
     scrollbar-width: thin;
     scrollbar-color: #575757 transparent;
-
-    min-height: 0;
-
 }
 
 .card {
-    // min-height: 8rem;
-
     display: flex;
     align-items: center;
-
-    gap: 1rem;
-
-    padding: 1rem 1.25rem;
-
+    gap: clamp(0.75rem, 1.5vmin, 1rem);
+    min-height: clamp(5.6rem, 12vmin, 7.5rem);
+    padding: clamp(0.75rem, 1.6vmin, 1rem) clamp(0.85rem, 2vmin, 1.25rem);
+    box-sizing: border-box;
     background: rgba(15, 20, 30, .35);
-
     border: 1px solid rgba(255, 255, 255, .08);
-
     transition: .2s;
-
     cursor: pointer;
-
-    max-width: stretch;
-    max-height: fit-content;
-
 }
 
 .card:hover {
@@ -940,15 +758,12 @@ onUnmounted(() => {
 
 .card_selected {
     border-left: 4px solid #72B3EE;
-
     background:
         linear-gradient(90deg,
             rgba(114, 179, 238, .18),
             rgba(15, 20, 30, .7));
-
     box-shadow:
         inset 0 0 40px rgba(114, 179, 238, .08);
-
 }
 
 .card--owned {
@@ -965,20 +780,22 @@ onUnmounted(() => {
             rgba(15, 20, 30, .35));
 }
 
-.card__image_placeholder {
-    width: 96px;
-    height: 96px;
+.card__image {
+    display: flex;
+    justify-content: center;
+    flex-shrink: 0;
+}
 
+.card__image_placeholder {
+    width: clamp(4rem, 8vmin, 6rem);
+    height: clamp(4rem, 8vmin, 6rem);
     display: flex;
     justify-content: center;
     align-items: center;
-
     background: rgba(255, 255, 255, .06);
-
-    font-size: 2rem;
-
+    font-size: clamp(1.4rem, 3vmin, 2rem);
+    font-family: 'vla_shu';
     color: white;
-
 }
 
 .card__content {
@@ -986,10 +803,8 @@ onUnmounted(() => {
     min-width: 0;
     display: flex;
     flex-direction: column;
-    // gap: 10rem;
     justify-content: space-between;
-    height: stretch;
-
+    align-self: stretch;
 }
 
 .card__top {
@@ -1001,46 +816,38 @@ onUnmounted(() => {
 
 .card__bottom {
     margin-top: auto;
-
     display: flex;
     justify-content: space-between;
     align-items: center;
     flex-wrap: wrap;
     gap: .5rem;
-
 }
 
 .card__title {
     color: white;
-    font-size: 1.4rem;
+    font-size: clamp(1rem, 2vmin, 1.35rem);
     font-family: 'jost-light';
+    line-height: 1.15;
+    overflow-wrap: anywhere;
 }
 
 .card__price_row {
     font-family: 'vla_shu';
-
-    font-size: min(1.5rem, 16px);
-
+    font-size: clamp(0.95rem, 1.8vmin, 1.25rem);
     color: #FFD95C;
-
     margin-top: auto;
-
     display: flex;
-    justify-content: center;
-
+    flex-wrap: wrap;
+    gap: 0.35rem;
     align-self: flex-end;
 }
 
-
 .status_badge {
     padding: .25rem .75rem;
-
-    font-size: .85rem;
-
+    font-size: clamp(0.68rem, 1.25vmin, .85rem);
     text-transform: uppercase;
-
     border: 1px solid;
-
+    line-height: 1.15;
 }
 
 .status_badge--owned {
@@ -1059,20 +866,17 @@ onUnmounted(() => {
 }
 
 .preview {
-    // width: 34rem;
-    width: min(34rem, 34vw);
-
-    flex-shrink: 0;
-
+    min-width: 0;
+    min-height: 0;
     display: flex;
     flex-direction: column;
-
     background: rgba(15, 20, 30, .85);
-
     border: 1px solid rgba(255, 255, 255, .08);
-
-    padding: 2rem;
-
+    padding: clamp(1rem, 2.5vmin, 2rem);
+    overflow-y: auto;
+    box-sizing: border-box;
+    scrollbar-width: thin;
+    scrollbar-color: #575757 transparent;
 }
 
 .preview__header {
@@ -1081,73 +885,62 @@ onUnmounted(() => {
     align-items: center;
 }
 
-.preview__image_placeholder {
-    width: min(18rem, 90vw);
-    height: min(18rem, 90vw);
+.preview__image {
+    display: flex;
+    justify-content: center;
+    margin-bottom: clamp(0.75rem, 2vmin, 1.5rem);
+}
 
+.preview__image_placeholder {
+    width: clamp(8rem, 22vmin, 16rem);
+    height: clamp(8rem, 22vmin, 16rem);
     display: flex;
     align-items: center;
     justify-content: center;
-
     background: rgba(255, 255, 255, .05);
-
     color: white;
-
-    font-size: min(5rem, 90vw);
-
+    font-size: clamp(3rem, 8vmin, 5rem);
+    font-family: 'vla_shu';
 }
-
 
 .preview__meta {
     margin-top: .75rem;
-
     color: #72B3EE;
-
-    font-size: 1.25rem;
-
+    font-size: clamp(0.9rem, 1.8vmin, 1.25rem);
+    font-family: 'jost-light';
+    text-align: center;
 }
 
 .preview__description {
-    // margin-top: min(2rem, 10px);
-
+    margin: clamp(0.75rem, 2vmin, 1.25rem) 0;
     color: rgba(255, 255, 255, .85);
-
     text-align: center;
-
-    line-height: 1.7;
-
-    font-size: min(1.2rem, 16px);
-
+    line-height: 1.45;
+    font-size: clamp(0.9rem, 1.6vmin, 1.1rem);
+    font-family: 'jost-light';
+    overflow-wrap: anywhere;
 }
 
 .preview__footer {
     margin-top: auto;
-
     display: flex;
     flex-direction: column;
-
     gap: 1rem;
-
 }
 
 .preview__price {
     text-align: center;
-
     font-family: 'vla_shu';
-
-    font-size: min(4rem, 24px);
-
+    font-size: clamp(1.25rem, 3vmin, 2rem);
     color: #FFD95C;
-
 }
 
 .preview__status {
     text-align: center;
-
-    font-size: min(2rem, 10px);
-
+    font-size: clamp(0.95rem, 1.8vmin, 1.25rem);
     color: #5effb1;
-
+    font-family: 'jost-light';
+    text-transform: uppercase;
 }
 
 .preview__buy_btn {
@@ -1158,16 +951,162 @@ onUnmounted(() => {
             #0f6bb6);
 
     color: white;
-    font-size: min(1.6rem, 20px);
+    font-size: clamp(1rem, 2vmin, 1.35rem);
     font-family: 'vla_shu';
     cursor: pointer;
     transition: .2s;
-    padding: 1rem;
+    padding: clamp(0.75rem, 2vmin, 1rem);
 
     &:hover {
         transform: translateY(-2px);
         box-shadow:
             0 0 35px rgba(63, 169, 255, .35);
+    }
+}
+
+@media (max-width: 860px) {
+    .shop_container {
+        align-items: stretch;
+    }
+
+    .shop_content {
+        width: 100%;
+        grid-template-columns: 1fr;
+        grid-template-rows: auto minmax(0, 1fr);
+        overflow: hidden;
+        padding-right: 0;
+    }
+
+    .inventory_panel {
+        width: 100%;
+    }
+
+    .cards {
+        overflow-y: auto;
+        padding-right: 0.35rem;
+    }
+
+    .preview {
+        order: -1;
+        max-height: clamp(11rem, 34vh, 17rem);
+        overflow: hidden;
+        display: grid;
+        grid-template-columns: auto minmax(0, 1fr);
+        grid-template-rows: auto minmax(0, 1fr) auto;
+        column-gap: clamp(0.75rem, 2vmin, 1.25rem);
+        row-gap: 0.65rem;
+    }
+
+    .preview__header {
+        display: grid;
+        grid-template-columns: auto minmax(0, 1fr);
+        grid-column: 1 / -1;
+        align-items: center;
+        column-gap: clamp(0.75rem, 2vmin, 1.25rem);
+    }
+
+    .preview__image {
+        grid-row: 1 / 3;
+        margin-bottom: 0;
+    }
+
+    .preview__image_placeholder {
+        width: clamp(5rem, 16vmin, 8rem);
+        height: clamp(5rem, 16vmin, 8rem);
+        font-size: clamp(2rem, 6vmin, 3.5rem);
+    }
+
+    .preview__title,
+    .preview__meta {
+        text-align: left;
+    }
+
+    .preview__title {
+        align-self: end;
+    }
+
+    .preview__meta {
+        align-self: start;
+        margin-top: 0.35rem;
+    }
+
+    .preview__description {
+        grid-column: 1 / -1;
+        min-height: 0;
+        overflow-y: auto;
+        margin: 0;
+        text-align: left;
+        line-height: 1.35;
+    }
+
+    .preview__footer {
+        grid-column: 1 / -1;
+        margin-top: 0;
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto;
+        align-items: center;
+        gap: 0.75rem;
+    }
+
+    .preview__price,
+    .preview__status {
+        text-align: left;
+    }
+
+    .preview__buy_btn {
+        min-width: 8rem;
+    }
+}
+
+@media (max-width: 520px) {
+    .shop_container {
+        padding: 0.75rem;
+    }
+
+    .card {
+        align-items: flex-start;
+    }
+
+    .card__image_placeholder {
+        width: 3.5rem;
+        height: 3.5rem;
+    }
+
+    .tabs {
+        gap: 0.65rem;
+    }
+
+    .inventory_panel {
+        justify-content: space-evenly;
+        gap: 0.45rem;
+        padding: 0.45rem 0.5rem;
+    }
+
+    .inventory_item {
+        font-size: clamp(0.8rem, 3vmin, 0.95rem);
+    }
+
+    .inventory_divider {
+        display: none;
+    }
+
+    .preview {
+        max-height: clamp(10rem, 38vh, 15rem);
+        padding: 0.85rem;
+    }
+
+    .preview__image_placeholder {
+        width: 4.5rem;
+        height: 4.5rem;
+    }
+
+    .preview__footer {
+        grid-template-columns: 1fr;
+    }
+
+    .preview__buy_btn {
+        width: 100%;
+        min-width: 0;
     }
 }
 </style>

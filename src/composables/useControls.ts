@@ -16,7 +16,8 @@ export function useControls(game: ReturnType<typeof useGame>) {
 
   const processedKeys = new Set<string>();
 
-  const INPUT_DT = 60 / 1000;
+  const INPUT_DT = 1000 / 60;
+  const MOVE_REPEAT_INTERVAL = 90;
 
   const TAP_DISTANCE = 20;
   const TAP_DURATION = 250;
@@ -25,6 +26,7 @@ export function useControls(game: ReturnType<typeof useGame>) {
   let startX = 0;
   let startY = 0;
   let startTime = 0;
+  let lastMoveRepeatTime = 0;
 
   enum controlKeys {
     LEFT = "ArrowLeft",
@@ -188,10 +190,6 @@ export function useControls(game: ReturnType<typeof useGame>) {
   }
 
   function handleKeyDown(e: KeyboardEvent) {
-    if (processedKeys.has(e.code)) return;
-
-    processedKeys.add(e.code);
-
     if (e.key !== controlKeys.ESCAPE) {
       e.preventDefault();
     }
@@ -199,46 +197,70 @@ export function useControls(game: ReturnType<typeof useGame>) {
     switch (e.code) {
       case controlKeys.LEFT:
       case controlKeys.LEFT_ALT:
+        if (e.repeat && !canProcessMoveRepeat()) return;
         handleGameGesture("left");
         break;
 
       case controlKeys.RIGHT:
       case controlKeys.RIGHT_ALT:
+        if (e.repeat && !canProcessMoveRepeat()) return;
         handleGameGesture("right");
         break;
 
       case controlKeys.UP:
       case controlKeys.UP_ALT:
+        if (processedKeys.has(e.code)) return;
+        processedKeys.add(e.code);
         handleGameGesture("up");
         break;
 
       case controlKeys.DOWN:
       case controlKeys.DOWN_ALT:
+        if (processedKeys.has(e.code)) return;
+        processedKeys.add(e.code);
         playerStore.forceJump = true;
         break;
 
       case controlKeys.SPACE:
+        if (processedKeys.has(e.code)) return;
+        processedKeys.add(e.code);
         handleGameGesture("tap");
         break;
 
       case controlKeys.NITRO:
+        if (processedKeys.has(e.code)) return;
+        processedKeys.add(e.code);
         playerStore.enableNitro();
         CarManager.getInstance().enableNitro();
         break;
 
       case controlKeys.MAGNET:
+        if (processedKeys.has(e.code)) return;
+        processedKeys.add(e.code);
         playerStore.enableMagnet([BaseItem]);
         break;
 
       case controlKeys.ESCAPE:
+        if (processedKeys.has(e.code)) return;
+        processedKeys.add(e.code);
         processEscape();
         break;
 
       case controlKeys.ENTER:
       case controlKeys.ENTER_NUMPAD:
+        if (processedKeys.has(e.code)) return;
+        processedKeys.add(e.code);
         processEnter();
         break;
     }
+  }
+
+  function canProcessMoveRepeat(): boolean {
+    const now = performance.now();
+    if (now - lastMoveRepeatTime < MOVE_REPEAT_INTERVAL) return false;
+
+    lastMoveRepeatTime = now;
+    return true;
   }
 
   function handleKeyUp(e: KeyboardEvent) {

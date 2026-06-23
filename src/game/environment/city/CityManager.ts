@@ -4,6 +4,8 @@ import * as THREE from "three";
 import { watch, type WatchStopHandle } from "vue";
 import { CityLayerInstanced } from "./CityLayerInstanced";
 import { ProceduralSceneryLayerInstanced } from "./ProceduralSceneryLayerInstanced";
+import { WaterSurfaceLayer } from "./WaterSurfaceLayer";
+import { WeatherEffects } from "./WeatherEffects";
 import { useEnvironmentStore } from "@/store/environmentStore";
 
 import building1 from "@/assets/models/building_1.glb";
@@ -14,9 +16,14 @@ import type { SceneryLayerConfig } from "@/levels/types";
 
 export class CityManager {
   private static instance: CityManager | null = null;
-  private layers: (CityLayerInstanced | ProceduralSceneryLayerInstanced)[] = [];
+  private layers: (
+    | CityLayerInstanced
+    | ProceduralSceneryLayerInstanced
+    | WaterSurfaceLayer
+  )[] = [];
+  private weatherEffects: WeatherEffects | null = null;
   private scene: THREE.Scene | null = null;
-  private stopSceneryWatcher: WatchStopHandle | null = null;
+  private stopEnvironmentWatcher: WatchStopHandle | null = null;
   private rebuildToken = 0;
 
   public static getInstance(): CityManager {
@@ -28,13 +35,16 @@ export class CityManager {
 
   public initialize(scene: THREE.Scene) {
     this.scene = scene;
-    this.stopSceneryWatcher?.();
+    this.stopEnvironmentWatcher?.();
 
     const environmentStore = useEnvironmentStore();
-    this.stopSceneryWatcher = watch(
-      () => environmentStore.currentScenery,
+    this.stopEnvironmentWatcher = watch(
+      () => ({
+        scenery: environmentStore.currentScenery,
+        weather: environmentStore.currentWeather,
+      }),
       () => {
-        this.rebuildFromCurrentScenery();
+        this.rebuildFromCurrentEnvironment();
       },
       { immediate: true, deep: true },
     );
@@ -44,25 +54,33 @@ export class CityManager {
     for (const layer of this.layers) {
       layer.update(deltaTime, speed);
     }
+    this.weatherEffects?.update(deltaTime, speed);
   }
 
   public dispose() {
     this.rebuildToken++;
-    this.stopSceneryWatcher?.();
-    this.stopSceneryWatcher = null;
+    this.stopEnvironmentWatcher?.();
+    this.stopEnvironmentWatcher = null;
     this.scene = null;
     this.disposeLayers();
+    this.disposeWeather();
   }
 
-  private async rebuildFromCurrentScenery() {
+  private async rebuildFromCurrentEnvironment() {
     if (!this.scene) return;
 
     const token = ++this.rebuildToken;
     const environmentStore = useEnvironmentStore();
     const scenery = environmentStore.currentScenery;
+    const weather = environmentStore.currentWeather;
     const layers = scenery.layers ?? [];
 
     this.disposeLayers();
+    this.disposeWeather();
+
+    if (weather) {
+      this.weatherEffects = new WeatherEffects(this.scene, weather);
+    }
 
     if (layers.length === 0) return;
 
@@ -77,6 +95,8 @@ export class CityManager {
       const layer =
         layerConfig.type === "city"
           ? await this.createCityLayer(resolvedConfig, scenery.scenerySets)
+          : layerConfig.type === "water_surface"
+            ? new WaterSurfaceLayer(this.scene, resolvedConfig)
           : new ProceduralSceneryLayerInstanced(this.scene, resolvedConfig);
 
       if (!layer) continue;
@@ -121,6 +141,12 @@ export class CityManager {
         : undefined,
       emissiveIntensity: config.emissiveIntensity,
       opacity: config.opacity,
+      waveAmplitude: config.waveAmplitude,
+      waveFrequency: config.waveFrequency,
+      waveSpeed: config.waveSpeed,
+      secondaryColor: config.secondaryColor
+        ? Number.parseInt(config.secondaryColor.replace("#", ""), 16)
+        : undefined,
     };
   }
 
@@ -129,5 +155,10 @@ export class CityManager {
       layer.dispose();
     }
     this.layers = [];
+  }
+
+  private disposeWeather() {
+    this.weatherEffects?.dispose();
+    this.weatherEffects = null;
   }
 }

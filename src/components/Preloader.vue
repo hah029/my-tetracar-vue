@@ -71,7 +71,7 @@ onMounted(() => {
     height: fit-content;
     opacity: 0;
 
-    font-size: 2.1875rem; // (35px)
+    font-size: clamp(1.45rem, 3.2vmin, 2.1875rem);
     transition: all 0.2s ease-in-out;
 
     // Неоновое свечение с анимацией мерцания

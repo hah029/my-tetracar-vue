@@ -94,6 +94,7 @@ export class CarPhysics {
     currentX: number,
     targetX: number,
     currentRotationY: number,
+    deltaTime: number,
   ): { newX: number; newRotationY: number } {
     const deltaX = targetX - currentX;
 
@@ -101,11 +102,15 @@ export class CarPhysics {
       return { newX: currentX, newRotationY: currentRotationY };
     }
 
-    const newX = currentX + deltaX * this.config.laneChangeSpeed;
+    const frameScale = Math.max(0, Math.min(deltaTime, 50)) / (1000 / 60);
+    const laneChangeFactor =
+      1 - Math.pow(1 - this.config.laneChangeSpeed, frameScale);
+    const tiltFactor = 1 - Math.pow(1 - this.config.tiltSmoothing, frameScale);
+
+    const newX = currentX + deltaX * laneChangeFactor;
     const newRotationY =
       currentRotationY +
-      (-deltaX * this.config.maxTilt - currentRotationY) *
-        this.config.tiltSmoothing;
+      (-deltaX * this.config.maxTilt - currentRotationY) * tiltFactor;
 
     return { newX, newRotationY };
   }
