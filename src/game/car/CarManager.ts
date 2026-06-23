@@ -215,6 +215,13 @@ export class CarManager {
     this.car = null;
   }
 
+  public dispose(): void {
+    this.stopPlayerVisualWatcher?.();
+    this.stopPlayerVisualWatcher = null;
+    this.destroyCar();
+    this.scene = null;
+  }
+
   public getCar(): Car {
     if (!this.car) {
       throw new Error("Car not created. Call createCar() first.");

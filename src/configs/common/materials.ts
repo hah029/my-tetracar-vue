@@ -1,32 +1,38 @@
-import type { GeometryConfig, MaterialConfig } from "@/game/cube/types";
-import { TEXTURES } from "@/assets/textures";
+import type { MaterialConfig } from "@/game/cube/types";
+import { atlas } from "@/assets/textures/TextureAtlas";
+import { ITEM_ATLAS_SPRITES } from "@/assets/textures/atlasSprites";
 
 export const magnetMaterialConfig = {
-  textureUrl: TEXTURES.cube.base,
+  atlas,
+  atlasSprite: ITEM_ATLAS_SPRITES.magnet,
   emissive: 0x000000,
   emissiveIntensity: 0.6,
 } as MaterialConfig;
 
 export const bulletMaterialConfig = {
-  textureUrl: TEXTURES.cube.bullet,
+  atlas,
+  atlasSprite: ITEM_ATLAS_SPRITES.bullet,
   emissive: 0xdd0000,
   emissiveIntensity: 0.6,
 } as MaterialConfig;
 
 export const nitroMaterialConfig = {
-  textureUrl: TEXTURES.cube.base,
+  atlas,
+  atlasSprite: ITEM_ATLAS_SPRITES.nitro,
   emissive: 0x00dd00,
   emissiveIntensity: 0.6,
 } as MaterialConfig;
 
 export const shieldMaterialConfig = {
-  textureUrl: TEXTURES.cube.base,
+  atlas,
+  atlasSprite: ITEM_ATLAS_SPRITES.shield,
   emissive: 0xffffff,
   emissiveIntensity: 0.6,
 } as MaterialConfig;
 
 export const goldenMaterialConfig = {
-  textureUrl: TEXTURES.cube.golden,
+  atlas,
+  atlasSprite: ITEM_ATLAS_SPRITES.golden,
   emissive: 0xefbf04,
   emissiveIntensity: 0.6,
   metalness: 4.0,

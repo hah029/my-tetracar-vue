@@ -133,7 +133,7 @@ export class LocalStoragePlatform implements IGamePlatform {
 
   async setPlayerData(data: PlayerDataSet): Promise<void> {
     const player = this.getPlayer();
-    player!.data = data;
+    player!.data = { ...player!.data, ...data };
     this.savePlayer(player!);
   }
 

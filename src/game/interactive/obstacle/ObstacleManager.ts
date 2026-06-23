@@ -8,7 +8,8 @@ import { EnemyCar } from "./EnemyCar";
 import { Jump } from "./Jump";
 import { useCommonStore } from "@/store/commonStore";
 import { usePlayerStore } from "@/store/playerStore";
-import { TEXTURES } from "@/assets/textures";
+import { atlas } from "@/assets/textures/TextureAtlas";
+import { OBSTACLE_ATLAS_SPRITES } from "@/assets/textures/atlasSprites";
 
 export class ObstacleManager {
   private static instance: ObstacleManager | null = null;
@@ -52,7 +53,7 @@ export class ObstacleManager {
       this.useGLB,
       undefined,
       formDetailed,
-      { textureUrl: TEXTURES.cube.obstacle3x3 },
+      { atlas, atlasSprite: OBSTACLE_ATLAS_SPRITES.default },
     );
 
     this.obstacles.push(obstacle);
@@ -89,7 +90,7 @@ export class ObstacleManager {
       this.useGLB,
       Math.random() > 0.5 ? 1 : -1, // direction
       form,
-      { textureUrl: TEXTURES.cube.obstacle3x3 },
+      { atlas, atlasSprite: OBSTACLE_ATLAS_SPRITES.default },
     );
 
     this.scene.add(obstacle);
@@ -109,7 +110,7 @@ export class ObstacleManager {
       true,
       undefined,
       undefined,
-      { textureUrl: TEXTURES.cube.base },
+      { atlas, atlasSprite: OBSTACLE_ATLAS_SPRITES.enemyCar },
     );
     this.scene.add(obstacle);
     this.obstacles.push(obstacle);

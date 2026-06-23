@@ -3,6 +3,7 @@ import { loadCubeModel } from "./loadCube";
 import type { GeometryConfig, CubeUserData, MaterialConfig } from "./types";
 import { loadTexture } from "@/helpers/loaders";
 import { useCommonStore } from "@/store/commonStore";
+import { applyAtlasSpriteUV, applyCubeSpriteUV } from "@/helpers/applyAtlasUV";
 
 export class CubeBuilder {
   private static modelCache = new Map<string, THREE.Group>();
@@ -84,21 +85,7 @@ export class CubeBuilder {
               // APPLY UV
               //
 
-              const uv = mesh.geometry.attributes.uv;
-
-              for (let i = 0; i < uv.count; i++) {
-                const u = uv.getX(i);
-                const v = uv.getY(i);
-
-                uv.setXY(
-                  i,
-                  sprite.uvRect.u + u * sprite.uvRect.w,
-
-                  sprite.uvRect.v + v * sprite.uvRect.h,
-                );
-              }
-
-              uv.needsUpdate = true;
+              applyAtlasSpriteUV(mesh.geometry, sprite);
 
               //
               // MATERIAL
@@ -281,23 +268,7 @@ export class CubeBuilder {
       const sprite = materialConfig.atlas.getSprite(materialConfig.atlasSprite);
 
       if (sprite) {
-        geometry = geometry.clone();
-
-        const uv = geometry.attributes.uv;
-
-        for (let i = 0; i < uv.count; i++) {
-          const u = uv.getX(i);
-          const v = uv.getY(i);
-
-          uv.setXY(
-            i,
-            sprite.uvRect.u + u * sprite.uvRect.w,
-
-            sprite.uvRect.v + v * sprite.uvRect.h,
-          );
-        }
-
-        uv.needsUpdate = true;
+        applyCubeSpriteUV(geometry, sprite);
       }
     }
 

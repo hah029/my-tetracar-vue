@@ -4,6 +4,7 @@ export const DIFFICULTIES = {
   easy: {
     id: "easy",
     name: "Easy",
+    description: "Lower speed, fewer obstacles and more forgiving pickups.",
     allowCoins: true,
     allowPositiveBoosts: true,
     allowNegativeBoosts: false,
@@ -22,6 +23,7 @@ export const DIFFICULTIES = {
   normal: {
     id: "normal",
     name: "Normal",
+    description: "Current baseline balance for speed, pickups and obstacles.",
     allowCoins: true,
     allowPositiveBoosts: true,
     allowNegativeBoosts: true,
@@ -40,6 +42,7 @@ export const DIFFICULTIES = {
   hard: {
     id: "hard",
     name: "Hard",
+    description: "Higher speed, scarce boosts and tighter obstacle rhythm.",
     allowCoins: true,
     allowPositiveBoosts: true,
     allowNegativeBoosts: true,

@@ -24,7 +24,7 @@ export class RoadManager {
   private carManager = CarManager.getInstance();
 
   private config!: RoadConfig;
-  private scene!: THREE.Scene;
+  private scene: THREE.Scene | null = null;
 
   public initialize(config: RoadConfig, scene: THREE.Scene) {
     this.config = { ...useEnvironmentStore().neonRoadConfig, ...config };
@@ -43,13 +43,16 @@ export class RoadManager {
   }
 
   public createRoad(): void {
+    if (!this.scene) return;
+
     this.clear();
     this.createStandardRoad();
   }
 
   private createStandardRoad(): void {
     this.road = new Road(this.config);
-    this.scene.add(this.road);
+    if (!this.scene) return;
+
     this.scene.add(this.road);
     this.addEdges();
     this.addRoadLines();
@@ -119,7 +122,7 @@ export class RoadManager {
       color,
       edgeConfig.opacity,
     );
-    this.scene.add(leftEdge);
+    this.scene?.add(leftEdge);
     this.edges.push(leftEdge);
 
     const rightEdge = new RoadEdge(
@@ -129,7 +132,7 @@ export class RoadManager {
       color,
       edgeConfig.opacity,
     );
-    this.scene.add(rightEdge);
+    this.scene?.add(rightEdge);
     this.edges.push(rightEdge);
   }
 
@@ -157,7 +160,7 @@ export class RoadManager {
         emissive: lineColor,
       });
       this.roadLines.push(line);
-      this.scene.add(line);
+      this.scene?.add(line);
     }
   }
   private addRoadLanes(): void {
@@ -186,7 +189,7 @@ export class RoadManager {
         color: laneColor,
       });
       this.roadLanes.push(lane);
-      this.scene.add(lane);
+      this.scene?.add(lane);
     }
   }
 
@@ -209,17 +212,22 @@ export class RoadManager {
 
   public clear(): void {
     if (this.road) {
-      this.scene.remove(this.road);
+      this.scene?.remove(this.road);
       this.road = null;
     }
-    this.roadLines.forEach((line) => this.scene.remove(line));
+    this.roadLines.forEach((line) => this.scene?.remove(line));
     this.roadLines = [];
-    this.roadLanes.forEach((line) => this.scene.remove(line));
+    this.roadLanes.forEach((line) => this.scene?.remove(line));
     this.roadLanes = [];
-    this.edges.forEach((edge) => this.scene.remove(edge));
+    this.edges.forEach((edge) => this.scene?.remove(edge));
     this.edges = [];
 
     this.clearSideObjects();
+  }
+
+  public dispose(): void {
+    this.clear();
+    this.scene = null;
   }
 
   public setRoadColor(color: number, emissive?: number): void {

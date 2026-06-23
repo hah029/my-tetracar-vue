@@ -40,7 +40,7 @@ import { useGraphicsStore } from "@/store/graphicsStore";
 const audioStore = useAudioStore();
 const graphicsStore = useGraphicsStore();
 const soundManager = SoundManager.getInstance();
-const volume = ref(Number(localStorage.getItem("masterVolume") ?? 0.6));
+const volume = ref(audioStore.masterVolume);
 const rowView = ref([false, false, false, false]);
 
 const foo = createNewText();
@@ -64,6 +64,14 @@ function updateVolume() {
     audioStore.setVolume(volume.value);
     soundManager.play("sfx_jump");
 };
+
+watch(
+    () => audioStore.masterVolume,
+    (value) => {
+        volume.value = value;
+    },
+    { immediate: true },
+);
 
 const props = defineProps<{
     backStatus: boolean;

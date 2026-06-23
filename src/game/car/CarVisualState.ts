@@ -1,10 +1,11 @@
 import * as THREE from "three";
-import { loadTexture } from "@/helpers/loaders";
+import { atlas } from "@/assets/textures/TextureAtlas";
+import type { AtlasSpriteName } from "@/assets/textures/atlasSprites";
 import { usePlayerStore } from "@/store/playerStore";
 
 export type CarVisualEffect = "nitro" | "shield" | "damage" | "default";
 
-export type TextureMap = Record<CarVisualEffect, string>;
+export type TextureMap = Record<CarVisualEffect, AtlasSpriteName>;
 
 export class CarVisualState {
   private meshes: THREE.Mesh[] = [];
@@ -34,12 +35,24 @@ export class CarVisualState {
   }
 
   preloadTextures(textureMap: TextureMap) {
-    Object.entries(textureMap).forEach(([mode, url]) => {
-      const texture = loadTexture(url);
-      texture.flipY = false;
+    Object.entries(textureMap).forEach(([mode, spriteName]) => {
+      const texture = this.createAtlasTexture(spriteName);
+      if (!texture) return;
 
-      this.textures.set(mode as CarVisualEffect | "default", texture);
+      this.textures.set(mode as CarVisualEffect, texture);
     });
+  }
+
+  private createAtlasTexture(spriteName: AtlasSpriteName): THREE.Texture | null {
+    const atlasTexture = atlas.getAtlasTexture();
+    const sprite = atlas.getSprite(spriteName);
+    if (!atlasTexture || !sprite) return null;
+
+    const texture = atlasTexture.clone();
+    texture.repeat.set(sprite.uvRect.w, sprite.uvRect.h);
+    texture.offset.set(sprite.uvRect.u, sprite.uvRect.v);
+    texture.needsUpdate = true;
+    return texture;
   }
 
   startBlink(duration: number = usePlayerStore().DEFAULT_BLINK_DURATION) {
@@ -140,6 +153,7 @@ export class CarVisualState {
       }
       if (material.map !== nextTexture) {
         material.map = nextTexture || null;
+        material.needsUpdate = true;
       }
 
       // Выбор emissive цвета и карты

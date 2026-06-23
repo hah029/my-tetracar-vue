@@ -1,5 +1,5 @@
 export interface CityLayerConfig {
-  type: "city";
+  type: "city" | "hills" | "ocean";
   xMin: number;
   xMax: number;
   zStart: number;

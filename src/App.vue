@@ -235,6 +235,7 @@ onMounted(() => {
 onUnmounted(() => {
     loop?.cleanupEventListeners();
     loop?.stop();
+    game.dispose();
     console.log('onUnmounted');
 });
 </script>

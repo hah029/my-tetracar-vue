@@ -4,6 +4,7 @@ import {
   type TextureOptions,
 } from "@/helpers/loaders/loadTexture";
 import { atlas } from "@/assets/textures/TextureAtlas";
+import { ITEM_ATLAS_SPRITES, type AtlasSpriteName } from "@/assets/textures/atlasSprites";
 import { useCommonStore } from "@/store/commonStore";
 
 export interface MaterialConfig {
@@ -12,7 +13,7 @@ export interface MaterialConfig {
   color?: number;
   textureUrl?: string;
   textureOptions?: TextureOptions;
-  atlasSprite?: string;
+  atlasSprite?: AtlasSpriteName;
   emissive?: number;
   emissiveIntensity?: number;
   transparent?: boolean;
@@ -77,7 +78,8 @@ class MaterialPoolClass {
       const sprite = atlas.getSprite(config.atlasSprite);
 
       if (atlasTexture) {
-        material.map = atlasTexture;
+        material.map = atlasTexture.clone();
+        material.map.needsUpdate = true;
 
         if (sprite) {
           material.map.repeat.set(sprite.uvRect.w, sprite.uvRect.h);
@@ -93,9 +95,9 @@ class MaterialPoolClass {
 
   getGoldenMaterial(): THREE.Material {
     return this.getMaterial({
-      type: "standardWithMap",
+      type: "atlas",
       key: "golden_coin",
-      textureUrl: useCommonStore().config.materials.golden.textureUrl,
+      atlasSprite: ITEM_ATLAS_SPRITES.golden,
       emissive: useCommonStore().config.materials.golden.emissive,
       emissiveIntensity:
         useCommonStore().config.materials.golden.emissiveIntensity,
@@ -104,8 +106,9 @@ class MaterialPoolClass {
 
   getEnergonMaterial(): THREE.Material {
     return this.getMaterial({
-      type: "standard",
+      type: "atlas",
       key: "energon_coin",
+      atlasSprite: ITEM_ATLAS_SPRITES.energon,
       color: 0x82c8e5,
       emissive: 0x82c8e5,
       emissiveIntensity: 0.6,
@@ -114,8 +117,9 @@ class MaterialPoolClass {
 
   getNitroMaterial(): THREE.Material {
     return this.getMaterial({
-      type: "standard",
+      type: "atlas",
       key: "nitro_booster",
+      atlasSprite: ITEM_ATLAS_SPRITES.nitro,
       color: 0x00dd00,
       emissive: 0x00dd00,
       emissiveIntensity: 0.6,
@@ -124,8 +128,9 @@ class MaterialPoolClass {
 
   getShieldMaterial(): THREE.Material {
     return this.getMaterial({
-      type: "standard",
+      type: "atlas",
       key: "shield_booster",
+      atlasSprite: ITEM_ATLAS_SPRITES.shield,
       color: 0xffffff,
       emissive: 0xffffff,
       emissiveIntensity: 0.6,
@@ -134,8 +139,9 @@ class MaterialPoolClass {
 
   getMagnetMaterial(): THREE.Material {
     return this.getMaterial({
-      type: "standard",
+      type: "atlas",
       key: "magnet_booster",
+      atlasSprite: ITEM_ATLAS_SPRITES.magnet,
       color: 0x0088ff,
       emissive: 0x0088ff,
       emissiveIntensity: 0.6,
@@ -144,8 +150,9 @@ class MaterialPoolClass {
 
   getBulletMaterial(): THREE.Material {
     return this.getMaterial({
-      type: "standard",
+      type: "atlas",
       key: "bullet_booster",
+      atlasSprite: ITEM_ATLAS_SPRITES.bullet,
       color: 0xdd0000,
       emissive: 0xdd0000,
       emissiveIntensity: 0.6,

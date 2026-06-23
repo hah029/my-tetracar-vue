@@ -23,13 +23,12 @@ export const useAudioStore = defineStore("audio", () => {
 
   async function toggleMaster() {
     masterEnabled.value = !masterEnabled.value;
-    soundManager.setMusic(masterEnabled.value);
-    await storage.setPlayerDataByKey("masterEnabled", musicEnabled.value);
+    soundManager.setMaster(masterEnabled.value);
+    await storage.setPlayerDataByKey("masterEnabled", masterEnabled.value);
   }
 
   async function toggleSFX() {
     sfxEnabled.value = !sfxEnabled.value;
-    soundManager.setMusic(sfxEnabled.value);
     await storage.setPlayerDataByKey("sfxEnabled", sfxEnabled.value);
   }
 
@@ -46,6 +45,7 @@ export const useAudioStore = defineStore("audio", () => {
 
     masterEnabled.value = data?.masterEnabled ?? false;
     musicEnabled.value = data?.musicEnabled ?? false;
+    sfxEnabled.value = data?.sfxEnabled ?? false;
     masterVolume.value = data?.masterVolume ?? audio.default_volume;
   }
 

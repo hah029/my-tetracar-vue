@@ -1,6 +1,6 @@
 // src/composables/useGame.ts
 import * as THREE from "three";
-import { ref, watch } from "vue";
+import { ref, watch, type WatchStopHandle } from "vue";
 // managers
 import { type CollisionResult } from "@/game/collision/CollisionSystem";
 import { type FlashType } from "@/game/effects/FlashEffectManager";
@@ -72,6 +72,12 @@ export function useGame() {
 
   let bulletSystem: BulletSystem;
   let collisionSystem: CollisionSystem;
+  let stopRoadConfigWatcher: WatchStopHandle | null = null;
+
+  function rebuildRoadRuntime() {
+    if (!roadManager) return;
+    roadManager.updateConfig(useEnvironmentStore().getLevelRoadConfig());
+  }
 
   function init(scene: THREE.Scene) {
     sceneRef = scene;
@@ -110,12 +116,11 @@ export function useGame() {
 
     // === Создание дороги и машины ===
     roadManager.createRoad();
-    watch(
-      () => levelStore.currentLevelId,
-      () => {
-        if (!roadManager) return;
-        roadManager.updateConfig(useEnvironmentStore().getLevelRoadConfig());
-      },
+    stopRoadConfigWatcher?.();
+    stopRoadConfigWatcher = watch(
+      () => useEnvironmentStore().currentRoad,
+      rebuildRoadRuntime,
+      { deep: true },
     );
 
     const newCar = carManager.createCar();
@@ -319,10 +324,6 @@ export function useGame() {
   }
 
   function reset() {
-    console.log(
-      "[DEBUG useGame.reset] called, carManager exists:",
-      !!carManager,
-    );
     if (!carManager || !obstacleManager || !roadManager || !sceneRef) {
       console.warn("[useGame.reset] missing managers:", {
         carManager: !!carManager,
@@ -333,10 +334,8 @@ export function useGame() {
       return;
     }
 
-    console.log("[DEBUG useGame.reset] calling carManager.resetCar()");
     carManager.resetCar();
     interactiveManager.reset();
-    roadManager.clear();
     collisionSystem.reset();
     bulletSystem.reset();
     flashEffectManager.clear();
@@ -359,7 +358,7 @@ export function useGame() {
       });
     }
 
-    roadManager.createRoad();
+    rebuildRoadRuntime();
 
     const newCar = carManager.getCar();
     car.value.mesh = newCar;
@@ -380,6 +379,23 @@ export function useGame() {
     progressStore.resetCoins();
 
     CameraSystem.reset(car.value.mesh.position);
+  }
+
+  function dispose() {
+    stopRoadConfigWatcher?.();
+    stopRoadConfigWatcher = null;
+
+    interactiveManager?.reset();
+    obstacleManager?.reset();
+    bulletSystem?.reset();
+    flashEffectManager?.clear();
+    roadManager?.dispose();
+    cityManager?.dispose();
+    carManager?.dispose();
+
+    sceneRef = null;
+    obstacles.value = [];
+    jumps.value = [];
   }
 
   function shoot() {
@@ -558,6 +574,7 @@ export function useGame() {
     resetJumps,
     getDangerLevel,
     reset,
+    dispose,
     spawnFlash,
 
     checkObstaclesCollision,

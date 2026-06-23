@@ -56,7 +56,7 @@ export class YandexPlatform implements IGamePlatform {
   }
 
   private async ensurePlayerDataCache(): Promise<PlayerDataSet | null> {
-    if (this.playerDataCache) {
+    if (this.playerDataCache && this.isPlayerDataCacheComplete) {
       return this.playerDataCache;
     }
 
@@ -66,7 +66,10 @@ export class YandexPlatform implements IGamePlatform {
       return null;
     }
 
-    this.playerDataCache = await player.getData();
+    this.playerDataCache = {
+      ...(this.playerDataCache ?? {}),
+      ...(await player.getData()),
+    };
     this.isPlayerDataCacheComplete = true;
 
     return this.playerDataCache;

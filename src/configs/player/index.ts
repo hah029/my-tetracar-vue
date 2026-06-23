@@ -1,4 +1,5 @@
 import { TEXTURES } from "@/assets/textures";
+import { ATLAS_SPRITES } from "@/assets/textures/atlasSprites";
 import { MODELS } from "@/assets/models";
 import type { GeometryConfig, MaterialConfig } from "@/game/cube/types";
 import type { TextureMap } from "@/game/car/CarVisualState";
@@ -55,10 +56,10 @@ export default {
 
   // маппинг текстур на состояния
   carMaterialConfigExtra: {
-    default: TEXTURES.cube.base,
-    nitro: TEXTURES.cube.nitro,
-    shield: TEXTURES.cube.shield,
-    damage: TEXTURES.cube.bullet,
+    default: ATLAS_SPRITES.cube.base,
+    nitro: ATLAS_SPRITES.cube.nitro,
+    shield: ATLAS_SPRITES.cube.armor,
+    damage: ATLAS_SPRITES.cube.bullet,
   } as TextureMap,
 
   // маппинг цветов эмиссии

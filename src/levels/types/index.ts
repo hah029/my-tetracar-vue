@@ -285,7 +285,7 @@ export interface SceneryConfig {
 }
 
 export interface SceneryLayerConfig {
-  type: "city";
+  type: "city" | "hills" | "ocean";
   xMin: number;
   xMax: number;
   zStart: number;

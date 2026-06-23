@@ -3,6 +3,7 @@ import type { LevelConfig } from "@/levels/types";
 const nightCity = {
   id: "night_city",
   name: "Night City",
+  description: "Baseline neon route with dense city scenery and balanced visibility.",
 
   visual: {
     camera: {

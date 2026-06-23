@@ -1,6 +1,7 @@
 import textureUrl from "@/assets/textures/road_tile.svg";
 import { MODELS } from "@/assets/models";
-import { TEXTURES } from "@/assets/textures";
+import { atlas } from "@/assets/textures/TextureAtlas";
+import { ATLAS_SPRITES } from "@/assets/textures/atlasSprites";
 
 export default {
   axesSize: 5,
@@ -43,6 +44,7 @@ export default {
   },
 
   sideObjectMaterialConfig: {
-    textureUrl: TEXTURES.cube.base,
+    atlas,
+    atlasSprite: ATLAS_SPRITES.cube.base,
   },
 };

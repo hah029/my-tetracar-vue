@@ -71,6 +71,7 @@ export class SoundManager {
     const isMusic = this.musicSet.has(name);
 
     if (isMusic && !audioStore.musicEnabled) return;
+    if (!isMusic && !audioStore.sfxEnabled) return;
 
     if (sound.isPlaying) sound.stop();
     sound.play();
@@ -86,7 +87,7 @@ export class SoundManager {
   // Метод для одноразовых звуков, которые не конфликтуют друг с другом
   playOneShot(name: string, volume: number = 0.6) {
     const audioStore = useAudioStore();
-    if (!audioStore.masterEnabled) return;
+    if (!audioStore.masterEnabled || !audioStore.sfxEnabled) return;
 
     const originalSound = this.sounds[name];
     if (!originalSound?.buffer) return;

@@ -1,6 +1,8 @@
 import * as THREE from "three";
 import { useCommonStore } from "@/store/commonStore";
 import { atlas } from "@/assets/textures/TextureAtlas";
+import { ATLAS_SPRITES } from "@/assets/textures/atlasSprites";
+import { applyCubeSpriteUV } from "@/helpers/applyAtlasUV";
 import type { RoadSideObjectsConfig } from "./types";
 // /game/road/SideObjectsInstanced.ts
 // import { loadCubeModel } from "@/game/cube/loadCube";
@@ -40,37 +42,9 @@ export class SideObjectsInstanced {
     const geometry = new THREE.BoxGeometry(1, 1, 1);
 
     // APPLY ATLAS UV
-    const sprite = atlas.getSprite("cube_base");
+    const sprite = atlas.getSprite(ATLAS_SPRITES.cube.base);
     if (!sprite) throw new Error("Atlas sprite not found");
-    const uv = geometry.attributes.uv;
-
-    for (let i = 0; i < uv.count; i++) {
-      const u = uv.getX(i);
-      const v = uv.getY(i);
-
-      uv.setXY(
-        i,
-        sprite.uvRect.u + u * sprite.uvRect.w,
-        sprite.uvRect.v + v * sprite.uvRect.h,
-      );
-
-      // правки из коммита Артема (пока закомментировал)
-      // switch(i) {
-      //     // верхняя грань
-      //     case 8:
-      //     case 9:
-      //     case 10:
-      //     case 11:
-      //         uv.setXY(i, sprite.uvRect.u + u * sprite.uvRect.w * 0.5, sprite.uvRect.v + v * sprite.uvRect.h * 0.5);
-      //         break;
-
-      //     // все остальные грани (хак, т.к. текстуры боковушек в атласе одинаковые, а низ не видно)
-      //     default:
-      //         uv.setXY(i, sprite.uvRect.u + sprite.uvRect.w * (0.5 + u * 0.5), sprite.uvRect.v + sprite.uvRect.h * (1 - v) * 0.25);
-      // };
-    }
-
-    uv.needsUpdate = true;
+    applyCubeSpriteUV(geometry, sprite);
 
     // TEXTURE
     const atlasTexture = atlas.getAtlasTexture();

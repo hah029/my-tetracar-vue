@@ -1,4 +1,8 @@
 import * as THREE from "three";
+import {
+	REQUIRED_ATLAS_SPRITES,
+	type AtlasSpriteName,
+} from "@/assets/textures/atlasSprites";
 
 // Интерфейс для JSON от TexturePacker (формат "JSON (Array)")
 interface TexturePackerFrame {
@@ -61,15 +65,15 @@ export class AtlasSprite {
 	 */
 	applyToMaterial(material: THREE.Material): void {
 		if ("map" in material && material.map) {
-			material.map = this.texture;
+			material.map = this.texture.clone();
 			material.map.repeat.set(this.uvRect.w, this.uvRect.h);
 			material.map.offset.set(this.uvRect.u, this.uvRect.v);
+			material.map.needsUpdate = true;
 		}
 	}
 
 	applyToGeometry(geometry: THREE.BufferGeometry): void {
 		const uv = geometry.attributes.uv;
-		console.log("UV ARRAY", uv.array);
 
 		for (let i = 0; i < uv.count; i++) {
 			const u = uv.getX(i);
@@ -131,6 +135,7 @@ export class TextureAtlas {
 					const sprite = new AtlasSprite(this.atlasTexture, frame);
 					this.sprites.set(frame.filename, sprite);
 				}
+				this.validateRequiredSprites();
 
 				console.log(
 					`✅ TextureAtlas loaded: ${this.sprites.size} sprites`
@@ -148,8 +153,12 @@ export class TextureAtlas {
 	/**
 	 * Получить спрайт по имени файла
 	 */
-	getSprite(filename: string): AtlasSprite | undefined {
+	getSprite(filename: AtlasSpriteName): AtlasSprite | undefined {
 		return this.sprites.get(filename);
+	}
+
+	hasSprite(filename: AtlasSpriteName): boolean {
+		return this.sprites.has(filename);
 	}
 
 	/**
@@ -164,6 +173,18 @@ export class TextureAtlas {
 	 */
 	getAllSprites(): Map<string, AtlasSprite> {
 		return this.sprites;
+	}
+
+	private validateRequiredSprites(): void {
+		const missing = REQUIRED_ATLAS_SPRITES.filter(
+			(spriteName) => !this.sprites.has(spriteName),
+		);
+
+		if (missing.length > 0) {
+			throw new Error(
+				`Texture atlas is missing required sprites: ${missing.join(", ")}`,
+			);
+		}
 	}
 }
 

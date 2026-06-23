@@ -8,7 +8,7 @@ export class RoadLine extends THREE.Mesh {
       z,
       color = 0x888888,
       emissive = color,
-      emissiveIntensity = 2,
+      emissiveIntensity = 1,
       opacity = 1,
       length = 800,
     } = config;
