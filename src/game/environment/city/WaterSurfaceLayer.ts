@@ -11,7 +11,14 @@ export class WaterSurfaceLayer {
   ) {
     const width = Math.max(1, config.xMax - config.xMin);
     const depth = Math.max(1, config.zEnd - config.zStart);
-    const geometry = new THREE.PlaneGeometry(width, depth, 96, 96);
+    const widthSegments = Math.max(96, Math.min(220, Math.round(width / 3.5)));
+    const depthSegments = Math.max(96, Math.min(180, Math.round(depth / 3.5)));
+    const geometry = new THREE.PlaneGeometry(
+      width,
+      depth,
+      widthSegments,
+      depthSegments,
+    );
     const material = this.createMaterial(config);
 
     this.mesh = new THREE.Mesh(geometry, material);
@@ -72,15 +79,53 @@ export class WaterSurfaceLayer {
         uniform float uWaveSpeed;
         varying vec2 vUv;
         varying float vWave;
+        varying float vFoam;
+
+        vec2 hash(vec2 p) {
+          p = vec2(dot(p, vec2(127.1, 311.7)), dot(p, vec2(269.5, 183.3)));
+          return -1.0 + 2.0 * fract(sin(p) * 43758.5453123);
+        }
+
+        float noise(vec2 p) {
+          vec2 i = floor(p);
+          vec2 f = fract(p);
+          vec2 u = f * f * (3.0 - 2.0 * f);
+
+          return mix(
+            mix(dot(hash(i + vec2(0.0, 0.0)), f - vec2(0.0, 0.0)),
+                dot(hash(i + vec2(1.0, 0.0)), f - vec2(1.0, 0.0)), u.x),
+            mix(dot(hash(i + vec2(0.0, 1.0)), f - vec2(0.0, 1.0)),
+                dot(hash(i + vec2(1.0, 1.0)), f - vec2(1.0, 1.0)), u.x),
+            u.y
+          );
+        }
+
+        float fbm(vec2 p) {
+          float value = 0.0;
+          float amplitude = 0.5;
+          mat2 rotate = mat2(0.8, -0.6, 0.6, 0.8);
+
+          for (int i = 0; i < 5; i++) {
+            value += amplitude * noise(p);
+            p = rotate * p * 2.05 + 17.0;
+            amplitude *= 0.5;
+          }
+
+          return value;
+        }
 
         void main() {
           vUv = uv;
           vec3 pos = position;
           float t = uTime * uWaveSpeed;
-          float waveA = sin((pos.x * uWaveFrequency) + t);
-          float waveB = sin((pos.y * uWaveFrequency * 1.7) - t * 1.35);
-          float waveC = sin(((pos.x + pos.y) * uWaveFrequency * 0.65) + t * 0.7);
-          vWave = (waveA + waveB + waveC) / 3.0;
+          vec2 flow = vec2(t * 0.18, -t * 0.11);
+          vec2 gust = vec2(-t * 0.055, t * 0.075);
+          float swell = fbm(pos.xy * uWaveFrequency + flow);
+          float chop = fbm(pos.xy * uWaveFrequency * 2.85 + gust);
+          float ridges = 1.0 - abs(fbm(pos.xy * uWaveFrequency * 5.2 - flow * 1.6));
+
+          vWave = swell * 0.72 + chop * 0.34 + ridges * 0.2;
+          vFoam = smoothstep(0.58, 0.9, vWave + ridges * 0.25);
           pos.z += vWave * uWaveAmplitude;
           gl_Position = projectionMatrix * modelViewMatrix * vec4(pos, 1.0);
         }
@@ -93,13 +138,13 @@ export class WaterSurfaceLayer {
         uniform float uOpacity;
         varying vec2 vUv;
         varying float vWave;
+        varying float vFoam;
 
         void main() {
-          float foam = smoothstep(0.42, 0.92, vWave);
-          float band = sin((vUv.y * 44.0) + (vWave * 2.5)) * 0.5 + 0.5;
-          float mixFactor = clamp(foam * 0.55 + band * 0.12, 0.0, 1.0);
+          float longCurrent = smoothstep(0.22, 0.88, sin(vUv.y * 18.0 + vWave * 3.0) * 0.5 + 0.5);
+          float mixFactor = clamp(vFoam * 0.62 + longCurrent * 0.08 + vWave * 0.18, 0.0, 1.0);
           vec3 color = mix(uColorA, uColorB, mixFactor);
-          color += uEmissive * uEmissiveIntensity * (0.35 + foam * 0.65);
+          color += uEmissive * uEmissiveIntensity * (0.28 + vFoam * 0.95);
           gl_FragColor = vec4(color, uOpacity);
         }
       `,

@@ -50,11 +50,15 @@ export class CityManager {
     );
   }
 
-  public update(deltaTime: number, speed: number): void {
+  public update(
+    deltaTime: number,
+    speed: number,
+    carPosition?: THREE.Vector3,
+  ): void {
     for (const layer of this.layers) {
       layer.update(deltaTime, speed);
     }
-    this.weatherEffects?.update(deltaTime, speed);
+    this.weatherEffects?.update(deltaTime, speed, carPosition);
   }
 
   public dispose() {

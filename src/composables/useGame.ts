@@ -163,10 +163,14 @@ export function useGame() {
     }
   }
 
-  function updateCity(deltaTime: number, speed: number) {
+  function updateCity(
+    deltaTime: number,
+    speed: number,
+    carPosition?: THREE.Vector3,
+  ) {
     if (!cityManager) return;
 
-    cityManager.update(deltaTime, speed);
+    cityManager.update(deltaTime, speed, carPosition);
   }
 
   function destroyObstacles(

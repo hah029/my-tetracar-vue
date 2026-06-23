@@ -315,6 +315,7 @@ export interface SceneryLayerConfig {
 export interface WeatherConfig {
   rain?: RainWeatherConfig;
   lightning?: LightningWeatherConfig;
+  headlights?: HeadlightsWeatherConfig;
 }
 
 export interface RainWeatherConfig {
@@ -339,6 +340,21 @@ export interface LightningWeatherConfig {
   duration: number;
   intensity: number;
   position?: Vector3Tuple;
+}
+
+export interface HeadlightsWeatherConfig {
+  enabled: boolean;
+  color: string;
+  intensity: number;
+  distance: number;
+  angle: number;
+  penumbra: number;
+  decay: number;
+  targetDistance: number;
+  positionOffsets: Vector3Tuple[];
+  beamLength: number;
+  beamRadius: number;
+  beamOpacity: number;
 }
 
 export interface InteractiveConfig {

@@ -130,7 +130,7 @@ export function GameLoop(
           UpdateMode.Gameplay,
         );
         game.updateRoad(deltaTime, currentSpeed);
-        game.updateCity(deltaTime, currentSpeed);
+        game.updateCity(deltaTime, currentSpeed, game.car.value.mesh.position);
 
         BulletSystem.getInstance().update(deltaTime);
 
