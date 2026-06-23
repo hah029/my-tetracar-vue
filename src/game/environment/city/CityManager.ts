@@ -99,9 +99,10 @@ export class CityManager {
       const layer =
         layerConfig.type === "city"
           ? await this.createCityLayer(resolvedConfig, scenery.scenerySets)
-          : layerConfig.type === "water_surface"
+          : layerConfig.type === "water_surface" ||
+              layerConfig.type === "terrain_surface"
             ? new WaterSurfaceLayer(this.scene, resolvedConfig)
-          : new ProceduralSceneryLayerInstanced(this.scene, resolvedConfig);
+            : new ProceduralSceneryLayerInstanced(this.scene, resolvedConfig);
 
       if (!layer) continue;
 

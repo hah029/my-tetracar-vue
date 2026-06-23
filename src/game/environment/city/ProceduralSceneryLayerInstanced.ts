@@ -5,6 +5,7 @@ export class ProceduralSceneryLayerInstanced {
   private mesh: THREE.InstancedMesh;
   private positions: THREE.Vector3[] = [];
   private scales: THREE.Vector3[] = [];
+  private rotations: number[] = [];
   private dummy = new THREE.Object3D();
 
   private readonly loopThreshold = 10;
@@ -33,10 +34,12 @@ export class ProceduralSceneryLayerInstanced {
 
       const position = new THREE.Vector3(x, config.y + height / 2, z);
       const scale = new THREE.Vector3(width, height, depth);
+      const rotationY = this.resolveRotationY(config.type);
 
       this.positions.push(position);
       this.scales.push(scale);
-      this.writeMatrix(i, position, scale);
+      this.rotations.push(rotationY);
+      this.writeMatrix(i, position, scale, rotationY);
     }
 
     this.mesh.instanceMatrix.needsUpdate = true;
@@ -50,6 +53,7 @@ export class ProceduralSceneryLayerInstanced {
     for (let i = 0; i < this.positions.length; i++) {
       const position = this.positions[i];
       const scale = this.scales[i];
+      const rotationY = this.rotations[i] ?? 0;
       if (!position || !scale) continue;
 
       position.z += move;
@@ -58,7 +62,7 @@ export class ProceduralSceneryLayerInstanced {
         position.z -= cycleLength;
       }
 
-      this.writeMatrix(i, position, scale);
+      this.writeMatrix(i, position, scale, rotationY);
     }
 
     this.mesh.instanceMatrix.needsUpdate = true;
@@ -76,12 +80,18 @@ export class ProceduralSceneryLayerInstanced {
 
     this.positions = [];
     this.scales = [];
+    this.rotations = [];
   }
 
-  private writeMatrix(index: number, position: THREE.Vector3, scale: THREE.Vector3) {
+  private writeMatrix(
+    index: number,
+    position: THREE.Vector3,
+    scale: THREE.Vector3,
+    rotationY: number,
+  ) {
     this.dummy.position.copy(position);
     this.dummy.scale.copy(scale);
-    this.dummy.rotation.set(0, 0, 0);
+    this.dummy.rotation.set(0, rotationY, 0);
     this.dummy.updateMatrix();
     this.mesh.setMatrixAt(index, this.dummy.matrix);
   }
@@ -90,6 +100,10 @@ export class ProceduralSceneryLayerInstanced {
     switch (type) {
       case "hills":
         return new THREE.ConeGeometry(0.5, 1, 8, 1);
+      case "basalt_spire":
+        return new THREE.ConeGeometry(0.42, 1, 5, 1);
+      case "lava_flow":
+        return new THREE.BoxGeometry(1, 1, 1);
       case "ocean":
         return new THREE.BoxGeometry(1, 1, 1);
       default:
@@ -111,6 +125,14 @@ export class ProceduralSceneryLayerInstanced {
 
   private resolveDepth(type: CityLayerConfig["type"], width: number): number {
     if (type === "ocean") return Math.max(2, width * 0.35);
+    if (type === "lava_flow") return Math.max(18, width * 18);
+    if (type === "basalt_spire") return width * THREE.MathUtils.randFloat(0.65, 1.15);
     return width;
+  }
+
+  private resolveRotationY(type: CityLayerConfig["type"]): number {
+    if (type === "lava_flow") return THREE.MathUtils.randFloatSpread(0.22);
+    if (type === "basalt_spire") return THREE.MathUtils.randFloat(0, Math.PI * 2);
+    return 0;
   }
 }

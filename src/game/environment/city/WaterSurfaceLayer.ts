@@ -71,12 +71,14 @@ export class WaterSurfaceLayer {
         uWaveAmplitude: { value: config.waveAmplitude ?? 1.2 },
         uWaveFrequency: { value: config.waveFrequency ?? 0.08 },
         uWaveSpeed: { value: config.waveSpeed ?? 1.6 },
+        uTerrainMode: { value: config.type === "terrain_surface" ? 1 : 0 },
       },
       vertexShader: `
         uniform float uTime;
         uniform float uWaveAmplitude;
         uniform float uWaveFrequency;
         uniform float uWaveSpeed;
+        uniform int uTerrainMode;
         varying vec2 vUv;
         varying float vWave;
         varying float vFoam;
@@ -124,8 +126,13 @@ export class WaterSurfaceLayer {
           float chop = fbm(pos.xy * uWaveFrequency * 2.85 + gust);
           float ridges = 1.0 - abs(fbm(pos.xy * uWaveFrequency * 5.2 - flow * 1.6));
 
-          vWave = swell * 0.72 + chop * 0.34 + ridges * 0.2;
-          vFoam = smoothstep(0.58, 0.9, vWave + ridges * 0.25);
+          if (uTerrainMode == 1) {
+            vWave = swell * 0.95 + chop * 0.18 + ridges * 0.08;
+            vFoam = smoothstep(0.2, 0.82, vWave * 0.65 + ridges * 0.08);
+          } else {
+            vWave = swell * 0.72 + chop * 0.34 + ridges * 0.2;
+            vFoam = smoothstep(0.58, 0.9, vWave + ridges * 0.25);
+          }
           pos.z += vWave * uWaveAmplitude;
           gl_Position = projectionMatrix * modelViewMatrix * vec4(pos, 1.0);
         }
@@ -136,15 +143,19 @@ export class WaterSurfaceLayer {
         uniform vec3 uEmissive;
         uniform float uEmissiveIntensity;
         uniform float uOpacity;
+        uniform int uTerrainMode;
         varying vec2 vUv;
         varying float vWave;
         varying float vFoam;
 
         void main() {
           float longCurrent = smoothstep(0.22, 0.88, sin(vUv.y * 18.0 + vWave * 3.0) * 0.5 + 0.5);
-          float mixFactor = clamp(vFoam * 0.62 + longCurrent * 0.08 + vWave * 0.18, 0.0, 1.0);
+          float mixFactor = uTerrainMode == 1
+            ? clamp(vFoam * 0.34 + vWave * 0.28, 0.0, 1.0)
+            : clamp(vFoam * 0.62 + longCurrent * 0.08 + vWave * 0.18, 0.0, 1.0);
           vec3 color = mix(uColorA, uColorB, mixFactor);
-          color += uEmissive * uEmissiveIntensity * (0.28 + vFoam * 0.95);
+          float emissiveMix = uTerrainMode == 1 ? (0.18 + vFoam * 0.42) : (0.28 + vFoam * 0.95);
+          color += uEmissive * uEmissiveIntensity * emissiveMix;
           gl_FragColor = vec4(color, uOpacity);
         }
       `,

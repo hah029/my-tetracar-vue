@@ -5,6 +5,13 @@ export class WeatherEffects {
   private rainMesh: THREE.InstancedMesh | null = null;
   private rainPositions: THREE.Vector3[] = [];
   private rainDummy = new THREE.Object3D();
+  private fireRockMesh: THREE.InstancedMesh | null = null;
+  private fireRockPositions: THREE.Vector3[] = [];
+  private fireRockSpeeds: number[] = [];
+  private fireRockScales: number[] = [];
+  private fireRockDummy = new THREE.Object3D();
+  private skyMesh: THREE.Mesh<THREE.SphereGeometry, THREE.ShaderMaterial> | null =
+    null;
   private lightningLight: THREE.PointLight | null = null;
   private lightningBolt: THREE.Group | null = null;
   private lightningMaterials: THREE.MeshBasicMaterial[] = [];
@@ -21,7 +28,9 @@ export class WeatherEffects {
     private scene: THREE.Scene,
     private config: WeatherConfig,
   ) {
+    this.createSky();
     this.createRain();
+    this.createFireRocks();
     this.createLightning();
     this.createHeadlights();
   }
@@ -32,7 +41,9 @@ export class WeatherEffects {
     carPosition?: THREE.Vector3,
   ): void {
     const dtSeconds = deltaTime / 1000;
+    this.updateSky(dtSeconds);
     this.updateRain(deltaTime, baseSpeed);
+    this.updateFireRocks(deltaTime, baseSpeed);
     this.updateLightning(dtSeconds);
     this.updateHeadlights(carPosition);
   }
@@ -49,6 +60,24 @@ export class WeatherEffects {
       this.rainMesh = null;
     }
 
+    if (this.fireRockMesh) {
+      this.scene.remove(this.fireRockMesh);
+      this.fireRockMesh.geometry.dispose();
+      if (Array.isArray(this.fireRockMesh.material)) {
+        this.fireRockMesh.material.forEach((material) => material.dispose());
+      } else {
+        this.fireRockMesh.material.dispose();
+      }
+      this.fireRockMesh = null;
+    }
+
+    if (this.skyMesh) {
+      this.scene.remove(this.skyMesh);
+      this.skyMesh.geometry.dispose();
+      this.skyMesh.material.dispose();
+      this.skyMesh = null;
+    }
+
     if (this.lightningLight) {
       this.scene.remove(this.lightningLight);
       this.lightningLight.dispose();
@@ -63,6 +92,234 @@ export class WeatherEffects {
     this.lightningMaterials = [];
     this.disposeHeadlights();
     this.rainPositions = [];
+    this.fireRockPositions = [];
+    this.fireRockSpeeds = [];
+    this.fireRockScales = [];
+  }
+
+  private createSky(): void {
+    const sky = this.config.sky;
+    if (!sky?.enabled) return;
+
+    const material = new THREE.ShaderMaterial({
+      transparent: sky.opacity < 1,
+      depthWrite: false,
+      depthTest: false,
+      side: THREE.BackSide,
+      uniforms: {
+        uTime: { value: 0 },
+        uTopColor: {
+          value: new THREE.Color(
+            Number.parseInt(sky.topColor.replace("#", ""), 16),
+          ),
+        },
+        uBottomColor: {
+          value: new THREE.Color(
+            Number.parseInt(sky.bottomColor.replace("#", ""), 16),
+          ),
+        },
+        uCloudColor: {
+          value: new THREE.Color(
+            Number.parseInt(sky.cloudColor.replace("#", ""), 16),
+          ),
+        },
+        uOpacity: { value: sky.opacity },
+        uNoiseStrength: { value: sky.noiseStrength },
+        uNoiseScale: { value: sky.noiseScale },
+        uSpeed: { value: sky.speed },
+      },
+      vertexShader: `
+        varying vec3 vWorldPosition;
+
+        void main() {
+          vec4 worldPosition = modelMatrix * vec4(position, 1.0);
+          vWorldPosition = worldPosition.xyz;
+          gl_Position = projectionMatrix * viewMatrix * worldPosition;
+        }
+      `,
+      fragmentShader: `
+        varying vec3 vWorldPosition;
+
+        uniform float uTime;
+        uniform vec3 uTopColor;
+        uniform vec3 uBottomColor;
+        uniform vec3 uCloudColor;
+        uniform float uOpacity;
+        uniform float uNoiseStrength;
+        uniform float uNoiseScale;
+        uniform float uSpeed;
+
+        float hash(vec2 p) {
+          return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453123);
+        }
+
+        float noise(vec2 p) {
+          vec2 i = floor(p);
+          vec2 f = fract(p);
+          vec2 u = f * f * (3.0 - 2.0 * f);
+          return mix(
+            mix(hash(i + vec2(0.0, 0.0)), hash(i + vec2(1.0, 0.0)), u.x),
+            mix(hash(i + vec2(0.0, 1.0)), hash(i + vec2(1.0, 1.0)), u.x),
+            u.y
+          );
+        }
+
+        void main() {
+          vec3 dir = normalize(vWorldPosition);
+          float vertical = clamp(dir.y * 0.5 + 0.5, 0.0, 1.0);
+          vec2 cloudUv = dir.xz * uNoiseScale + vec2(uTime * uSpeed, -uTime * uSpeed * 0.35);
+          float cloud = noise(cloudUv);
+          cloud += noise(cloudUv * 2.1 + 8.7) * 0.45;
+          cloud = smoothstep(0.48, 1.08, cloud) * uNoiseStrength;
+
+          vec3 baseColor = mix(uBottomColor, uTopColor, vertical);
+          vec3 color = mix(baseColor, uCloudColor, cloud);
+          gl_FragColor = vec4(color, uOpacity);
+        }
+      `,
+    });
+
+    this.skyMesh = new THREE.Mesh(
+      new THREE.SphereGeometry(950, 48, 24),
+      material,
+    );
+    this.skyMesh.frustumCulled = false;
+    this.skyMesh.renderOrder = -10;
+    this.scene.add(this.skyMesh);
+  }
+
+  private updateSky(dtSeconds: number): void {
+    if (!this.skyMesh) return;
+    this.skyMesh.material.uniforms.uTime.value += dtSeconds;
+  }
+
+  private createFireRocks(): void {
+    const fireRocks = this.config.fireRocks;
+    if (!fireRocks?.enabled || fireRocks.count <= 0) return;
+
+    const geometry = new THREE.ConeGeometry(0.35, 2.8, 7, 1, true);
+    const material = new THREE.ShaderMaterial({
+      transparent: fireRocks.opacity < 1,
+      depthWrite: false,
+      blending: THREE.AdditiveBlending,
+      uniforms: {
+        uColor: {
+          value: new THREE.Color(
+            Number.parseInt(fireRocks.color.replace("#", ""), 16),
+          ),
+        },
+        uCoreColor: {
+          value: new THREE.Color(
+            Number.parseInt(fireRocks.coreColor.replace("#", ""), 16),
+          ),
+        },
+        uOpacity: { value: fireRocks.opacity },
+      },
+      vertexShader: `
+        varying float vHotness;
+
+        void main() {
+          vHotness = smoothstep(-1.4, 1.4, position.y);
+          gl_Position = projectionMatrix * modelViewMatrix * instanceMatrix * vec4(position, 1.0);
+        }
+      `,
+      fragmentShader: `
+        varying float vHotness;
+
+        uniform vec3 uColor;
+        uniform vec3 uCoreColor;
+        uniform float uOpacity;
+
+        void main() {
+          vec3 color = mix(uColor, uCoreColor, vHotness);
+          float alpha = mix(0.35, 1.0, vHotness) * uOpacity;
+          gl_FragColor = vec4(color, alpha);
+        }
+      `,
+    });
+
+    this.fireRockMesh = new THREE.InstancedMesh(
+      geometry,
+      material,
+      fireRocks.count,
+    );
+    this.fireRockMesh.frustumCulled = false;
+    this.fireRockMesh.renderOrder = 6;
+
+    for (let i = 0; i < fireRocks.count; i++) {
+      const position = this.createFireRockPosition(true);
+      this.fireRockPositions.push(position);
+      this.fireRockSpeeds.push(
+        THREE.MathUtils.randFloat(fireRocks.minFallSpeed, fireRocks.maxFallSpeed),
+      );
+      this.fireRockScales.push(
+        THREE.MathUtils.randFloat(fireRocks.minSize, fireRocks.maxSize),
+      );
+      this.writeFireRockMatrix(i, position);
+    }
+
+    this.fireRockMesh.instanceMatrix.needsUpdate = true;
+    this.scene.add(this.fireRockMesh);
+  }
+
+  private updateFireRocks(deltaTime: number, baseSpeed: number): void {
+    const fireRocks = this.config.fireRocks;
+    if (!fireRocks?.enabled || !this.fireRockMesh) return;
+
+    const dtSeconds = deltaTime / 1000;
+    const forwardMove = deltaTime * baseSpeed * 0.08;
+
+    for (let i = 0; i < this.fireRockPositions.length; i++) {
+      const position = this.fireRockPositions[i];
+      const fallSpeed = this.fireRockSpeeds[i] ?? fireRocks.minFallSpeed;
+      if (!position) continue;
+
+      position.x += fireRocks.windX * dtSeconds;
+      position.y -= fallSpeed * dtSeconds;
+      position.z += forwardMove + fireRocks.windZ * dtSeconds;
+
+      if (
+        position.y < -8 ||
+        Math.abs(position.x) > fireRocks.areaWidth * 0.6 ||
+        position.z > fireRocks.areaDepth * 0.35
+      ) {
+        position.copy(this.createFireRockPosition(false));
+        this.fireRockSpeeds[i] = THREE.MathUtils.randFloat(
+          fireRocks.minFallSpeed,
+          fireRocks.maxFallSpeed,
+        );
+        this.fireRockScales[i] = THREE.MathUtils.randFloat(
+          fireRocks.minSize,
+          fireRocks.maxSize,
+        );
+      }
+
+      this.writeFireRockMatrix(i, position);
+    }
+
+    this.fireRockMesh.instanceMatrix.needsUpdate = true;
+  }
+
+  private createFireRockPosition(initial: boolean): THREE.Vector3 {
+    const fireRocks = this.config.fireRocks!;
+    return new THREE.Vector3(
+      THREE.MathUtils.randFloatSpread(fireRocks.areaWidth),
+      initial
+        ? THREE.MathUtils.randFloat(fireRocks.minHeight, fireRocks.maxHeight)
+        : fireRocks.maxHeight,
+      THREE.MathUtils.randFloat(-fireRocks.areaDepth, fireRocks.areaDepth * 0.18),
+    );
+  }
+
+  private writeFireRockMatrix(index: number, position: THREE.Vector3): void {
+    if (!this.fireRockMesh) return;
+
+    const scale = this.fireRockScales[index] ?? 1;
+    this.fireRockDummy.position.copy(position);
+    this.fireRockDummy.rotation.set(0.82, 0, -0.55);
+    this.fireRockDummy.scale.set(scale, scale, scale);
+    this.fireRockDummy.updateMatrix();
+    this.fireRockMesh.setMatrixAt(index, this.fireRockDummy.matrix);
   }
 
   private createRain(): void {

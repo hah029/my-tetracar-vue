@@ -1,5 +1,12 @@
 export interface CityLayerConfig {
-  type: "city" | "hills" | "ocean" | "water_surface";
+  type:
+    | "city"
+    | "hills"
+    | "ocean"
+    | "water_surface"
+    | "terrain_surface"
+    | "lava_flow"
+    | "basalt_spire";
   xMin: number;
   xMax: number;
   zStart: number;

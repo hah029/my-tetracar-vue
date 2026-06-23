@@ -290,7 +290,14 @@ export interface SceneryConfig {
 }
 
 export interface SceneryLayerConfig {
-  type: "city" | "hills" | "ocean" | "water_surface";
+  type:
+    | "city"
+    | "hills"
+    | "ocean"
+    | "water_surface"
+    | "terrain_surface"
+    | "lava_flow"
+    | "basalt_spire";
   xMin: number;
   xMax: number;
   zStart: number;
@@ -316,6 +323,37 @@ export interface WeatherConfig {
   rain?: RainWeatherConfig;
   lightning?: LightningWeatherConfig;
   headlights?: HeadlightsWeatherConfig;
+  sky?: AtmosphericSkyConfig;
+  fireRocks?: FireRocksWeatherConfig;
+}
+
+export interface AtmosphericSkyConfig {
+  enabled: boolean;
+  topColor: string;
+  bottomColor: string;
+  cloudColor: string;
+  opacity: number;
+  noiseStrength: number;
+  noiseScale: number;
+  speed: number;
+}
+
+export interface FireRocksWeatherConfig {
+  enabled: boolean;
+  count: number;
+  color: string;
+  coreColor: string;
+  opacity: number;
+  areaWidth: number;
+  areaDepth: number;
+  minHeight: number;
+  maxHeight: number;
+  minFallSpeed: number;
+  maxFallSpeed: number;
+  windX: number;
+  windZ: number;
+  minSize: number;
+  maxSize: number;
 }
 
 export interface RainWeatherConfig {
