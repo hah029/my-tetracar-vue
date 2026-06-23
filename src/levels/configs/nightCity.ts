@@ -3,7 +3,8 @@ import type { LevelConfig } from "@/levels/types";
 const nightCity = {
   id: "night_city",
   name: "Night City",
-  description: "Baseline neon route with dense city scenery and balanced visibility.",
+  description:
+    "Baseline neon route with dense city scenery and balanced visibility.",
 
   visual: {
     camera: {
@@ -23,8 +24,8 @@ const nightCity = {
       fogNear: 0.01,
       fogFar: 200,
       toneMappingExposure: 0.9,
-      bloomStrength: 1.0,
-      bloomRadius: 0,
+      bloomStrength: 0.3,
+      bloomRadius: 0.5,
       bloomThreshold: 1.2,
     },
 

@@ -1,7 +1,7 @@
 <template>
     <TouchZone />
 
-    <div class="game_hud">
+    <div class="game_hud" :class="{ 'game_hud--light-bg': hasLightBackground }">
         <!-- Верхняя панель -->
         <div class="top_panel">
             <div class="buttons_left_group">
@@ -106,6 +106,59 @@ $booster-icon-size: 1.875rem;
     --hud-pad-x: clamp(0.75rem, 4vmin, 2.5rem);
     --hud-top: clamp(0.75rem, 3vmin, 1.875rem);
     --hud-bottom-panel-height: clamp(4.5rem, 12vmin, 8rem);
+    --hud-text-shadow: 0 0 0.45rem rgba(0, 0, 0, 0.55), 0 0.08rem 0.18rem rgba(0, 0, 0, 0.55);
+    --hud-muted-color: rgba(255, 255, 255, 0.58);
+    --hud-divider-color: rgba(255, 255, 255, 0.4);
+    --hud-panel-bg: linear-gradient(90deg,
+            rgba(0, 0, 0, 0) 0%,
+            rgba(0, 0, 0, 0.55) 10%,
+            rgba(0, 0, 0, 0.55) 90%,
+            rgba(0, 0, 0, 0) 100%);
+    --hud-timed-bg: rgba(31, 112, 155, 0.16);
+    --hud-timed-border: rgba(105, 226, 255, 0.18);
+    --hud-timed-shadow: inset 0 0 1.4rem rgba(67, 184, 255, 0.06);
+    text-shadow: var(--hud-text-shadow);
+}
+
+.game_hud--light-bg {
+    --hud-text-shadow: 0 0.08rem 0.18rem rgba(255, 255, 255, 0.75), 0 0 0.7rem rgba(255, 255, 255, 0.45);
+    --hud-muted-color: rgba(20, 29, 40, 0.64);
+    --hud-divider-color: rgba(20, 29, 40, 0.32);
+    --hud-panel-bg: linear-gradient(90deg,
+            rgba(255, 255, 255, 0) 0%,
+            rgba(235, 243, 250, 0.78) 10%,
+            rgba(235, 243, 250, 0.78) 90%,
+            rgba(255, 255, 255, 0) 100%);
+    --hud-timed-bg: rgba(255, 255, 255, 0.42);
+    --hud-timed-border: rgba(33, 62, 80, 0.18);
+    --hud-timed-shadow: inset 0 0 1.2rem rgba(20, 42, 56, 0.05);
+
+    .color_yellow,
+    .color_yellow_light {
+        color: #7e5f00;
+    }
+
+    .color_blue,
+    .color_blue_light,
+    .color_ultramarine {
+        color: #155b86;
+    }
+
+    .color_red_light {
+        color: #9c242c;
+    }
+
+    .color_green_light {
+        color: #2d681d;
+    }
+
+    .color_white {
+        color: #1c2530;
+    }
+
+    .color_gray {
+        color: var(--hud-muted-color);
+    }
 }
 
 .font_adaptation {
@@ -296,7 +349,7 @@ $booster-icon-size: 1.875rem;
 .divider {
     height: 1.563rem;
     width: 1px;
-    background-color: rgba(255, 255, 255, 0.4);
+    background-color: var(--hud-divider-color);
 }
 
 .notifications_panel {
@@ -328,11 +381,7 @@ $booster-icon-size: 1.875rem;
     justify-content: center;
     align-items: center;
     gap: clamp(0.65rem, 3vmin, 2rem);
-    background: linear-gradient(90deg,
-            rgba(0, 0, 0, 0) 0%,
-            rgba(0, 0, 0, 0.55) 10%,
-            rgba(0, 0, 0, 0.55) 90%,
-            rgba(0, 0, 0, 0) 100%);
+    background: var(--hud-panel-bg);
 }
 
 .booster_group {
@@ -346,9 +395,10 @@ $booster-icon-size: 1.875rem;
 .booster_group--timed {
     padding: clamp(0.35rem, 1vmin, 0.55rem) clamp(0.5rem, 1.8vmin, 1rem);
     border: 1px solid rgba(105, 226, 255, 0.18);
+    border-color: var(--hud-timed-border);
     border-radius: 999px;
-    background: rgba(31, 112, 155, 0.16);
-    box-shadow: inset 0 0 1.4rem rgba(67, 184, 255, 0.06);
+    background: var(--hud-timed-bg);
+    box-shadow: var(--hud-timed-shadow);
 }
 
 .booster_item {
@@ -365,7 +415,7 @@ $booster-icon-size: 1.875rem;
     flex: 0 0 auto;
     background: linear-gradient(180deg,
             rgba(255, 255, 255, 0) 0%,
-            rgba(255, 255, 255, 0.42) 50%,
+            var(--hud-divider-color) 50%,
             rgba(255, 255, 255, 0) 100%);
 }
 
@@ -494,6 +544,7 @@ import { useGameState } from '@/store/gameState';
 import { usePlayerStore } from '@/store/playerStore';
 import { useProgressStore } from '@/store/progressStore';
 import { useMetaStore } from '@/store/metaStore';
+import { useEnvironmentStore } from '@/store/environmentStore';
 import { createNewText } from '@/helpers/functions';
 import TouchZone from './panels/TouchZone.vue';
 import HudNotifications from './panels/HudNotifications.vue';
@@ -503,7 +554,28 @@ const gameStore = useGameState();
 const playerStore = usePlayerStore();
 const progressStore = useProgressStore();
 const metaStore = useMetaStore();
+const environmentStore = useEnvironmentStore();
 const foo = createNewText();
+
+function getColorLuminance(hexColor: string): number {
+    const normalized = hexColor.replace('#', '').trim();
+    const hex = normalized.length === 3
+        ? normalized.split('').map((char) => char + char).join('')
+        : normalized.padEnd(6, '0').slice(0, 6);
+
+    const rgb = [0, 2, 4].map((start) => Number.parseInt(hex.slice(start, start + 2), 16) / 255);
+    const [r, g, b] = rgb.map((channel) =>
+        channel <= 0.03928
+            ? channel / 12.92
+            : Math.pow((channel + 0.055) / 1.055, 2.4)
+    );
+
+    return 0.2126 * r + 0.7152 * g + 0.0722 * b;
+}
+
+const hasLightBackground = computed(() =>
+    getColorLuminance(environmentStore.currentRender.backgroundColor) > 0.45
+);
 
 // Валюты
 const goldens = computed(() => metaStore.goldens);

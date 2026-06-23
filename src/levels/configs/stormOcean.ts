@@ -21,8 +21,8 @@ const stormOcean = {
     render: {
       backgroundColor: "#122948",
       fogColor: "#122948",
-      fogNear: 5,
-      fogFar: 85,
+      fogNear: 0.01,
+      fogFar: 150,
       toneMappingExposure: 0.78,
       bloomStrength: 1.35,
       bloomRadius: 0.12,

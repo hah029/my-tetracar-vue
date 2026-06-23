@@ -3,7 +3,8 @@ import type { LevelConfig } from "@/levels/types";
 const mistyHills = {
   id: "misty_hills",
   name: "Misty Hills",
-  description: "Soft daylight route with layered hills, lighter bloom and calmer scenery.",
+  description:
+    "Soft daylight route with layered hills, lighter bloom and calmer scenery.",
 
   visual: {
     camera: {
@@ -23,8 +24,8 @@ const mistyHills = {
       fogNear: 0.01,
       fogFar: 200,
       toneMappingExposure: 0.9,
-      bloomStrength: 0.7,
-      bloomRadius: 0.05,
+      bloomStrength: 0.3,
+      bloomRadius: 0.5,
       bloomThreshold: 1.25,
     },
 
