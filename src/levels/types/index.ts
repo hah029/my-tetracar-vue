@@ -439,6 +439,11 @@ export interface NitroTrailVisualConfig {
 
 export interface GameplayConfig {
   /**
+   * Количество полос дороги.
+   */
+  laneCount: number;
+
+  /**
    * Стартовая скорость
    */
   startSpeed: number;

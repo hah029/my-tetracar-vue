@@ -12,13 +12,15 @@ export default {
   },
 
   // Функция для вычисления дефолтных полос (зависит от XZ_SCALING)
-  getDefaultLanes: (xzScaling: number) => [
-    -(12 * xzScaling),
-    -(6 * xzScaling),
-    0,
-    6 * xzScaling,
-    12 * xzScaling,
-  ],
+  getDefaultLanes: (xzScaling: number, laneCount = 5) => {
+    const spacing = 6 * xzScaling;
+    const centerOffset = (laneCount - 1) / 2;
+
+    return Array.from(
+      { length: laneCount },
+      (_, index) => (index - centerOffset) * spacing,
+    );
+  },
 
   // Базовый конфиг дороги (без lanes — они вычисляются динамически)
   defaultRoadBase: {

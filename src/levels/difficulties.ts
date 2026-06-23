@@ -9,6 +9,7 @@ export const DIFFICULTIES = {
     allowPositiveBoosts: true,
     allowNegativeBoosts: false,
     gameplay: {
+      laneCount: 4,
       startSpeed: 0.04,
       maxSpeed: 0.75,
       speedIncreaseRate: 0.000003,
@@ -28,6 +29,7 @@ export const DIFFICULTIES = {
     allowPositiveBoosts: true,
     allowNegativeBoosts: true,
     gameplay: {
+      laneCount: 5,
       startSpeed: 0.05,
       maxSpeed: 1.0,
       speedIncreaseRate: 0.000005,
@@ -47,12 +49,13 @@ export const DIFFICULTIES = {
     allowPositiveBoosts: true,
     allowNegativeBoosts: true,
     gameplay: {
+      laneCount: 5,
       startSpeed: 0.07,
       maxSpeed: 1.2,
       speedIncreaseRate: 0.000007,
       coinSpawnChance: 0.45,
-      boostSpawnChance: 0.12,
-      positiveBoostChance: 0.65,
+      boostSpawnChance: 0.08,
+      positiveBoostChance: 0.25,
       negativeBoostChance: 0.35,
       obstacleSpawnChance: 0.85,
       targetDistance: 1200,

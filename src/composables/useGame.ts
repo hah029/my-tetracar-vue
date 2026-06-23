@@ -118,7 +118,10 @@ export function useGame() {
     roadManager.createRoad();
     stopRoadConfigWatcher?.();
     stopRoadConfigWatcher = watch(
-      () => useEnvironmentStore().currentRoad,
+      () => ({
+        road: useEnvironmentStore().currentRoad,
+        laneCount: useLevelStore().currentGameplay.laneCount,
+      }),
       rebuildRoadRuntime,
       { deep: true },
     );

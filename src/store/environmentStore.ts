@@ -11,7 +11,10 @@ export const useEnvironmentStore = defineStore("environmentStore", () => {
   const config = ref(environmentConfig);
 
   const defaultLanes = computed(() =>
-    config.value.getDefaultLanes(commonStore.config.xzScaling),
+    config.value.getDefaultLanes(
+      commonStore.config.xzScaling,
+      levelStore.currentGameplay.laneCount,
+    ),
   );
 
   const defaultRoadConfig = computed<RoadConfig>(() => ({

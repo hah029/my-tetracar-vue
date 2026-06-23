@@ -40,6 +40,7 @@
                             <span class="option_name">{{ difficulty.name }}</span>
                             <span class="option_meta">
                                 {{ difficulty.gameplay.startSpeed.toFixed(2) }} → {{ difficulty.gameplay.maxSpeed.toFixed(2) }}
+                                · {{ difficulty.gameplay.laneCount }} lanes
                             </span>
                         </button>
                     </div>

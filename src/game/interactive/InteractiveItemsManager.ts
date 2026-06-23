@@ -56,6 +56,8 @@ export class InteractiveItemsManager {
     this.segmentQueue = new SegmentQueue(() => {
       const distance = useProgressStore().getDistance();
       return Math.floor(distance / this.difficultyStep) + 1;
+    }, () => {
+      return useLevelStore().currentGameplay.laneCount;
     });
   }
 
@@ -148,23 +150,16 @@ export class InteractiveItemsManager {
 
     const cfg = useCommonStore().config;
 
-    const baseMultiplier = 30;
-    // const baseMultiplier = 20;
-
-    const segmentRowLength =
-      useCommonStore().segmentRowLengths.body +
-      useCommonStore().segmentRowLengths.spacing *
-        ((baseMultiplier * speed) / usePlayerStore().maxSpeed);
+    const segmentRowLength = Math.max(
+      cfg.segmentRowMinLength,
+      speed * cfg.segmentRowTargetTravelMs,
+    );
 
     // console.log("segmentRowLength", segmentRowLength);
 
     segment.pattern.forEach((row, rowIndex) => {
       const z = baseZ - rowIndex * segmentRowLength;
-      let row_ = [...row];
-
-      if (isReversed) {
-        row_ = row_.reverse();
-      }
+      const row_ = isReversed ? [...row].reverse() : row;
 
       row_.forEach((rawValue, lane) => {
         const value = resolveLanePatternBySpawnRules(
