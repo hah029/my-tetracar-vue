@@ -80,6 +80,7 @@ export class ObstacleManager {
     if (!form) {
       return;
     }
+    const formDetailed = useCommonStore().fullObstacleForms[index];
 
     const obstacle = new MovingObstacle(
       startLane,
@@ -91,6 +92,7 @@ export class ObstacleManager {
       Math.random() > 0.5 ? 1 : -1, // direction
       form,
       { atlas, atlasSprite: OBSTACLE_ATLAS_SPRITES.default },
+      formDetailed,
     );
 
     this.scene.add(obstacle);

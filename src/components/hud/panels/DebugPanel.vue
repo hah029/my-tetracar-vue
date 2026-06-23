@@ -278,7 +278,7 @@
 
     // Обработчик клавиш
     const handleKeydown = (e: KeyboardEvent): void => {
-        if ((e.ctrlKey || e.metaKey) && e.key === 'q') {
+        if ((e.ctrlKey || e.metaKey) && (e.code === 'KeyQ' || e.key.toLowerCase() === 'q')) {
             e.preventDefault();
             visible.value = !visible.value;
             console.log('DebugPanel visibility:', visible.value);
@@ -322,6 +322,7 @@
     // Lifecycle hooks
     onMounted(() => {
         console.log('🟢 DebugPanel component mounted');
+        window.addEventListener('keydown', handleKeydown);
         initDebug();
         
         if (!scene || !renderer) {
@@ -347,7 +348,6 @@
     });
 
     const setupPanel = () => {
-        window.addEventListener('keydown', handleKeydown);
         monitorFrameTime();
         
         updateInterval = window.setInterval(() => {

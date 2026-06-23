@@ -22,6 +22,7 @@ export class MovingObstacle extends CubeObstacle {
     direction: 1 | -1 = 1,
     formConfig: GeometryConfig[],
     materialConfig?: MaterialConfig,
+    formDetailConfig?: GeometryConfig[],
   ) {
     super(
       startLane,
@@ -30,7 +31,7 @@ export class MovingObstacle extends CubeObstacle {
       scene,
       useGLB,
       undefined,
-      useCommonStore().fullObstacleForms[0],
+      formDetailConfig ?? useCommonStore().fullObstacleForms[0],
       materialConfig,
     );
 

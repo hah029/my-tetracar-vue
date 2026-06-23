@@ -190,6 +190,10 @@ export function useControls(game: ReturnType<typeof useGame>) {
   }
 
   function handleKeyDown(e: KeyboardEvent) {
+    if ((e.ctrlKey || e.metaKey) && e.code === "KeyQ") {
+      return;
+    }
+
     if (e.key !== controlKeys.ESCAPE) {
       e.preventDefault();
     }
