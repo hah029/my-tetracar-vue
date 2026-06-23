@@ -40,6 +40,7 @@ export class Jump extends THREE.Mesh {
     // Позиция по полосе через RoadManager
     const x = RoadManager.getInstance().getLanePosition(laneIndex);
     this.position.set(x, commonStore.baseItemYpos, zPos);
+    this.userData.previousZ = zPos;
 
     this.collider = new THREE.Box3().setFromObject(this);
     scene.add(this);
@@ -47,6 +48,7 @@ export class Jump extends THREE.Mesh {
 
   // Движение трамплина и анимация свечения
   public update(deltaTime: number, speed: number): boolean {
+    this.userData.previousZ = this.position.z;
     this.position.z += deltaTime * speed;
     this.collider.setFromObject(this);
     return this.position.z > useCommonStore().config.itemsRemovingZpos;

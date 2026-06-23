@@ -177,7 +177,7 @@ export class FlashEffectManager {
       billboard: false,
     });
 
-    CameraSystem.triggerImpactShake(10, 200);
+    CameraSystem.triggerLandingShake();
   }
 
   update(now = performance.now()) {

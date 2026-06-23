@@ -481,6 +481,16 @@ export interface GameplayConfig {
   negativeBoostChance: number;
 
   /**
+   * Шанс, что выпавший буст станет corrupted-вариантом.
+   */
+  corruptedBoostChance: number;
+
+  /**
+   * Веса конкретных corrupted-вариантов внутри уже инвертированного буста.
+   */
+  corruptedBoostWeights: CorruptedBoostWeights;
+
+  /**
    * Вероятность появления препятствий
    */
   obstacleSpawnChance: number;
@@ -489,6 +499,20 @@ export interface GameplayConfig {
    * Дистанция для прохождения уровня
    */
   targetDistance: number;
+}
+
+export type CorruptedNitroVariant = "heavyNitro";
+export type CorruptedShieldVariant = "blindShield";
+export type CorruptedMagnetVariant = "lethalMagnet" | "repulseMagnet";
+export type CorruptedBoostVariant =
+  | CorruptedNitroVariant
+  | CorruptedShieldVariant
+  | CorruptedMagnetVariant;
+
+export interface CorruptedBoostWeights {
+  nitro: Record<CorruptedNitroVariant, number>;
+  shield: Record<CorruptedShieldVariant, number>;
+  magnet: Record<CorruptedMagnetVariant, number>;
 }
 
 export interface MusicConfig {

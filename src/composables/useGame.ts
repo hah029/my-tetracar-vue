@@ -417,6 +417,7 @@ export function useGame() {
     bulletSystem.spawnBullet(carManager.getCar());
     playerStore.consumeAmmo();
     soundManager.play("sfx_shot");
+    CameraSystem.triggerShotShake();
   }
 
   function handleJumpCollision(deltaTime: number) {
@@ -434,6 +435,10 @@ export function useGame() {
       destroyObstacles(collision.impactPoint!, [
         collision.impactSubject as BaseObstacle,
       ]);
+
+      if (playerStore.corruptedShieldEnabled) {
+        playerStore.triggerShieldBlindness();
+      }
 
       playerStore.reduceShield();
       if (playerStore.armor == 0) {
@@ -504,14 +509,17 @@ export function useGame() {
     }
 
     if (collision.impactSubject instanceof NitroItem) {
+      const corrupted =
+        collision.impactSubject.userData.corruptedBoost === "heavyNitro";
       CarManager.getInstance().enableNitro();
 
-      playerStore.enableNitro();
-      playerStore.addNewMsg("nitroActivated");
+      playerStore.enableNitro(corrupted);
+      playerStore.addNewMsg(corrupted ? "heavyNitroActivated" : "nitroActivated");
       playerStore.makeEventHappened("addNitro");
 
       soundManager.play("sfx_add_nitro");
       spawnFlash("nitro", carPos);
+      CameraSystem.triggerNitroShake(corrupted);
 
       return;
     }
@@ -522,14 +530,20 @@ export function useGame() {
         return;
       }
 
-      playerStore.addArmor();
+      const corrupted =
+        collision.impactSubject.userData.corruptedBoost === "blindShield";
+      const wasShieldEnabled = playerStore.isShieldEnabled;
 
-      if (!playerStore.isShieldEnabled) {
-        playerStore.enableShield();
+      playerStore.addArmor();
+      playerStore.enableShield(corrupted);
+
+      if (!wasShieldEnabled) {
         CarManager.getInstance().enableShield();
       }
 
-      playerStore.addNewMsg("armorEquipped");
+      playerStore.addNewMsg(
+        corrupted ? "unstableArmorEquipped" : "armorEquipped",
+      );
       playerStore.makeEventHappened("addArmor");
 
       soundManager.play("sfx_add_armor");
@@ -538,8 +552,25 @@ export function useGame() {
     }
 
     if (collision.impactSubject instanceof MagnetItem) {
-      playerStore.enableMagnet(collision.impactSubject.userData.magnetTypes!);
-      playerStore.addNewMsg("magnetActivated");
+      const corruptedBoost = collision.impactSubject.userData.corruptedBoost;
+      const magnetMode =
+        corruptedBoost === "lethalMagnet"
+          ? "lethalPull"
+          : corruptedBoost === "repulseMagnet"
+            ? "repulse"
+            : "pull";
+
+      playerStore.enableMagnet(
+        collision.impactSubject.userData.magnetTypes!,
+        magnetMode,
+      );
+      playerStore.addNewMsg(
+        magnetMode === "lethalPull"
+          ? "unstableMagnetActivated"
+          : magnetMode === "repulse"
+            ? "inverseMagnetActivated"
+            : "magnetActivated",
+      );
       playerStore.makeEventHappened("addMagnet");
       spawnFlash("magnet", carPos);
       return;

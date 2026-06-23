@@ -137,6 +137,7 @@ export class Car extends THREE.Group {
 
     // Обновляем коллайдер
     if (this.cubes.length > 0) {
+      this.updateWorldMatrix(true, true);
       this.collider.updateFromCubes(this.cubes);
     }
 

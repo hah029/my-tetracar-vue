@@ -2,6 +2,7 @@
 varying vec2 vUv;
 uniform float time;
 uniform vec3 color;
+uniform float opacity;
 
 void main() {
 
@@ -18,6 +19,6 @@ sin(vUv.y * 18.0 - time * 12.0) * 0.5 + 0.5;
 // яркость
 float alpha = beam * (0.45 + flow * 0.7);
 
-gl_FragColor = vec4(color, alpha);
+gl_FragColor = vec4(color, alpha * opacity);
 }
     

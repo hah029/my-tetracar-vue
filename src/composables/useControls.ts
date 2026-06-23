@@ -4,6 +4,7 @@ import { onMounted, onUnmounted, ref } from "vue";
 import { useGameState } from "@/store/gameState";
 import { usePlayerStore } from "@/store/playerStore";
 import { CarManager } from "@/game/car";
+import { CameraSystem } from "@/game/camera/CameraSystem";
 import { BaseItem } from "@/game/interactive/items/BaseItem";
 import { GameStates } from "@/game/core/GameState";
 import type { useGame } from "./useGame";
@@ -236,6 +237,7 @@ export function useControls(game: ReturnType<typeof useGame>) {
         processedKeys.add(e.code);
         playerStore.enableNitro();
         CarManager.getInstance().enableNitro();
+        CameraSystem.triggerNitroShake();
         break;
 
       case controlKeys.MAGNET:

@@ -27,6 +27,24 @@ export default {
   // прыжок
   jumpHeight: 4.0,
 
+  // масса и инерция
+  mass: {
+    cubeDensity: 1,
+    armorUnitMass: 0.55,
+    ammoUnitMass: 0.1,
+    corruptedNitroMass: 2.5,
+    maxExtraMassRatio: 1.6,
+    minControlMultiplier: 0.5,
+    minJumpMultiplier: 0.55,
+    minSpeedMultiplier: 0.75,
+    controlPenaltyPerMassRatio: 0.18,
+    jumpPenaltyPerMassRatio: 0.24,
+    speedPenaltyPerMassRatio: 0.08,
+    corruptedNitroControlPenalty: 0.18,
+    lateralAcceleration: 0.03,
+    lateralDamping: 0.18,
+  },
+
   // нитро
   nitro: {
     multiplier: 1.5,

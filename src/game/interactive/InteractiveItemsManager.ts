@@ -20,6 +20,13 @@ import { MagnetSystem } from "../magnet/MagnetSystem";
 import { DestructionManager } from "./DestructionManager";
 import { simulateJumpTrajectory } from "../physics/JumpSimulator";
 import { resolveLanePatternBySpawnRules } from "@/levels/spawnRules";
+import { BoosterItem } from "./items/booster/BoosterItem";
+import { NitroItem } from "./items/booster/NitroItem";
+import { ShieldItem } from "./items/booster/ShieldItem";
+import { MagnetItem } from "./items/booster/MagnetItem";
+import type { CorruptedBoostVariant } from "@/levels/types";
+
+type ItemSpawnSource = "segment" | "drop";
 
 export class InteractiveItemsManager {
   private static instance: InteractiveItemsManager | null = null;
@@ -106,20 +113,21 @@ export class InteractiveItemsManager {
   private updatePlayerEffects(deltaTime: number) {
     const playerStore = usePlayerStore();
     if (playerStore.isNitroEnabled) {
-      this.nitroEnabledTimer += deltaTime;
-      playerStore.nitroTimer -= deltaTime;
+      playerStore.nitroTimer = Math.max(0, playerStore.nitroTimer - deltaTime);
 
-      if (this.nitroEnabledTimer >= usePlayerStore().BASE_NITRO_TIMER) {
+      if (playerStore.nitroTimer <= 0) {
         CarManager.getInstance().disableNitro();
         playerStore.disableNitro();
         this.nitroEnabledTimer = 0;
       }
     }
     if (playerStore.isMagnetEnabled) {
-      this.magnetEnabledTimer += deltaTime;
-      playerStore.magnetTimer -= deltaTime;
+      playerStore.magnetTimer = Math.max(
+        0,
+        playerStore.magnetTimer - deltaTime,
+      );
 
-      if (this.magnetEnabledTimer >= usePlayerStore().BASE_MAGNET_TIMER) {
+      if (playerStore.magnetTimer <= 0) {
         playerStore.disableMagnet();
         this.magnetEnabledTimer = 0;
       }
@@ -208,7 +216,12 @@ export class InteractiveItemsManager {
             this.spawnCoinLine(z, lane);
             break;
           case LanePattern.Booster:
-            this.spawnBooster(z, lane, undefined, spawnRules.boosterTypes);
+            this.spawnBooster(
+              z,
+              lane,
+              undefined,
+              spawnRules.boosterTypes.filter((type) => type !== "nitro"),
+            );
             break;
           case LanePattern.Nitro:
             this.spawnNitroBooster(z, lane);
@@ -241,6 +254,7 @@ export class InteractiveItemsManager {
     laneIndex?: number,
     posX?: number,
     allowedTypes?: ("golden" | "energon")[],
+    source: ItemSpawnSource = "segment",
   ) {
     const item = this.coinManager.spawnRandom(
       baseZ,
@@ -251,33 +265,43 @@ export class InteractiveItemsManager {
       allowedTypes,
     ) as BaseItem;
     if (item) {
-      this.addItem(item);
+      this.addItem(item, source);
       return item;
     }
     return null;
   }
 
-  public spawnEnergonCoin(baseZ: number, laneIndex?: number, xPos?: number) {
+  public spawnEnergonCoin(
+    baseZ: number,
+    laneIndex?: number,
+    xPos?: number,
+    source: ItemSpawnSource = "segment",
+  ) {
     const item = this.coinManager.spawnEnergon(
       baseZ,
       laneIndex,
       xPos,
     ) as BaseItem;
     if (item) {
-      this.addItem(item);
+      this.addItem(item, source);
       return item;
     }
     return null;
   }
 
-  public spawnGoldenCoin(baseZ: number, laneIndex?: number, xPos?: number) {
+  public spawnGoldenCoin(
+    baseZ: number,
+    laneIndex?: number,
+    xPos?: number,
+    source: ItemSpawnSource = "segment",
+  ) {
     const item = this.coinManager.spawnGolden(
       baseZ,
       laneIndex,
       xPos,
     ) as BaseItem;
     if (item) {
-      this.addItem(item);
+      this.addItem(item, source);
       return item;
     }
     return null;
@@ -305,7 +329,10 @@ export class InteractiveItemsManager {
     laneIndex?: number,
     xPos?: number,
     allowedTypes?: ("nitro" | "shield" | "magnet" | "bullet")[],
+    source: ItemSpawnSource = "segment",
   ) {
+    if (allowedTypes && allowedTypes.length === 0) return null;
+
     const item = this.boosterManager.spawnRandom(
       baseZ,
       laneIndex,
@@ -314,43 +341,63 @@ export class InteractiveItemsManager {
       allowedTypes,
     );
     if (item) {
-      this.addItem(item);
+      this.addItem(item, source);
       return item;
     }
     return null;
   }
 
-  public spawnNitroBooster(baseZ: number, laneIndex?: number, xPos?: number) {
+  public spawnNitroBooster(
+    baseZ: number,
+    laneIndex?: number,
+    xPos?: number,
+    source: ItemSpawnSource = "segment",
+  ) {
     const item = this.boosterManager.spawnNitro(baseZ, laneIndex, xPos);
     if (item) {
-      this.addItem(item);
+      this.addItem(item, source);
       return item;
     }
     return null;
   }
 
-  public spawnMagnetBooster(baseZ: number, laneIndex?: number, xPos?: number) {
+  public spawnMagnetBooster(
+    baseZ: number,
+    laneIndex?: number,
+    xPos?: number,
+    source: ItemSpawnSource = "segment",
+  ) {
     const item = this.boosterManager.spawnMagnet(baseZ, laneIndex, xPos);
     if (item) {
-      this.addItem(item);
+      this.addItem(item, source);
       return item;
     }
     return null;
   }
 
-  public spawnShieldBooster(baseZ: number, laneIndex?: number, xPos?: number) {
+  public spawnShieldBooster(
+    baseZ: number,
+    laneIndex?: number,
+    xPos?: number,
+    source: ItemSpawnSource = "segment",
+  ) {
     const item = this.boosterManager.spawnShield(baseZ, laneIndex, xPos);
     if (item) {
-      this.addItem(item);
+      this.addItem(item, source);
       return item;
     }
     return null;
   }
 
-  public spawnBulletItem(baseZ: number, laneIndex?: number, xPos?: number) {
+  public spawnBulletItem(
+    baseZ: number,
+    laneIndex?: number,
+    xPos?: number,
+    source: ItemSpawnSource = "segment",
+  ) {
     const item = this.boosterManager.spawnBullet(baseZ, laneIndex, xPos);
     if (item) {
-      this.addItem(item);
+      this.addItem(item, source);
       return item;
     }
     return null;
@@ -421,6 +468,8 @@ export class InteractiveItemsManager {
 
     this.items.forEach((item) => {
       if (item.userData.magnetLine) this.scene.remove(item.userData.magnetLine);
+      this.magnetSystem.removeRepulseBeam(item);
+      item.disposeCorruptedBoostMaterials();
 
       this.scene.remove(item);
     });
@@ -433,9 +482,87 @@ export class InteractiveItemsManager {
     this.magnetEnabledTimer = 0;
   }
 
-  public addItem(item: BaseItem) {
+  public addItem(item: BaseItem, source: ItemSpawnSource = "segment") {
+    item.userData.spawnSource = source;
+    this.applyCorruptedBoostRoll(item, source);
     this.items.push(item);
     this.scene.add(item);
+  }
+
+  private applyCorruptedBoostRoll(item: BaseItem, source: ItemSpawnSource) {
+    if (!(item instanceof BoosterItem)) return;
+    if (
+      source === "drop" &&
+      !useCommonStore().config.allowCorruptedBoostDrops
+    ) {
+      return;
+    }
+
+    const gameplay = useLevelStore().currentGameplay;
+    const chance = gameplay.corruptedBoostChance;
+    if (chance <= 0 || Math.random() > chance) return;
+
+    if (item instanceof NitroItem) {
+      this.markCorruptedBoost(
+        item,
+        this.pickWeightedCorruptedVariant(gameplay.corruptedBoostWeights.nitro),
+      );
+      return;
+    }
+
+    if (item instanceof ShieldItem) {
+      this.markCorruptedBoost(
+        item,
+        this.pickWeightedCorruptedVariant(gameplay.corruptedBoostWeights.shield),
+      );
+      return;
+    }
+
+    if (item instanceof MagnetItem) {
+      this.markCorruptedBoost(
+        item,
+        this.pickWeightedCorruptedVariant(gameplay.corruptedBoostWeights.magnet),
+      );
+    }
+  }
+
+  private pickWeightedCorruptedVariant<T extends CorruptedBoostVariant>(
+    weights: Record<T, number>,
+  ): T {
+    const entries = Object.entries(weights) as [T, number][];
+    const totalWeight = entries.reduce(
+      (sum, [, weight]) => sum + Math.max(0, weight),
+      0,
+    );
+
+    if (totalWeight <= 0) return entries[0][0];
+
+    let roll = Math.random() * totalWeight;
+    for (const [variant, weight] of entries) {
+      roll -= Math.max(0, weight);
+      if (roll <= 0) return variant;
+    }
+
+    return entries[entries.length - 1][0];
+  }
+
+  private markCorruptedBoost(item: BaseItem, variant: CorruptedBoostVariant) {
+    item.userData.corruptedBoost = variant;
+    item.userData.corruptedBoostPulse = {
+      color: this.getCorruptedEmissionColor(variant),
+      time: Math.random() * 1000,
+    };
+  }
+
+  private getCorruptedEmissionColor(variant: CorruptedBoostVariant) {
+    const colorByVariant: Record<CorruptedBoostVariant, number> = {
+      heavyNitro: 0xff2a7a,
+      lethalMagnet: 0xff1f1f,
+      repulseMagnet: 0x28d7ff,
+      blindShield: 0xf7fbff,
+    };
+
+    return colorByVariant[variant] ?? 0xff2a7a;
   }
 
   public removeItem(item: BaseItem) {
@@ -446,6 +573,8 @@ export class InteractiveItemsManager {
 
     const line = item.userData.magnetLine;
     if (line) this.scene.remove(line);
+    this.magnetSystem.removeRepulseBeam(item);
+    item.disposeCorruptedBoostMaterials();
 
     this.scene.remove(item);
   }

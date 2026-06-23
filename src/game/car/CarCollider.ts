@@ -23,7 +23,7 @@ export class CarCollider {
     if (cubes.length === 0) return;
 
     // Принудительно обновляем мировые матрицы всех кубиков
-    cubes.forEach((cube) => cube.updateWorldMatrix(false, true));
+    cubes.forEach((cube) => cube.updateWorldMatrix(true, true));
 
     // Создаём временный Box3, расширяя его по каждому кубику
     const tempBox = new THREE.Box3();
@@ -110,12 +110,34 @@ export class CarCollider {
     carPosition?: THREE.Vector3,
   ): boolean {
     const jumpBox = new THREE.Box3().setFromObject(jump);
-    // const xDistance = Math.abs(carPosition.x - jump.position.x);
-    // if (xDistance > 1.2) return false;
-    // const zDistance = Math.abs(carPosition.z - jump.position.z);
-    // if (zDistance > 1.5) return false;
+    if (this.collider.intersectsBox(jumpBox)) return true;
 
-    return this.collider.intersectsBox(jumpBox);
+    const carBox = this.collider;
+    const carCenter = new THREE.Vector3();
+    const jumpCenter = new THREE.Vector3();
+    const jumpSize = new THREE.Vector3();
+
+    carBox.getCenter(carCenter);
+    jumpBox.getCenter(jumpCenter);
+    jumpBox.getSize(jumpSize);
+
+    const previousZ =
+      typeof jump.userData.previousZ === "number"
+        ? jump.userData.previousZ
+        : jump.position.z;
+    const sweptMinZ = Math.min(previousZ, jump.position.z) - jumpSize.z * 0.5;
+    const sweptMaxZ = Math.max(previousZ, jump.position.z) + jumpSize.z * 0.5;
+
+    const xPadding = 0.35;
+    const zPadding = 0.25;
+    const overlapsX =
+      carBox.max.x >= jumpBox.min.x - xPadding &&
+      carBox.min.x <= jumpBox.max.x + xPadding;
+    const crossesZ =
+      carCenter.z >= sweptMinZ - zPadding &&
+      carCenter.z <= sweptMaxZ + zPadding;
+
+    return overlapsX && crossesZ;
   }
 
   // Включение визуализации коллайдера

@@ -30,19 +30,26 @@ export default {
 
   // Фоновая/постоянная тряска (шейк)
   shake: {
-    base: { amplitude: 0.000001, frequency: 1 },
-    max: { amplitude: 0.01, frequency: 2 },
-    multiplier: { y: 1.3, z: 0.7 },
-    delta_time_default: 1,
+    base: { amplitude: 0.05, frequency: 1.05 },
+    max: { amplitude: 0.18, frequency: 1.75 },
+    multiplier: { y: 0.9, z: 0.55 },
+    lookat: 0.45,
+    roll: 0.011,
   },
 
   // Тряска при ударе (impact shake)
   impact_shake: {
-    min: 0.23, // IMPACT_SHAKE_MIN
-    max: 0.42, // IMPACT_SHAKE_MAX
-    decay_rate: 6, // IMPACT_SHAKE_DECAY_RATE
-    duration: 50000, // IMPACT_DURATION
-    max_amplitude: 10000, // MAX_IMPACT_AMPLITUDE
+    min: 0.6,
+    max: 0.9,
+    decay_rate: 6.5,
+    duration: 0.32,
+  },
+
+  event_shake: {
+    shot: { strength: 0.28, duration: 0.1 },
+    nitro: { strength: 0.28, duration: 0.6 },
+    heavy_nitro: { strength: 0.42, duration: 0.7 },
+    landing: { strength: 0.28, duration: 0.2 },
   },
 
   // Поведение камеры при разрушении (destroyed state)

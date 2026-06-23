@@ -6,7 +6,15 @@ import type { ItemType } from "./types";
 import type { MaterialConfig } from "@/game/cube/types";
 import { CubeBuilder } from "@/game/cube/Cube";
 import { useCommonStore } from "@/store/commonStore";
-import { MaterialPool } from "@/helpers/MaterialPool"; // 👈 ДОБАВИТЬ ИМПОРТ
+
+type EmissiveMaterial = THREE.Material & {
+  emissive: THREE.Color;
+  emissiveIntensity: number;
+};
+
+type DisposableMaterial = THREE.Material & {
+  dispose: () => void;
+};
 
 export class BaseItem extends THREE.Group {
   public collider: THREE.Sphere;
@@ -64,6 +72,7 @@ export class BaseItem extends THREE.Group {
       this.cube = await CubeBuilder.build(config);
       this.cube.position.set(0, 0, 0);
       this.add(this.cube);
+      this.ensureLethalMagnetObstacleVisual();
     } catch (error) {
       console.error("[Coin] build error:", error);
       throw error;
@@ -73,7 +82,117 @@ export class BaseItem extends THREE.Group {
   update(deltaTime: number, speed: number): boolean {
     this.position.z += deltaTime * speed;
     this.cube.rotation.y += this.rotationYDiff;
+    this.ensureLethalMagnetObstacleVisual();
+    this.updateCorruptedEmission(deltaTime);
     this.collider.center.copy(this.position);
     return this.position.z > useCommonStore().config.itemsRemovingZpos;
+  }
+
+  public markAsLethalMagnetObstacle() {
+    this.userData.lethalMagnetObstacleVisual = true;
+    this.ensureLethalMagnetObstacleVisual();
+  }
+
+  public disposeCorruptedBoostMaterials() {
+    const materials = this.userData.corruptedBoostMaterials as
+      | EmissiveMaterial[]
+      | undefined;
+    materials?.forEach((material) => material.dispose());
+    this.userData.corruptedBoostMaterials = undefined;
+
+    const obstacleMaterials = this.userData.lethalMagnetObstacleMaterials as
+      | DisposableMaterial[]
+      | undefined;
+    obstacleMaterials?.forEach((material) => material.dispose());
+    this.userData.lethalMagnetObstacleMaterials = undefined;
+  }
+
+  private updateCorruptedEmission(deltaTime: number) {
+    const pulseConfig = this.userData.corruptedBoostPulse as
+      | { color: number; time: number }
+      | undefined;
+    if (!pulseConfig) return;
+
+    this.ensureCorruptedBoostMaterials();
+
+    const materials = this.userData.corruptedBoostMaterials as
+      | EmissiveMaterial[]
+      | undefined;
+    if (!materials?.length) return;
+
+    pulseConfig.time += deltaTime;
+    const intensity = 0.75 + Math.sin(pulseConfig.time * 0.014) * 0.45;
+
+    materials.forEach((material) => {
+      material.emissive.setHex(pulseConfig.color);
+      material.emissiveIntensity = intensity;
+    });
+  }
+
+  private ensureCorruptedBoostMaterials() {
+    if (this.userData.corruptedBoostMaterialsReady) return;
+
+    const materials: EmissiveMaterial[] = [];
+
+    this.cube.traverse((child) => {
+      const mesh = child as THREE.Mesh;
+      if (!mesh.isMesh) return;
+
+      const sourceMaterials = Array.isArray(mesh.material)
+        ? mesh.material
+        : [mesh.material];
+
+      const clonedMaterials = sourceMaterials.map((material) => {
+        const clone = material.clone();
+        if (this.isEmissiveMaterial(clone)) {
+          clone.needsUpdate = true;
+          materials.push(clone);
+        }
+        return clone;
+      });
+
+      mesh.material = Array.isArray(mesh.material)
+        ? clonedMaterials
+        : clonedMaterials[0];
+    });
+
+    this.userData.corruptedBoostMaterials = materials;
+    this.userData.corruptedBoostMaterialsReady = materials.length > 0;
+  }
+
+  private ensureLethalMagnetObstacleVisual() {
+    if (!this.userData.lethalMagnetObstacleVisual) return;
+    if (this.userData.lethalMagnetObstacleMaterialsReady) return;
+
+    const materials: THREE.Material[] = [];
+    let hasMesh = false;
+
+    this.cube.traverse((child) => {
+      const mesh = child as THREE.Mesh;
+      if (!mesh.isMesh) return;
+
+      hasMesh = true;
+      const material = new THREE.MeshStandardMaterial({
+        color: 0x050505,
+        emissive: 0x000000,
+        emissiveIntensity: 0,
+        roughness: 0.85,
+        metalness: 0.15,
+      });
+
+      mesh.material = material;
+      materials.push(material);
+    });
+
+    if (!hasMesh) return;
+
+    this.userData.lethalMagnetObstacleMaterials = materials;
+    this.userData.lethalMagnetObstacleMaterialsReady = true;
+  }
+
+  private isEmissiveMaterial(
+    material: THREE.Material,
+  ): material is EmissiveMaterial {
+    return "emissive" in material && "emissiveIntensity" in material;
   }
 }

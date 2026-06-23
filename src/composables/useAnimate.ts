@@ -154,13 +154,23 @@ export function GameLoop(
 
         const itemCollision = game.checkItemsCollision();
         if (itemCollision != null) {
-          if (itemCollision.impactSubject instanceof CoinItem) {
+          if (
+            playerStore.magnetMode === "lethalPull" &&
+            (itemCollision.impactSubject as BaseItem).userData.status ===
+              "magnetized"
+          ) {
+            const impactSubject = itemCollision.impactSubject as BaseItem;
+            game.destroyCar(impactSubject.position.clone());
+            game.removeItem(impactSubject);
+            gameState.endGame();
+          } else if (itemCollision.impactSubject instanceof CoinItem) {
             // обработка Coin
             game.handleCoinCollision(itemCollision);
+            game.removeItem(itemCollision.impactSubject as BaseItem);
           } else if (itemCollision.impactSubject instanceof BoosterItem) {
             game.handleBoosterCollision(itemCollision);
+            game.removeItem(itemCollision.impactSubject as BaseItem);
           }
-          game.removeItem(itemCollision.impactSubject as BaseItem);
         }
 
         const realCar = game.car.value.mesh;
@@ -172,12 +182,13 @@ export function GameLoop(
               isDestroyed: () => game.car.value.isDestroyed,
             },
             currentSpeed,
-            // deltaTime,
+            deltaTime,
           );
         }
 
         game.updateEffects();
         usePlayerStore().updateNitro(deltaTime);
+        usePlayerStore().updateStatusEffects(deltaTime);
         debugCollider?.update();
       }
 

@@ -26,6 +26,11 @@
                         <div class="font_adaptation metrics_number">{{ currentSpeed }}</div>
                         <div class="metrics_text">{{ foo.makeText('gamePlay.keyStats.speed', 'empty') }}</div>
                     </div>
+                    <div class="divider"></div>
+                    <div class="metrics_block" :class="massColorClass">
+                        <div class="font_adaptation metrics_number">{{ currentMass }}</div>
+                        <div class="metrics_text">mass</div>
+                    </div>
                 </div>
             </div>
 
@@ -506,6 +511,12 @@ const energons = computed(() => metaStore.energons);
 const score = computed(() => Math.floor(progressStore.score));
 const currentMultiplier = computed(() => progressStore.currentMultiplier);
 const currentSpeed = computed(() => (playerStore.getCurrentSpeed() * 100).toFixed(1));
+const currentMass = computed(() => playerStore.mass.toFixed(1));
+const massColorClass = computed(() => {
+    if (playerStore.massRatio >= 1.55) return 'color_red_light';
+    if (playerStore.massRatio >= 1.25) return 'color_yellow_light';
+    return 'color_gray';
+});
 
 // Цветовые классы для уведомлений/бустеров
 const colorMap: Record<string, string> = {

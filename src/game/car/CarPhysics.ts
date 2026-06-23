@@ -17,6 +17,7 @@ export class CarPhysics {
   private config: Required<CarConfig>;
   private jumpSimulator: JumpSimulator;
   private jumpState: JumpState;
+  private jumpHeight = 0;
   private physicsConfig: PhysicsConfig = {
     ...useCommonStore().getBasePhysics(),
   };
@@ -26,8 +27,9 @@ export class CarPhysics {
       ...usePlayerStore().getDefaultCarConfig(),
       ...config,
     };
+    this.jumpHeight = this.config.jumpHeight;
     this.jumpSimulator = new JumpSimulator({
-      jumpHeight: this.config.jumpHeight,
+      jumpHeight: this.jumpHeight,
       gravity: this.physicsConfig.gravity!,
       groundY: useCommonStore().baseItemYpos + 0.6,
     });
@@ -36,6 +38,12 @@ export class CarPhysics {
   }
 
   public startJump(currentY: number): void {
+    this.refreshRuntimeConfig();
+    this.jumpSimulator = new JumpSimulator({
+      jumpHeight: this.jumpHeight,
+      gravity: this.physicsConfig.gravity!,
+      groundY: currentY,
+    });
     this.jumpSimulator.setGroundY(currentY);
     this.jumpState = this.jumpSimulator.startJump({
       ...this.jumpState,
@@ -96,6 +104,7 @@ export class CarPhysics {
     currentRotationY: number,
     deltaTime: number,
   ): { newX: number; newRotationY: number } {
+    this.refreshRuntimeConfig();
     const deltaX = targetX - currentX;
 
     if (isNaN(deltaX)) {
@@ -108,6 +117,7 @@ export class CarPhysics {
     const tiltFactor = 1 - Math.pow(1 - this.config.tiltSmoothing, frameScale);
 
     const newX = currentX + deltaX * laneChangeFactor;
+
     const newRotationY =
       currentRotationY +
       (-deltaX * this.config.maxTilt - currentRotationY) * tiltFactor;
@@ -185,6 +195,16 @@ export class CarPhysics {
 
   public reset(): void {
     this.jumpState = this.jumpSimulator.createInitialState();
+  }
+
+  private refreshRuntimeConfig(): void {
+    const playerStore = usePlayerStore();
+    this.config = {
+      ...this.config,
+      ...playerStore.getRuleOptions(),
+      ...playerStore.getJumpOptions(),
+    };
+    this.jumpHeight = this.config.jumpHeight;
   }
 
   public getState() {

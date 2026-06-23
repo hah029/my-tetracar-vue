@@ -377,6 +377,7 @@ export class CubeObstacle extends BaseObstacle {
           worldPos.z,
           undefined,
           worldPos.x,
+          "drop",
         );
 
       case "energon_coin":
@@ -384,6 +385,7 @@ export class CubeObstacle extends BaseObstacle {
           worldPos.z,
           undefined,
           worldPos.x,
+          "drop",
         );
 
       case "bullet":
@@ -391,6 +393,7 @@ export class CubeObstacle extends BaseObstacle {
           worldPos.z,
           undefined,
           worldPos.x,
+          "drop",
         );
 
       case "shield_booster":
@@ -398,6 +401,7 @@ export class CubeObstacle extends BaseObstacle {
           worldPos.z,
           undefined,
           worldPos.x,
+          "drop",
         );
 
       case "nitro_booster":
@@ -405,6 +409,7 @@ export class CubeObstacle extends BaseObstacle {
           worldPos.z,
           undefined,
           worldPos.x,
+          "drop",
         );
 
       case "magnet_booster":
@@ -412,6 +417,7 @@ export class CubeObstacle extends BaseObstacle {
           worldPos.z,
           undefined,
           worldPos.x,
+          "drop",
         );
 
       default:

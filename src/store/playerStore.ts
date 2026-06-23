@@ -18,6 +18,8 @@ const DEFAULT_NITRO_TRAIL: NitroTrailVisualConfig = {
   timeScale: 4,
 };
 
+export type MagnetMode = "pull" | "lethalPull" | "repulse";
+
 export const usePlayerStore = defineStore("playerStore", () => {
   const progressStore = useProgressStore();
   const metaStore = useMetaStore();
@@ -79,6 +81,10 @@ export const usePlayerStore = defineStore("playerStore", () => {
   const acceleration = ref(config.value.acceleration);
   const accelerationType = ref<"exponential" | "logarithmic">("logarithmic");
   const forceJump = ref(false);
+  const isMassEnabled = ref(true);
+  const extraTemporaryMass = ref(0);
+  const corruptedNitroMass = ref(0);
+  const corruptedNitroEnabled = ref(false);
 
   const isNitroEnabled = ref(false);
   const nitroTimer = ref(config.value.nitro.baseTimer);
@@ -93,13 +99,38 @@ export const usePlayerStore = defineStore("playerStore", () => {
   const magnetForce = ref(config.value.magnet.force);
   const magnetMaxTargets = ref(config.value.magnet.maxTargets);
   const magnetTypes = ref([] as any[]);
+  const magnetMode = ref<MagnetMode>("pull");
 
   const isShieldEnabled = ref(false);
+  const corruptedShieldEnabled = ref(false);
+  const shieldBlindnessTimer = ref(0);
   const armor = ref(0);
   const maxArmor = computed(() => metaStore.maxArmor);
 
   const ammo = ref(0);
   const maxAmmo = computed(() => metaStore.maxAmmo);
+  const bodyMass = computed(() =>
+    carCubesConfig.value.reduce((sum, cube) => {
+      const [sx, sy, sz] = cube.scale;
+      return sum + sx * sy * sz * config.value.mass.cubeDensity;
+    }, 0),
+  );
+  const cargoMass = computed(
+    () =>
+      armor.value * config.value.mass.armorUnitMass +
+      ammo.value * config.value.mass.ammoUnitMass,
+  );
+  const temporaryMass = computed(
+    () => extraTemporaryMass.value + corruptedNitroMass.value,
+  );
+  const mass = computed(() => bodyMass.value + cargoMass.value + temporaryMass.value);
+  const maxMass = computed(
+    () => bodyMass.value * (1 + config.value.mass.maxExtraMassRatio),
+  );
+  const massRatio = computed(() =>
+    bodyMass.value > 0 ? mass.value / bodyMass.value : 1,
+  );
+  const cargoMassRatio = computed(() => Math.max(0, massRatio.value - 1));
 
   const currentLane = ref(1);
   const carPosition = ref({ x: 0, y: 0, z: 0 });
@@ -141,13 +172,20 @@ export const usePlayerStore = defineStore("playerStore", () => {
     disableShield();
     disableNitro();
     disableMagnet();
+    resetMass();
+    shieldBlindnessTimer.value = 0;
   }
 
-  function enableNitro() {
+  function enableNitro(corrupted = false) {
     if (!isNitroEnabled.value) {
       progressStore.riseMultiplier(2, "multiply");
     }
     isNitroEnabled.value = true;
+    nitroTimer.value = config.value.nitro.baseTimer;
+    corruptedNitroEnabled.value = corrupted;
+    corruptedNitroMass.value = corrupted && isMassEnabled.value
+      ? getClampedTemporaryMass(config.value.mass.corruptedNitroMass)
+      : 0;
     nitroMultiplierTarget.value = config.value.nitro.multiplier;
     if (renderInstance.value != null) {
       renderInstance.value.setAfterImagePassAmount(
@@ -159,6 +197,8 @@ export const usePlayerStore = defineStore("playerStore", () => {
 
   function disableNitro() {
     isNitroEnabled.value = false;
+    corruptedNitroEnabled.value = false;
+    corruptedNitroMass.value = 0;
     nitroTimer.value = config.value.nitro.baseTimer;
     nitroMultiplierTarget.value = 1;
     if (progressStore.currentMultiplier != 1) {
@@ -182,15 +222,18 @@ export const usePlayerStore = defineStore("playerStore", () => {
     );
   }
 
-  function enableMagnet(types: any[]) {
+  function enableMagnet(types: any[], mode: MagnetMode = "pull") {
     isMagnetEnabled.value = true;
+    magnetTimer.value = config.value.magnet.baseTimer;
     magnetTypes.value = types;
+    magnetMode.value = mode;
   }
 
   function disableMagnet() {
     isMagnetEnabled.value = false;
     magnetTimer.value = config.value.magnet.baseTimer;
     magnetTypes.value = [];
+    magnetMode.value = "pull";
   }
 
   function addArmor(): void {
@@ -201,24 +244,103 @@ export const usePlayerStore = defineStore("playerStore", () => {
     if (armor.value > 0) armor.value -= 1;
   }
 
-  function enableShield() {
+  function enableShield(corrupted = false) {
     isShieldEnabled.value = true;
+    corruptedShieldEnabled.value = corrupted;
   }
 
   function disableShield() {
     isShieldEnabled.value = false;
+    corruptedShieldEnabled.value = false;
+  }
+
+  function triggerShieldBlindness(duration = 900) {
+    shieldBlindnessTimer.value = Math.max(
+      shieldBlindnessTimer.value,
+      duration,
+    );
+  }
+
+  function updateStatusEffects(delta: number) {
+    if (shieldBlindnessTimer.value > 0) {
+      shieldBlindnessTimer.value = Math.max(
+        0,
+        shieldBlindnessTimer.value - delta,
+      );
+    }
   }
 
   function resetGameData() {
     baseSpeed.value = startSpeed.value;
     speed.value = startSpeed.value;
     isNitroEnabled.value = false;
+    corruptedNitroEnabled.value = false;
+    corruptedShieldEnabled.value = false;
+    shieldBlindnessTimer.value = 0;
+    resetMass();
     currentLane.value = 1;
+  }
+
+  function addMass(amount: number) {
+    extraTemporaryMass.value = getClampedTemporaryMass(
+      extraTemporaryMass.value + amount,
+    );
+  }
+
+  function resetMass() {
+    extraTemporaryMass.value = 0;
+    corruptedNitroMass.value = 0;
+  }
+
+  function getClampedTemporaryMass(amount: number) {
+    const maxTemporaryMass = Math.max(
+      0,
+      maxMass.value - bodyMass.value - cargoMass.value,
+    );
+    return Math.max(0, Math.min(maxTemporaryMass, amount));
+  }
+
+  function getMassPenalty() {
+    if (!isMassEnabled.value) return 0;
+    return cargoMassRatio.value;
+  }
+
+  function getControlMultiplier() {
+    if (!isMassEnabled.value) return 1;
+
+    const massPenalty =
+      getMassPenalty() * config.value.mass.controlPenaltyPerMassRatio;
+    const nitroPenalty = corruptedNitroEnabled.value
+      ? config.value.mass.corruptedNitroControlPenalty
+      : 0;
+
+    return Math.max(
+      config.value.mass.minControlMultiplier,
+      1 - massPenalty - nitroPenalty,
+    );
+  }
+
+  function getJumpMultiplier() {
+    if (!isMassEnabled.value) return 1;
+
+    return Math.max(
+      config.value.mass.minJumpMultiplier,
+      1 - getMassPenalty() * config.value.mass.jumpPenaltyPerMassRatio,
+    );
+  }
+
+  function getSpeedMassMultiplier() {
+    if (!isMassEnabled.value) return 1;
+
+    return Math.max(
+      config.value.mass.minSpeedMultiplier,
+      1 - getMassPenalty() * config.value.mass.speedPenaltyPerMassRatio,
+    );
   }
 
   function getCurrentSpeed() {
     const curSpeed = baseSpeed.value * nitroMultiplierCurrent.value;
-    return Math.min(curSpeed, maxSpeed.value);
+    return Math.min(curSpeed, maxSpeed.value) * getSpeedMassMultiplier();
   }
 
   function getCurrentSpeedInCubesPerHour(precision = 2) {
@@ -232,11 +354,22 @@ export const usePlayerStore = defineStore("playerStore", () => {
       return acceleration.value * (1 - ratio);
     }
     const logFactor = maxSpeed.value / (currentSpeed + 1);
-    return acceleration.value * logFactor * (1 - ratio);
+    return (
+      acceleration.value * logFactor * (1 - ratio) * getSpeedMassMultiplier()
+    );
   }
 
   function setAccelerationType(type: "exponential" | "logarithmic") {
     accelerationType.value = type;
+  }
+
+  function setMassEnabled(enabled: boolean) {
+    isMassEnabled.value = enabled;
+    if (!enabled) resetMass();
+  }
+
+  function toggleMassEnabled() {
+    setMassEnabled(!isMassEnabled.value);
   }
 
   function addAmmo(): void {
@@ -274,15 +407,18 @@ export const usePlayerStore = defineStore("playerStore", () => {
 
   function getRuleOptions() {
     return {
-      laneChangeSpeed: config.value.laneChangeSpeed,
+      laneChangeSpeed: config.value.laneChangeSpeed * getControlMultiplier(),
       maxTilt: config.value.maxTilt,
       tiltSmoothing: config.value.tiltSmoothing,
+      lateralAcceleration:
+        config.value.mass.lateralAcceleration * getControlMultiplier(),
+      lateralDamping: config.value.mass.lateralDamping,
     };
   }
 
   function getJumpOptions() {
     return {
-      jumpHeight: config.value.jumpHeight,
+      jumpHeight: config.value.jumpHeight * getJumpMultiplier(),
     };
   }
 
@@ -319,7 +455,10 @@ export const usePlayerStore = defineStore("playerStore", () => {
     startSpeed,
     baseSpeed,
     isNitroEnabled,
+    corruptedNitroEnabled,
     isShieldEnabled,
+    corruptedShieldEnabled,
+    shieldBlindnessTimer,
     currentLane,
     maxSpeed,
     acceleration,
@@ -342,15 +481,34 @@ export const usePlayerStore = defineStore("playerStore", () => {
     magnetForce,
     magnetMaxTargets,
     magnetTypes,
+    magnetMode,
     forceJump,
+    isMassEnabled,
+    mass,
+    maxMass,
+    bodyMass,
+    cargoMass,
+    temporaryMass,
+    corruptedNitroMass,
+    massRatio,
     resetPlayerAchievements,
     enableNitro,
     disableNitro,
     updateNitro,
+    updateStatusEffects,
     enableShield,
+    triggerShieldBlindness,
     disableShield,
     enableMagnet,
     disableMagnet,
+    addMass,
+    resetMass,
+    getControlMultiplier,
+    getJumpMultiplier,
+    setMassEnabled,
+    toggleMassEnabled,
+    getRuleOptions,
+    getJumpOptions,
     resetGameData,
     applyGameplayConfig,
     getCurrentSpeed,

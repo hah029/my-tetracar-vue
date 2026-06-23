@@ -9,6 +9,10 @@
     <RightsPanel />
     <TeamLogo />
     <DebugPanel />
+    <div
+        class="blindness_overlay"
+        :style="{ opacity: playerStore.shieldBlindnessTimer > 0 ? 1 : 0 }"
+    />
 </template>
 
 <style lang='scss'>
@@ -125,6 +129,15 @@ span {
             /* Прозрачность внизу */
         );
 }
+
+.blindness_overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 9998;
+    pointer-events: none;
+    background: #ffffff;
+    transition: opacity 220ms ease-out;
+}
 </style>
 
 <script setup lang="ts">
@@ -160,6 +173,7 @@ const threeRoot = ref<HTMLDivElement | null>(null);
 const threeInstance = useThree(threeRoot);
 const game = useGame();
 const gameState = useGameState();
+const playerStore = usePlayerStore();
 const controls = useControls(game);
 
 // Добавляем controls в объект game для доступа из HUD
@@ -207,7 +221,6 @@ onMounted(() => {
     const camera = threeInstance.getCamera();
     const composer = threeInstance.getComposer();
 
-    const playerStore = usePlayerStore();
     playerStore.renderInstance = threeInstance;
 
 

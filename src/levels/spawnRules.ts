@@ -42,10 +42,6 @@ function clampChance(value: number): number {
   return Math.max(0, Math.min(1, value));
 }
 
-function roll(chance: number): boolean {
-  return Math.random() <= clampChance(chance);
-}
-
 function resolveCoinTypes(coinSets: CoinSetId[]): CoinType[] {
   if (coinSets.includes("default")) return ["golden", "energon"];
 
@@ -97,8 +93,7 @@ export function resolveLanePatternBySpawnRules(
   if (isCoinPattern(value)) {
     if (
       !activeRules.allowCoins ||
-      !isCoinTypeAllowed(value, activeRules.coinTypes) ||
-      !roll(activeRules.coinChance)
+      !isCoinTypeAllowed(value, activeRules.coinTypes)
     ) {
       return LanePattern.Empty;
     }
@@ -110,8 +105,7 @@ export function resolveLanePatternBySpawnRules(
     if (!activeRules.allowJumps) return LanePattern.Empty;
     if (
       !activeRules.allowCoins ||
-      !activeRules.coinTypes.includes("golden") ||
-      !roll(activeRules.coinChance)
+      !activeRules.coinTypes.includes("golden")
     ) {
       return LanePattern.Jump;
     }
@@ -121,9 +115,18 @@ export function resolveLanePatternBySpawnRules(
   if (isPositiveBoostPattern(value)) {
     if (
       !activeRules.allowPositiveBoosts ||
-      !isBoosterTypeAllowed(value, activeRules.boosterTypes) ||
-      !roll(activeRules.boostChance) ||
-      !roll(activeRules.positiveBoostChance)
+      !isBoosterTypeAllowed(value, activeRules.boosterTypes)
+    ) {
+      return LanePattern.Empty;
+    }
+
+    return value;
+  }
+
+  if (isNegativeBoostPattern(value)) {
+    if (
+      !activeRules.allowNegativeBoosts ||
+      !isBoosterTypeAllowed(value, activeRules.boosterTypes)
     ) {
       return LanePattern.Empty;
     }
@@ -132,7 +135,6 @@ export function resolveLanePatternBySpawnRules(
   }
 
   if (isObstaclePattern(value)) {
-    if (!roll(activeRules.obstacleChance)) return LanePattern.Empty;
     return value;
   }
 
@@ -183,10 +185,13 @@ function isPositiveBoostPattern(value: LanePatternValue): boolean {
   return (
     value === LanePattern.Booster ||
     value === LanePattern.BulletItem ||
-    value === LanePattern.Nitro ||
     value === LanePattern.Shield ||
     value === LanePattern.Magnet
   );
+}
+
+function isNegativeBoostPattern(value: LanePatternValue): boolean {
+  return value === LanePattern.Nitro;
 }
 
 function isObstaclePattern(value: LanePatternValue): boolean {

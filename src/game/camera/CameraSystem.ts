@@ -5,15 +5,20 @@ import { usePlayerStore } from "@/store/playerStore";
 class CameraSystemClass {
   private camera: THREE.PerspectiveCamera | null = null;
 
-  // base shake
-  private shakeTimer = 0;
-  private shakeOffset = new THREE.Vector3();
+  private basePosition = new THREE.Vector3();
+  private targetPosition = new THREE.Vector3();
+  private finalPosition = new THREE.Vector3();
+  private lookAtPosition = new THREE.Vector3();
 
-  // impact shake
+  private driveTimer = 0;
+  private driveOffset = new THREE.Vector3();
+  private eventOffset = new THREE.Vector3();
+  private currentRoll = 0;
+
   private impactTimer = 0;
-  private impactOffset = new THREE.Vector3();
-  private impactDuration!: number;
-  private impactAmplitude!: number;
+  private impactDuration = 0;
+  private impactAmplitude = 0;
+  private impactSeed = 0;
 
   initialize(camera: THREE.PerspectiveCamera) {
     const cameraStore = useCameraStore();
@@ -32,8 +37,8 @@ class CameraSystemClass {
       cfg.inits.lookat.z,
     );
 
-    this.impactDuration = cfg.impact_shake.duration;
-    this.impactAmplitude = cfg.impact_shake.max_amplitude;
+    this.basePosition.copy(this.camera.position);
+    this.clearEventShake();
   }
 
   update(
@@ -43,25 +48,26 @@ class CameraSystemClass {
       isDestroyed(): boolean;
     },
     speed: number,
+    deltaTime = 1000 / 60,
   ) {
     if (!this.camera) return;
     if (car.isDestroyed()) return;
 
     const cameraStore = useCameraStore();
     const cfg = cameraStore.config;
+    const playerStore = usePlayerStore();
 
     const carPos = car.position;
+    const dt = Math.min(deltaTime, 50) / 1000;
 
-    const rawSpeedFactor = speed / usePlayerStore().maxSpeed;
+    const rawSpeedFactor = speed / playerStore.maxSpeed;
     const speedFactor = THREE.MathUtils.clamp(rawSpeedFactor, 0, 1);
-    const nitroBoost = usePlayerStore().isNitroEnabled ? 0.06 : 0;
-    const speedFactorNorm = speedFactor;
+    const nitroBoost = playerStore.isNitroEnabled ? 0.06 : 0;
 
     const fovCurve = 1 - Math.pow(1 - speedFactor, 2);
     const distanceCurve = Math.pow(speedFactor, 0.6);
 
-    // 1. Позиция камеры
-    const targetCamPos = new THREE.Vector3(
+    this.targetPosition.set(
       carPos.x,
       cfg.settings.height - (cfg.settings.height * speedFactor - 1),
       carPos.z +
@@ -71,19 +77,25 @@ class CameraSystemClass {
           cfg.settings.distance_reduction_factor,
     );
 
-    this.camera.position.lerp(
-      targetCamPos,
-      cfg.settings.follow_speed * speedFactor,
+    const followFactor = THREE.MathUtils.clamp(
+      cfg.settings.follow_speed * Math.max(speedFactor, 0.08),
+      0,
+      1,
     );
-    this.applyShake(speedFactorNorm);
-    this.camera.position.add(this.shakeOffset);
+    this.basePosition.lerp(this.targetPosition, followFactor);
 
-    // 2. Наклон при поворотах
-    const targetTilt = -car.rotation.y * cfg.tilt.factor;
-    this.camera.rotation.z +=
-      (targetTilt - this.camera.rotation.z) * cfg.settings.follow_speed;
+    const driveMotionFactor =
+      speed > 0 ? THREE.MathUtils.clamp(speedFactor, 0.28, 1) : 0;
 
-    // 3. Динамический FOV с плавным изменением
+    this.updateDriveMotion(driveMotionFactor, dt);
+    this.updateEventShake(dt);
+
+    this.finalPosition
+      .copy(this.basePosition)
+      .add(this.driveOffset)
+      .add(this.eventOffset);
+    this.camera.position.copy(this.finalPosition);
+
     const targetFOV =
       cfg.fov.min +
       (cfg.fov.max - cfg.fov.min) * fovCurve +
@@ -95,13 +107,25 @@ class CameraSystemClass {
     );
     this.camera.updateProjectionMatrix();
 
-    // 4. LookAt
-    const lookAtPos = new THREE.Vector3(
+    this.lookAtPosition.set(
       carPos.x,
       carPos.y + cfg.settings.lookat_y_offset,
       carPos.z - cfg.settings.lookahead,
     );
-    this.camera.lookAt(lookAtPos);
+    this.lookAtPosition.x +=
+      this.driveOffset.x * cfg.shake.lookat + this.eventOffset.x * 0.22;
+    this.lookAtPosition.y +=
+      this.driveOffset.y * cfg.shake.lookat * 0.55 + this.eventOffset.y * 0.18;
+    this.camera.lookAt(this.lookAtPosition);
+
+    const targetTilt = -car.rotation.y * cfg.tilt.factor;
+    this.currentRoll = THREE.MathUtils.lerp(
+      this.currentRoll,
+      targetTilt,
+      THREE.MathUtils.clamp(cfg.settings.follow_speed * 0.35, 0, 1),
+    );
+    this.camera.rotation.z +=
+      this.currentRoll + this.getDriveRoll(driveMotionFactor);
   }
 
   updateDestroyed(
@@ -159,10 +183,10 @@ class CameraSystemClass {
       );
     }
 
-    this.impactAmplitude = 0;
-    this.impactOffset.set(0, 0, 0);
+    this.clearEventShake();
 
     this.camera.position.lerp(targetCamPos, cfg.destroyed.lerp_factor);
+    this.basePosition.copy(this.camera.position);
 
     this.camera.rotation.z = 0;
     this.camera.rotation.x = 0;
@@ -203,14 +227,17 @@ class CameraSystemClass {
     const cameraStore = useCameraStore();
     const cfg = cameraStore.config;
 
-    this.shakeTimer = 0;
-    this.shakeOffset.set(0, 0, 0);
+    this.driveTimer = 0;
+    this.driveOffset.set(0, 0, 0);
+    this.currentRoll = 0;
+    this.clearEventShake();
 
     this.camera.position.set(
       carPosition.x,
       cfg.settings.height,
       carPosition.z + cfg.settings.distance,
     );
+    this.basePosition.copy(this.camera.position);
 
     this.camera.fov = cfg.fov.min;
     this.camera.rotation.z = 0;
@@ -224,9 +251,7 @@ class CameraSystemClass {
     this.camera.lookAt(lookAt);
   }
 
-  private applyShake(speedFactor: number, deltaTime = 1) {
-    this.shakeTimer += deltaTime;
-
+  private updateDriveMotion(speedFactor: number, deltaSeconds: number) {
     const cfg = useCameraStore().config.shake;
 
     const amplitude =
@@ -237,49 +262,94 @@ class CameraSystemClass {
       cfg.base.frequency +
       (cfg.max.frequency - cfg.base.frequency) * speedFactor;
 
-    this.shakeOffset
-      .set(
-        Math.sin(this.shakeTimer * frequency),
-        Math.sin(this.shakeTimer * frequency * cfg.multiplier.y),
-        Math.cos(this.shakeTimer * frequency * cfg.multiplier.z),
-      )
-      .multiplyScalar(amplitude);
+    this.driveTimer += deltaSeconds * frequency * Math.PI * 2;
+    this.driveOffset.set(
+      Math.sin(this.driveTimer * 0.72) * amplitude * 0.65,
+      Math.sin(this.driveTimer) * amplitude * cfg.multiplier.y,
+      Math.cos(this.driveTimer * 0.47) * amplitude * cfg.multiplier.z,
+    );
+  }
+
+  private updateEventShake(deltaSeconds: number) {
+    this.eventOffset.set(0, 0, 0);
+    if (this.impactTimer >= this.impactDuration || this.impactDuration <= 0) {
+      return;
+    }
+
+    this.impactTimer += deltaSeconds;
+    const progress = THREE.MathUtils.clamp(
+      this.impactTimer / this.impactDuration,
+      0,
+      1,
+    );
+    const cfg = useCameraStore().config.impact_shake;
+    const decay = Math.exp(-cfg.decay_rate * progress);
+    const amplitude = this.impactAmplitude * decay;
+    const t = this.impactTimer * 60;
+
+    this.eventOffset.set(
+      Math.sin(t * 2.17 + this.impactSeed) * amplitude * 0.8,
+      Math.sin(t * 2.83 + this.impactSeed * 1.7) * amplitude * 0.5,
+      Math.sin(t * 1.63 + this.impactSeed * 2.3) * amplitude * 0.35,
+    );
+  }
+
+  private getDriveRoll(speedFactor: number) {
+    const cfg = useCameraStore().config.shake;
+    const roll =
+      Math.sin(this.driveTimer * 0.58) *
+      cfg.roll *
+      THREE.MathUtils.clamp(speedFactor, 0, 1);
+    const eventRoll =
+      this.eventOffset.x *
+      0.01 *
+      THREE.MathUtils.clamp(this.impactAmplitude / 0.34, 0, 1);
+    return roll + eventRoll;
+  }
+
+  private clearEventShake() {
+    this.impactTimer = 0;
+    this.impactDuration = 0;
+    this.impactAmplitude = 0;
+    this.impactSeed = 0;
+    this.eventOffset.set(0, 0, 0);
   }
 
   public triggerImpactShake(
-    strength: number, // 0..1
-    duration = 0.4,
+    strength: number,
+    duration = useCameraStore().config.impact_shake.duration,
   ) {
     const cameraStore = useCameraStore();
     const cfg = cameraStore.config;
+    const normalizedStrength = THREE.MathUtils.clamp(strength, 0, 1);
+    const durationSeconds = duration > 10 ? duration / 1000 : duration;
 
     this.impactTimer = 0;
-    this.impactDuration = duration;
+    this.impactDuration = Math.max(0.05, durationSeconds);
+    this.impactSeed = Math.random() * Math.PI * 2;
 
     this.impactAmplitude = THREE.MathUtils.lerp(
       cfg.impact_shake.min,
       cfg.impact_shake.max,
-      strength,
+      normalizedStrength,
     );
   }
 
-  // private applyImpactShake(deltaTime: number) {
-  //   if (this.impactTimer >= this.impactDuration) {
-  //     this.impactOffset.set(0, 0, 0);
-  //     return;
-  //   }
-  //
-  //   this.impactTimer += deltaTime;
-  //   const t = this.impactTimer / this.impactDuration;
-  //
-  //   const cameraStore = useCameraStore();
-  //   const cfg = cameraStore.config.value;
-  //   const decay = Math.exp(-cfg.impact_shake.decay_rate * t);
-  //
-  //   this.impactOffset
-  //     .set(Math.random() * 2 - 1, Math.random() * 2 - 1, Math.random() * 2 - 1)
-  //     .multiplyScalar(this.impactAmplitude * decay);
-  // }
+  public triggerShotShake() {
+    const cfg = useCameraStore().config.event_shake.shot;
+    this.triggerImpactShake(cfg.strength, cfg.duration);
+  }
+
+  public triggerNitroShake(corrupted = false) {
+    const cfg = useCameraStore().config.event_shake;
+    const shake = corrupted ? cfg.heavy_nitro : cfg.nitro;
+    this.triggerImpactShake(shake.strength, shake.duration);
+  }
+
+  public triggerLandingShake() {
+    const cfg = useCameraStore().config.event_shake.landing;
+    this.triggerImpactShake(cfg.strength, cfg.duration);
+  }
 
   getCamera() {
     return this.camera;
