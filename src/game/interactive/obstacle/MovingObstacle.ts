@@ -58,6 +58,7 @@ export class MovingObstacle extends CubeObstacle {
     if (this.position.x > this.maxX) {
       this.direction = -1;
     }
+    this.position.y = this.getSurfaceY(this.getLane(), this.position.z);
   }
 
   public getLane(): number {

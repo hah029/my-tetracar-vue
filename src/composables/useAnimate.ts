@@ -119,8 +119,16 @@ export function GameLoop(
           isFinite(v.y) &&
           isFinite(v.z);
         const carPos = realCar?.position;
+        const cameraAnchor =
+          realCar && "getGameOverCameraPosition" in realCar
+            ? (realCar as any).getGameOverCameraPosition()
+            : null;
         const safePosition =
-          carPos && isValidVector(carPos) ? carPos : undefined;
+          cameraAnchor && isValidVector(cameraAnchor)
+            ? cameraAnchor
+            : carPos && isValidVector(carPos)
+              ? carPos
+              : undefined;
         updateDestruction(deltaTime, 0, safePosition);
       } else {
         progressStore.addDistance(deltaTime * currentSpeed);
@@ -175,9 +183,13 @@ export function GameLoop(
 
         const realCar = game.car.value.mesh;
         if (realCar) {
+          const cameraFollowPosition =
+            "getCameraFollowPosition" in realCar
+              ? (realCar as any).getCameraFollowPosition()
+              : realCar.position;
           CameraSystem.update(
             {
-              position: realCar.position,
+              position: cameraFollowPosition,
               rotation: realCar.rotation,
               isDestroyed: () => game.car.value.isDestroyed,
             },

@@ -52,6 +52,7 @@ const nightCity = {
       opacity: 0.25,
       laneColor: "#FFFFFF",
       length: 800,
+      segmentSurfaces: true,
       edges: {
         color: "#00ffff",
         height: 10,

@@ -247,6 +247,31 @@ export interface RoadEnvironmentConfig {
    * Боковые объекты вдоль дороги.
    */
   sideObjects?: RoadSideObjectsConfig;
+
+  /**
+   * Короткие секции дороги, поднятые над базовой плоскостью.
+   */
+  elevatedSections?: RoadElevatedSectionConfig[];
+
+  /**
+   * Рисовать дорожное полотно как часть runtime-сегментов вместо общей плоскости.
+   */
+  segmentSurfaces?: boolean;
+}
+
+export interface RoadElevatedSectionConfig {
+  lanes: number[];
+  zStart: number;
+  length: number;
+  height: number;
+  rampLength: number;
+  rampIn?: boolean;
+  rampOut?: boolean;
+  speedFactor?: number;
+  color?: string;
+  emissiveColor?: string;
+  emissiveIntensity?: number;
+  opacity?: number;
 }
 
 export interface RoadEdgeConfig {

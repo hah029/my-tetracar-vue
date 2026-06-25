@@ -38,6 +38,8 @@ export class BaseItem extends THREE.Group {
       status: "landed",
       velocity: new THREE.Vector3(),
       rotationSpeed: new THREE.Vector3(),
+      laneIndex,
+      followSurface: laneIndex !== undefined,
     };
 
     let x: number;
@@ -81,11 +83,23 @@ export class BaseItem extends THREE.Group {
 
   update(deltaTime: number, speed: number): boolean {
     this.position.z += deltaTime * speed;
+    this.updateSurfaceHeight();
     this.cube.rotation.y += this.rotationYDiff;
     this.ensureLethalMagnetObstacleVisual();
     this.updateCorruptedEmission(deltaTime);
     this.collider.center.copy(this.position);
     return this.position.z > useCommonStore().config.itemsRemovingZpos;
+  }
+
+  private updateSurfaceHeight(): void {
+    if (this.userData.status !== "landed") return;
+    if (this.userData.followSurface === false) return;
+    if (typeof this.userData.laneIndex !== "number") return;
+
+    const road = RoadManager.getInstance();
+    this.position.y =
+      useCommonStore().baseItemYpos +
+      road.getSurfaceHeightAt(this.userData.laneIndex, this.position.z);
   }
 
   public markAsLethalMagnetObstacle() {

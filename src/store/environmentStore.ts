@@ -75,6 +75,14 @@ export const useEnvironmentStore = defineStore("environmentStore", () => {
       emissiveIntensity: road.emissiveIntensity,
       opacity: road.opacity,
       sideObjects,
+      segmentSurfaces: road.segmentSurfaces,
+      elevatedSections: road.elevatedSections?.map((section) => ({
+        ...section,
+        color: section.color ? colorToNumber(section.color) : undefined,
+        emissive: section.emissiveColor
+          ? colorToNumber(section.emissiveColor)
+          : undefined,
+      })),
     };
   }
 

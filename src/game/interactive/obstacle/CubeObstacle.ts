@@ -65,7 +65,7 @@ export class CubeObstacle extends BaseObstacle {
     };
 
     const x = RoadManager.getInstance().getLanePosition(laneIndex);
-    this.position.set(x, 0, zPos);
+    this.position.set(x, this.getSurfaceY(laneIndex, zPos), zPos);
 
     const destructionSource = formDetailConfig ?? formBaseConfig;
     this.buildDestructionCells(destructionSource);
@@ -269,7 +269,12 @@ export class CubeObstacle extends BaseObstacle {
 
     const dz = dt * speed;
     this.position.z += dz;
+    this.position.y = this.getSurfaceY(this.getLane(), this.position.z);
     return this.position.z > useCommonStore().config.itemsRemovingZpos;
+  }
+
+  protected getSurfaceY(laneIndex: number, z: number): number {
+    return RoadManager.getInstance().getSurfaceHeightAt(laneIndex, z);
   }
 
   // =========================================================

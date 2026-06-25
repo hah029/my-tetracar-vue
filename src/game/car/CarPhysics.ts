@@ -54,22 +54,39 @@ export class CarPhysics {
   public updateJump(
     currentY: number,
     deltaTime: number,
+    groundY?: number,
   ): {
     newY: number;
     isJumping: boolean;
     pitch: number;
     hasLanded: boolean;
   } {
+    if (groundY !== undefined) {
+      this.jumpSimulator.setGroundY(groundY);
+    }
+
     // Если прыжок не активен – просто возвращаем текущую высоту,
     // а внутреннее состояние подгоняем под неё (для корректного старта в будущем)
     if (!this.jumpState.isJumping) {
-      this.jumpState.y = currentY;
-      return {
-        newY: currentY,
-        isJumping: false,
-        pitch: 0,
-        hasLanded: false,
-      };
+      const targetY = groundY ?? currentY;
+      if (targetY < currentY - 0.25) {
+        this.jumpState = {
+          y: currentY,
+          velocity: 0,
+          isJumping: true,
+        };
+      } else {
+        const frameScale = Math.max(0, Math.min(deltaTime, 50)) / (1000 / 60);
+        const followFactor = 1 - Math.pow(1 - 0.32, frameScale);
+        const newY = currentY + (targetY - currentY) * followFactor;
+        this.jumpState.y = newY;
+        return {
+          newY,
+          isJumping: false,
+          pitch: 0,
+          hasLanded: false,
+        };
+      }
     }
 
     // Преобразуем deltaTime в секунды
@@ -88,8 +105,8 @@ export class CarPhysics {
 
     const hasLanded = prevIsJumping && !this.jumpState.isJumping;
 
-    let pitch = prevVelocity > 0 ? 0.2 : -0.1;
-    if (usePlayerStore().forceJump) pitch = -0.2;
+    let pitch = prevVelocity > 0 ? 0.08 : -0.025;
+    if (usePlayerStore().forceJump) pitch = -0.08;
     return {
       newY: this.jumpState.y,
       isJumping: this.jumpState.isJumping,
@@ -213,8 +230,8 @@ export class CarPhysics {
       jumpVelocity: this.jumpState.velocity,
       targetPitch: this.jumpState.isJumping
         ? this.jumpState.velocity > 0
-          ? 0.2
-          : -0.1
+          ? 0.08
+          : -0.025
         : 0,
     };
   }

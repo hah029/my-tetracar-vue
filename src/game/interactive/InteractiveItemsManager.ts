@@ -25,6 +25,8 @@ import { NitroItem } from "./items/booster/NitroItem";
 import { ShieldItem } from "./items/booster/ShieldItem";
 import { MagnetItem } from "./items/booster/MagnetItem";
 import type { CorruptedBoostVariant } from "@/levels/types";
+import { RoadManager } from "@/game/environment/road";
+import type { Segment, SegmentElevatedSection } from "./segments/Segment";
 
 type ItemSpawnSource = "segment" | "drop";
 
@@ -135,11 +137,20 @@ export class InteractiveItemsManager {
   }
 
   private ensureWorldFilled(deltaTime: number, speed: number) {
-    // 🚫 защита от спама за кадр
-    const MAX_SPAWNS_PER_FRAME = 1;
+    // Ограничение защищает от всплеска объектов, но дает догнать высокую скорость.
+    const MAX_SPAWNS_PER_FRAME = 6;
     let spawned = 0;
 
-    const minZ = useCommonStore().config.baseSegmentsZpos * 1.2;
+    const cfg = useCommonStore().config;
+    const rowLength = Math.max(
+      cfg.segmentRowMinLength,
+      speed * cfg.segmentRowTargetTravelMs,
+    );
+    const spawnAheadBuffer = Math.max(
+      Math.abs(cfg.baseSegmentsZpos) * 0.2,
+      rowLength * 8,
+    );
+    const minZ = cfg.baseSegmentsZpos - spawnAheadBuffer;
 
     this.worldFrontZ += speed * deltaTime;
 
@@ -161,6 +172,19 @@ export class InteractiveItemsManager {
     const segmentRowLength = Math.max(
       cfg.segmentRowMinLength,
       speed * cfg.segmentRowTargetTravelMs,
+    );
+
+    this.spawnElevatedSectionsForSegment(
+      segment,
+      isReversed,
+      baseZ,
+      segmentRowLength,
+    );
+    this.spawnRoadSurfaceForSegment(
+      segment,
+      isReversed,
+      baseZ,
+      segmentRowLength,
     );
 
     // console.log("segmentRowLength", segmentRowLength);
@@ -260,7 +284,7 @@ export class InteractiveItemsManager {
       baseZ,
       laneIndex,
       posX,
-      undefined,
+      this.getSurfaceItemY(baseZ, laneIndex),
       undefined,
       allowedTypes,
     ) as BaseItem;
@@ -281,6 +305,7 @@ export class InteractiveItemsManager {
       baseZ,
       laneIndex,
       xPos,
+      this.getSurfaceItemY(baseZ, laneIndex),
     ) as BaseItem;
     if (item) {
       this.addItem(item, source);
@@ -299,6 +324,7 @@ export class InteractiveItemsManager {
       baseZ,
       laneIndex,
       xPos,
+      this.getSurfaceItemY(baseZ, laneIndex),
     ) as BaseItem;
     if (item) {
       this.addItem(item, source);
@@ -317,6 +343,8 @@ export class InteractiveItemsManager {
       const item = this.coinManager.spawnGolden(
         baseZ - i * spacing,
         laneIndex,
+        undefined,
+        this.getSurfaceItemY(baseZ - i * spacing, laneIndex),
       ) as BaseItem;
       if (item) {
         this.addItem(item);
@@ -337,7 +365,7 @@ export class InteractiveItemsManager {
       baseZ,
       laneIndex,
       xPos,
-      undefined,
+      this.getSurfaceItemY(baseZ, laneIndex),
       allowedTypes,
     );
     if (item) {
@@ -353,7 +381,12 @@ export class InteractiveItemsManager {
     xPos?: number,
     source: ItemSpawnSource = "segment",
   ) {
-    const item = this.boosterManager.spawnNitro(baseZ, laneIndex, xPos);
+    const item = this.boosterManager.spawnNitro(
+      baseZ,
+      laneIndex,
+      xPos,
+      this.getSurfaceItemY(baseZ, laneIndex),
+    );
     if (item) {
       this.addItem(item, source);
       return item;
@@ -367,7 +400,12 @@ export class InteractiveItemsManager {
     xPos?: number,
     source: ItemSpawnSource = "segment",
   ) {
-    const item = this.boosterManager.spawnMagnet(baseZ, laneIndex, xPos);
+    const item = this.boosterManager.spawnMagnet(
+      baseZ,
+      laneIndex,
+      xPos,
+      this.getSurfaceItemY(baseZ, laneIndex),
+    );
     if (item) {
       this.addItem(item, source);
       return item;
@@ -381,7 +419,12 @@ export class InteractiveItemsManager {
     xPos?: number,
     source: ItemSpawnSource = "segment",
   ) {
-    const item = this.boosterManager.spawnShield(baseZ, laneIndex, xPos);
+    const item = this.boosterManager.spawnShield(
+      baseZ,
+      laneIndex,
+      xPos,
+      this.getSurfaceItemY(baseZ, laneIndex),
+    );
     if (item) {
       this.addItem(item, source);
       return item;
@@ -395,7 +438,12 @@ export class InteractiveItemsManager {
     xPos?: number,
     source: ItemSpawnSource = "segment",
   ) {
-    const item = this.boosterManager.spawnBullet(baseZ, laneIndex, xPos);
+    const item = this.boosterManager.spawnBullet(
+      baseZ,
+      laneIndex,
+      xPos,
+      this.getSurfaceItemY(baseZ, laneIndex),
+    );
     if (item) {
       this.addItem(item, source);
       return item;
@@ -411,9 +459,11 @@ export class InteractiveItemsManager {
   ) {
     const jumpZ = baseZ + this.getJumpDistance(deltaTime, speed);
     this.obstacleManager.spawnJump(lane, jumpZ);
+    const groundY =
+      this.getSurfaceItemY(jumpZ, lane) ?? useCommonStore().baseItemYpos;
 
     const trajectory = simulateJumpTrajectory({
-      startY: 0.5, // высота машины при прыжке
+      startY: useCommonStore().baseItemYpos,
       jumpHeight: usePlayerStore().JUMP_HEIGHT,
       gravity: useCommonStore().config.physics.gravity,
       deltaTime: deltaTime,
@@ -430,10 +480,13 @@ export class InteractiveItemsManager {
         coinZ,
         lane,
         undefined,
-        point.y,
+        groundY + (point.y - useCommonStore().baseItemYpos),
       ) as BaseItem;
 
-      if (item) this.addItem(item);
+      if (item) {
+        item.userData.followSurface = false;
+        this.addItem(item);
+      }
     }
   }
 
@@ -452,6 +505,97 @@ export class InteractiveItemsManager {
     const max = 8;
     const factor = Math.min((deltaTime * speed) / 3, 1);
     return min + (max - min) * factor;
+  }
+
+  private spawnElevatedSectionsForSegment(
+    segment: Segment,
+    isReversed: boolean,
+    baseZ: number,
+    rowLength: number,
+  ): void {
+    const elevatedSections = segment.elevatedSections ?? [];
+    if (elevatedSections.length === 0) return;
+
+    const road = RoadManager.getInstance();
+    const laneCount = useLevelStore().currentGameplay.laneCount;
+
+    for (const section of elevatedSections) {
+      const rowStart = Math.max(0, Math.min(section.rowStart, section.rowEnd));
+      const rowEnd = Math.min(
+        segment.pattern.length,
+        Math.max(section.rowStart, section.rowEnd),
+      );
+      if (rowEnd <= rowStart) continue;
+
+      road.spawnElevatedSection({
+        lanes: this.resolveElevatedLanes(section, isReversed, laneCount),
+        zStart: baseZ - rowEnd * rowLength + rowLength / 2,
+        length: (rowEnd - rowStart) * rowLength,
+        height: section.height,
+        rampLength: Math.max(rowLength, section.rampRows * rowLength),
+        rampIn: section.rampIn,
+        rampOut: section.rampOut,
+        color: this.colorToNumber(section.color),
+        emissive: this.colorToNumber(section.emissiveColor),
+        emissiveIntensity: section.emissiveIntensity,
+        opacity: section.opacity,
+      });
+    }
+  }
+
+  private spawnRoadSurfaceForSegment(
+    segment: Segment,
+    isReversed: boolean,
+    baseZ: number,
+    rowLength: number,
+  ): void {
+    const laneCount = useLevelStore().currentGameplay.laneCount;
+    const coverage = (segment.elevatedSections ?? []).map((section) => {
+      const rowStart = Math.max(0, Math.min(section.rowStart, section.rowEnd));
+      const rowEnd = Math.min(
+        segment.pattern.length,
+        Math.max(section.rowStart, section.rowEnd),
+      );
+
+      return {
+        lanes: this.resolveElevatedLanes(section, isReversed, laneCount),
+        rowStart,
+        rowEnd,
+      };
+    });
+
+    RoadManager.getInstance().spawnSegmentSurface(
+      baseZ,
+      rowLength,
+      segment.pattern.length,
+      coverage,
+    );
+  }
+
+  private resolveElevatedLanes(
+    section: SegmentElevatedSection,
+    isReversed: boolean,
+    laneCount: number,
+  ): number[] {
+    if (!isReversed) return section.lanes;
+    return section.lanes.map((lane) => laneCount - 1 - lane);
+  }
+
+  private colorToNumber(color?: string): number | undefined {
+    if (!color) return undefined;
+    return Number.parseInt(color.replace("#", ""), 16);
+  }
+
+  private getSurfaceItemY(
+    baseZ: number,
+    laneIndex?: number,
+  ): number | undefined {
+    if (laneIndex === undefined) return undefined;
+
+    return (
+      useCommonStore().baseItemYpos +
+      RoadManager.getInstance().getSurfaceHeightAt(laneIndex, baseZ)
+    );
   }
 
   // прокси

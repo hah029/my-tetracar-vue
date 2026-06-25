@@ -1,13 +1,19 @@
 // /game/road/RoadManager.ts
 
 import * as THREE from "three";
-import type { RoadConfig, RoadStats } from "./types";
+import type { RoadConfig, RoadElevatedSectionConfig, RoadStats } from "./types";
 import { Road } from "./Road";
 import { RoadLine } from "./RoadLine";
 import { RoadLane } from "./RoadLane";
 import { SpeedLine } from "./SpeedLine";
 import { RoadEdge } from "./edges";
 import { SideObjectsInstanced } from "./SideObjectsInstanced";
+import { RoadElevatedSection } from "./RoadElevatedSection";
+import {
+  RoadSegmentSurface,
+  type RoadSegmentSurfaceCoverage,
+  type RoadSegmentSurfaceInterval,
+} from "./RoadSegmentSurface";
 import { useCommonStore } from "@/store/commonStore";
 import { useEnvironmentStore } from "@/store/environmentStore";
 import { CarManager } from "@/game/car";
@@ -19,6 +25,9 @@ export class RoadManager {
   private roadLanes: RoadLane[] = [];
   private speedLines: SpeedLine[] = [];
   private edges: THREE.Mesh[] = [];
+  private elevatedSections: RoadElevatedSection[] = [];
+  private segmentSurfaces: RoadSegmentSurface[] = [];
+  private idleSegmentSurface: RoadSegmentSurface | null = null;
   private leftSideObjects: SideObjectsInstanced | null = null;
   private rightSideObjects: SideObjectsInstanced | null = null;
   private carManager = CarManager.getInstance();
@@ -53,11 +62,105 @@ export class RoadManager {
     this.road = new Road(this.config);
     if (!this.scene) return;
 
-    this.scene.add(this.road);
+    if (!this.config.segmentSurfaces) {
+      this.scene.add(this.road);
+    }
     this.addEdges();
-    this.addRoadLines();
-    this.addRoadLanes();
+    if (!this.config.segmentSurfaces) {
+      this.addRoadLines();
+      this.addRoadLanes();
+    } else {
+      this.addIdleSegmentSurface();
+    }
+    this.addElevatedSections();
     this.addSideObjects();
+  }
+
+  private addIdleSegmentSurface(): void {
+    if (!this.road || !this.scene) return;
+
+    const lanes = this.road.getLanePositions();
+    const laneWidth = this.road.width / lanes.length;
+    const rowLength = Math.max(12, useCommonStore().config.segmentRowMinLength);
+    const rowCount = Math.ceil(this.config.length / rowLength);
+
+    this.idleSegmentSurface = new RoadSegmentSurface(
+      this.scene,
+      this.config,
+      lanes,
+      laneWidth,
+      0,
+      rowLength,
+      rowCount,
+      [],
+      { loop: true },
+    );
+    this.idleSegmentSurface.setLoopOcclusionProvider(() =>
+      this.getSegmentSurfaceIntervals(),
+    );
+  }
+
+  public spawnSegmentSurface(
+    baseZ: number,
+    rowLength: number,
+    rowCount: number,
+    coverage: RoadSegmentSurfaceCoverage[] = [],
+  ): void {
+    if (!this.road || !this.scene || !this.config.segmentSurfaces) return;
+
+    const lanes = this.road.getLanePositions();
+    const laneWidth = this.road.width / lanes.length;
+
+    this.segmentSurfaces.push(
+      new RoadSegmentSurface(
+        this.scene,
+        this.config,
+        lanes,
+        laneWidth,
+        baseZ,
+        rowLength,
+        rowCount,
+        coverage,
+      ),
+    );
+  }
+
+  private addElevatedSections(): void {
+    if (!this.road || !this.scene) return;
+
+    const sections = this.config.elevatedSections ?? [];
+    if (sections.length === 0) return;
+
+    const lanes = this.road.getLanePositions();
+    const laneWidth = this.road.width / lanes.length;
+
+    for (const sectionConfig of sections) {
+      this.elevatedSections.push(
+        new RoadElevatedSection(
+          this.scene,
+          sectionConfig,
+          this.config,
+          lanes,
+          laneWidth,
+        ),
+      );
+    }
+  }
+
+  public spawnElevatedSection(sectionConfig: RoadElevatedSectionConfig): void {
+    if (!this.road || !this.scene) return;
+
+    const lanes = this.road.getLanePositions();
+    const laneWidth = this.road.width / lanes.length;
+    this.elevatedSections.push(
+      new RoadElevatedSection(
+        this.scene,
+        { ...sectionConfig, loop: false },
+        this.config,
+        lanes,
+        laneWidth,
+      ),
+    );
   }
 
   private addSideObjects(): void {
@@ -77,7 +180,7 @@ export class RoadManager {
     const endZ = this.config.length;
 
     this.leftSideObjects = new SideObjectsInstanced(
-      this.scene,
+      this.scene!,
       leftX,
       startZ,
       endZ,
@@ -88,7 +191,7 @@ export class RoadManager {
     );
 
     this.rightSideObjects = new SideObjectsInstanced(
-      this.scene,
+      this.scene!,
       rightX,
       startZ,
       endZ,
@@ -196,6 +299,23 @@ export class RoadManager {
   public update(deltaTime: number, speed: number): void {
     this.leftSideObjects?.update(deltaTime, speed);
     this.rightSideObjects?.update(deltaTime, speed);
+    for (let i = this.segmentSurfaces.length - 1; i >= 0; i--) {
+      const surface = this.segmentSurfaces[i];
+      if (!surface) continue;
+      if (surface.update(deltaTime, speed)) {
+        surface.dispose();
+        this.segmentSurfaces.splice(i, 1);
+      }
+    }
+    for (let i = this.elevatedSections.length - 1; i >= 0; i--) {
+      const section = this.elevatedSections[i];
+      if (!section) continue;
+      if (section.update(deltaTime, speed)) {
+        section.dispose();
+        this.elevatedSections.splice(i, 1);
+      }
+    }
+    this.idleSegmentSurface?.update(deltaTime, speed);
 
     this.updateCurrentLane(this.carManager.getCar().getCurrentLane());
   }
@@ -221,8 +341,24 @@ export class RoadManager {
     this.roadLanes = [];
     this.edges.forEach((edge) => this.scene?.remove(edge));
     this.edges = [];
+    this.elevatedSections.forEach((section) => section.dispose());
+    this.elevatedSections = [];
+    this.segmentSurfaces.forEach((surface) => surface.dispose());
+    this.segmentSurfaces = [];
+    this.clearIdleSegmentSurface();
 
     this.clearSideObjects();
+  }
+
+  private clearIdleSegmentSurface(): void {
+    this.idleSegmentSurface?.dispose();
+    this.idleSegmentSurface = null;
+  }
+
+  private getSegmentSurfaceIntervals(): RoadSegmentSurfaceInterval[] {
+    return this.segmentSurfaces.flatMap((surface) =>
+      surface.getSurfaceIntervals(),
+    );
   }
 
   public dispose(): void {
@@ -264,6 +400,20 @@ export class RoadManager {
     }
     const lane = this.config.lanes[index];
     return lane ? lane : 0;
+  }
+
+  public getSurfaceHeightAt(lane: number, z: number = 0): number {
+    let height = 0;
+
+    for (const section of this.elevatedSections) {
+      const candidate = section.getHeightAt(lane, z);
+      if (candidate === 0) continue;
+      if (height === 0 || Math.abs(candidate) > Math.abs(height)) {
+        height = candidate;
+      }
+    }
+
+    return height;
   }
 
   public updateConfig(config: Partial<RoadConfig>): void {

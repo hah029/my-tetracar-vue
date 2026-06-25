@@ -33,6 +33,24 @@ export interface RoadConfig {
   edgeOffset?: number;
   textureUrl?: string;
   sideObjects?: RoadSideObjectsConfig;
+  elevatedSections?: RoadElevatedSectionConfig[];
+  segmentSurfaces?: boolean;
+}
+
+export interface RoadElevatedSectionConfig {
+  lanes: number[];
+  zStart: number;
+  length: number;
+  height: number;
+  rampLength: number;
+  rampIn?: boolean;
+  rampOut?: boolean;
+  speedFactor?: number;
+  color?: number;
+  emissive?: number;
+  emissiveIntensity?: number;
+  opacity?: number;
+  loop?: boolean;
 }
 
 export interface RoadSideObjectsConfig {

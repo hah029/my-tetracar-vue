@@ -12,6 +12,7 @@ export interface JumpConfig {
 
 export class Jump extends THREE.Mesh {
   private collider: THREE.Box3;
+  private laneIndex: number;
 
   constructor(
     laneIndex: number,
@@ -36,10 +37,16 @@ export class Jump extends THREE.Mesh {
       opacity: 0.85,
     });
     super(geometry, material.clone());
+    this.laneIndex = laneIndex;
 
     // Позиция по полосе через RoadManager
-    const x = RoadManager.getInstance().getLanePosition(laneIndex);
-    this.position.set(x, commonStore.baseItemYpos, zPos);
+    const road = RoadManager.getInstance();
+    const x = road.getLanePosition(laneIndex);
+    this.position.set(
+      x,
+      commonStore.baseItemYpos + road.getSurfaceHeightAt(laneIndex, zPos),
+      zPos,
+    );
     this.userData.previousZ = zPos;
 
     this.collider = new THREE.Box3().setFromObject(this);
@@ -50,6 +57,12 @@ export class Jump extends THREE.Mesh {
   public update(deltaTime: number, speed: number): boolean {
     this.userData.previousZ = this.position.z;
     this.position.z += deltaTime * speed;
+    this.position.y =
+      useCommonStore().baseItemYpos +
+      RoadManager.getInstance().getSurfaceHeightAt(
+        this.laneIndex,
+        this.position.z,
+      );
     this.collider.setFromObject(this);
     return this.position.z > useCommonStore().config.itemsRemovingZpos;
   }
