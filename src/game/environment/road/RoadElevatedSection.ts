@@ -1,6 +1,7 @@
 import * as THREE from "three";
 import type { RoadConfig, RoadElevatedSectionConfig } from "./types";
 import { loadTexture } from "@/helpers/loaders";
+import type { RoadSegmentSurfaceInterval } from "./RoadSegmentSurface";
 
 export class RoadElevatedSection {
   private static readonly SAFE_REMOVE_Z = 90;
@@ -69,6 +70,14 @@ export class RoadElevatedSection {
     }
 
     return this.height;
+  }
+
+  public getSurfaceIntervals(): RoadSegmentSurfaceInterval[] {
+    return this.config.lanes.map((lane) => ({
+      lane,
+      back: this.group.position.z,
+      front: this.group.position.z + this.totalLength,
+    }));
   }
 
   public dispose(): void {

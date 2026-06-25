@@ -18,6 +18,8 @@ import { useCommonStore } from "@/store/commonStore";
 import { useEnvironmentStore } from "@/store/environmentStore";
 import { CarManager } from "@/game/car";
 
+const IDLE_SURFACE_DISABLE_PADDING = 6;
+
 export class RoadManager {
   private static instance: RoadManager | null = null;
   private road: Road | null = null;
@@ -81,7 +83,10 @@ export class RoadManager {
 
     const lanes = this.road.getLanePositions();
     const laneWidth = this.road.width / lanes.length;
-    const rowLength = Math.max(12, useCommonStore().config.segmentRowMinLength);
+    const rowLength = Math.max(
+      2,
+      useCommonStore().config.segmentRowMinLength / 4,
+    );
     const rowCount = Math.ceil(this.config.length / rowLength);
 
     this.idleSegmentSurface = new RoadSegmentSurface(
@@ -96,7 +101,7 @@ export class RoadManager {
       { loop: true },
     );
     this.idleSegmentSurface.setLoopOcclusionProvider(() =>
-      this.getSegmentSurfaceIntervals(),
+      this.getGameplayRoadIntervals(),
     );
   }
 
@@ -315,7 +320,11 @@ export class RoadManager {
         this.elevatedSections.splice(i, 1);
       }
     }
-    this.idleSegmentSurface?.update(deltaTime, speed);
+    if (this.shouldDisableIdleSegmentSurface()) {
+      this.clearIdleSegmentSurface();
+    } else {
+      this.idleSegmentSurface?.update(deltaTime, speed);
+    }
 
     this.updateCurrentLane(this.carManager.getCar().getCurrentLane());
   }
@@ -355,10 +364,28 @@ export class RoadManager {
     this.idleSegmentSurface = null;
   }
 
-  private getSegmentSurfaceIntervals(): RoadSegmentSurfaceInterval[] {
-    return this.segmentSurfaces.flatMap((surface) =>
-      surface.getSurfaceIntervals(),
+  private shouldDisableIdleSegmentSurface(): boolean {
+    if (!this.idleSegmentSurface || this.segmentSurfaces.length === 0) {
+      return false;
+    }
+
+    const visibleFrontZ =
+      useCommonStore().config.itemsRemovingZpos + IDLE_SURFACE_DISABLE_PADDING;
+
+    return this.segmentSurfaces.some(
+      (surface) => surface.getFrontEdgeZ() >= visibleFrontZ,
     );
+  }
+
+  private getGameplayRoadIntervals(): RoadSegmentSurfaceInterval[] {
+    return [
+      ...this.segmentSurfaces.flatMap((surface) =>
+        surface.getSurfaceIntervals(),
+      ),
+      ...this.elevatedSections.flatMap((section) =>
+        section.getSurfaceIntervals(),
+      ),
+    ];
   }
 
   public dispose(): void {

@@ -23,6 +23,7 @@ type SurfaceMeshRecord = {
 export class RoadSegmentSurface {
   private static readonly SAFE_REMOVE_Z = 90;
   private static readonly OCCLUSION_EPSILON = 0.08;
+  private static readonly TEXTURE_TILE_SIZE = 2;
   private group = new THREE.Group();
   private meshes: THREE.Mesh[] = [];
   private surfaceMeshes: SurfaceMeshRecord[] = [];
@@ -89,7 +90,7 @@ export class RoadSegmentSurface {
   public getFrontZ(): number {
     if (this.loop) {
       return this.surfaceMeshes.reduce(
-        (front, row) => Math.max(front, row.mesh.position.z),
+        (front, row) => Math.max(front, row.mesh.position.z + row.length / 2),
         -Infinity,
       );
     }
@@ -100,20 +101,20 @@ export class RoadSegmentSurface {
   public getBackZ(): number {
     if (this.loop) {
       return this.surfaceMeshes.reduce(
-        (back, row) => Math.min(back, row.mesh.position.z),
+        (back, row) => Math.min(back, row.mesh.position.z - row.length / 2),
         Infinity,
       );
     }
 
-    return this.group.position.z - (this.rowCount - 1) * this.rowLength;
+    return this.group.position.z - this.rowCount * this.rowLength;
   }
 
   public getFrontEdgeZ(): number {
-    return this.getFrontZ() + this.rowLength / 2;
+    return this.getFrontZ();
   }
 
   public getBackEdgeZ(): number {
-    return this.getBackZ() - this.rowLength / 2;
+    return this.getBackZ();
   }
 
   public dispose(): void {
@@ -145,31 +146,26 @@ export class RoadSegmentSurface {
   }
 
   private createMeshes(): void {
-    const material = this.createMaterial();
-
     if (this.loop) {
-      this.createLoopMeshes(material);
+      this.createLoopMeshes();
     } else {
-      this.createSegmentMeshes(material);
+      this.createSegmentMeshes();
     }
-
-    material.dispose();
   }
 
-  private createLoopMeshes(material: THREE.MeshStandardMaterial): void {
+  private createLoopMeshes(): void {
     for (let rowIndex = 0; rowIndex < this.rowCount; rowIndex++) {
       for (let lane = 0; lane < this.lanePositions.length; lane++) {
         this.addSurfaceMesh(
           lane,
           this.getRowZ(rowIndex),
           this.rowLength,
-          material,
         );
       }
     }
   }
 
-  private createSegmentMeshes(material: THREE.MeshStandardMaterial): void {
+  private createSegmentMeshes(): void {
     for (let lane = 0; lane < this.lanePositions.length; lane++) {
       let rowIndex = 0;
 
@@ -189,9 +185,8 @@ export class RoadSegmentSurface {
 
         const rangeEnd = rowIndex;
         const length = (rangeEnd - rangeStart) * this.rowLength;
-        const centerZ =
-          -((rangeStart + rangeEnd - 1) * this.rowLength) / 2;
-        this.addSurfaceMesh(lane, centerZ, length, material);
+        const centerZ = -((rangeStart + rangeEnd) * this.rowLength) / 2;
+        this.addSurfaceMesh(lane, centerZ, length);
       }
     }
   }
@@ -200,10 +195,15 @@ export class RoadSegmentSurface {
     lane: number,
     z: number,
     length: number,
-    material: THREE.MeshStandardMaterial,
   ): void {
     const geometry = new THREE.PlaneGeometry(this.laneWidth * 0.92, length);
-    const mesh = new THREE.Mesh(geometry, material.clone());
+    const worldBackZ = this.loop
+      ? undefined
+      : this.group.position.z + z - length / 2;
+    const mesh = new THREE.Mesh(
+      geometry,
+      this.createMaterial(length, worldBackZ),
+    );
     mesh.rotation.x = -Math.PI / 2;
     mesh.position.set(this.getLaneX(lane), this.config.yPosition ?? 0, z);
     mesh.castShadow = false;
@@ -222,15 +222,29 @@ export class RoadSegmentSurface {
     );
   }
 
-  private createMaterial(): THREE.MeshStandardMaterial {
+  private createMaterial(
+    length: number,
+    worldBackZ?: number,
+  ): THREE.MeshStandardMaterial {
+    const offsetY =
+      worldBackZ === undefined
+        ? undefined
+        : this.getTexturePhase(worldBackZ);
     const map = this.config.textureUrl
       ? loadTexture(this.config.textureUrl, {
           wrapS: THREE.RepeatWrapping,
           wrapT: THREE.RepeatWrapping,
           repeat: {
             x: Math.max(this.laneWidth / 2, 1),
-            y: Math.max(this.rowLength / 2, 1),
+            y: Math.max(length / 2, 1),
           },
+          offset:
+            offsetY === undefined
+              ? undefined
+              : {
+                  x: 0,
+                  y: offsetY,
+                },
         })
       : undefined;
 
@@ -252,12 +266,17 @@ export class RoadSegmentSurface {
     return 0;
   }
 
+  private getTexturePhase(worldZ: number): number {
+    const phase = worldZ / RoadSegmentSurface.TEXTURE_TILE_SIZE;
+    return ((phase % 1) + 1) % 1;
+  }
+
   private getRowZ(rowIndex: number): number {
     if (this.loop) {
-      return this.baseZ - rowIndex * this.rowLength;
+      return this.baseZ - (rowIndex + 0.5) * this.rowLength;
     }
 
-    return -rowIndex * this.rowLength;
+    return -(rowIndex + 0.5) * this.rowLength;
   }
 
   private overlapsAnyInterval(

@@ -529,7 +529,7 @@ export class InteractiveItemsManager {
 
       road.spawnElevatedSection({
         lanes: this.resolveElevatedLanes(section, isReversed, laneCount),
-        zStart: baseZ - rowEnd * rowLength + rowLength / 2,
+        zStart: baseZ - rowEnd * rowLength,
         length: (rowEnd - rowStart) * rowLength,
         height: section.height,
         rampLength: Math.max(rowLength, section.rampRows * rowLength),
