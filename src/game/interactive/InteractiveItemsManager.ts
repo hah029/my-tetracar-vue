@@ -27,6 +27,7 @@ import { MagnetItem } from "./items/booster/MagnetItem";
 import type { CorruptedBoostVariant } from "@/levels/types";
 import { RoadManager } from "@/game/environment/road";
 import type { Segment, SegmentElevatedSection } from "./segments/Segment";
+import { getSegmentsForLevel } from "./segments/SegmentLibrary";
 
 type ItemSpawnSource = "segment" | "drop";
 
@@ -67,6 +68,16 @@ export class InteractiveItemsManager {
       return Math.floor(distance / this.difficultyStep) + 1;
     }, () => {
       return useLevelStore().currentGameplay.laneCount;
+    }, () => {
+      const interactive = useLevelStore().currentInteractive;
+      if (!interactive.segmentSets?.length && !interactive.segmentIds?.length) {
+        return undefined;
+      }
+
+      return getSegmentsForLevel({
+        segmentSets: interactive.segmentSets,
+        segmentIds: interactive.segmentIds,
+      });
     });
   }
 

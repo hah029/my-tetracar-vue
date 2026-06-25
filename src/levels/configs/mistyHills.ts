@@ -150,6 +150,7 @@ const mistyHills = {
     boosterSets: ["default"],
     obstacleSets: ["nature"],
     jumpSets: ["default"],
+    segmentSets: ["base", "rewards", "jumpers"],
     density: 1.0,
     obstacleDensity: 1.0,
   },

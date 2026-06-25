@@ -442,6 +442,16 @@ export interface InteractiveConfig {
   jumpSets: string[];
 
   /**
+   * Наборы дорожных сегментов, из которых уровень строит маршрут.
+   */
+  segmentSets?: SegmentSetId[];
+
+  /**
+   * Точный allow-list id сегментов. Если задан, применяется поверх segmentSets.
+   */
+  segmentIds?: string[];
+
+  /**
    * Множитель плотности интерактивных объектов уровня.
    * Конкретные шансы останутся в DifficultyConfig.
    */
@@ -462,6 +472,14 @@ export type BoosterSetId =
   | "shield"
   | "magnet"
   | "bullet";
+
+export type SegmentSetId =
+  | "base"
+  | "traffic"
+  | "rewards"
+  | "jumpers"
+  | "hazards"
+  | "vertical";
 
 export interface PlayerConfig {
   /**

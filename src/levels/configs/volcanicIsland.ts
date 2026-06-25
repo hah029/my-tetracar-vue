@@ -247,6 +247,7 @@ const volcanicIsland = {
     boosterSets: ["default"],
     obstacleSets: ["storm"],
     jumpSets: ["default"],
+    segmentSets: ["base", "traffic", "rewards", "jumpers", "hazards"],
     density: 1.0,
     obstacleDensity: 1.15,
   },

@@ -115,7 +115,7 @@
         "id": "magnetRadiusIncreasing",
         "type": "upgrade",
         "title": "Увеличение радиуса магнита",
-        "description": "Увеличивает радиус действия магнита на 5 единиц",
+        "description": "Увеличивает радиус действия магнита на 1 полосу",
         "price": {
             "value": 10000,
             "currency": "golden"

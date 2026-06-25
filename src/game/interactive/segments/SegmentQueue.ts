@@ -6,10 +6,16 @@ export class SegmentQueue {
   private queueSize = 3;
   private difficulty: () => number;
   private laneCount: () => number;
+  private segmentPool: () => readonly Segment[] | undefined;
 
-  constructor(difficulty: () => number, laneCount: () => number) {
+  constructor(
+    difficulty: () => number,
+    laneCount: () => number,
+    segmentPool: () => readonly Segment[] | undefined = () => undefined,
+  ) {
     this.difficulty = difficulty;
     this.laneCount = laneCount;
+    this.segmentPool = segmentPool;
   }
 
   public getNext(): Segment {
@@ -20,7 +26,11 @@ export class SegmentQueue {
     const seg = this.queue.shift();
 
     if (!seg) {
-      return SegmentGenerator.getSegment(this.difficulty(), this.laneCount());
+      return SegmentGenerator.getSegment(
+        this.difficulty(),
+        this.laneCount(),
+        this.segmentPool(),
+      );
     }
 
     return seg;
@@ -30,6 +40,7 @@ export class SegmentQueue {
     const segment = SegmentGenerator.getSegment(
       this.difficulty(),
       this.laneCount(),
+      this.segmentPool(),
     );
     this.queue.push(segment);
   }

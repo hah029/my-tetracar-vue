@@ -111,16 +111,11 @@ export class Car extends THREE.Group {
 
   private canMoveToLane(targetLane: number): boolean {
     const roadManager = RoadManager.getInstance();
-    const currentHeight = roadManager.getSurfaceHeightAt(
-      this.currentLane,
-      this.position.z,
-    );
-    const targetHeight = roadManager.getSurfaceHeightAt(
-      targetLane,
-      this.position.z,
-    );
+    const targetY =
+      useCommonStore().baseItemYpos +
+      roadManager.getSurfaceHeightAt(targetLane, this.position.z);
 
-    return targetHeight <= currentHeight + Car.LANE_HEIGHT_BLOCK_EPSILON;
+    return this.position.y >= targetY - Car.LANE_HEIGHT_BLOCK_EPSILON;
   }
 
   private handleOutOfRoadMove(direction: -1 | 1): void {

@@ -8,8 +8,15 @@ export class SegmentGenerator {
   private static history: Segment[] = [];
   private static historySize = 3;
 
-  static getSegment(difficulty: number, laneCount = 5): Segment {
-    const segments = SegmentGenerator.getSegmentsForLaneCount(laneCount);
+  static getSegment(
+    difficulty: number,
+    laneCount = 5,
+    segmentPool?: readonly Segment[],
+  ): Segment {
+    const segments =
+      segmentPool && segmentPool.length > 0
+        ? [...segmentPool]
+        : SegmentGenerator.getSegmentsForLaneCount(laneCount);
 
     // 1️⃣ фильтр по сложности
     const available = segments.filter((s) => s.difficulty <= difficulty);

@@ -4,6 +4,7 @@ import { Platform } from "@/sdk/Platform";
 import { WalletService } from "./services/WalletService";
 import { RewardProcessor } from "./RewardProcessor";
 import { useMetaStore } from "@/store/metaStore";
+import metaConfig from "@/configs/meta";
 
 import type { Product, PurchaseTransaction } from "./types";
 import { useProgressStore } from "@/store/progressStore";
@@ -120,9 +121,8 @@ export class PurchaseService {
       case "upgrade": {
         const upgradeKey = product.effect?.upgrade;
         if (upgradeKey) {
-          if (
-            meta.getUpgradeLevel(upgradeKey) >= meta.maxUpgrades[upgradeKey]
-          ) {
+          const maxLevel = metaConfig.max_upgrades[upgradeKey];
+          if (maxLevel !== undefined && meta.getUpgradeLevel(upgradeKey) >= maxLevel) {
             return { available: false, reason: "max_level" };
           }
         }

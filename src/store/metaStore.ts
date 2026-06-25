@@ -4,6 +4,7 @@ import { ref, computed } from "vue";
 import { Platform } from "@/sdk/Platform";
 
 import meta from "@/configs/meta";
+import { useCommonStore } from "@/store/commonStore";
 
 export interface TimedEffect {
   feature: string;
@@ -14,6 +15,7 @@ export interface TimedEffect {
 
 export const useMetaStore = defineStore("metaStore", () => {
   const platform = Platform.getInstance();
+  const commonStore = useCommonStore();
 
   // ===== STATE =====
 
@@ -45,8 +47,11 @@ export const useMetaStore = defineStore("metaStore", () => {
   const maxArmor = computed(
     () => meta.base_counts.shield + upgrades.value.armorLevel,
   );
+  const magnetRadiusLaneStep = computed(() => commonStore.config.xzScaling * 6);
   const magnetRadius = computed(
-    () => meta.base_counts.magnetRadius + upgrades.value.magnetRadiusLevel * 5,
+    () =>
+      meta.base_counts.magnetRadius +
+      upgrades.value.magnetRadiusLevel * magnetRadiusLaneStep.value,
   );
   // Апгрейды (уровни)
   const maxUpgrades = ref<Record<string, any>>({
@@ -113,8 +118,14 @@ export const useMetaStore = defineStore("metaStore", () => {
     if (!(key in upgrades.value)) {
       upgrades.value[key] = 0;
     }
-    if (upgrades.value[key] < meta.max_upgrades[key]) {
-      upgrades.value[key] += amount;
+
+    const maxLevel = meta.max_upgrades[key];
+    if (maxLevel === undefined) {
+      return;
+    }
+
+    if (upgrades.value[key] < maxLevel) {
+      upgrades.value[key] = Math.min(upgrades.value[key] + amount, maxLevel);
     }
   }
 
@@ -288,6 +299,7 @@ export const useMetaStore = defineStore("metaStore", () => {
     // computed
     maxAmmo,
     maxArmor,
+    magnetRadiusLaneStep,
     magnetRadius,
     maxUpgrades,
 

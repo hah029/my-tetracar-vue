@@ -90,6 +90,15 @@
                         <img class="icon" src="@/assets/images/hud/cube_armor.svg" />
                     </div>
                 </div>
+
+                <div class="inventory_item">
+                    <div class="inventory_item__value color_blue_light">
+                        {{ getMagnetLevelString() }}
+                    </div>
+                    <div class="inventory_item__icon">
+                        <img class="icon" src="@/assets/images/hud/cube_magnet.svg" />
+                    </div>
+                </div>
             </div>
 
             <!-- CONTENT -->
@@ -167,6 +176,11 @@
 
                         <div v-if="selectedItem.type === 'upgrade'" class="preview__meta">
                             {{ getUpgradeLevelString(selectedItem) }}
+                        </div>
+
+                        <div v-if="selectedItem.type === 'upgrade' && getUpgradeValueString(selectedItem)"
+                            class="preview__meta preview__meta--sub">
+                            {{ getUpgradeValueString(selectedItem) }}
                         </div>
 
                         <div v-if="selectedItem.type === 'timed_feature'" class="preview__meta">
@@ -273,6 +287,18 @@ type ProductStatus =
     | "available"
     | "owned"
     | "not_enough_currency";
+
+const upgradeValueLabels: Record<string, string> = {
+    ammoLevel: "Патроны",
+    armorLevel: "Броня",
+    magnetRadiusLevel: "Бонус радиуса",
+};
+
+const upgradeValueSteps: Record<string, number> = {
+    ammoLevel: 2,
+    armorLevel: 1,
+    magnetRadiusLevel: 1,
+};
 
 function getItemId(item: any): string {
     return item.id ?? item.title ?? "";
@@ -489,6 +515,71 @@ function getUpgradeLevelString(product: any): string {
 
     const upgradeInfo = getUpgradeLevel(product);
     return `Уровень: ${upgradeInfo!.level} / ${upgradeInfo!.maxLevel}`;
+}
+
+function getUpgradeValue(product: any): number | null {
+    switch (product.effect?.upgrade) {
+        case "ammoLevel":
+            return metaStore.maxAmmo;
+
+        case "armorLevel":
+            return metaStore.maxArmor;
+
+        case "magnetRadiusLevel":
+            return metaStore.getUpgradeLevel("magnetRadiusLevel");
+
+        default:
+            return null;
+    }
+}
+
+function getUpgradeValueString(product: any): string {
+    if (product.type !== "upgrade") {
+        return "";
+    }
+
+    const upgradeKey = product.effect?.upgrade;
+    const currentValue = getUpgradeValue(product);
+    const upgradeInfo = getUpgradeLevel(product);
+    const label = upgradeValueLabels[upgradeKey];
+    const step = upgradeValueSteps[upgradeKey] ?? product.effect?.value ?? 0;
+
+    if (!label || currentValue === null || !upgradeInfo) {
+        return "";
+    }
+
+    if (upgradeKey === "magnetRadiusLevel") {
+        if (upgradeInfo.level >= upgradeInfo.maxLevel) {
+            return `${label}: ${currentValue} ${getLaneWord(currentValue)}`;
+        }
+
+        return `${label}: ${currentValue} -> ${currentValue + step} ${getLaneWord(currentValue + step)}`;
+    }
+
+    if (upgradeInfo.level >= upgradeInfo.maxLevel) {
+        return `${label}: ${currentValue}`;
+    }
+
+    return `${label}: ${currentValue} -> ${currentValue + step}`;
+}
+
+function getMagnetLevelString(): string {
+    const level = metaStore.getUpgradeLevel("magnetRadiusLevel");
+    const maxLevel = meta.max_upgrades.magnetRadiusLevel;
+
+    return `${level} / ${maxLevel}`;
+}
+
+function getLaneWord(value: number): string {
+    if (value % 10 === 1 && value % 100 !== 11) {
+        return "полоса";
+    }
+
+    if ([2, 3, 4].includes(value % 10) && ![12, 13, 14].includes(value % 100)) {
+        return "полосы";
+    }
+
+    return "полос";
 }
 
 function backButtonClick() {
