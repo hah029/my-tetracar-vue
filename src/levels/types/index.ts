@@ -479,7 +479,8 @@ export type SegmentSetId =
   | "rewards"
   | "jumpers"
   | "hazards"
-  | "vertical";
+  | "vertical"
+  | "turns";
 
 export interface PlayerConfig {
   /**

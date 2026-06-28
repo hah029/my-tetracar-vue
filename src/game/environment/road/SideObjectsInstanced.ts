@@ -7,6 +7,11 @@ import type { RoadSideObjectsConfig } from "./types";
 // /game/road/SideObjectsInstanced.ts
 // import { loadCubeModel } from "@/game/cube/loadCube";
 
+type SideObjectOcclusionInterval = {
+  back: number;
+  front: number;
+};
+
 export class SideObjectsInstanced {
   private mesh!: THREE.InstancedMesh;
   private positions: THREE.Vector3[] = [];
@@ -16,7 +21,10 @@ export class SideObjectsInstanced {
   private scene: THREE.Scene;
   private x: number;
   private config: RoadSideObjectsConfig;
+  private visibleScale = new THREE.Vector3();
+  private hiddenScale = new THREE.Vector3(0, 0, 0);
   private disposed = false;
+  private occlusionProvider: (() => SideObjectOcclusionInterval[]) | null = null;
 
   constructor(
     scene: THREE.Scene,
@@ -28,11 +36,18 @@ export class SideObjectsInstanced {
     this.scene = scene;
     this.x = x;
     this.config = config;
+    this.visibleScale.set(...config.scale);
     this.spacing = config.spacing;
     this.count = Math.ceil((endZ - startZ) / this.spacing) + 2;
     this.init(startZ).catch((e) =>
       console.error("[SideObjectsInstanced] init error", e),
     );
+  }
+
+  public setOcclusionProvider(
+    provider: (() => SideObjectOcclusionInterval[]) | null,
+  ): void {
+    this.occlusionProvider = provider;
   }
 
   private async init(startZ: number) {
@@ -94,6 +109,7 @@ export class SideObjectsInstanced {
   update(delta: number, speed: number) {
     if (!this.mesh) return;
     const move = delta * speed;
+    const occlusionIntervals = this.occlusionProvider?.() ?? [];
 
     for (let i = 0; i < this.count; i++) {
       const pos = this.positions[i];
@@ -105,11 +121,22 @@ export class SideObjectsInstanced {
         pos.z -= this.count * this.spacing;
       }
 
+      const visible = !this.isOccluded(pos.z, occlusionIntervals);
       this.dummy.position.copy(pos);
+      this.dummy.scale.copy(visible ? this.visibleScale : this.hiddenScale);
       this.dummy.updateMatrix();
       this.mesh.setMatrixAt(i, this.dummy.matrix);
     }
     this.mesh.instanceMatrix.needsUpdate = true;
+  }
+
+  private isOccluded(
+    z: number,
+    intervals: SideObjectOcclusionInterval[],
+  ): boolean {
+    return intervals.some(
+      (interval) => z >= interval.back && z <= interval.front,
+    );
   }
 
   dispose() {

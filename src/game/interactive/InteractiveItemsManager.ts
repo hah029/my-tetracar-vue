@@ -14,7 +14,7 @@ import { usePlayerStore } from "@/store/playerStore";
 import { useProgressStore } from "@/store/progressStore";
 import { useCommonStore } from "@/store/commonStore";
 import { useLevelStore } from "@/store/levelStore";
-import type { BaseItem } from "./items/BaseItem";
+import type { BaseItem, CurvedItemState } from "./items/BaseItem";
 import type { BaseObstacle } from "./obstacle/BaseObstacle";
 import { MagnetSystem } from "../magnet/MagnetSystem";
 import { DestructionManager } from "./DestructionManager";
@@ -26,8 +26,13 @@ import { ShieldItem } from "./items/booster/ShieldItem";
 import { MagnetItem } from "./items/booster/MagnetItem";
 import type { CorruptedBoostVariant } from "@/levels/types";
 import { RoadManager } from "@/game/environment/road";
-import type { Segment, SegmentElevatedSection } from "./segments/Segment";
+import type {
+  Segment,
+  SegmentCurve,
+  SegmentElevatedSection,
+} from "./segments/Segment";
 import { getSegmentsForLevel } from "./segments/SegmentLibrary";
+import type { RoadSegmentSurfaceCurve } from "@/game/environment/road/RoadSegmentSurface";
 
 type ItemSpawnSource = "segment" | "drop";
 
@@ -63,22 +68,29 @@ export class InteractiveItemsManager {
     this.destructionManager = DestructionManager.getInstance();
     this.magnetSystem.initialize(scene);
 
-    this.segmentQueue = new SegmentQueue(() => {
-      const distance = useProgressStore().getDistance();
-      return Math.floor(distance / this.difficultyStep) + 1;
-    }, () => {
-      return useLevelStore().currentGameplay.laneCount;
-    }, () => {
-      const interactive = useLevelStore().currentInteractive;
-      if (!interactive.segmentSets?.length && !interactive.segmentIds?.length) {
-        return undefined;
-      }
+    this.segmentQueue = new SegmentQueue(
+      () => {
+        const distance = useProgressStore().getDistance();
+        return Math.floor(distance / this.difficultyStep) + 1;
+      },
+      () => {
+        return useLevelStore().currentGameplay.laneCount;
+      },
+      () => {
+        const interactive = useLevelStore().currentInteractive;
+        if (
+          !interactive.segmentSets?.length &&
+          !interactive.segmentIds?.length
+        ) {
+          return undefined;
+        }
 
-      return getSegmentsForLevel({
-        segmentSets: interactive.segmentSets,
-        segmentIds: interactive.segmentIds,
-      });
-    });
+        return getSegmentsForLevel({
+          segmentSets: interactive.segmentSets,
+          segmentIds: interactive.segmentIds,
+        });
+      },
+    );
   }
 
   public update(car: Car, deltaTime: number, speed: number, mode: UpdateMode) {
@@ -185,6 +197,13 @@ export class InteractiveItemsManager {
       speed * cfg.segmentRowTargetTravelMs,
     );
 
+    // Резолвим curve для этого сегмента
+    const curve = this.resolveSegmentCurve(
+      segment,
+      isReversed,
+      segmentRowLength,
+    );
+
     this.spawnElevatedSectionsForSegment(
       segment,
       isReversed,
@@ -205,10 +224,37 @@ export class InteractiveItemsManager {
       const row_ = isReversed ? [...row].reverse() : row;
 
       row_.forEach((rawValue, lane) => {
-        const value = resolveLanePatternBySpawnRules(
-          rawValue,
-          spawnRules,
-        );
+        const value = resolveLanePatternBySpawnRules(rawValue, spawnRules);
+
+        // Для curved-сегмента создаём CurvedItemState
+        // Геометрия плоская — вращение pivotGroup создаёт дугу
+        let curvedState: CurvedItemState | undefined;
+        let itemSpawnX: number | undefined;
+        let itemSpawnZ: number | undefined;
+        if (curve) {
+          const laneX = RoadManager.getInstance().getLanePosition(lane);
+          const localPx = laneX;
+          const localPz = -rowIndex * segmentRowLength;
+
+          curvedState = {
+            pivotX: curve.pivotX,
+            localPx,
+            localPz,
+            totalAngleRad: curve.totalAngleRad,
+            direction: curve.direction,
+            rotateStartZ: curve.rotateStartZ,
+            rotateEndZ: curve.rotateEndZ,
+            groupZ: baseZ,
+          };
+
+          // Начальная мировая позиция (при максимальном угле поворота)
+          const angleSign = curve.direction === "left" ? 1 : -1;
+          const spawnAngle = angleSign * curve.totalAngleRad;
+          const cos = Math.cos(spawnAngle);
+          const sin = Math.sin(spawnAngle);
+          itemSpawnX = curve.pivotX + localPx * cos + localPz * sin;
+          itemSpawnZ = baseZ + localPz * cos - localPx * sin;
+        }
 
         switch (value) {
           case LanePattern.Obstacle:
@@ -242,33 +288,59 @@ export class InteractiveItemsManager {
             this.spawnJumpWithCoins(lane, dt, speed, z);
             break;
           case LanePattern.Coin:
-            this.spawnSingleCoin(z, lane, undefined, spawnRules.coinTypes);
+            this.attachCurvedState(
+              this.spawnSingleCoin(
+                itemSpawnZ ?? z,
+                lane,
+                itemSpawnX,
+                spawnRules.coinTypes,
+              ),
+              curvedState,
+            );
             break;
           case LanePattern.Energon:
-            this.spawnEnergonCoin(z, lane);
+            this.attachCurvedState(
+              this.spawnEnergonCoin(itemSpawnZ ?? z, lane, itemSpawnX),
+              curvedState,
+            );
             break;
           case LanePattern.CoinLine:
             this.spawnCoinLine(z, lane);
             break;
           case LanePattern.Booster:
-            this.spawnBooster(
-              z,
-              lane,
-              undefined,
-              spawnRules.boosterTypes.filter((type) => type !== "nitro"),
+            this.attachCurvedState(
+              this.spawnBooster(
+                itemSpawnZ ?? z,
+                lane,
+                itemSpawnX,
+                spawnRules.boosterTypes.filter((type) => type !== "nitro"),
+              ),
+              curvedState,
             );
             break;
           case LanePattern.Nitro:
-            this.spawnNitroBooster(z, lane);
+            this.attachCurvedState(
+              this.spawnNitroBooster(itemSpawnZ ?? z, lane, itemSpawnX),
+              curvedState,
+            );
             break;
           case LanePattern.Shield:
-            this.spawnShieldBooster(z, lane);
+            this.attachCurvedState(
+              this.spawnShieldBooster(itemSpawnZ ?? z, lane, itemSpawnX),
+              curvedState,
+            );
             break;
           case LanePattern.Magnet:
-            this.spawnMagnetBooster(z, lane);
+            this.attachCurvedState(
+              this.spawnMagnetBooster(itemSpawnZ ?? z, lane, itemSpawnX),
+              curvedState,
+            );
             break;
           case LanePattern.BulletItem:
-            this.spawnBulletItem(z, lane);
+            this.attachCurvedState(
+              this.spawnBulletItem(itemSpawnZ ?? z, lane, itemSpawnX),
+              curvedState,
+            );
             break;
           case LanePattern.MovingObstacle:
             this.obstacleManager.spawnMovingObstacle(lane, z, 1, 0);
@@ -281,6 +353,14 @@ export class InteractiveItemsManager {
     });
 
     return segment.pattern.length * segmentRowLength;
+  }
+
+  private attachCurvedState(
+    item: BaseItem | null | undefined,
+    state: CurvedItemState | undefined,
+  ): void {
+    if (!item || !state) return;
+    item.setCurvedItemState(state);
   }
 
   // спавн объектов
@@ -580,6 +660,7 @@ export class InteractiveItemsManager {
       rowLength,
       segment.pattern.length,
       coverage,
+      this.resolveSegmentCurve(segment, isReversed, rowLength),
     );
   }
 
@@ -595,6 +676,56 @@ export class InteractiveItemsManager {
   private colorToNumber(color?: string): number | undefined {
     if (!color) return undefined;
     return Number.parseInt(color.replace("#", ""), 16);
+  }
+
+  private resolveSegmentCurve(
+    segment: Segment,
+    isReversed: boolean,
+    rowLength: number,
+  ): RoadSegmentSurfaceCurve | undefined {
+    const curve = segment.curve;
+    if (!curve) return undefined;
+
+    const rowStart = Math.max(0, curve.rowStart ?? 0);
+    const rowEnd = Math.min(
+      segment.pattern.length,
+      Math.max(rowStart, curve.rowEnd ?? segment.pattern.length),
+    );
+    if (rowEnd <= rowStart) return undefined;
+
+    const totalAngleRad = THREE.MathUtils.degToRad(curve.totalAngleDeg ?? 30);
+    const segmentLength = segment.pattern.length * rowLength;
+    const radius = segmentLength / totalAngleRad;
+    const direction = this.resolveCurveDirection(curve, isReversed);
+    const pivotX = direction === "left" ? -radius : radius;
+
+    return {
+      direction,
+      totalAngleRad,
+      radius,
+      pivotX,
+      rowStart,
+      rowEnd,
+      rotateStartZ: useCommonStore().config.baseSegmentsZpos,
+      rotateEndZ: useCommonStore().config.itemsRemovingZpos,
+    };
+  }
+
+  private resolveCurveDirection(
+    curve: SegmentCurve,
+    isReversed: boolean,
+  ): SegmentCurve["direction"] {
+    if (!isReversed) return curve.direction;
+    return curve.direction === "left" ? "right" : "left";
+  }
+
+  private getLaneWidth(): number {
+    const lanes = RoadManager.getInstance().getLanes();
+    if (lanes.length >= 2) {
+      return Math.abs(lanes[1]! - lanes[0]!);
+    }
+
+    return useCommonStore().config.xzScaling * 6;
   }
 
   private getSurfaceItemY(
@@ -668,7 +799,9 @@ export class InteractiveItemsManager {
     if (item instanceof ShieldItem) {
       this.markCorruptedBoost(
         item,
-        this.pickWeightedCorruptedVariant(gameplay.corruptedBoostWeights.shield),
+        this.pickWeightedCorruptedVariant(
+          gameplay.corruptedBoostWeights.shield,
+        ),
       );
       return;
     }
@@ -676,7 +809,9 @@ export class InteractiveItemsManager {
     if (item instanceof MagnetItem) {
       this.markCorruptedBoost(
         item,
-        this.pickWeightedCorruptedVariant(gameplay.corruptedBoostWeights.magnet),
+        this.pickWeightedCorruptedVariant(
+          gameplay.corruptedBoostWeights.magnet,
+        ),
       );
     }
   }

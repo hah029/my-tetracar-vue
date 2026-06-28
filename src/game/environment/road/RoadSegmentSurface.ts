@@ -8,6 +8,20 @@ export type RoadSegmentSurfaceCoverage = {
   rowEnd: number;
 };
 
+export type RoadSegmentSurfaceCurve = {
+  direction: "left" | "right";
+  /** Полный угол дуги в радианах */
+  totalAngleRad: number;
+  /** Радиус дуги (вычисляется из totalAngleRad и длины сегмента) */
+  radius: number;
+  /** X-позиция pivot'а (центра окружности) в локальном пространстве группы */
+  pivotX: number;
+  rowStart: number;
+  rowEnd: number;
+  rotateStartZ: number;
+  rotateEndZ: number;
+};
+
 export type RoadSegmentSurfaceInterval = {
   lane: number;
   back: number;
@@ -18,6 +32,19 @@ type SurfaceMeshRecord = {
   mesh: THREE.Mesh;
   lane: number;
   length: number;
+  rowIndex?: number;
+  leftX?: number;
+  rightX?: number;
+  frontZ?: number;
+  backZ?: number;
+};
+
+type CurveSideObjectRecord = {
+  mesh: THREE.Mesh;
+  side: "left" | "right";
+  rowIndex: number;
+  localZ: number;
+  localX: number;
 };
 
 export class RoadSegmentSurface {
@@ -25,8 +52,11 @@ export class RoadSegmentSurface {
   private static readonly OCCLUSION_EPSILON = 0.08;
   private static readonly TEXTURE_TILE_SIZE = 2;
   private group = new THREE.Group();
+  /** Дочерняя группа для curved-сегментов: вращается вокруг pivot */
+  private pivotGroup: THREE.Group | null = null;
   private meshes: THREE.Mesh[] = [];
   private surfaceMeshes: SurfaceMeshRecord[] = [];
+  private curveSideObjects: CurveSideObjectRecord[] = [];
   private readonly loop: boolean;
   private loopOcclusionProvider: (() => RoadSegmentSurfaceInterval[]) | null =
     null;
@@ -40,13 +70,25 @@ export class RoadSegmentSurface {
     private rowLength: number,
     private rowCount: number,
     private coverage: RoadSegmentSurfaceCoverage[],
-    options: { loop?: boolean } = {},
+    options: { loop?: boolean; curve?: RoadSegmentSurfaceCurve } = {},
   ) {
     this.loop = options.loop ?? false;
+    this.curve = options.curve ?? null;
     this.group.position.z = this.loop ? 0 : baseZ;
+
+    // Для curved-сегментов создаём pivotGroup
+    if (this.curve) {
+      this.pivotGroup = new THREE.Group();
+      this.pivotGroup.position.set(this.curve.pivotX, 0, 0);
+      this.group.add(this.pivotGroup);
+    }
+
     this.createMeshes();
+    this.updatePivotRotation();
     this.scene.add(this.group);
   }
+
+  private readonly curve: RoadSegmentSurfaceCurve | null;
 
   public update(deltaTime: number, speed: number): boolean {
     if (this.loop) {
@@ -55,6 +97,7 @@ export class RoadSegmentSurface {
     }
 
     this.group.position.z += deltaTime * speed;
+    this.updatePivotRotation();
 
     return this.getBackEdgeZ() > RoadSegmentSurface.SAFE_REMOVE_Z;
   }
@@ -132,10 +175,20 @@ export class RoadSegmentSurface {
     this.group.clear();
     this.meshes = [];
     this.surfaceMeshes = [];
+    this.curveSideObjects = [];
   }
 
   public getSurfaceIntervals(): RoadSegmentSurfaceInterval[] {
-    return this.surfaceMeshes.map(({ mesh, lane, length }) => {
+    return this.surfaceMeshes.map((row) => {
+      const { mesh, lane, length } = row;
+      if (row.frontZ !== undefined && row.backZ !== undefined) {
+        return {
+          lane,
+          back: this.group.position.z + row.backZ,
+          front: this.group.position.z + row.frontZ,
+        };
+      }
+
       const z = this.group.position.z + mesh.position.z;
       return {
         lane,
@@ -144,6 +197,24 @@ export class RoadSegmentSurface {
       };
     });
   }
+
+  public getSideObjectOcclusionInterval(): {
+    back: number;
+    front: number;
+  } | null {
+    if (!this.curve) {
+      return null;
+    }
+
+    return {
+      back: this.getBackZ(),
+      front: this.getFrontZ(),
+    };
+  }
+
+  // ============================================================
+  // Создание мешей
+  // ============================================================
 
   private createMeshes(): void {
     if (this.loop) {
@@ -156,16 +227,17 @@ export class RoadSegmentSurface {
   private createLoopMeshes(): void {
     for (let rowIndex = 0; rowIndex < this.rowCount; rowIndex++) {
       for (let lane = 0; lane < this.lanePositions.length; lane++) {
-        this.addSurfaceMesh(
-          lane,
-          this.getRowZ(rowIndex),
-          this.rowLength,
-        );
+        this.addSurfaceMesh(lane, this.getRowZ(rowIndex), this.rowLength);
       }
     }
   }
 
   private createSegmentMeshes(): void {
+    if (this.curve) {
+      this.createCurvedSegmentMeshes();
+      return;
+    }
+
     for (let lane = 0; lane < this.lanePositions.length; lane++) {
       let rowIndex = 0;
 
@@ -176,10 +248,7 @@ export class RoadSegmentSurface {
         }
 
         const rangeStart = rowIndex;
-        while (
-          rowIndex < this.rowCount &&
-          !this.isCovered(lane, rowIndex)
-        ) {
+        while (rowIndex < this.rowCount && !this.isCovered(lane, rowIndex)) {
           rowIndex++;
         }
 
@@ -191,11 +260,7 @@ export class RoadSegmentSurface {
     }
   }
 
-  private addSurfaceMesh(
-    lane: number,
-    z: number,
-    length: number,
-  ): void {
+  private addSurfaceMesh(lane: number, z: number, length: number): void {
     const geometry = new THREE.PlaneGeometry(this.laneWidth * 0.92, length);
     const worldBackZ = this.loop
       ? undefined
@@ -213,6 +278,217 @@ export class RoadSegmentSurface {
     this.surfaceMeshes.push({ mesh, lane, length });
   }
 
+  // ============================================================
+  // Curved segment: pre-curved arc geometry
+  // ============================================================
+
+  private createCurvedSegmentMeshes(): void {
+    if (!this.curve) return;
+
+    const target = this.pivotGroup ?? this.group;
+
+    // Создаём плоскую (прямую) геометрию в локальном пространстве pivotGroup.
+    // Вращение pivotGroup создаёт иллюзию дуги.
+    for (let rowIndex = 0; rowIndex < this.rowCount; rowIndex++) {
+      const frontZ = -rowIndex * this.rowLength;
+      const backZ = -(rowIndex + 1) * this.rowLength;
+
+      for (let lane = 0; lane < this.lanePositions.length; lane++) {
+        if (this.isCovered(lane, rowIndex)) {
+          continue;
+        }
+
+        const laneCenter = this.getLaneX(lane);
+        const halfWidth = this.laneWidth * 0.46;
+        const leftEdge = laneCenter - halfWidth;
+        const rightEdge = laneCenter + halfWidth;
+
+        this.addCurvedSurfaceMesh(
+          lane,
+          rowIndex,
+          leftEdge,
+          rightEdge,
+          frontZ,
+          backZ,
+          target,
+        );
+      }
+    }
+
+    this.addCurvedSideObjects(target);
+  }
+
+  /**
+   * Создаёт один плоский quad для curved-сегмента.
+   * Все меши добавляются в pivotGroup.
+   * Вращение pivotGroup создаёт иллюзию дуги.
+   */
+  private addCurvedSurfaceMesh(
+    lane: number,
+    rowIndex: number,
+    leftEdge: number,
+    rightEdge: number,
+    frontZ: number,
+    backZ: number,
+    target: THREE.Group,
+  ): void {
+    const positions = new Float32Array([
+      leftEdge,
+      0,
+      frontZ,
+      rightEdge,
+      0,
+      frontZ,
+      leftEdge,
+      0,
+      backZ,
+      rightEdge,
+      0,
+      backZ,
+    ]);
+
+    const geometry = new THREE.BufferGeometry();
+    geometry.setAttribute("position", new THREE.BufferAttribute(positions, 3));
+    geometry.setAttribute(
+      "uv",
+      new THREE.BufferAttribute(new Float32Array([0, 0, 1, 0, 0, 1, 1, 1]), 2),
+    );
+    geometry.setIndex([0, 1, 2, 1, 3, 2]);
+    geometry.computeVertexNormals();
+
+    const mesh = new THREE.Mesh(
+      geometry,
+      this.createMaterial(
+        this.rowLength,
+        this.group.position.z - rowIndex * this.rowLength,
+      ),
+    );
+    mesh.castShadow = false;
+    mesh.receiveShadow = true;
+    target.add(mesh);
+    this.meshes.push(mesh);
+    this.surfaceMeshes.push({
+      mesh,
+      lane,
+      length: this.rowLength,
+      rowIndex,
+      leftX: leftEdge,
+      rightX: rightEdge,
+      frontZ,
+      backZ,
+    });
+  }
+
+  // ============================================================
+  // Вращение pivotGroup
+  // ============================================================
+
+  /**
+   * Обновляет rotation.y pivotGroup на основе прогресса движения сегмента.
+   * При спавне (progress=0) угол = totalAngleRad → сегмент максимально изогнут.
+   * При достижении игрока (progress=1) угол = 0 → сегмент выпрямлен.
+   */
+  private updatePivotRotation(): void {
+    if (!this.curve || !this.pivotGroup) return;
+
+    const progress = this.getProgress();
+    const angleSign = this.curve.direction === "left" ? 1 : -1;
+    const angle = angleSign * this.curve.totalAngleRad * (1 - progress);
+    this.pivotGroup.rotation.y = angle;
+  }
+
+  private getProgress(): number {
+    if (!this.curve) return 1;
+
+    const denominator = this.curve.rotateEndZ - this.curve.rotateStartZ;
+    if (denominator === 0) return 1;
+
+    const value =
+      (this.group.position.z - this.curve.rotateStartZ) / denominator;
+    const x = THREE.MathUtils.clamp(value, 0, 1);
+    // smoothstep
+    return x * x * (3 - 2 * x);
+  }
+
+  // ============================================================
+  // Side objects на дуге
+  // ============================================================
+
+  private addCurvedSideObjects(target: THREE.Group): void {
+    if (!this.curve || !this.config.sideObjects?.enabled) {
+      return;
+    }
+
+    const sideConfig = this.config.sideObjects;
+    const geometry = new THREE.BoxGeometry(1, 1, 1);
+    const material = new THREE.MeshStandardMaterial({
+      color: sideConfig.color,
+      emissive: sideConfig.emissive ?? 0x000000,
+      emissiveIntensity: sideConfig.emissiveIntensity ?? 0,
+      transparent: (sideConfig.opacity ?? 1) < 1,
+      opacity: sideConfig.opacity ?? 1,
+    });
+    const leftLane = this.lanePositions[0] ?? 0;
+    const rightLane = this.lanePositions[this.lanePositions.length - 1] ?? 0;
+    const leftX = leftLane - this.laneWidth * 0.5 - sideConfig.offset;
+    const rightX = rightLane + this.laneWidth * 0.5 + sideConfig.offset;
+    const rowStep = Math.max(
+      1,
+      Math.round(sideConfig.spacing / this.rowLength),
+    );
+
+    for (let rowIndex = 0; rowIndex < this.rowCount; rowIndex += rowStep) {
+      const localZ = -(rowIndex + 0.5) * this.rowLength;
+      this.addCurveSideObject(
+        leftX,
+        localZ,
+        rowIndex,
+        geometry,
+        material,
+        target,
+      );
+      this.addCurveSideObject(
+        rightX,
+        localZ,
+        rowIndex,
+        geometry,
+        material,
+        target,
+      );
+    }
+
+    geometry.dispose();
+    material.dispose();
+  }
+
+  private addCurveSideObject(
+    localX: number,
+    localZ: number,
+    rowIndex: number,
+    geometry: THREE.BufferGeometry,
+    material: THREE.Material,
+    target: THREE.Group,
+  ): void {
+    const mesh = new THREE.Mesh(geometry.clone(), material.clone());
+    mesh.castShadow = true;
+    mesh.receiveShadow = true;
+    mesh.scale.set(...this.config.sideObjects!.scale);
+    mesh.position.set(localX, this.config.sideObjects?.y ?? 0, localZ);
+    target.add(mesh);
+    this.meshes.push(mesh);
+    this.curveSideObjects.push({
+      mesh,
+      side: "left",
+      rowIndex,
+      localX,
+      localZ,
+    });
+  }
+
+  // ============================================================
+  // Вспомогательные методы
+  // ============================================================
+
   private isCovered(lane: number, rowIndex: number): boolean {
     return this.coverage.some(
       (section) =>
@@ -227,9 +503,7 @@ export class RoadSegmentSurface {
     worldBackZ?: number,
   ): THREE.MeshStandardMaterial {
     const offsetY =
-      worldBackZ === undefined
-        ? undefined
-        : this.getTexturePhase(worldBackZ);
+      worldBackZ === undefined ? undefined : this.getTexturePhase(worldBackZ);
     const map = this.config.textureUrl
       ? loadTexture(this.config.textureUrl, {
           wrapS: THREE.RepeatWrapping,

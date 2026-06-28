@@ -12,6 +12,7 @@ import { RoadElevatedSection } from "./RoadElevatedSection";
 import {
   RoadSegmentSurface,
   type RoadSegmentSurfaceCoverage,
+  type RoadSegmentSurfaceCurve,
   type RoadSegmentSurfaceInterval,
 } from "./RoadSegmentSurface";
 import { useCommonStore } from "@/store/commonStore";
@@ -110,6 +111,7 @@ export class RoadManager {
     rowLength: number,
     rowCount: number,
     coverage: RoadSegmentSurfaceCoverage[] = [],
+    curve?: RoadSegmentSurfaceCurve,
   ): void {
     if (!this.road || !this.scene || !this.config.segmentSurfaces) return;
 
@@ -126,6 +128,7 @@ export class RoadManager {
         rowLength,
         rowCount,
         coverage,
+        { curve },
       ),
     );
   }
@@ -194,6 +197,9 @@ export class RoadManager {
         spacing: sideObjects.spacing * useCommonStore().config.xzScaling,
       },
     );
+    this.leftSideObjects.setOcclusionProvider(() =>
+      this.getCurvedRoadIntervals(),
+    );
 
     this.rightSideObjects = new SideObjectsInstanced(
       this.scene!,
@@ -204,6 +210,9 @@ export class RoadManager {
         ...sideObjects,
         spacing: sideObjects.spacing * useCommonStore().config.xzScaling,
       },
+    );
+    this.rightSideObjects.setOcclusionProvider(() =>
+      this.getCurvedRoadIntervals(),
     );
   }
 
@@ -386,6 +395,14 @@ export class RoadManager {
         section.getSurfaceIntervals(),
       ),
     ];
+  }
+
+  private getCurvedRoadIntervals(): { back: number; front: number }[] {
+    return this.segmentSurfaces
+      .map((surface) => surface.getSideObjectOcclusionInterval())
+      .filter((interval): interval is { back: number; front: number } =>
+        interval !== null,
+      );
   }
 
   public dispose(): void {

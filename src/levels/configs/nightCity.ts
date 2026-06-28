@@ -107,6 +107,7 @@ const nightCity = {
       "jumpers",
       "hazards",
       "vertical",
+      "turns",
     ],
     density: 1.0,
     obstacleDensity: 1.0,

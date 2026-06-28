@@ -16,13 +16,29 @@ type DisposableMaterial = THREE.Material & {
   dispose: () => void;
 };
 
+/**
+ * Состояние объекта на дугообразном сегменте.
+ * Позволяет объекту синхронно вращаться вместе с pivotGroup дороги.
+ */
+export type CurvedItemState = {
+  pivotX: number;
+  localPx: number;
+  localPz: number;
+  totalAngleRad: number;
+  direction: "left" | "right";
+  rotateStartZ: number;
+  rotateEndZ: number;
+  /** Текущая Z-позиция группы дороги (обновляется каждый кадр) */
+  groupZ: number;
+};
+
 export class BaseItem extends THREE.Group {
   public collider: THREE.Sphere;
   public itemType!: ItemType;
   protected cube: THREE.Object3D = new THREE.Object3D();
   protected rotationYDiff = useCommonStore().config.baseItemRotation;
   protected initialPosition: THREE.Vector3;
-  protected existingMaterial?: THREE.Material; // 👈 НОВОЕ ПОЛЕ
+  protected existingMaterial?: THREE.Material;
 
   constructor(
     zPos: number,
@@ -30,7 +46,7 @@ export class BaseItem extends THREE.Group {
     xPos?: number,
     yPos: number = useCommonStore().baseItemYpos,
     material: MaterialConfig | null = null,
-    existingMaterial?: THREE.Material, // 👈 НОВЫЙ ПАРАМЕТР
+    existingMaterial?: THREE.Material,
   ) {
     super();
     this.userData = {
@@ -55,7 +71,7 @@ export class BaseItem extends THREE.Group {
     this.position.copy(this.initialPosition);
     this.cube.position.set(0, 0, 0);
     this.collider = new THREE.Sphere(this.position.clone(), 0.45);
-    this.existingMaterial = existingMaterial; // 👈 СОХРАНЯЕМ
+    this.existingMaterial = existingMaterial;
     this.build(material).catch((err) => {
       console.error("[Coin] build failed:", err);
     });
@@ -67,7 +83,7 @@ export class BaseItem extends THREE.Group {
       geomConfig: useCommonStore().itemGeometryConfig,
       useTexture: material != null,
       materialConfig: material != null ? material : undefined,
-      existingMaterial: this.existingMaterial, // ПЕРЕДАЁМ ГОТОВЫЙ МАТЕРИАЛ
+      existingMaterial: this.existingMaterial,
     };
 
     try {
@@ -82,13 +98,61 @@ export class BaseItem extends THREE.Group {
   }
 
   update(deltaTime: number, speed: number): boolean {
-    this.position.z += deltaTime * speed;
+    const curvedState = this.userData.curvedItemState as
+      | CurvedItemState
+      | undefined;
+
+    if (curvedState) {
+      this.updateCurvedItem(deltaTime, speed, curvedState);
+    } else {
+      this.position.z += deltaTime * speed;
+    }
+
     this.updateSurfaceHeight();
     this.cube.rotation.y += this.rotationYDiff;
     this.ensureLethalMagnetObstacleVisual();
     this.updateCorruptedEmission(deltaTime);
     this.collider.center.copy(this.position);
     return this.position.z > useCommonStore().config.itemsRemovingZpos;
+  }
+
+  /**
+   * Устанавливает состояние для движения по дугообразному сегменту.
+   */
+  public setCurvedItemState(state: CurvedItemState): void {
+    this.userData.curvedItemState = state;
+  }
+
+  private updateCurvedItem(
+    deltaTime: number,
+    speed: number,
+    state: CurvedItemState,
+  ): void {
+    // Обновляем groupZ синхронно с дорогой
+    state.groupZ += deltaTime * speed;
+
+    // Прогресс движения сегмента (0 = спавн, 1 = у игрока)
+    const progress = this.getCurveProgress(state);
+
+    // Текущий угол поворота pivotGroup
+    const angleSign = state.direction === "left" ? 1 : -1;
+    const angle = angleSign * state.totalAngleRad * (1 - progress);
+    const cos = Math.cos(angle);
+    const sin = Math.sin(angle);
+
+    // Трансформируем локальную позицию (в pivotGroup space) в мировую
+    this.position.x = state.pivotX + state.localPx * cos + state.localPz * sin;
+    this.position.z = state.groupZ + state.localPz * cos - state.localPx * sin;
+    this.rotation.y = angle;
+  }
+
+  private getCurveProgress(state: CurvedItemState): number {
+    const denominator = state.rotateEndZ - state.rotateStartZ;
+    if (denominator === 0) return 1;
+
+    const value = (state.groupZ - state.rotateStartZ) / denominator;
+    const x = THREE.MathUtils.clamp(value, 0, 1);
+    return x * x * (3 - 2 * x); // smoothstep
   }
 
   private updateSurfaceHeight(): void {
