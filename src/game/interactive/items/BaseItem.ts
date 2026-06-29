@@ -6,6 +6,7 @@ import type { ItemType } from "./types";
 import type { MaterialConfig } from "@/game/cube/types";
 import { CubeBuilder } from "@/game/cube/Cube";
 import { useCommonStore } from "@/store/commonStore";
+import type { RoadCurveMotion } from "@/game/environment/road/RoadSegmentSurface";
 
 type EmissiveMaterial = THREE.Material & {
   emissive: THREE.Color;
@@ -31,8 +32,7 @@ export type CurvedItemState = {
   rotateStartZ: number;
   rotateEndZ: number;
   radius: number;
-  /** Текущий угол подхода дуги к точке касания. */
-  angleRad: number;
+  motion: RoadCurveMotion;
 };
 
 export class BaseItem extends THREE.Group {
@@ -131,17 +131,19 @@ export class BaseItem extends THREE.Group {
     speed: number,
     state: CurvedItemState,
   ): void {
-    state.angleRad -= (deltaTime * speed) / state.radius;
     const angleSign = state.direction === "left" ? 1 : -1;
-    const angle = angleSign * state.angleRad;
+    const angle = angleSign * state.motion.angleRad;
     const cos = Math.cos(angle);
     const sin = Math.sin(angle);
 
     // Трансформируем локальную позицию (в pivotGroup space) в мировую
     this.position.x = state.pivotX + state.localPx * cos + state.localPz * sin;
     this.position.z =
-      state.rotateEndZ + state.localPz * cos - state.localPx * sin;
+      state.motion.pivotZ + state.localPz * cos - state.localPx * sin;
     this.rotation.y = angle + state.localAngleRad;
+    if (state.motion.completed) {
+      delete this.userData.curvedItemState;
+    }
   }
 
   private updateSurfaceHeight(): void {

@@ -272,9 +272,8 @@ export class CubeObstacle extends BaseObstacle {
       | CurvedItemState
       | undefined;
     if (curvedState) {
-      curvedState.angleRad -= (dt * speed) / curvedState.radius;
       const angleSign = curvedState.direction === "left" ? 1 : -1;
-      const angle = angleSign * curvedState.angleRad;
+      const angle = angleSign * curvedState.motion.angleRad;
       const cos = Math.cos(angle);
       const sin = Math.sin(angle);
       this.position.x =
@@ -282,10 +281,13 @@ export class CubeObstacle extends BaseObstacle {
         curvedState.localPx * cos +
         curvedState.localPz * sin;
       this.position.z =
-        curvedState.rotateEndZ +
+        curvedState.motion.pivotZ +
         curvedState.localPz * cos -
         curvedState.localPx * sin;
       this.rotation.y = angle + curvedState.localAngleRad;
+      if (curvedState.motion.completed) {
+        delete this.userData.curvedItemState;
+      }
     } else {
       this.position.z += dt * speed;
     }

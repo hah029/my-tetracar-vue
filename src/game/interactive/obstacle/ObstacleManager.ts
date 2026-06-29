@@ -97,6 +97,7 @@ export class ObstacleManager {
 
     this.scene.add(obstacle);
     this.obstacles.push(obstacle);
+    return obstacle;
   }
 
   public spawnEnemyCar(
@@ -116,6 +117,7 @@ export class ObstacleManager {
     );
     this.scene.add(obstacle);
     this.obstacles.push(obstacle);
+    return obstacle;
   }
 
   public spawnJump(

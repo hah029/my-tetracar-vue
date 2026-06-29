@@ -26,6 +26,24 @@ export type RoadSegmentSurfaceCurve = {
   rotateEndZ: number;
 };
 
+export type RoadCurveMotion = {
+  direction: "left" | "right";
+  pivotX: number;
+  pivotZ: number;
+  turnStartZ: number;
+  radius: number;
+  totalAngleRad: number;
+  angleRad: number;
+  phase: "approach" | "turning" | "completed";
+  completed: boolean;
+};
+
+export type RoadRouteAttachment = {
+  motion: RoadCurveMotion;
+  /** Расстояние от дальнего конца дуги до начала прямого сегмента. */
+  startDistance: number;
+};
+
 export type RoadSegmentSurfaceInterval = {
   lane: number;
   back: number;
@@ -58,10 +76,13 @@ export class RoadSegmentSurface {
   private group = new THREE.Group();
   /** Дочерняя группа для curved-сегментов: вращается вокруг pivot */
   private pivotGroup: THREE.Group | null = null;
+  private attachmentGroup: THREE.Group | null = null;
   private meshes: THREE.Mesh[] = [];
   private surfaceMeshes: SurfaceMeshRecord[] = [];
   private curveSideObjects: CurveSideObjectRecord[] = [];
-  private curveAngle = 0;
+  private sideObjectsDetached = false;
+  private readonly routeAttachment: RoadRouteAttachment | null;
+  private readonly motion: RoadCurveMotion | null;
   private readonly loop: boolean;
   private loopOcclusionProvider: (() => RoadSegmentSurfaceInterval[]) | null =
     null;
@@ -75,28 +96,47 @@ export class RoadSegmentSurface {
     private rowLength: number,
     private rowCount: number,
     private coverage: RoadSegmentSurfaceCoverage[],
-    options: { loop?: boolean; curve?: RoadSegmentSurfaceCurve } = {},
+    options: {
+      loop?: boolean;
+      curve?: RoadSegmentSurfaceCurve;
+      motion?: RoadCurveMotion;
+      routeAttachment?: RoadRouteAttachment;
+    } = {},
   ) {
     this.loop = options.loop ?? false;
     this.curve = options.curve ?? null;
+    this.routeAttachment = options.routeAttachment ?? null;
+    this.motion =
+      options.motion ?? this.routeAttachment?.motion ?? null;
     this.group.position.z = this.loop
       ? 0
-      : this.curve
-        ? this.curve.rotateEndZ
+      : this.motion
+        ? this.motion.pivotZ
         : baseZ;
 
     // Для curved-сегментов создаём pivotGroup
-    if (this.curve) {
+    if (this.motion) {
       this.pivotGroup = new THREE.Group();
-      this.pivotGroup.position.set(this.curve.pivotX, 0, 0);
+      this.pivotGroup.position.set(this.motion.pivotX, 0, 0);
       this.group.add(this.pivotGroup);
-      const approachDistance = Math.max(
-        0,
-        this.curve.rotateEndZ - this.baseZ,
-      );
-      this.curveAngle = Math.asin(
-        THREE.MathUtils.clamp(approachDistance / this.curve.radius, -1, 1),
-      );
+      if (this.routeAttachment) {
+        this.attachmentGroup = new THREE.Group();
+        const directionSign =
+          this.motion.direction === "left" ? 1 : -1;
+        const endAngle = directionSign * this.motion.totalAngleRad;
+        const startVectorX = -this.motion.pivotX;
+        const farX = startVectorX * Math.cos(endAngle);
+        const farZ = -startVectorX * Math.sin(endAngle);
+        const tangentX = -Math.sin(endAngle);
+        const tangentZ = -Math.cos(endAngle);
+        this.attachmentGroup.position.set(
+          farX + tangentX * this.routeAttachment.startDistance,
+          0,
+          farZ + tangentZ * this.routeAttachment.startDistance,
+        );
+        this.attachmentGroup.rotation.y = endAngle;
+        this.pivotGroup.add(this.attachmentGroup);
+      }
     }
 
     this.createMeshes();
@@ -112,9 +152,20 @@ export class RoadSegmentSurface {
       return false;
     }
 
-    if (this.curve) {
-      this.curveAngle -= (deltaTime * speed) / this.curve.radius;
+    if (this.motion) {
+      if (!this.motion.completed) {
+        this.group.position.z = this.motion.pivotZ;
+      }
       this.updatePivotRotation();
+      if (this.motion.completed) {
+        if (!this.sideObjectsDetached) {
+          this.curveSideObjects.forEach(({ mesh }) => {
+            mesh.visible = false;
+          });
+          this.sideObjectsDetached = true;
+        }
+        this.group.position.z += deltaTime * speed;
+      }
     } else {
       this.group.position.z += deltaTime * speed;
     }
@@ -129,7 +180,7 @@ export class RoadSegmentSurface {
   }
 
   public isCurved(): boolean {
-    return this.curve !== null;
+    return this.motion !== null && !this.motion.completed;
   }
 
   private updateLoopRows(deltaTime: number, speed: number): void {
@@ -162,7 +213,7 @@ export class RoadSegmentSurface {
       );
     }
 
-    if (this.curve) return this.getWorldZBounds().front;
+    if (this.motion) return this.getWorldZBounds().front;
     return this.group.position.z;
   }
 
@@ -174,7 +225,7 @@ export class RoadSegmentSurface {
       );
     }
 
-    if (this.curve) return this.getWorldZBounds().back;
+    if (this.motion) return this.getWorldZBounds().back;
     return this.group.position.z - this.rowCount * this.rowLength;
   }
 
@@ -228,7 +279,7 @@ export class RoadSegmentSurface {
     back: number;
     front: number;
   } | null {
-    if (!this.curve) {
+    if (!this.motion || this.motion.completed) {
       return null;
     }
 
@@ -264,6 +315,7 @@ export class RoadSegmentSurface {
       return;
     }
 
+    const target = this.attachmentGroup ?? this.group;
     for (let lane = 0; lane < this.lanePositions.length; lane++) {
       let rowIndex = 0;
 
@@ -281,12 +333,22 @@ export class RoadSegmentSurface {
         const rangeEnd = rowIndex;
         const length = (rangeEnd - rangeStart) * this.rowLength;
         const centerZ = -((rangeStart + rangeEnd) * this.rowLength) / 2;
-        this.addSurfaceMesh(lane, centerZ, length);
+        this.addSurfaceMesh(lane, centerZ, length, target);
       }
+    }
+
+    if (this.routeAttachment) {
+      this.addAttachedLaneLines(target);
+      this.addAttachedSideObjects(target);
     }
   }
 
-  private addSurfaceMesh(lane: number, z: number, length: number): void {
+  private addSurfaceMesh(
+    lane: number,
+    z: number,
+    length: number,
+    target: THREE.Group = this.group,
+  ): void {
     const geometry = new THREE.PlaneGeometry(this.laneWidth * 0.92, length);
     const worldBackZ = this.loop
       ? undefined
@@ -299,9 +361,83 @@ export class RoadSegmentSurface {
     mesh.position.set(this.getLaneX(lane), this.config.yPosition ?? 0, z);
     mesh.castShadow = false;
     mesh.receiveShadow = true;
-    this.group.add(mesh);
+    target.add(mesh);
     this.meshes.push(mesh);
     this.surfaceMeshes.push({ mesh, lane, length });
+  }
+
+  private addAttachedLaneLines(target: THREE.Group): void {
+    const color = this.config.laneColor ?? this.config.emissive ?? 0xffffff;
+    for (let lane = 0; lane < this.lanePositions.length - 1; lane++) {
+      const left = this.lanePositions[lane];
+      const right = this.lanePositions[lane + 1];
+      if (left === undefined || right === undefined) continue;
+      const geometry = new THREE.BoxGeometry(
+        Math.max(0.08, this.laneWidth * 0.025),
+        0.03,
+        this.rowCount * this.rowLength,
+      );
+      const material = new THREE.MeshStandardMaterial({
+        color,
+        emissive: color,
+        emissiveIntensity: 1,
+      });
+      const mesh = new THREE.Mesh(geometry, material);
+      mesh.position.set(
+        (left + right) / 2,
+        0.015,
+        -(this.rowCount * this.rowLength) / 2,
+      );
+      target.add(mesh);
+      this.meshes.push(mesh);
+    }
+  }
+
+  private addAttachedSideObjects(target: THREE.Group): void {
+    const sideConfig = this.config.sideObjects;
+    if (!sideConfig?.enabled) return;
+
+    const geometry = new THREE.BoxGeometry(1, 1, 1);
+    const sprite = atlas.getSprite(ATLAS_SPRITES.cube.base);
+    if (sprite) applyCubeSpriteUV(geometry, sprite);
+    const atlasTexture = atlas.getAtlasTexture();
+    const material = new THREE.MeshStandardMaterial({
+      map: atlasTexture ?? null,
+      color: sideConfig.color,
+      emissive: sideConfig.emissive ?? 0x000000,
+      emissiveIntensity: sideConfig.emissiveIntensity ?? 0,
+      transparent: (sideConfig.opacity ?? 1) < 1,
+      opacity: sideConfig.opacity ?? 1,
+    });
+    const leftLane = this.lanePositions[0] ?? 0;
+    const rightLane = this.lanePositions[this.lanePositions.length - 1] ?? 0;
+    const leftX = leftLane - this.laneWidth * 0.5 - sideConfig.offset;
+    const rightX = rightLane + this.laneWidth * 0.5 + sideConfig.offset;
+    const length = this.rowCount * this.rowLength;
+    const spacing =
+      sideConfig.spacing * useCommonStore().config.xzScaling;
+
+    for (let distance = spacing / 2; distance < length; distance += spacing) {
+      this.addCurveSideObject(
+        leftX,
+        -distance,
+        Math.floor(distance / this.rowLength),
+        geometry,
+        material,
+        target,
+      );
+      this.addCurveSideObject(
+        rightX,
+        -distance,
+        Math.floor(distance / this.rowLength),
+        geometry,
+        material,
+        target,
+      );
+    }
+
+    geometry.dispose();
+    material.dispose();
   }
 
   // ============================================================
@@ -524,10 +660,10 @@ export class RoadSegmentSurface {
    * При достижении игрока (progress=1) угол = 0 → сегмент выпрямлен.
    */
   private updatePivotRotation(): void {
-    if (!this.curve || !this.pivotGroup) return;
+    if (!this.motion || !this.pivotGroup) return;
 
-    const angleSign = this.curve.direction === "left" ? 1 : -1;
-    this.pivotGroup.rotation.y = angleSign * this.curveAngle;
+    const angleSign = this.motion.direction === "left" ? 1 : -1;
+    this.pivotGroup.rotation.y = angleSign * this.motion.angleRad;
   }
 
   // ============================================================

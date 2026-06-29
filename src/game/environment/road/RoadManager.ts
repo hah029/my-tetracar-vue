@@ -14,6 +14,8 @@ import {
   type RoadSegmentSurfaceCoverage,
   type RoadSegmentSurfaceCurve,
   type RoadSegmentSurfaceInterval,
+  type RoadCurveMotion,
+  type RoadRouteAttachment,
 } from "./RoadSegmentSurface";
 import { useCommonStore } from "@/store/commonStore";
 import { useEnvironmentStore } from "@/store/environmentStore";
@@ -30,6 +32,9 @@ export class RoadManager {
   private edges: THREE.Mesh[] = [];
   private elevatedSections: RoadElevatedSection[] = [];
   private segmentSurfaces: RoadSegmentSurface[] = [];
+  private activeRoute:
+    | { motion: RoadCurveMotion; tailDistance: number }
+    | null = null;
   private idleSegmentSurface: RoadSegmentSurface | null = null;
   private leftSideObjects: SideObjectsInstanced | null = null;
   private rightSideObjects: SideObjectsInstanced | null = null;
@@ -52,6 +57,10 @@ export class RoadManager {
       RoadManager.instance = new RoadManager();
     }
     return RoadManager.instance;
+  }
+
+  public hasActiveRouteTransform(): boolean {
+    return this.activeRoute !== null && !this.activeRoute.motion.completed;
   }
 
   public createRoad(): void {
@@ -112,11 +121,39 @@ export class RoadManager {
     rowCount: number,
     coverage: RoadSegmentSurfaceCoverage[] = [],
     curve?: RoadSegmentSurfaceCurve,
-  ): void {
+  ): RoadRouteAttachment | undefined {
     if (!this.road || !this.scene || !this.config.segmentSurfaces) return;
 
     const lanes = this.road.getLanePositions();
     const laneWidth = this.road.width / lanes.length;
+
+    let motion: RoadCurveMotion | undefined;
+    let routeAttachment: RoadRouteAttachment | undefined;
+
+    if (curve) {
+      motion = {
+        direction: curve.direction,
+        pivotX: curve.pivotX,
+        pivotZ: baseZ,
+        // До прохождения ближнего конца мимо игрока дуга движется как обычный
+        // сегмент с нулевым углом. Ранний старт на rotateStartZ разрывает стык
+        // с предыдущей прямой почти сразу после спавна.
+        turnStartZ: curve.rotateEndZ,
+        radius: curve.radius,
+        totalAngleRad: curve.totalAngleRad,
+        angleRad: 0,
+        phase: "approach",
+        completed: false,
+      };
+      this.activeRoute = { motion, tailDistance: 0 };
+      routeAttachment = { motion, startDistance: 0 };
+    } else if (this.activeRoute && !this.activeRoute.motion.completed) {
+      routeAttachment = {
+        motion: this.activeRoute.motion,
+        startDistance: this.activeRoute.tailDistance,
+      };
+      this.activeRoute.tailDistance += rowCount * rowLength;
+    }
 
     this.segmentSurfaces.push(
       new RoadSegmentSurface(
@@ -128,9 +165,11 @@ export class RoadManager {
         rowLength,
         rowCount,
         coverage,
-        { curve },
+        { curve, motion, routeAttachment: curve ? undefined : routeAttachment },
       ),
     );
+
+    return routeAttachment;
   }
 
   private addElevatedSections(): void {
@@ -311,6 +350,34 @@ export class RoadManager {
   }
 
   public update(deltaTime: number, speed: number): void {
+    if (this.activeRoute && !this.activeRoute.motion.completed) {
+      const motion = this.activeRoute.motion;
+      let remainingTravel = deltaTime * speed;
+      if (motion.phase === "approach") {
+        const approachDistance = Math.max(
+          0,
+          motion.turnStartZ - motion.pivotZ,
+        );
+        const approachTravel = Math.min(remainingTravel, approachDistance);
+        motion.pivotZ += approachTravel;
+        remainingTravel -= approachTravel;
+        if (motion.pivotZ >= motion.turnStartZ) {
+          motion.pivotZ = motion.turnStartZ;
+          motion.phase = "turning";
+        }
+      }
+
+      if (motion.phase === "turning" && remainingTravel > 0) {
+        motion.angleRad -= remainingTravel / motion.radius;
+        if (motion.angleRad <= -motion.totalAngleRad) {
+          motion.angleRad = -motion.totalAngleRad;
+          motion.phase = "completed";
+          motion.completed = true;
+          this.activeRoute = null;
+        }
+      }
+    }
+
     this.leftSideObjects?.update(deltaTime, speed);
     this.rightSideObjects?.update(deltaTime, speed);
     for (let i = this.segmentSurfaces.length - 1; i >= 0; i--) {
@@ -363,6 +430,7 @@ export class RoadManager {
     this.elevatedSections = [];
     this.segmentSurfaces.forEach((surface) => surface.dispose());
     this.segmentSurfaces = [];
+    this.activeRoute = null;
     this.clearIdleSegmentSurface();
 
     this.clearSideObjects();
