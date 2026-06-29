@@ -57,6 +57,7 @@ export class RoadSegmentSurface {
   private meshes: THREE.Mesh[] = [];
   private surfaceMeshes: SurfaceMeshRecord[] = [];
   private curveSideObjects: CurveSideObjectRecord[] = [];
+  private curveAngle = 0;
   private readonly loop: boolean;
   private loopOcclusionProvider: (() => RoadSegmentSurfaceInterval[]) | null =
     null;
@@ -74,13 +75,24 @@ export class RoadSegmentSurface {
   ) {
     this.loop = options.loop ?? false;
     this.curve = options.curve ?? null;
-    this.group.position.z = this.loop ? 0 : baseZ;
+    this.group.position.z = this.loop
+      ? 0
+      : this.curve
+        ? this.curve.rotateEndZ
+        : baseZ;
 
     // Для curved-сегментов создаём pivotGroup
     if (this.curve) {
       this.pivotGroup = new THREE.Group();
       this.pivotGroup.position.set(this.curve.pivotX, 0, 0);
       this.group.add(this.pivotGroup);
+      const approachDistance = Math.max(
+        0,
+        this.curve.rotateEndZ - this.baseZ,
+      );
+      this.curveAngle = Math.asin(
+        THREE.MathUtils.clamp(approachDistance / this.curve.radius, -1, 1),
+      );
     }
 
     this.createMeshes();
@@ -96,8 +108,12 @@ export class RoadSegmentSurface {
       return false;
     }
 
-    this.group.position.z += deltaTime * speed;
-    this.updatePivotRotation();
+    if (this.curve) {
+      this.curveAngle -= (deltaTime * speed) / this.curve.radius;
+      this.updatePivotRotation();
+    } else {
+      this.group.position.z += deltaTime * speed;
+    }
 
     return this.getBackEdgeZ() > RoadSegmentSurface.SAFE_REMOVE_Z;
   }
@@ -138,6 +154,7 @@ export class RoadSegmentSurface {
       );
     }
 
+    if (this.curve) return this.getWorldZBounds().front;
     return this.group.position.z;
   }
 
@@ -149,6 +166,7 @@ export class RoadSegmentSurface {
       );
     }
 
+    if (this.curve) return this.getWorldZBounds().back;
     return this.group.position.z - this.rowCount * this.rowLength;
   }
 
@@ -287,11 +305,12 @@ export class RoadSegmentSurface {
 
     const target = this.pivotGroup ?? this.group;
 
-    // Создаём плоскую (прямую) геометрию в локальном пространстве pivotGroup.
-    // Вращение pivotGroup создаёт иллюзию дуги.
+    // Геометрия сразу строится вокруг центра окружности. pivotGroup содержит
+    // координаты относительно pivot, поэтому его вращение остаётся rigid-body
+    // трансформацией и не деформирует отдельные ряды.
     for (let rowIndex = 0; rowIndex < this.rowCount; rowIndex++) {
-      const frontZ = -rowIndex * this.rowLength;
-      const backZ = -(rowIndex + 1) * this.rowLength;
+      const frontAngle = this.getCurveRowAngle(rowIndex);
+      const backAngle = this.getCurveRowAngle(rowIndex + 1);
 
       for (let lane = 0; lane < this.lanePositions.length; lane++) {
         if (this.isCovered(lane, rowIndex)) {
@@ -308,8 +327,8 @@ export class RoadSegmentSurface {
           rowIndex,
           leftEdge,
           rightEdge,
-          frontZ,
-          backZ,
+          frontAngle,
+          backAngle,
           target,
         );
       }
@@ -319,7 +338,7 @@ export class RoadSegmentSurface {
   }
 
   /**
-   * Создаёт один плоский quad для curved-сегмента.
+   * Создаёт один quad дуги в системе координат pivot.
    * Все меши добавляются в pivotGroup.
    * Вращение pivotGroup создаёт иллюзию дуги.
    */
@@ -328,23 +347,27 @@ export class RoadSegmentSurface {
     rowIndex: number,
     leftEdge: number,
     rightEdge: number,
-    frontZ: number,
-    backZ: number,
+    frontAngle: number,
+    backAngle: number,
     target: THREE.Group,
   ): void {
+    const leftFront = this.getCurvePoint(leftEdge, frontAngle);
+    const rightFront = this.getCurvePoint(rightEdge, frontAngle);
+    const leftBack = this.getCurvePoint(leftEdge, backAngle);
+    const rightBack = this.getCurvePoint(rightEdge, backAngle);
     const positions = new Float32Array([
-      leftEdge,
+      leftFront.x,
       0,
-      frontZ,
-      rightEdge,
+      leftFront.z,
+      rightFront.x,
       0,
-      frontZ,
-      leftEdge,
+      rightFront.z,
+      leftBack.x,
       0,
-      backZ,
-      rightEdge,
+      leftBack.z,
+      rightBack.x,
       0,
-      backZ,
+      rightBack.z,
     ]);
 
     const geometry = new THREE.BufferGeometry();
@@ -374,9 +397,43 @@ export class RoadSegmentSurface {
       rowIndex,
       leftX: leftEdge,
       rightX: rightEdge,
-      frontZ,
-      backZ,
+      frontZ: Math.max(
+        leftFront.z,
+        rightFront.z,
+        leftBack.z,
+        rightBack.z,
+      ),
+      backZ: Math.min(
+        leftFront.z,
+        rightFront.z,
+        leftBack.z,
+        rightBack.z,
+      ),
     });
+  }
+
+  private getCurveRowAngle(rowIndex: number): number {
+    if (!this.curve) return 0;
+    const directionSign = this.curve.direction === "left" ? 1 : -1;
+    const clampedRow = THREE.MathUtils.clamp(rowIndex, 0, this.rowCount);
+    return (
+      directionSign *
+      (clampedRow / this.rowCount) *
+      this.curve.totalAngleRad
+    );
+  }
+
+  /**
+   * Возвращает точку дороги относительно pivot. При angle=0 её мировая
+   * координата после добавления pivotGroup равна исходному laneX.
+   */
+  private getCurvePoint(x: number, angle: number): THREE.Vector2 {
+    if (!this.curve) return new THREE.Vector2(x, 0);
+    const relativeX = x - this.curve.pivotX;
+    return new THREE.Vector2(
+      relativeX * Math.cos(angle),
+      -relativeX * Math.sin(angle),
+    );
   }
 
   // ============================================================
@@ -391,23 +448,8 @@ export class RoadSegmentSurface {
   private updatePivotRotation(): void {
     if (!this.curve || !this.pivotGroup) return;
 
-    const progress = this.getProgress();
     const angleSign = this.curve.direction === "left" ? 1 : -1;
-    const angle = angleSign * this.curve.totalAngleRad * (1 - progress);
-    this.pivotGroup.rotation.y = angle;
-  }
-
-  private getProgress(): number {
-    if (!this.curve) return 1;
-
-    const denominator = this.curve.rotateEndZ - this.curve.rotateStartZ;
-    if (denominator === 0) return 1;
-
-    const value =
-      (this.group.position.z - this.curve.rotateStartZ) / denominator;
-    const x = THREE.MathUtils.clamp(value, 0, 1);
-    // smoothstep
-    return x * x * (3 - 2 * x);
+    this.pivotGroup.rotation.y = angleSign * this.curveAngle;
   }
 
   // ============================================================
@@ -438,18 +480,20 @@ export class RoadSegmentSurface {
     );
 
     for (let rowIndex = 0; rowIndex < this.rowCount; rowIndex += rowStep) {
-      const localZ = -(rowIndex + 0.5) * this.rowLength;
+      const angle = this.getCurveRowAngle(rowIndex + 0.5);
+      const leftPoint = this.getCurvePoint(leftX, angle);
+      const rightPoint = this.getCurvePoint(rightX, angle);
       this.addCurveSideObject(
-        leftX,
-        localZ,
+        leftPoint.x,
+        leftPoint.y,
         rowIndex,
         geometry,
         material,
         target,
       );
       this.addCurveSideObject(
-        rightX,
-        localZ,
+        rightPoint.x,
+        rightPoint.y,
         rowIndex,
         geometry,
         material,
@@ -551,6 +595,14 @@ export class RoadSegmentSurface {
     }
 
     return -(rowIndex + 0.5) * this.rowLength;
+  }
+
+  private getWorldZBounds(): { back: number; front: number } {
+    this.group.updateWorldMatrix(true, true);
+    const bounds = new THREE.Box3().setFromObject(this.group);
+    return Number.isFinite(bounds.min.z)
+      ? { back: bounds.min.z, front: bounds.max.z }
+      : { back: this.group.position.z, front: this.group.position.z };
   }
 
   private overlapsAnyInterval(

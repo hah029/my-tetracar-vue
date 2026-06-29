@@ -28,8 +28,9 @@ export type CurvedItemState = {
   direction: "left" | "right";
   rotateStartZ: number;
   rotateEndZ: number;
-  /** Текущая Z-позиция группы дороги (обновляется каждый кадр) */
-  groupZ: number;
+  radius: number;
+  /** Текущий угол подхода дуги к точке касания. */
+  angleRad: number;
 };
 
 export class BaseItem extends THREE.Group {
@@ -128,31 +129,17 @@ export class BaseItem extends THREE.Group {
     speed: number,
     state: CurvedItemState,
   ): void {
-    // Обновляем groupZ синхронно с дорогой
-    state.groupZ += deltaTime * speed;
-
-    // Прогресс движения сегмента (0 = спавн, 1 = у игрока)
-    const progress = this.getCurveProgress(state);
-
-    // Текущий угол поворота pivotGroup
+    state.angleRad -= (deltaTime * speed) / state.radius;
     const angleSign = state.direction === "left" ? 1 : -1;
-    const angle = angleSign * state.totalAngleRad * (1 - progress);
+    const angle = angleSign * state.angleRad;
     const cos = Math.cos(angle);
     const sin = Math.sin(angle);
 
     // Трансформируем локальную позицию (в pivotGroup space) в мировую
     this.position.x = state.pivotX + state.localPx * cos + state.localPz * sin;
-    this.position.z = state.groupZ + state.localPz * cos - state.localPx * sin;
+    this.position.z =
+      state.rotateEndZ + state.localPz * cos - state.localPx * sin;
     this.rotation.y = angle;
-  }
-
-  private getCurveProgress(state: CurvedItemState): number {
-    const denominator = state.rotateEndZ - state.rotateStartZ;
-    if (denominator === 0) return 1;
-
-    const value = (state.groupZ - state.rotateStartZ) / denominator;
-    const x = THREE.MathUtils.clamp(value, 0, 1);
-    return x * x * (3 - 2 * x); // smoothstep
   }
 
   private updateSurfaceHeight(): void {

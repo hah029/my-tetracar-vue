@@ -233,8 +233,14 @@ export class InteractiveItemsManager {
         let itemSpawnZ: number | undefined;
         if (curve) {
           const laneX = RoadManager.getInstance().getLanePosition(lane);
-          const localPx = laneX;
-          const localPz = -rowIndex * segmentRowLength;
+          const directionSign = curve.direction === "left" ? 1 : -1;
+          const rowAngle =
+            directionSign *
+            (rowIndex / segment.pattern.length) *
+            curve.totalAngleRad;
+          const radiusAtLane = laneX - curve.pivotX;
+          const localPx = radiusAtLane * Math.cos(rowAngle);
+          const localPz = -radiusAtLane * Math.sin(rowAngle);
 
           curvedState = {
             pivotX: curve.pivotX,
@@ -244,16 +250,24 @@ export class InteractiveItemsManager {
             direction: curve.direction,
             rotateStartZ: curve.rotateStartZ,
             rotateEndZ: curve.rotateEndZ,
-            groupZ: baseZ,
+            radius: curve.radius,
+            angleRad: Math.asin(
+              THREE.MathUtils.clamp(
+                (curve.rotateEndZ - baseZ) / curve.radius,
+                -1,
+                1,
+              ),
+            ),
           };
 
           // Начальная мировая позиция (при максимальном угле поворота)
           const angleSign = curve.direction === "left" ? 1 : -1;
-          const spawnAngle = angleSign * curve.totalAngleRad;
+          const spawnAngle = angleSign * curvedState.angleRad;
           const cos = Math.cos(spawnAngle);
           const sin = Math.sin(spawnAngle);
           itemSpawnX = curve.pivotX + localPx * cos + localPz * sin;
-          itemSpawnZ = baseZ + localPz * cos - localPx * sin;
+          itemSpawnZ =
+            curve.rotateEndZ + localPz * cos - localPx * sin;
         }
 
         switch (value) {
