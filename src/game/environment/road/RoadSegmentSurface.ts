@@ -73,6 +73,8 @@ export class RoadSegmentSurface {
   private static readonly SAFE_REMOVE_Z = 90;
   private static readonly OCCLUSION_EPSILON = 0.08;
   private static readonly TEXTURE_TILE_SIZE = 2;
+  private static readonly SURFACE_SEAM_OVERLAP = 0.08;
+  private static readonly IDLE_SURFACE_Y_OFFSET = -0.025;
   private group = new THREE.Group();
   /** Дочерняя группа для curved-сегментов: вращается вокруг pivot */
   private pivotGroup: THREE.Group | null = null;
@@ -337,8 +339,9 @@ export class RoadSegmentSurface {
       }
     }
 
+    this.addStraightLaneLines(target);
+
     if (this.routeAttachment) {
-      this.addAttachedLaneLines(target);
       this.addAttachedSideObjects(target);
     }
   }
@@ -349,16 +352,26 @@ export class RoadSegmentSurface {
     length: number,
     target: THREE.Group = this.group,
   ): void {
-    const geometry = new THREE.PlaneGeometry(this.laneWidth * 0.92, length);
+    const renderedLength =
+      length + RoadSegmentSurface.SURFACE_SEAM_OVERLAP;
+    const geometry = new THREE.PlaneGeometry(
+      this.laneWidth + RoadSegmentSurface.SURFACE_SEAM_OVERLAP,
+      renderedLength,
+    );
     const worldBackZ = this.loop
       ? undefined
       : this.group.position.z + z - length / 2;
     const mesh = new THREE.Mesh(
       geometry,
-      this.createMaterial(length, worldBackZ),
+      this.createMaterial(renderedLength, worldBackZ),
     );
     mesh.rotation.x = -Math.PI / 2;
-    mesh.position.set(this.getLaneX(lane), this.config.yPosition ?? 0, z);
+    mesh.position.set(
+      this.getLaneX(lane),
+      (this.config.yPosition ?? 0) +
+        (this.loop ? RoadSegmentSurface.IDLE_SURFACE_Y_OFFSET : 0),
+      z,
+    );
     mesh.castShadow = false;
     mesh.receiveShadow = true;
     target.add(mesh);
@@ -366,7 +379,7 @@ export class RoadSegmentSurface {
     this.surfaceMeshes.push({ mesh, lane, length });
   }
 
-  private addAttachedLaneLines(target: THREE.Group): void {
+  private addStraightLaneLines(target: THREE.Group): void {
     const color = this.config.laneColor ?? this.config.emissive ?? 0xffffff;
     for (let lane = 0; lane < this.lanePositions.length - 1; lane++) {
       const left = this.lanePositions[lane];
@@ -374,8 +387,9 @@ export class RoadSegmentSurface {
       if (left === undefined || right === undefined) continue;
       const geometry = new THREE.BoxGeometry(
         Math.max(0.08, this.laneWidth * 0.025),
-        0.03,
-        this.rowCount * this.rowLength,
+        0.025,
+        this.rowCount * this.rowLength +
+          RoadSegmentSurface.SURFACE_SEAM_OVERLAP,
       );
       const material = new THREE.MeshStandardMaterial({
         color,
@@ -385,7 +399,7 @@ export class RoadSegmentSurface {
       const mesh = new THREE.Mesh(geometry, material);
       mesh.position.set(
         (left + right) / 2,
-        0.015,
+        (this.config.yPosition ?? 0) + 0.018,
         -(this.rowCount * this.rowLength) / 2,
       );
       target.add(mesh);
@@ -453,8 +467,10 @@ export class RoadSegmentSurface {
     // координаты относительно pivot, поэтому его вращение остаётся rigid-body
     // трансформацией и не деформирует отдельные ряды.
     for (let rowIndex = 0; rowIndex < this.rowCount; rowIndex++) {
-      const frontAngle = this.getCurveRowAngle(rowIndex);
-      const backAngle = this.getCurveRowAngle(rowIndex + 1);
+      const rowOverlap =
+        RoadSegmentSurface.SURFACE_SEAM_OVERLAP / this.rowLength / 2;
+      const frontAngle = this.getCurveRowAngle(rowIndex - rowOverlap);
+      const backAngle = this.getCurveRowAngle(rowIndex + 1 + rowOverlap);
 
       for (let lane = 0; lane < this.lanePositions.length; lane++) {
         if (this.isCovered(lane, rowIndex)) {
@@ -462,7 +478,9 @@ export class RoadSegmentSurface {
         }
 
         const laneCenter = this.getLaneX(lane);
-        const halfWidth = this.laneWidth * 0.46;
+        const halfWidth =
+          this.laneWidth / 2 +
+          RoadSegmentSurface.SURFACE_SEAM_OVERLAP / 2;
         const leftEdge = laneCenter - halfWidth;
         const rightEdge = laneCenter + halfWidth;
 
@@ -629,10 +647,9 @@ export class RoadSegmentSurface {
   private getCurveRowAngle(rowIndex: number): number {
     if (!this.curve) return 0;
     const directionSign = this.curve.direction === "left" ? 1 : -1;
-    const clampedRow = THREE.MathUtils.clamp(rowIndex, 0, this.rowCount);
     return (
       directionSign *
-      (clampedRow / this.rowCount) *
+      (rowIndex / this.rowCount) *
       this.curve.totalAngleRad
     );
   }

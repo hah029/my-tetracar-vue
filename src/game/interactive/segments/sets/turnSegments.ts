@@ -57,7 +57,7 @@ export const TURN_SEGMENTS: Segment[] = [
     difficulty: 2,
     curve: {
       direction: "left",
-      totalAngleDeg: 30,
+      totalAngleDeg: 45,
       rowStart: TURN_CURVE_START,
       rowEnd: TURN_CURVE_END,
     },
@@ -71,7 +71,7 @@ export const TURN_SEGMENTS: Segment[] = [
     difficulty: 2,
     curve: {
       direction: "right",
-      totalAngleDeg: 30,
+      totalAngleDeg: 45,
       rowStart: TURN_CURVE_START,
       rowEnd: TURN_CURVE_END,
     },
