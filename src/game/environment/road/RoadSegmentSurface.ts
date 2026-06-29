@@ -1,6 +1,10 @@
 import * as THREE from "three";
 import type { RoadConfig } from "./types";
 import { loadTexture } from "@/helpers/loaders";
+import { atlas } from "@/assets/textures/TextureAtlas";
+import { ATLAS_SPRITES } from "@/assets/textures/atlasSprites";
+import { applyCubeSpriteUV } from "@/helpers/applyAtlasUV";
+import { useCommonStore } from "@/store/commonStore";
 
 export type RoadSegmentSurfaceCoverage = {
   lanes: number[];
@@ -122,6 +126,10 @@ export class RoadSegmentSurface {
     provider: (() => RoadSegmentSurfaceInterval[]) | null,
   ): void {
     this.loopOcclusionProvider = provider;
+  }
+
+  public isCurved(): boolean {
+    return this.curve !== null;
   }
 
   private updateLoopRows(deltaTime: number, speed: number): void {
@@ -334,7 +342,77 @@ export class RoadSegmentSurface {
       }
     }
 
+    this.addCurvedLaneLines(target);
     this.addCurvedSideObjects(target);
+  }
+
+  private addCurvedLaneLines(target: THREE.Group): void {
+    if (!this.curve || this.lanePositions.length < 2) return;
+
+    const color = this.config.laneColor ?? this.config.emissive ?? 0xffffff;
+    const material = new THREE.MeshStandardMaterial({
+      color,
+      emissive: color,
+      emissiveIntensity: 1,
+    });
+    const lineWidth = Math.max(0.08, this.laneWidth * 0.025);
+
+    for (let rowIndex = 0; rowIndex < this.rowCount; rowIndex++) {
+      const frontAngle = this.getCurveRowAngle(rowIndex);
+      const backAngle = this.getCurveRowAngle(rowIndex + 1);
+
+      for (let lane = 0; lane < this.lanePositions.length - 1; lane++) {
+        const leftLane = this.lanePositions[lane];
+        const rightLane = this.lanePositions[lane + 1];
+        if (leftLane === undefined || rightLane === undefined) continue;
+
+        const dividerX = (leftLane + rightLane) / 2;
+        this.addCurvedLineMesh(
+          dividerX,
+          lineWidth,
+          frontAngle,
+          backAngle,
+          material,
+          target,
+        );
+      }
+    }
+
+    material.dispose();
+  }
+
+  private addCurvedLineMesh(
+    centerX: number,
+    width: number,
+    frontAngle: number,
+    backAngle: number,
+    material: THREE.Material,
+    target: THREE.Group,
+  ): void {
+    const leftFront = this.getCurvePoint(centerX - width / 2, frontAngle);
+    const rightFront = this.getCurvePoint(centerX + width / 2, frontAngle);
+    const leftBack = this.getCurvePoint(centerX - width / 2, backAngle);
+    const rightBack = this.getCurvePoint(centerX + width / 2, backAngle);
+    const geometry = new THREE.BufferGeometry();
+    geometry.setAttribute(
+      "position",
+      new THREE.BufferAttribute(
+        new Float32Array([
+          leftFront.x, 0.015, leftFront.y,
+          rightFront.x, 0.015, rightFront.y,
+          leftBack.x, 0.015, leftBack.y,
+          rightBack.x, 0.015, rightBack.y,
+        ]),
+        3,
+      ),
+    );
+    geometry.setIndex([0, 1, 2, 1, 3, 2]);
+    geometry.computeVertexNormals();
+
+    const mesh = new THREE.Mesh(geometry, material.clone());
+    mesh.receiveShadow = true;
+    target.add(mesh);
+    this.meshes.push(mesh);
   }
 
   /**
@@ -358,16 +436,16 @@ export class RoadSegmentSurface {
     const positions = new Float32Array([
       leftFront.x,
       0,
-      leftFront.z,
+      leftFront.y,
       rightFront.x,
       0,
-      rightFront.z,
+      rightFront.y,
       leftBack.x,
       0,
-      leftBack.z,
+      leftBack.y,
       rightBack.x,
       0,
-      rightBack.z,
+      rightBack.y,
     ]);
 
     const geometry = new THREE.BufferGeometry();
@@ -398,16 +476,16 @@ export class RoadSegmentSurface {
       leftX: leftEdge,
       rightX: rightEdge,
       frontZ: Math.max(
-        leftFront.z,
-        rightFront.z,
-        leftBack.z,
-        rightBack.z,
+        leftFront.y,
+        rightFront.y,
+        leftBack.y,
+        rightBack.y,
       ),
       backZ: Math.min(
-        leftFront.z,
-        rightFront.z,
-        leftBack.z,
-        rightBack.z,
+        leftFront.y,
+        rightFront.y,
+        leftBack.y,
+        rightBack.y,
       ),
     });
   }
@@ -463,7 +541,15 @@ export class RoadSegmentSurface {
 
     const sideConfig = this.config.sideObjects;
     const geometry = new THREE.BoxGeometry(1, 1, 1);
+    const sprite = atlas.getSprite(ATLAS_SPRITES.cube.base);
+    if (sprite) applyCubeSpriteUV(geometry, sprite);
+    const atlasTexture = atlas.getAtlasTexture();
+    if (atlasTexture) {
+      atlasTexture.flipY = false;
+      atlasTexture.colorSpace = THREE.SRGBColorSpace;
+    }
     const material = new THREE.MeshStandardMaterial({
+      map: atlasTexture ?? null,
       color: sideConfig.color,
       emissive: sideConfig.emissive ?? 0x000000,
       emissiveIntensity: sideConfig.emissiveIntensity ?? 0,
@@ -474,13 +560,22 @@ export class RoadSegmentSurface {
     const rightLane = this.lanePositions[this.lanePositions.length - 1] ?? 0;
     const leftX = leftLane - this.laneWidth * 0.5 - sideConfig.offset;
     const rightX = rightLane + this.laneWidth * 0.5 + sideConfig.offset;
-    const rowStep = Math.max(
-      1,
-      Math.round(sideConfig.spacing / this.rowLength),
-    );
+    const segmentLength = this.rowCount * this.rowLength;
+    const spacing =
+      sideConfig.spacing * useCommonStore().config.xzScaling;
+    const objectCount = Math.ceil(segmentLength / spacing);
 
-    for (let rowIndex = 0; rowIndex < this.rowCount; rowIndex += rowStep) {
-      const angle = this.getCurveRowAngle(rowIndex + 0.5);
+    for (let index = 0; index < objectCount; index++) {
+      const distance = Math.min(
+        segmentLength,
+        index * spacing + spacing / 2,
+      );
+      const rowPosition = distance / this.rowLength;
+      const rowIndex = Math.min(
+        this.rowCount - 1,
+        Math.floor(rowPosition),
+      );
+      const angle = this.getCurveRowAngle(rowPosition);
       const leftPoint = this.getCurvePoint(leftX, angle);
       const rightPoint = this.getCurvePoint(rightX, angle);
       this.addCurveSideObject(
@@ -575,6 +670,10 @@ export class RoadSegmentSurface {
       opacity: this.config.opacity ?? 1,
       roughness: 0.62,
       metalness: 0.08,
+      side: THREE.DoubleSide,
+      polygonOffset: true,
+      polygonOffsetFactor: -1,
+      polygonOffsetUnits: -1,
     });
   }
 

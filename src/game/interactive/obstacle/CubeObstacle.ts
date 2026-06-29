@@ -17,6 +17,7 @@ import {
 import { BaseItem } from "../items/BaseItem";
 import { InteractiveItemsManager } from "../InteractiveItemsManager";
 import { useCommonStore } from "@/store/commonStore";
+import type { CurvedItemState } from "../items/BaseItem";
 
 type DropType =
   | "golden_coin"
@@ -267,10 +268,34 @@ export class CubeObstacle extends BaseObstacle {
       return false;
     }
 
-    const dz = dt * speed;
-    this.position.z += dz;
+    const curvedState = this.userData.curvedItemState as
+      | CurvedItemState
+      | undefined;
+    if (curvedState) {
+      curvedState.angleRad -= (dt * speed) / curvedState.radius;
+      const angleSign = curvedState.direction === "left" ? 1 : -1;
+      const angle = angleSign * curvedState.angleRad;
+      const cos = Math.cos(angle);
+      const sin = Math.sin(angle);
+      this.position.x =
+        curvedState.pivotX +
+        curvedState.localPx * cos +
+        curvedState.localPz * sin;
+      this.position.z =
+        curvedState.rotateEndZ +
+        curvedState.localPz * cos -
+        curvedState.localPx * sin;
+      this.rotation.y = angle + curvedState.localAngleRad;
+    } else {
+      this.position.z += dt * speed;
+    }
     this.position.y = this.getSurfaceY(this.getLane(), this.position.z);
     return this.position.z > useCommonStore().config.itemsRemovingZpos;
+  }
+
+  public setCurvedItemState(state: CurvedItemState | undefined): void {
+    if (!state) return;
+    this.userData.curvedItemState = state;
   }
 
   protected getSurfaceY(laneIndex: number, z: number): number {

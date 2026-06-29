@@ -134,8 +134,13 @@ export class SideObjectsInstanced {
     z: number,
     intervals: SideObjectOcclusionInterval[],
   ): boolean {
+    const padding = Math.max(
+      this.spacing * 0.75,
+      this.config.scale[2] * 0.5,
+    );
     return intervals.some(
-      (interval) => z >= interval.back && z <= interval.front,
+      (interval) =>
+        z >= interval.back - padding && z <= interval.front + padding,
     );
   }
 

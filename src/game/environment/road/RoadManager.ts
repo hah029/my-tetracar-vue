@@ -381,6 +381,10 @@ export class RoadManager {
     const visibleFrontZ =
       useCommonStore().config.itemsRemovingZpos + IDLE_SURFACE_DISABLE_PADDING;
 
+    if (this.segmentSurfaces.some((surface) => surface.isCurved())) {
+      return true;
+    }
+
     return this.segmentSurfaces.some(
       (surface) => surface.getFrontEdgeZ() >= visibleFrontZ,
     );

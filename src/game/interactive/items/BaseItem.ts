@@ -24,6 +24,8 @@ export type CurvedItemState = {
   pivotX: number;
   localPx: number;
   localPz: number;
+  /** Угол касательной в локальной точке дуги. */
+  localAngleRad: number;
   totalAngleRad: number;
   direction: "left" | "right";
   rotateStartZ: number;
@@ -139,7 +141,7 @@ export class BaseItem extends THREE.Group {
     this.position.x = state.pivotX + state.localPx * cos + state.localPz * sin;
     this.position.z =
       state.rotateEndZ + state.localPz * cos - state.localPx * sin;
-    this.rotation.y = angle;
+    this.rotation.y = angle + state.localAngleRad;
   }
 
   private updateSurfaceHeight(): void {

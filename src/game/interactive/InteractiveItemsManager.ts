@@ -246,6 +246,7 @@ export class InteractiveItemsManager {
             pivotX: curve.pivotX,
             localPx,
             localPz,
+            localAngleRad: rowAngle,
             totalAngleRad: curve.totalAngleRad,
             direction: curve.direction,
             rotateStartZ: curve.rotateStartZ,
@@ -272,16 +273,24 @@ export class InteractiveItemsManager {
 
         switch (value) {
           case LanePattern.Obstacle:
-            this.obstacleManager.spawnStaticObstacle(lane, z, 2);
+            this.obstacleManager
+              .spawnStaticObstacle(lane, itemSpawnZ ?? z, 2)
+              ?.setCurvedItemState(curvedState);
             break;
           case LanePattern.Obstacle1:
-            this.obstacleManager.spawnStaticObstacle(lane, z, 0);
+            this.obstacleManager
+              .spawnStaticObstacle(lane, itemSpawnZ ?? z, 0)
+              ?.setCurvedItemState(curvedState);
             break;
           case LanePattern.Obstacle2:
-            this.obstacleManager.spawnStaticObstacle(lane, z, 1);
+            this.obstacleManager
+              .spawnStaticObstacle(lane, itemSpawnZ ?? z, 1)
+              ?.setCurvedItemState(curvedState);
             break;
           case LanePattern.Obstacle3:
-            this.obstacleManager.spawnStaticObstacle(lane, z, 2);
+            this.obstacleManager
+              .spawnStaticObstacle(lane, itemSpawnZ ?? z, 2)
+              ?.setCurvedItemState(curvedState);
             break;
           case LanePattern.Jump:
             this.spawnJump(lane, dt, speed, z);

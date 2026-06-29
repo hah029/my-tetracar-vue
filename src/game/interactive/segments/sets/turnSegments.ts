@@ -33,6 +33,17 @@ function makeTurnPattern(direction: "left" | "right"): L[][] {
       row[CENTER_LANE] = L.Booster;
     }
 
+    // Временный отладочный набор для проверки синхронизации с дугой.
+    if (rowIndex === 30) {
+      row[direction === "left" ? 3 : 1] = L.Obstacle1;
+    }
+    if (rowIndex === 60) {
+      row[direction === "left" ? 1 : 3] = L.Nitro;
+    }
+    if (rowIndex === 90) {
+      row[CENTER_LANE] = L.Obstacle3;
+    }
+
     return row;
   });
 }
