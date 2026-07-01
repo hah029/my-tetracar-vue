@@ -31,6 +31,8 @@
 
 <style lang='scss' scoped>
     @use "@/styles/menu.scss" as *;
+    @use "@/styles/typography" as *;
+    @use "@/styles/colors" as *;
     
     .rights_root {
         position: absolute;
@@ -40,11 +42,11 @@
         flex-direction: column;
         align-items: flex-start;
         justify-content: flex-end;
-        color: white;
         opacity: 0.65;
-        font-size: 0.75rem;
-        font-family: 'jost-light';
-        letter-spacing: 0.05rem;
+        
+        @include text-copyright;
+        color: $color_white;
+
         z-index: z("rights_and_logo");
     }
 

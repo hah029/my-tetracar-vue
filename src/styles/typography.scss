@@ -1,0 +1,146 @@
+// шрифты
+$font-primary: 'vla_shu', sans-serif;
+$font-secondary: 'jost-regular', sans-serif;
+$font-secondary-light: 'jost-light', sans-serif;
+
+// брейкпоинты
+$breakpoint-mobile-small: 480px;
+$breakpoint-mobile: 768px;
+$breakpoint-tablet: 1024px;
+$breakpoint-laptop: 1440px;
+$breakpoint-desktop: 1920px;
+
+// миксины:
+
+// 1) главная кнопка входа в Splash Screen 
+    @mixin text-splash-button {
+        font-family: $font-primary;
+        font-size: 5.13vh;  // позже расчитать
+        line-height: 1.1;
+
+        @media (min-width: $breakpoint-mobile) and (orientation: landscape) { font-size: 5.13vh; }
+        // @media (min-width: $breakpoint-tablet) and (orientation: landscape) { font-size: 2.56vw; }  // позже расчитать
+        // @media (min-width: $breakpoint-laptop) and (orientation: landscape) { font-size: 2.22vw; }  // позже расчитать
+        @media (min-width: $breakpoint-desktop) and (orientation: landscape) { font-size: 2.188rem; }
+    }
+
+// 2) кнопки первого уровня (в главном меню - Main Menu)
+    @mixin text-main-menu-button {
+        font-family: $font-primary;
+        font-size: 4.53vh;
+        line-height: 1.05;
+
+        @media (min-width: $breakpoint-mobile) and (orientation: landscape) { font-size: 5.56vh; }
+        @media (min-width: $breakpoint-tablet) and (orientation: landscape) { font-size: 2.56vw; }
+        @media (min-width: $breakpoint-laptop) and (orientation: landscape) { font-size: 2.22vw; }
+        @media (min-width: $breakpoint-desktop) and (orientation: landscape) { font-size: 2.188rem; }
+    }
+
+/* 3) кнопки второго уровня в меню (Secondary Menu Buttons)
+    (Desktop 30px → Laptop 28px → Tablet 45px → Mobile 65px → Small 55px) */
+    @mixin text-secondary-menu-button {
+        font-size: clamp(28px, 2vw, 30px);  // Desktop
+        font-family: $font-primary;
+        line-height: 1.05;
+        
+        @media (max-width: $breakpoint-laptop) {
+            font-size: clamp(26px, 1.8vw, 28px);  // Laptop
+        }
+        
+        @media (max-width: $breakpoint-tablet) {
+            font-size: clamp(38px, 5vw, 48px);  // Tablet
+        }
+        
+        @media (max-width: $breakpoint-mobile) {
+            font-size: clamp(55px, 13vw, 65px);  // Mobile
+        }
+        
+        @media (max-width: $breakpoint-mobile-small) {
+            font-size: clamp(45px, 11vw, 55px);  // Mobile Small
+        }
+    }
+
+/* 4) кнопки третьего уровня в меню (Third Menu Buttons)
+    (Desktop 22px → Laptop 20px → Tablet 35px → Mobile 50px → Small 42px) */
+    @mixin text-third-menu-button {
+        font-size: clamp(20px, 1.5vw, 22px);  // Desktop
+        font-family: $font-primary;
+        line-height: 1.05;
+        
+        @media (max-width: $breakpoint-laptop) {
+            font-size: clamp(18px, 1.3vw, 20px);  // Laptop
+        }
+        
+        @media (max-width: $breakpoint-tablet) {
+            font-size: clamp(30px, 4vw, 38px);  // Tablet
+        }
+        
+        @media (max-width: $breakpoint-mobile) {
+            font-size: clamp(42px, 10vw, 50px);  // Mobile
+        }
+        
+        @media (max-width: $breakpoint-mobile-small) {
+            font-size: clamp(35px, 9vw, 42px);  // Mobile Small
+        }
+    }
+
+/* 5) заголовки во всех меню (Menu Titles)
+    (Desktop 40px → Laptop 36px → Tablet 55px → Mobile 80px → Small 70px) */
+    @mixin text-menu-title {
+        font-size: clamp(36px, 3vw, 40px);  // Desktop
+        font-family: $font-primary;
+        line-height: 1.1;
+        
+        @media (max-width: $breakpoint-laptop) {
+            font-size: clamp(34px, 2.8vw, 36px);  // Laptop
+        }
+        
+        @media (max-width: $breakpoint-tablet) {
+            font-size: clamp(48px, 6vw, 60px);  // Tablet
+        }
+        
+        @media (max-width: $breakpoint-mobile) {
+            font-size: clamp(70px, 16vw, 80px);  // Mobile
+        }
+        
+        @media (max-width: $breakpoint-mobile-small) {
+            font-size: clamp(60px, 14vw, 70px);  // Mobile Small
+        }
+    }
+
+// 6) Copyrights
+    @mixin text-copyright {
+        font-family: $font-secondary-light;
+        font-size: 1.88vh;  // позже расчитать
+        line-height: 1.4;   // позже расчитать (?)
+        letter-spacing: 0.05rem;
+        
+        @media (min-width: $breakpoint-mobile) and (orientation: landscape) { font-size: 1.88vh; }
+        // @media (min-width: $breakpoint-tablet) and (orientation: landscape) { font-size: 2.56vw; }  // позже расчитать
+        // @media (min-width: $breakpoint-laptop) and (orientation: landscape) { font-size: 2.22vw; }  // позже расчитать
+        @media (min-width: $breakpoint-desktop) and (orientation: landscape) { font-size: 0.75rem; }
+    }
+
+/* 7) TeamLogo
+    (Desktop 12px → Laptop 12px → Tablet 18px → Mobile 23px → Small 19px) */
+    @mixin text-team-logo {
+        font-size: clamp(11px, 0.8vw, 12px);  // Desktop
+        font-family: $font-primary;
+        line-height: 1.3;
+        
+        @media (max-width: $breakpoint-laptop) {
+            font-size: clamp(11px, 0.8vw, 12px);  // Laptop
+        }
+        
+        @media (max-width: $breakpoint-tablet) {
+            font-size: clamp(15px, 2.2vw, 19px);  // Tablet
+        }
+        
+        @media (max-width: $breakpoint-mobile) {
+            font-size: clamp(19px, 4.8vw, 23px);  // Mobile
+        }
+        
+        @media (max-width: $breakpoint-mobile-small) {
+            font-size: clamp(16px, 4.2vw, 19px);  // Mobile Small
+        }
+    }

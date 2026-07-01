@@ -42,204 +42,192 @@
 
 
 <script setup lang="ts">
-import SoundSettings from "./overlays/SoundSettings.vue";
-import GraphicSettings from "./overlays/GraphicSettings.vue";
-import LanguageSettings from "./overlays/LanguageSettings.vue";
-import ControlSettings from "./overlays/ControlSettings.vue";
-import AboutSettings from "./overlays/AboutSettings.vue";
+    import SoundSettings from "./overlays/SoundSettings.vue";
+    import GraphicSettings from "./overlays/GraphicSettings.vue";
+    import LanguageSettings from "./overlays/LanguageSettings.vue";
+    import ControlSettings from "./overlays/ControlSettings.vue";
+    import AboutSettings from "./overlays/AboutSettings.vue";
 
-import { onMounted, computed, ref } from "vue";
-import { createNewText, deleteTextLines } from '@/helpers/functions';
-import { useGameState } from "@/store/gameState";
+    import { onMounted, computed, ref } from "vue";
+    import { createNewText, deleteTextLines } from '@/helpers/functions';
+    import { useGameState } from "@/store/gameState";
 
-enum SettingsView {
-    Main,
-    Sound,
-    Graphics,
-    Language,
-    Controls,
-    About,
-    null,
-}
+    enum SettingsView {
+        Main,
+        Sound,
+        Graphics,
+        Language,
+        Controls,
+        About,
+        null,
+    }
 
-// ===== STORES =====
-const gameState = useGameState();
+    // ===== STORES =====
+    const gameState = useGameState();
 
-// ===== LOCAL STATE =====
-const currentView = ref<SettingsView>(SettingsView.null);
+    // ===== LOCAL STATE =====
+    const currentView = ref<SettingsView>(SettingsView.null);
 
-const isHeaderShown = ref(false);
-const isBackButtonShown = ref(false);
-const isBackButtonClicked = ref(false);
+    const isHeaderShown = ref(false);
+    const isBackButtonShown = ref(false);
+    const isBackButtonClicked = ref(false);
 
-// ===== TEXT =====
-const foo_1 = createNewText();
-const foo_2 = deleteTextLines();
+    // ===== TEXT =====
+    const foo_1 = createNewText();
+    const foo_2 = deleteTextLines();
 
-// ===== UI STATE (без таймаутов) =====
-const isInSubMenu = computed(() => currentView.value !== SettingsView.Main && currentView.value !== SettingsView.null);
+    // ===== UI STATE (без таймаутов) =====
+    const isInSubMenu = computed(() => currentView.value !== SettingsView.Main && currentView.value !== SettingsView.null);
 
-// ===== MENU =====
-const menuButtons = computed(() => [
-    {
-        id: 1,
-        text: foo_1.makeText("settings.menuList.graphics"),
-        action: () => currentView.value = SettingsView.Graphics,
-    },
-    {
-        id: 2,
-        text: foo_1.makeText("settings.menuList.sounds"),
-        action: () => currentView.value = SettingsView.Sound,
-    },
-    {
-        id: 3,
-        text: foo_1.makeText("settings.menuList.lang"),
-        action: () => currentView.value = SettingsView.Language,
-    },
-    {
-        id: 4,
-        text: foo_1.makeText("settings.menuList.controls"),
-        action: () => currentView.value = SettingsView.Controls,
-    },
-    {
-        id: 5,
-        text: foo_1.makeText("settings.menuList.about"),
-        action: () => currentView.value = SettingsView.About,
-    },
-]);
+    // ===== MENU =====
+    const menuButtons = computed(() => [
+        {
+            id: 1,
+            text: foo_1.makeText("settings.menuList.graphics"),
+            action: () => currentView.value = SettingsView.Graphics,
+        },
+        {
+            id: 2,
+            text: foo_1.makeText("settings.menuList.sounds"),
+            action: () => currentView.value = SettingsView.Sound,
+        },
+        {
+            id: 3,
+            text: foo_1.makeText("settings.menuList.lang"),
+            action: () => currentView.value = SettingsView.Language,
+        },
+        {
+            id: 4,
+            text: foo_1.makeText("settings.menuList.controls"),
+            action: () => currentView.value = SettingsView.Controls,
+        },
+        {
+            id: 5,
+            text: foo_1.makeText("settings.menuList.about"),
+            action: () => currentView.value = SettingsView.About,
+        },
+    ]);
 
-// ===== TITLE =====
-const dynamicTitleName = computed(() => {
-    if (isInSubMenu.value) {
-        const map = {
-            [SettingsView.Graphics]: menuButtons.value[0]!.text,
-            [SettingsView.Sound]: menuButtons.value[1]!.text,
-            [SettingsView.Language]: menuButtons.value[2]!.text,
-            [SettingsView.Controls]: menuButtons.value[3]!.text,
-            [SettingsView.About]: menuButtons.value[4]!.text,
+    // ===== TITLE =====
+    const dynamicTitleName = computed(() => {
+        if (isInSubMenu.value) {
+            const map = {
+                [SettingsView.Graphics]: menuButtons.value[0]!.text,
+                [SettingsView.Sound]: menuButtons.value[1]!.text,
+                [SettingsView.Language]: menuButtons.value[2]!.text,
+                [SettingsView.Controls]: menuButtons.value[3]!.text,
+                [SettingsView.About]: menuButtons.value[4]!.text,
+            };
+            return foo_2.correctText(map[currentView.value]);
+        } else {
+            return foo_1.makeText("settings.title", "empty");
         };
-        return foo_2.correctText(map[currentView.value]);
-    } else {
-        return foo_1.makeText("settings.title", "empty");
+    });
+
+    // ===== BACK =====
+    function backButtonClick() {
+        if (isInSubMenu.value) {
+            isBackButtonClicked.value = true;
+            setTimeout(() => {
+                isBackButtonClicked.value = false;
+                currentView.value = SettingsView.Main;
+            }, 500);
+
+        } else {
+            if (gameState.currentState == 'menu') {
+                isHeaderShown.value = false;
+            };
+            setTimeout(() => {
+                currentView.value = SettingsView.null;
+            }, 100);
+            setTimeout(() => {
+                isBackButtonShown.value = false;
+            }, 400);
+
+            setTimeout(() => {
+                gameState.closeOverlay();
+            }, 500);
+        };
     };
-});
 
-// ===== BACK =====
-function backButtonClick() {
-    if (isInSubMenu.value) {
-        isBackButtonClicked.value = true;
-        setTimeout(() => {
-            isBackButtonClicked.value = false;
-            currentView.value = SettingsView.Main;
-        }, 500);
-
-    } else {
+    function setContainerPos() {
         if (gameState.currentState == 'menu') {
-            isHeaderShown.value = false;
+            return 'container_pos_main_menu';
+        } else if (gameState.currentState == 'pause') {
+            return 'container_pos_pause';
         };
-        setTimeout(() => {
-            currentView.value = SettingsView.null;
-        }, 100);
-        setTimeout(() => {
-            isBackButtonShown.value = false;
-        }, 400);
+    };
+    function setHeaderSize() {
+        if (gameState.currentState == 'pause') {
+            return 'header_pause';
+        };
+    };
 
+    onMounted(() => {
+        isHeaderShown.value = true;
         setTimeout(() => {
-            gameState.closeOverlay();
+            currentView.value = SettingsView.Main;
+        }, 200);
+        setTimeout(() => {
+            isBackButtonShown.value = true;
         }, 500);
-    };
-};
-
-function setContainerPos() {
-    if (gameState.currentState == 'menu') {
-        return 'container_pos_main_menu';
-    } else if (gameState.currentState == 'pause') {
-        return 'container_pos_pause';
-    };
-};
-function setHeaderSize() {
-    if (gameState.currentState == 'pause') {
-        return 'header_pause';
-    };
-};
-
-onMounted(() => {
-    isHeaderShown.value = true;
-    setTimeout(() => {
-        currentView.value = SettingsView.Main;
-    }, 200);
-    setTimeout(() => {
-        isBackButtonShown.value = true;
-    }, 500);
-});
+    });
 </script>
 
 
 <style scoped lang="scss">
-@use "@/styles/menu.scss";
-@use "@/styles/animations.scss";
+    @use "@/styles/menu.scss";
+    @use "@/styles/animations.scss";
+    @use "@/styles/typography" as *;
+    @use "@/styles/colors" as *;
 
-.container {
-    position: fixed !important;
-    justify-content: center !important;
-}
-
-.container_correction {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    width: 100%;
-    height: 100%;
-    background-color: rgba(0, 0, 0, 0.72);
-    backdrop-filter: blur(2px);
-
-    gap: clamp(1.2rem, 3vmin, 2.5rem);
-
-}
-
-.header_pause {
-    font-size: clamp(2rem, 4vmin, 3.125rem);
-}
-
-.settings_container {
-    position: relative;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    box-sizing: border-box;
-    gap: 1rem;
-}
-
-.group_correction {
-    position: static !important;
-    min-height: 10.25rem;
-    display: flex;
-    flex-direction: column;
-    justify-content: flex-start;
-    align-items: center;
-
-    &>*+* {
-        margin-top: 0.938rem; // 15px - row-gap (между кнопками)
+    .container_correction {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: flex-end !important;
+        bottom: 2.6875rem !important;
+        gap: 5.3125rem;
     }
-}
 
-.btn_correction {
-    font-size: clamp(1.25rem, 2.4vmin, 1.875rem);
-}
+    .header_pause {
+        font-size: clamp(2rem, 4vmin, 3.125rem);
+    }
 
-/* we will explain what these classes do next! */
-// .v-enter-active {
-//     transition: opacity 0.5s ease;
-// }
+    .settings_container {
+        position: relative;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        box-sizing: border-box;
+        gap: 1rem;
+    }
 
-// .v-enter-from,
-// .v-leave-to {
-//     opacity: 1;
-// }
+    .group_correction {
+        position: static !important;
+        min-height: 10.25rem;
+        display: flex;
+        flex-direction: column;
+        justify-content: flex-start;
+        align-items: center;
+
+        &>*+* {
+            margin-top: 0.938rem; // 15px - row-gap (между кнопками)
+        }
+    }
+
+    .btn_correction {
+        @include text-secondary-menu-button;
+        color: $color-yellow-super-light;
+    }
+
+    /* we will explain what these classes do next! */
+    // .v-enter-active {
+    //     transition: opacity 0.5s ease;
+    // }
+
+    // .v-enter-from,
+    // .v-leave-to {
+    //     opacity: 1;
+    // }
 </style>

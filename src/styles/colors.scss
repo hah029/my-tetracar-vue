@@ -1,0 +1,23 @@
+// #region - цвета шрифтов
+$color-yellow: #FFD95C;
+$color-yellow-light: #FFF5AD;
+$color-yellow-super-light: #FDFFE3;
+$color-blue: #72B3EE;
+$color-blue-light: #D7FBFF;
+$color-red-light: #FFC3C5;
+$color-green-light: #BFFF8E;
+$color-white: white;
+$color-gray: rgba(255, 255, 255, 0.5);
+$color-ultramarine: #CED2FF;
+
+.color_yellow { color: $color-yellow; }
+.color_yellow_light { color: $color-yellow-light; }
+.color_yellow_super_light { color: $color-yellow-super-light; }
+.color_blue { color: $color-blue; }
+.color_blue_light { color: $color-blue-light; }
+.color_red_light { color: $color-red-light; }
+.color_green_light { color: $color-green-light; }
+.color_white { color: $color-white; }
+.color_gray { color: $color-gray; }
+.color_ultramarine { color: $color-ultramarine; }
+// #endregion

@@ -1,4 +1,6 @@
 @use "sass:map";
+@use "@/styles/typography" as *;
+@use "@/styles/colors" as *;
 
 $z-layers: (
     "canvas": 0,
@@ -18,10 +20,10 @@ $z-layers: (
 .container {
     position: absolute;
     box-sizing: border-box;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
+    // top: 0;
+    // left: 0;
+    // right: 0;
+    // bottom: 0;
     display: flex;
     flex-direction: column;
     justify-content: flex-start;
@@ -54,11 +56,14 @@ $z-layers: (
         width: min(100rem, 90vw);
     }
     .header_text {
-        font-family: 'vla_shu';
-        font-size: clamp(1.8rem, 3.2vmin, 2.7rem);
-        color: #72B3EE;
         margin-bottom: 1rem;
-        line-height: 1;
+        @include text-menu-title;
+        color: $color-blue;
+
+        // font-family: 'vla_shu';
+        // font-size: clamp(1.8rem, 3.2vmin, 2.7rem);
+        // color: #72B3EE;
+        // line-height: 1;
     }
     .header_image {
         width: min(34.625rem, 90vw);
@@ -81,49 +86,13 @@ $z-layers: (
 .menu_btn {
     background: none;
     border: none;
-    // ---
-    font-family: 'vla_shu';
-    font-size: clamp(1.25rem, 2.6vmin, 1.9rem);
-    line-height: 1.05;
-    color: #FDFFE3;
-    filter: drop-shadow(0 0 15px rgba(255, 246, 25, 0.4));
+    filter: drop-shadow(0 0 0.9375rem rgba(255, 246, 25, 0.4));
     cursor: pointer;
     transition: all 0.1s ease-in-out;
 
     &:hover {
-        color: #72B3EE;
-        filter: drop-shadow(0 0 20px rgba(121, 190, 255, 1));
+        color: $color-blue;
+        filter: drop-shadow(0 0 1.25rem rgb(140, 186, 229));
         transition: all 0.1s ease-in-out;
     }
-}
-
-.color_yellow {
-    color: #FFD95C;
-}
-.color_yellow_light {
-    color: #FFF5AD;
-}
-.color_yellow_super_light {
-    color: #FDFFE3;
-}
-.color_blue {
-    color: #72B3EE;
-}
-.color_blue_light {
-    color: #D7FBFF;
-}
-.color_red_light {
-    color: #FFC3C5;
-}
-.color_green_light {
-    color: #BFFF8E;
-}
-.color_white {
-    color: white;
-}
-.color_gray {
-    color: rgba(255, 255, 255, 0.5);
-}
-.color_ultramarine {
-    color: #CED2FF;
 }

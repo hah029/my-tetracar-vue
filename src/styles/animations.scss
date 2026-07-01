@@ -1,3 +1,14 @@
+@use "@/styles/typography" as *;
+
+// CSS-переменные для анимации логотипа
+:root {
+    // mobile (базовые значения)
+    --logo-top-start: 13.68vh;
+    --logo-top-end: 10.26vh;
+    --logo-width-start: 86.26vw;
+    --logo-width-end: 78.44vw;
+}
+
 // имитация появления дороги (сдвиг вверх черного градиентного фона)
 @keyframes fading_keys {
     from { 
@@ -33,16 +44,36 @@
     }
 
     // анимация поднятия текста лого вверх при переходе в главное меню
-    .logo_mooving {
-        animation: logoMovingAnim 0.5s cubic-bezier(0.42, 0, 1, 1) forwards;
+    // mobile
+    @media (max-width: $breakpoint-mobile) and (orientation: landscape) {
+        :root {
+            --logo-top-start: 13.68vh;
+            --logo-top-end: 10.26vh;
+            --logo-width-start: 86.26vw;
+            --logo-width-end: 78.44vw;
+        }
+    }
+    // desktop
+    @media (min-width: $breakpoint-desktop) and (orientation: landscape) {
+        :root {
+            --logo-top-start: 18.47vh;
+            --logo-top-end: 9.783vh;
+            --logo-width-start: 81.5vw;
+            --logo-width-end: 65.625vw;
+        }
     }
     @keyframes logoMovingAnim {
         0% {
-            top: 18.47%;
+            top: var(--logo-top-start);
+            width: var(--logo-width-start);
         }
         100% {
-            top: 13.04%;
+            top: var(--logo-top-end);
+            width: var(--logo-width-end);
         }
+    }
+    .logo_mooving {
+        animation: logoMovingAnim 0.5s cubic-bezier(0.42, 0, 1, 1) forwards;
     }
 
     // анимации возникновения неоновых подсветкок логотипа
@@ -83,7 +114,7 @@
 
 // #region - блок анимаций кнопок Главного меню
     .buttons_group_showing-enter-active {
-        animation: slideIn 0.5s cubic-bezier(0.25, 0.1, 0.25, 1) backwards;
+        animation: slideIn 0.7s cubic-bezier(0.25, 0.1, 0.25, 1) backwards;
     }
 
     @keyframes slideIn {
@@ -99,7 +130,7 @@
 
     // Для исчезновения
     .buttons_group_showing-leave-active {
-        animation: slideOut 0.5s cubic-bezier(0.25, 0.1, 0.25, 1) forwards;
+        animation: slideOut 0.7s cubic-bezier(0.25, 0.1, 0.25, 1) forwards;
     }
 
     @keyframes slideOut {

@@ -316,8 +316,8 @@ onMounted(() => {
 
 .container {
     justify-content: center !important;
-    background-color: rgba(0, 0, 0, 0.72);
-    backdrop-filter: blur(2px);
+    // background-color: rgba(0, 0, 0, 0.72);
+    // backdrop-filter: blur(2px);
 }
 
 @media (max-width: 520px) {
