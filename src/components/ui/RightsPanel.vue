@@ -19,7 +19,7 @@
     const gameState = useGameState();
     const foo = createNewText();
     const isRightPanelShown = computed(() => {
-        return gameState.currentState === GameStates.Menu && gameState.activeOverlay === null;
+        return gameState.currentState === GameStates.Menu;
     });
 
     // получаем рандомную фразу "Все права защищены" в нужном переводе

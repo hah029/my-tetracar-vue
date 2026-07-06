@@ -36,10 +36,16 @@
 
     // анимация появления текста логотипа игры из темноты при старте игры
     .game_logo_showing-enter-active {
-        transition: all ease-in-out 2.5s;
-        // transition-delay: 1s;
+        transition: all ease-in-out 2s;
+        transition-delay: 0.2s;
     }
     .game_logo_showing-enter-from {
+        opacity: 0;
+    }
+    .game_logo_showing-leave-active {
+        transition: all ease-in-out 1s;
+    }
+    .game_logo_showing-leave-to {
         opacity: 0;
     }
 
@@ -114,7 +120,7 @@
 
 // #region - блок анимаций кнопок Главного меню
     .buttons_group_showing-enter-active {
-        animation: slideIn 0.7s cubic-bezier(0.25, 0.1, 0.25, 1) backwards;
+        animation: slideIn 0.5s cubic-bezier(0.25, 0.1, 0.25, 1) backwards;
     }
 
     @keyframes slideIn {
@@ -130,7 +136,7 @@
 
     // Для исчезновения
     .buttons_group_showing-leave-active {
-        animation: slideOut 0.7s cubic-bezier(0.25, 0.1, 0.25, 1) forwards;
+        animation: slideOut 0.5s cubic-bezier(0.25, 0.1, 0.25, 1) forwards;
     }
 
     @keyframes slideOut {

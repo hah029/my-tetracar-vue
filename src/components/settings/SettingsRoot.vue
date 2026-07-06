@@ -157,6 +157,7 @@
             return 'container_pos_pause';
         };
     };
+
     function setHeaderSize() {
         if (gameState.currentState == 'pause') {
             return 'header_pause';
@@ -170,7 +171,7 @@
         }, 200);
         setTimeout(() => {
             isBackButtonShown.value = true;
-        }, 500);
+        }, 550);
     });
 </script>
 
@@ -182,37 +183,88 @@
     @use "@/styles/colors" as *;
 
     .container_correction {
+        top: 7.265vh;
+        justify-content: flex-start !important; // позже расчитать (для мини-мобил)
+        gap: 10.427vh;                          // позже расчитать (для мини-мобил)
+
+        @media (min-width: $breakpoint-mobile) and (orientation: landscape) { 
+            top: 7.265vh;
+            justify-content: flex-start !important;
+            gap: 10.427vh;
+        }
+        // позже расчитать:
+        // @media (min-width: $breakpoint-tablet) and (orientation: landscape) { 
+        //     bottom: 12.8125rem;
+        //     gap: 5.56vh; 
+        //     justify-content: center !important;
+        // }  
+        // @media (min-width: $breakpoint-laptop) and (orientation: landscape) { 
+        //     bottom: 12.8125rem;
+        //     gap: 5.56vh; 
+        //     justify-content: center !important;
+        // }
+        @media (min-width: $breakpoint-desktop) and (orientation: landscape) {
+            top: 22.813rem;
+            gap: 5.3125rem;
+        }
+    }
+
+    .settings_container {
         display: flex;
         flex-direction: column;
         align-items: center;
-        justify-content: flex-end !important;
-        bottom: 2.6875rem !important;
-        gap: 5.3125rem;
+        justify-content: flex-start;
+
+        gap: 5.128vh;   // позже расчитать (для мини-мобил)
+
+        @media (min-width: $breakpoint-mobile) and (orientation: landscape) { 
+            gap: 5.128vh;
+        }
+        // позже расчитать:
+        // @media (min-width: $breakpoint-tablet) and (orientation: landscape) { 
+        //     bottom: 12.8125rem;
+        //     gap: 5.56vh; 
+        //     justify-content: center !important;
+        // }  
+        // @media (min-width: $breakpoint-laptop) and (orientation: landscape) { 
+        //     bottom: 12.8125rem;
+        //     gap: 5.56vh; 
+        //     justify-content: center !important;
+        // }
+        @media (min-width: $breakpoint-desktop) and (orientation: landscape) {
+            gap: 2.8125rem;
+        }
     }
 
     .header_pause {
         font-size: clamp(2rem, 4vmin, 3.125rem);
     }
 
-    .settings_container {
-        position: relative;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        box-sizing: border-box;
-        gap: 1rem;
-    }
-
     .group_correction {
         position: static !important;
-        min-height: 10.25rem;
         display: flex;
         flex-direction: column;
         justify-content: flex-start;
         align-items: center;
 
-        &>*+* {
-            margin-top: 0.938rem; // 15px - row-gap (между кнопками)
+        gap: 3.846vh;   // позже расчитать (для мини-мобил)
+
+        @media (min-width: $breakpoint-mobile) and (orientation: landscape) { 
+            gap: 3.846vh;
+        }
+        // позже расчитать:
+        // @media (min-width: $breakpoint-tablet) and (orientation: landscape) { 
+        //     bottom: 12.8125rem;
+        //     gap: 5.56vh; 
+        //     justify-content: center !important;
+        // }  
+        // @media (min-width: $breakpoint-laptop) and (orientation: landscape) { 
+        //     bottom: 12.8125rem;
+        //     gap: 5.56vh; 
+        //     justify-content: center !important;
+        // }
+        @media (min-width: $breakpoint-desktop) and (orientation: landscape) {
+            gap: 1.125rem;
         }
     }
 
@@ -220,14 +272,4 @@
         @include text-secondary-menu-button;
         color: $color-yellow-super-light;
     }
-
-    /* we will explain what these classes do next! */
-    // .v-enter-active {
-    //     transition: opacity 0.5s ease;
-    // }
-
-    // .v-enter-from,
-    // .v-leave-to {
-    //     opacity: 1;
-    // }
 </style>

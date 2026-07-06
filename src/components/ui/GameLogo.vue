@@ -92,8 +92,15 @@
 
                 case GameStates.Menu:
                     isLettersMovedToTop.value = true;
-                    isLettersShown.value = true;
-                    isLinesShown.value = true;
+                    
+                    // скрываем логотип игры при нужных сценариях
+                    if ((isMobile.value || isTablet.value) && gameState.activeOverlay !== null) {
+                        isLettersShown.value = false;
+                        isLinesShown.value = false;
+                    } else {
+                        isLettersShown.value = true;
+                        isLinesShown.value = true;
+                    };
                     break;
 
                 case GameStates.LevelSelect:

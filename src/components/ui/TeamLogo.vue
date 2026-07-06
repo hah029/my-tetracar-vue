@@ -22,7 +22,7 @@
 
     const gameState = useGameState();
     const isRightPanelShown = computed(() => {
-        return gameState.currentState === GameStates.Menu && gameState.activeOverlay === null;
+        return gameState.currentState === GameStates.Menu;
     });
 
     // разделяем название команды на два слова
