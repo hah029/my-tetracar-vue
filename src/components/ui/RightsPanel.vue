@@ -36,8 +36,30 @@
     
     .rights_root {
         position: absolute;
-        bottom: 1.875rem;
-        left: 2.5rem;
+
+        // #region - bottom and left
+        bottom: 5.13vh;     // позже расчитать (для мини-мобил)
+        left: 5.98vh;      // позже расчитать (для мини-мобил)
+
+        @media (min-width: $breakpoint-mobile) and (orientation: landscape) { 
+            bottom: 5.13vh;
+            left: 5.98vh;
+        }
+        // позже расчитать:
+        // @media (min-width: $breakpoint-tablet) and (orientation: landscape) { 
+            // bottom: 1.875rem;
+            // left: 2.5rem;
+        // }  
+        // @media (min-width: $breakpoint-laptop) and (orientation: landscape) { 
+            // bottom: 1.875rem;
+            // left: 2.5rem;
+        // }
+        @media (min-width: $breakpoint-desktop) and (orientation: landscape) {
+            bottom: 1.875rem;
+            left: 2.5rem;
+        }
+        // #endregion
+
         display: flex;
         flex-direction: column;
         align-items: flex-start;

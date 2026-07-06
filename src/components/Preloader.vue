@@ -4,7 +4,8 @@
             'button-enter': isEntering,     // класс для анимации появления
             'leaving': isLeaving            // класс для анимации исчезновения
         }" @click="letsPlay" @animationend="onAnimationEnd">
-            {{ foo.makeText("preloader.pressAnyButton") }}
+            {{ splashScreenText }}
+            <!-- {{ foo.makeText("preloader.pressAnyButton") }} -->
             <!-- {{ text("preloader.pressAnyButton") }} -->
         </button>
     </div>
@@ -15,7 +16,7 @@
     import { GameStates } from "@/game/core/GameState";
     import { useGameState } from "@/store/gameState";
     import { createNewText } from '@/helpers/functions';
-    import { onMounted, ref } from "vue";
+    import { onMounted, onUnmounted, ref, computed } from "vue";
 
     // подключаем store
     const gameState = useGameState();
@@ -23,6 +24,24 @@
 
     const isEntering = ref(false);      // флаг для анимации появления
     const isLeaving = ref(false);       // флаг для анимации исчезновения
+
+    // #region - Определение устройства
+    const isDesktop = ref(false);
+    const isTablet = ref(false);
+    const isMobile = ref(true); // по умолчанию true
+
+    function updateDevice() {
+        const width = window.innerWidth;
+        const isLandscape = window.matchMedia("(orientation: landscape)").matches;
+        
+        // Определяем по ширине (Mobile-first)
+        isDesktop.value = width >= 1920 && isLandscape;
+        isTablet.value = width >= 1024 && width < 1920 && isLandscape;
+        isMobile.value = width < 1024 && isLandscape;
+    };
+    
+    let resizeCleanup: (() => void) | null = null;
+    // #endregion
 
     // переходим в главное меню
     function letsPlay() {
@@ -52,12 +71,32 @@
     };
 
     onMounted(() => {
+        updateDevice();
+        const handler = () => updateDevice();
+        window.addEventListener('resize', handler);
+        resizeCleanup = () => window.removeEventListener('resize', handler);
+
         // выводим кнопку
         setTimeout(() => {
             setTimeout(() => {
                 isEntering.value = true;
             }, 50);
         }, 3200);
+    });
+
+    onUnmounted(() => {
+        if (resizeCleanup) resizeCleanup();
+    });
+
+    // выводим текст в зависимости от типа устройства
+    const splashScreenText = computed(() => {
+        if (isMobile.value || isTablet.value) {
+            // Mobile-first: базовые значения для мобильных (или, в данном случае, еще и для планшетов)
+            return foo.makeText("preloader.pressAnyButtonMob");
+        } else if (isDesktop.value) {
+            // Десктоп
+            return foo.makeText("preloader.pressAnyButton");
+        };
     });
 </script>
 

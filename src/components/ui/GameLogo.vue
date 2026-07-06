@@ -42,7 +42,6 @@
     const isLettersMovedToTop = ref(false);
     const isLinesShown = ref(false);
 
-
     // #region - Определение устройства
     const isDesktop = ref(false);
     const isTablet = ref(false);
@@ -57,9 +56,9 @@
         isTablet.value = width >= 1024 && width < 1920 && isLandscape;
         isMobile.value = width < 1024 && isLandscape;
         
-        console.log('isMobile:', isMobile.value);
-        console.log('isTablet:', isTablet.value);
-        console.log('isDesktop:', isDesktop.value);
+        // console.log('isMobile:', isMobile.value);
+        // console.log('isTablet:', isTablet.value);
+        // console.log('isDesktop:', isDesktop.value);
     }
 
     let resizeCleanup: (() => void) | null = null;
@@ -125,27 +124,30 @@
     });
 
     const logoStyle = computed(() => {
-        // Mobile-first: базовые значения для мобильных
-        let topPreloader = 13.68;
-        let topMenu = 10.26;
-        let widthPreloader = 86.26;
-        let widthMenu = 78.44;
-        
-        // Планшеты
-        if (isTablet.value) {
+        let topPreloader;
+        let topMenu;
+        let widthPreloader;
+        let widthMenu;
+
+        if (isMobile.value) {
+            // Mobile-first: базовые значения для мобильных
+            topPreloader = 13.68;
+            topMenu = 10.26;
+            widthPreloader = 86.26;
+            widthMenu = 78.44;
+        } else if (isTablet.value) {
+            // планшеты
             topPreloader = 15;
             topMenu = 10;
             widthPreloader = 83;
             widthMenu = 70;
-        }
-        
-        // Десктоп
-        if (isDesktop.value) {
+        } else if (isDesktop.value) {
+            // десктоп
             topPreloader = 18.47;
             topMenu = 9.783;
             widthPreloader = 81.5;
             widthMenu = 65.625;
-        }
+        };
         
         const myPos = gameState.isPreloaderShown ? topPreloader : topMenu;
         const myWidth = gameState.isPreloaderShown ? widthPreloader : widthMenu;

@@ -105,6 +105,7 @@
         justify-content: flex-start;
         position: fixed;
         
+        // #region - bottom and gap
         bottom: 11.111vh;
         gap: 5.56vh;
 
@@ -125,6 +126,7 @@
             bottom: 12.8125rem;
             gap: 2rem;
         }
+        // #endregion
     }
 
     .btn_correction {
