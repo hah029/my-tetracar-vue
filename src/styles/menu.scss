@@ -48,6 +48,22 @@ $z-layers: (
         -webkit-user-select: none;
         -moz-user-select: none;
         -ms-user-select: none;
+
+        margin-bottom: 5.128vh;   // позже расчитать (для мини-мобил)
+
+        @media (min-width: $breakpoint-mobile) and (orientation: landscape) { 
+            margin-bottom: 5.128vh;
+        }
+        // позже расчитать:
+        // @media (min-width: $breakpoint-tablet) and (orientation: landscape) { 
+        //     margin-bottom: 5.56vh; 
+        // }  
+        // @media (min-width: $breakpoint-laptop) and (orientation: landscape) { 
+        //     margin-bottom: 5.56vh; 
+        // }
+        @media (min-width: $breakpoint-desktop) and (orientation: landscape) {
+            margin-bottom: 2.8125rem;
+        }
     }
 
     .header_text {
@@ -95,7 +111,6 @@ $z-layers: (
 // #endregion
 
 .buttons_group {
-    position: absolute;
     height: fit-content;
     display: flex;
     flex-direction: column;

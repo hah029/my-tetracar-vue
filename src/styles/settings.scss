@@ -1,13 +1,9 @@
 .settings_sub_container {
-    width: min(28rem, 90vw);
-    min-height: 0;
+    width: 25rem;
     display: flex;
     flex-direction: column;
     justify-content: flex-start;
-    
-    &>*+* {
-        margin-top: 1.25rem; // 20px - row-gap (между кнопками)
-    }
+    gap: 1.9375rem;
 }
 
 .addit_font {

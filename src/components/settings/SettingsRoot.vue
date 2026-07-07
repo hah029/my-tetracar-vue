@@ -214,26 +214,6 @@
         flex-direction: column;
         align-items: center;
         justify-content: flex-start;
-
-        gap: 5.128vh;   // позже расчитать (для мини-мобил)
-
-        @media (min-width: $breakpoint-mobile) and (orientation: landscape) { 
-            gap: 5.128vh;
-        }
-        // позже расчитать:
-        // @media (min-width: $breakpoint-tablet) and (orientation: landscape) { 
-        //     bottom: 12.8125rem;
-        //     gap: 5.56vh; 
-        //     justify-content: center !important;
-        // }  
-        // @media (min-width: $breakpoint-laptop) and (orientation: landscape) { 
-        //     bottom: 12.8125rem;
-        //     gap: 5.56vh; 
-        //     justify-content: center !important;
-        // }
-        @media (min-width: $breakpoint-desktop) and (orientation: landscape) {
-            gap: 2.8125rem;
-        }
     }
 
     .header_pause {
@@ -241,7 +221,7 @@
     }
 
     .group_correction {
-        position: static !important;
+        // position: static !important;
         display: flex;
         flex-direction: column;
         justify-content: flex-start;
