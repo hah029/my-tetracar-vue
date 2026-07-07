@@ -51,29 +51,18 @@ $breakpoint-desktop: 1920px;
 /* 4) кнопки третьего уровня в меню (Third Menu Buttons)
     (Desktop 22px → Laptop 20px → Tablet 35px → Mobile 50px → Small 42px) */
     @mixin text-third-menu-button {
-        font-size: clamp(20px, 1.5vw, 22px);  // Desktop
-        font-family: $font-primary;
-        line-height: 1.05;
+        font-family: $font-secondary-light;
+        font-size: 4.274vh;  // позже расчитать (для мини-мобил)
+        letter-spacing: 0.05rem;
+        text-transform: uppercase;
         
-        @media (max-width: $breakpoint-laptop) {
-            font-size: clamp(18px, 1.3vw, 20px);  // Laptop
-        }
-        
-        @media (max-width: $breakpoint-tablet) {
-            font-size: clamp(30px, 4vw, 38px);  // Tablet
-        }
-        
-        @media (max-width: $breakpoint-mobile) {
-            font-size: clamp(42px, 10vw, 50px);  // Mobile
-        }
-        
-        @media (max-width: $breakpoint-mobile-small) {
-            font-size: clamp(35px, 9vw, 42px);  // Mobile Small
-        }
+        @media (min-width: $breakpoint-mobile) and (orientation: landscape) { font-size: 4.274vh; }
+        // @media (min-width: $breakpoint-tablet) and (orientation: landscape) { font-size: 2.56vw; }  // позже расчитать
+        // @media (min-width: $breakpoint-laptop) and (orientation: landscape) { font-size: 2.22vw; }  // позже расчитать
+        @media (min-width: $breakpoint-desktop) and (orientation: landscape) { font-size: 1.375rem; }
     }
 
-/* 5) заголовки во всех меню (Menu Titles)
-    (Desktop 40px → Laptop 36px → Tablet 55px → Mobile 80px → Small 70px) */
+// 5) заголовки во всех меню (Menu Titles)
     @mixin text-menu-title {
         font-family: $font-primary;
         font-size: 6.838vh;  // позже расчитать (для мини-мобил)

@@ -1,6 +1,5 @@
 <template>
-    <!-- <div class="container correction"> -->
-    <div class="container container_correction" :class="setContainerPos()">
+    <div class="container container_correction">
         <div class="settings_container">
 
             <!-- HEADER -->
@@ -33,7 +32,7 @@
 
         <!-- BACK -->
         <Transition name="header_footer_block_anim">
-            <button v-if="isBackButtonShown" class="menu_btn btn_correction" @click="backButtonClick">
+            <button v-if="isBackButtonShown" class="menu_btn btn_correction back_button" @click="backButtonClick">
                 {{ foo_1.makeText("mainMenu.goBack") }}
             </button>
         </Transition>
@@ -150,13 +149,13 @@
         };
     };
 
-    function setContainerPos() {
-        if (gameState.currentState == 'menu') {
-            return 'container_pos_main_menu';
-        } else if (gameState.currentState == 'pause') {
-            return 'container_pos_pause';
-        };
-    };
+    // function setContainerPos() {
+    //     if (gameState.currentState == 'menu') {
+    //         return 'container_pos_main_menu';
+    //     } else if (gameState.currentState == 'pause') {
+    //         return 'container_pos_pause';
+    //     };
+    // };
 
     function setHeaderSize() {
         if (gameState.currentState == 'pause') {
@@ -183,30 +182,19 @@
     @use "@/styles/colors" as *;
 
     .container_correction {
-        // justify-content: flex-start !important; 
-        justify-content: space-between !important; 
-        height: 494px !important;
-        top: 7.265vh;   // позже расчитать (для мини-мобил)
-        gap: 10.427vh;  // позже расчитать (для мини-мобил)
+        position: relative;
+        padding: 7.265vh 0 0 0;             // позже расчитать (для мини-мобил)
 
         @media (min-width: $breakpoint-mobile) and (orientation: landscape) { 
-            top: 7.265vh;
-            gap: 10.427vh;
+            padding: 7.265vh 0 0 0;
         }
         // позже расчитать:
         // @media (min-width: $breakpoint-tablet) and (orientation: landscape) { 
-        //     bottom: 12.8125rem;
-        //     gap: 5.56vh; 
-        //     justify-content: center !important;
-        // }  
+            // padding: 7.265vh 0 0 0;
         // @media (min-width: $breakpoint-laptop) and (orientation: landscape) { 
-        //     bottom: 12.8125rem;
-        //     gap: 5.56vh; 
-        //     justify-content: center !important;
-        // }
+            // padding: 7.265vh 0 0 0;
         @media (min-width: $breakpoint-desktop) and (orientation: landscape) {
-            top: 22.813rem;
-            gap: 5.3125rem;
+            padding: 22.5rem 0 0 0;
         }
     }
 
@@ -252,5 +240,22 @@
     .btn_correction {
         @include text-secondary-menu-button;
         color: $color-yellow-super-light;
+    }
+
+    .back_button {
+        position: absolute;
+        bottom: 7.265vh;
+
+        @media (min-width: $breakpoint-mobile) and (orientation: landscape) { 
+            bottom: 7.265vh;
+        }
+        // позже расчитать:
+        // @media (min-width: $breakpoint-tablet) and (orientation: landscape) { 
+            // bottom: 3.75rem;
+        // @media (min-width: $breakpoint-laptop) and (orientation: landscape) { 
+            // bottom: 3.75rem;
+        @media (min-width: $breakpoint-desktop) and (orientation: landscape) {
+            bottom: 3.75rem;
+        }
     }
 </style>

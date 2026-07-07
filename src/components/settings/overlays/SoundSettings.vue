@@ -41,7 +41,8 @@
     const graphicsStore = useGraphicsStore();
     const soundManager = SoundManager.getInstance();
     const volume = ref(audioStore.masterVolume);
-    const rowView = ref([false, false, false, false]);
+    const rowView = ref([false, false, false]);
+    const rowViewCount = rowView.value.length;
 
     const foo = createNewText();
 
@@ -80,10 +81,9 @@
     watch(() => props.backStatus, (newVal) => {
         if (newVal) {
             // Скрываем в обратном порядке с задержками
-            const total = rowView.value.length;
-            for (let i = 0; i < total; i++) {
+            for (let i = 0; i < rowViewCount; i++) {
                 setTimeout(() => {
-                    rowView.value[total - 1 - i] = false;
+                    rowView.value[rowViewCount - 1 - i] = false;
                 }, i * 100);
             }
         }
@@ -91,11 +91,10 @@
 
     onMounted(() => {
         // Появление с задержками
-        const total = rowView.value.length;
-        for (let i = 0; i < total; i++) {
+        for (let i = 0; i < rowViewCount; i++) {
             setTimeout(() => {
                 rowView.value[i] = true;
-            }, 400 + i * 100); // начинаем с задержки 400 мс
+            }, 750 + i * 100);
         }
     });
 </script>
