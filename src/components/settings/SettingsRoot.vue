@@ -183,13 +183,14 @@
     @use "@/styles/colors" as *;
 
     .container_correction {
-        top: 7.265vh;
-        justify-content: flex-start !important; // позже расчитать (для мини-мобил)
-        gap: 10.427vh;                          // позже расчитать (для мини-мобил)
+        // justify-content: flex-start !important; 
+        justify-content: space-between !important; 
+        height: 494px !important;
+        top: 7.265vh;   // позже расчитать (для мини-мобил)
+        gap: 10.427vh;  // позже расчитать (для мини-мобил)
 
         @media (min-width: $breakpoint-mobile) and (orientation: landscape) { 
             top: 7.265vh;
-            justify-content: flex-start !important;
             gap: 10.427vh;
         }
         // позже расчитать:
