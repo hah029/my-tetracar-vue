@@ -132,8 +132,8 @@
             "mobileLabels": {
                 "pause": "пауза",
                 "fire": "выстрел",
-                "swipe": "свайп",
-                "switcher": "левша / правша"
+                "left": "влево",
+                "right": "вправо"
             },
             "labels": {
                 "left": "влево",

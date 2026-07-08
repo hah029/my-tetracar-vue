@@ -132,8 +132,8 @@
             "mobileLabels": {
                 "pause": "pause",
                 "fire": "fire",
-                "swipe": "swipe",
-                "switcher": "left / right handed"
+                "left": "left",
+                "right": "right"
             },
             "labels": {
                 "left": "left",

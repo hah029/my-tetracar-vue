@@ -1,36 +1,18 @@
 <template>
-    <div class="controls_global_container" @click="changeControlType()">
-        <Transition v-if="controlsType == 'mobile'" name="buttons_group_showing" tag="div">
-            <div v-if="imageView" class="mobile_container">
-                <span v-for="(control, index) in mobileControls" :class="setMobileTextStyle(control.id)" :key="control.id"
-                :style="{ animationDelay: `${index * 0.06}s` }">
+    <div class="controls_global_container">
+        <Transition v-if="isMobile || isTablet" name="buttons_group_showing" tag="div">
+            <div class="mobile_container" v-if="imageView">
+                <span v-for="(control, index) in mobileControls" :key="control.id"
+                    class="addit_font" :class="setMobileTextStyle(control.id)"
+                    :style="{ animationDelay: `${index * 0.06}s` }">
                     {{ control.text }}
                 </span>
                 <img class="vector_img"  src="@/assets/images/controls_mobile.svg" />
-                <div class="left_right_handed_switcher_block" @click.stop="switchHandedDirection()">
-                    <div class="content_block">
-                        <span class="switcher_label">
-                            {{ foo.makeText("settings.controls.mobileLabels.switcher", "empty") }}
-                        </span>
-                        <div class="switcher_image_block">
-                            <div class="frame_container">
-                                <img class="vector_img switcher_corr" src="@/assets/images/switcher_frame.svg" />
-                            </div>
-                            <div class="circle_container" :style="setCircleStyle">
-                                <img class="vector_img switcher_corr" src="@/assets/images/switcher_circle.svg" />
-                            </div>
-                        </div>
-                    </div>
-                    <div class="divider_block">
-                        <div class="divider" :style="setDividerStyle"></div>
-                    </div>
-                </div>
             </div>
         </Transition>
 
-        <TransitionGroup v-if="controlsType == 'desktop'" name="buttons_group_showing" tag="div"
-            class="settings_sub_container container_correction">
-            <!-- v-if="currentView === SettingsView.Main" -->
+        <TransitionGroup v-if="isDesktop" name="buttons_group_showing" tag="div"
+            class="settings_sub_container">
             <div v-for="(row, index) in desktopControls" v-if="rowView" class="settings_row addit_font" :key="row.id"
                 :style="{ animationDelay: `${index * 0.06}s` }">
                 <span>{{ row.text }}</span>
@@ -48,19 +30,30 @@
 
 
 <script setup lang="ts">
-    import { onMounted, ref, watch, computed } from "vue";
-    import { useTranslation } from "i18next-vue";
+    import { onMounted, onUnmounted, ref, watch, computed } from "vue";
     import { createNewText } from '@/helpers/functions';
 
-    const { i18next } = useTranslation();
-    const currentLang = computed(() => i18next.language)
     const imageView = ref(false);
     const rowView = ref(false);
-    const isRightHandedControls = ref(true);
-
-    // const controlsType = ref('mobile');
-    const controlsType = ref('desktop');
     const foo = createNewText();
+
+    // #region - Определение устройства
+    const isDesktop = ref(false);
+    const isTablet = ref(false);
+    const isMobile = ref(true); // по умолчанию true
+
+    function updateDevice() {
+        const width = window.innerWidth;
+        const isLandscape = window.matchMedia("(orientation: landscape)").matches;
+        
+        // Определяем по ширине (Mobile-first)
+        isDesktop.value = width >= 1920 && isLandscape;
+        isTablet.value = width >= 1024 && width < 1920 && isLandscape;
+        isMobile.value = width < 1024 && isLandscape;
+    }
+
+    let resizeCleanup: (() => void) | null = null;
+    // #endregion
 
     const desktopControls = computed(() => [
         {
@@ -73,11 +66,11 @@
             text: foo.makeText("settings.controls.labels.right", "empty"),
             key: foo.makeText("settings.controls.keys.right", "empty"),
         },
-        {
-            id: 3,
-            text: foo.makeText("settings.controls.labels.drop", "empty"),
-            key: foo.makeText("settings.controls.keys.drop", "empty"),
-        },
+        // {
+        //     id: 3,
+        //     text: foo.makeText("settings.controls.labels.drop", "empty"),
+        //     key: foo.makeText("settings.controls.keys.drop", "empty"),
+        // },
         {
             id: 4,
             text: foo.makeText("settings.controls.labels.fire", "empty"),
@@ -101,7 +94,11 @@
         },
         {
             id: 3,
-            text: foo.makeText("settings.controls.mobileLabels.swipe", "empty"),
+            text: foo.makeText("settings.controls.mobileLabels.left", "empty"),
+        },
+        {
+            id: 4,
+            text: foo.makeText("settings.controls.mobileLabels.right", "empty"),
         },
     ]);
 
@@ -109,34 +106,16 @@
         backStatus: boolean;
     }>();
 
+    // отлавливаем нажатие кнопки "Назад"
     watch(() => props.backStatus, (newVal) => {
         if (newVal) {
-            imageView.value = false;
-            rowView.value = false;
+            if (isMobile.value || isTablet.value) {
+                imageView.value = false;
+            } else {
+                rowView.value = false;
+            };
         };
     });
-
-    // переключение контролов (PC - mobile)
-    function changeControlType() {
-        if (controlsType.value == 'mobile') {
-            imageView.value = false;
-            setTimeout(() => {
-                controlsType.value = 'desktop';
-            }, 400);
-            setTimeout(() => {
-                rowView.value = true;
-            }, 600);
-
-        } else if (controlsType.value == 'desktop') {
-            rowView.value = false;
-            setTimeout(() => {
-                controlsType.value = 'mobile';
-            }, 400);
-            setTimeout(() => {
-                imageView.value = true;
-            }, 600);
-        };
-    };
 
     // определяем направление значка стрелки внутри кнопки
     function setArrowDirection(id_) {
@@ -147,64 +126,36 @@
         };
     };
 
-    // определяем направление значка стрелки внутри кнопки
+    // расставляем текст над линиями-выносками (в мобильной версии)
     function setMobileTextStyle(id_) {
         if (id_ == 1) {
             return 'pause_text';
         } else if (id_ == 2) {
             return 'fire_text';
         } else if (id_ == 3) {
-            return 'swipe_text';
+            return 'left_text';
+        } else if (id_ == 4) {
+            return 'right_text';
         };
     };
-
-    function switchHandedDirection() {
-        isRightHandedControls.value = !isRightHandedControls.value;
-    };
-
-    // устанавливаем стиль подчеркивания под текстом "Левша/правша"
-    const setDividerStyle = computed(() => {
-        let myPos;
-        let myWidth;
-
-        if (isRightHandedControls.value) {
-            if (i18next.language == 'ru') {
-                myPos = 3.125;
-                myWidth = 5.5;
-            } else if (i18next.language == 'en') {
-                myPos = 3.3125;
-                myWidth = 9;
-            };
-        } else {
-            if (i18next.language == 'ru') {
-                myPos = 9.5;
-                myWidth = 4.75;
-            } else if (i18next.language == 'en') {
-                myPos = 13.375;
-                myWidth = 2.75;
-            };
-        };
-
-        return { 
-            right: `${myPos}rem`,
-            width: `${myWidth}rem`
-        };
-    });
-
-    // меняем позицию кружка рядом с текстом "Левша/правша"
-    const setCircleStyle = computed(() => {
-        let myPos = isRightHandedControls.value ? 1.375 : 0.375;
-
-        return { 
-            left: `${myPos}rem`,
-        };
-    });
 
     onMounted(() => {
         setTimeout(() => {
-            rowView.value = true;
-        }, 400);
+            if (isMobile.value || isTablet.value) {
+                imageView.value = true;
+            } else {
+                rowView.value = true;
+            };
+        }, 750);
+
+        updateDevice();
+        const handler = () => updateDevice();
+        window.addEventListener('resize', handler);
+        resizeCleanup = () => window.removeEventListener('resize', handler);
     }); 
+    onUnmounted(() => {
+        if (resizeCleanup) resizeCleanup();
+    });
 </script>
 
 
@@ -212,6 +163,7 @@
     @use "@/styles/menu.scss";
     @use "@/styles/settings.scss";
     @use "@/styles/animations.scss";
+    @use "@/styles/typography" as *;
 
     // #region - общее
     .controls_global_container {
@@ -224,101 +176,106 @@
 
     .vector_img {
         width: 100%;
-        height: 100%;
     }
-
     // #endregion
 
     // #region - стили мобильных контролов
     .mobile_container {
         position: relative;
-        width: 31.9375rem;
-        height: 13.75rem;
-        margin-top: 3.25rem;
-        font-size: 1.25rem;
-        color: #FDFFE3;
-        text-transform: uppercase;
-        font-family: "jost-light";
-        letter-spacing: 0.063rem;
         text-align: center;
+
+        width: 102.564vh;   // позже расчитать (для мини-мобил)    
+        // height: 42.274vh;   // позже расчитать (для мини-мобил)
+
+        @media (min-width: $breakpoint-mobile) and (orientation: landscape) { 
+            width: 102.564vh;
+            // height: 42.274vh;
+        }
+        // позже расчитать:
+        // @media (min-width: $breakpoint-tablet) and (orientation: landscape) { 
+            // width: 102.564vh;
+            // height: 42.274vh;
+        // }
     }
+
     .pause_text {
         position: absolute;
-        top: 0.25rem;
-        left: 0rem;
-        width: 7rem;
+        top: 0.8vh;         // позже расчитать (для мини-мобил)
+        left: 2.222vh;      // позже расчитать (для мини-мобил)
+        width: 18.889vh;    // позже расчитать (для мини-мобил)
+
+        @media (min-width: $breakpoint-mobile) and (orientation: landscape) { 
+            top: 0.8vh;
+            left: 2.222vh;
+            width: 18.889vh;
+        }
+        // позже расчитать:
+        // @media (min-width: $breakpoint-tablet) and (orientation: landscape) { 
+            // top: 0.8vh;
+            // left: 2.222vh;
+            // width: 18.889vh;
+        // }
     }
+
     .fire_text {
         position: absolute;
-        top: 11.9rem;
-        left: 0rem;
-        width: 6.375rem;
-    }
-    .swipe_text {
-        position: absolute;
-        top: 11.9rem;
-        right: 0rem;
-        width: 6.375rem;
-    }
-    .left_right_handed_switcher_block {
-        position: absolute;
-        top: 1.5rem;
-        right: 0rem;
-        display: flex;
-        flex-direction: column;
-        align-items: flex-end;
-        justify-content: flex-start;
-        gap: 0.25rem;
-        font-size: 1.125rem;
-        cursor: pointer;
-    }
-    .content_block {
-        // position: relative;
-        // top: 1.5rem;
-        // right: 0rem;
-        display: flex;
-        justify-content: flex-end;
-        align-items: center;
-        gap: 1rem;
-    }
-    .switcher_image_block {
-        position: relative;
-        width: 2.5rem;
-        height: 1.375rem;
-    }
-    .frame_container {
-        position: absolute;
-        width: 100%;
-        height: 100%;
-    }
-    .circle_container {
-        position: absolute;
-        width: 0.75rem;
-        height: 0.75rem;
-        top: 0.1125rem;
-    }
-    .switcher_corr {
-        filter: invert(92%) sepia(19%) saturate(274%) hue-rotate(26deg) brightness(107%) contrast(105%);
+        top: 38vh;         // позже расчитать (для мини-мобил)
+        left: 82.051vh;      // позже расчитать (для мини-мобил)
+        width: 20.513vh;    // позже расчитать (для мини-мобил)
+
+        @media (min-width: $breakpoint-mobile) and (orientation: landscape) { 
+            top: 38vh;
+            left: 82.051vh;
+            width: 20.513vh;
+        }
+        // позже расчитать:
+        // @media (min-width: $breakpoint-tablet) and (orientation: landscape) { 
+            // top: 38.889vh;
+            // left: 82.051vh;
+            // width: 20.513vh;
+        // }
     }
 
-    .divider_block {
-        height: 0.0625rem;
-        width: 100%;
-    }
-    .divider {
-        height: 100%;
-        background: rgba(255, 255, 255, 0.7);
+    .left_text {
+        position: absolute;
+        top: 19.1vh;         // позже расчитать (для мини-мобил)
+        left: 0vh;      // позже расчитать (для мини-мобил)
+        width: 17.179vh;    // позже расчитать (для мини-мобил)
+
+        @media (min-width: $breakpoint-mobile) and (orientation: landscape) { 
+            top: 19.1vh;
+            left: 0vh;
+            width: 17.179vh;
+        }
+        // позже расчитать:
+        // @media (min-width: $breakpoint-tablet) and (orientation: landscape) { 
+            // top: 19.1vh;
+            // left: 0vh;
+            // width: 17.179vh;
+        // }
     }
 
+    .right_text {
+        position: absolute;
+        top: 19.3vh;         // позже расчитать (для мини-мобил)
+        left: 84.188vh;      // позже расчитать (для мини-мобил)
+        width: 18.462vh;    // позже расчитать (для мини-мобил)
+
+        @media (min-width: $breakpoint-mobile) and (orientation: landscape) { 
+            top: 19.3vh;
+            left: 84.188vh;
+            width: 18.462vh;
+        }
+        // позже расчитать:
+        // @media (min-width: $breakpoint-tablet) and (orientation: landscape) { 
+            // top: 19.3vh;
+            // left: 84.188vh;
+            // width: 18.462vh;
+        // }
+    }
     // #endregion
 
     // #region - стили desktop контролов
-        .container_correction {
-            &>*+* {
-                margin-top: 1rem; // 16px - row-gap (между кнопками)
-            }
-        }
-
         .right_part {
             display: flex;
             justify-content: flex-end;
