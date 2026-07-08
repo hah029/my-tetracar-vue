@@ -47,7 +47,7 @@
     import ControlSettings from "./overlays/ControlSettings.vue";
     import AboutSettings from "./overlays/AboutSettings.vue";
 
-    import { onMounted, computed, ref } from "vue";
+    import { onMounted, computed, ref, watch } from "vue";
     import { createNewText, deleteTextLines } from '@/helpers/functions';
     import { useGameState } from "@/store/gameState";
 
@@ -63,7 +63,7 @@
 
     // ===== STORES =====
     const gameState = useGameState();
-
+    
     // ===== LOCAL STATE =====
     const currentView = ref<SettingsView>(SettingsView.null);
 
@@ -163,14 +163,70 @@
         };
     };
 
+    // 🔥 Следим за изменением секции настроек
+    watch(
+        () => gameState.settingsSection,
+        (section) => {
+            if (section === 'about') {
+                currentView.value = SettingsView.About;
+            } else if (section === 'sound') {
+                currentView.value = SettingsView.Sound;
+            } else if (section === 'graphics') {
+                currentView.value = SettingsView.Graphics;
+            } else if (section === 'language') {
+                currentView.value = SettingsView.Language;
+            } else if (section === 'controls') {
+                currentView.value = SettingsView.Controls;
+            } else if (section === 'main' || section === null) {
+                currentView.value = SettingsView.Main;
+            }
+        },
+        // { immediate: true }
+    );
+
     onMounted(() => {
         isHeaderShown.value = true;
-        setTimeout(() => {
-            currentView.value = SettingsView.Main;
-        }, 200);
-        setTimeout(() => {
-            isBackButtonShown.value = true;
-        }, 550);
+        
+        // setTimeout(() => {
+        //     currentView.value = SettingsView.Main;
+        // }, 200);
+        // setTimeout(() => {
+        //     isBackButtonShown.value = true;
+        // }, 550);
+
+        // 🔥 Если settingsSection уже установлен — применяем его
+        const section = gameState.settingsSection;
+
+        if (section && section !== 'main') {
+            if (section === 'about') {
+                currentView.value = SettingsView.About;
+            } else if (section === 'sound') {
+                currentView.value = SettingsView.Sound;
+            } else if (section === 'graphics') {
+                currentView.value = SettingsView.Graphics;
+            } else if (section === 'language') {
+                currentView.value = SettingsView.Language;
+            } else if (section === 'controls') {
+                currentView.value = SettingsView.Controls;
+            }
+            // setTimeout(() => {
+            // }, 300); // Задержка, чтобы Main успел отрендериться
+            setTimeout(() => {
+                isBackButtonShown.value = true;
+            }, 1000);
+            
+        } else {
+            setTimeout(() => {
+                currentView.value = SettingsView.Main;
+            }, 200);
+            setTimeout(() => {
+                isBackButtonShown.value = true;
+            }, 550);
+        };
+        
+        // setTimeout(() => {
+        //     isBackButtonShown.value = true;
+        // }, 550);
     });
 </script>
 

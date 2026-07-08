@@ -17,6 +17,15 @@ type UIOverlay =
   | "leaderBoards"
   | "trainingScreen";
 
+export type SettingsSection =
+  | null
+  | "main"
+  | "sound"
+  | "graphics"
+  | "language"
+  | "controls"
+  | "about";
+
 export const useGameState = defineStore("gameState", () => {
   // ===== STATE =====
   const currentState = ref<GameStates>(GameStates.Preloader);
@@ -25,9 +34,12 @@ export const useGameState = defineStore("gameState", () => {
   const isFirstGame = ref(false);
   const activeOverlay = ref<UIOverlay>(null);
   const previousState = ref<GameStates>(GameStates.Preloader); // Запоминаем предыдущее состояние
+  
+  const settingsSection = ref<SettingsSection>(null);
+
   const playerStore = usePlayerStore();
   const platform = Platform.getInstance();
-
+  
   let resetCallback: (() => void) | null = null;
 
   // ===== FSM: allowed transitions =====
@@ -226,8 +238,20 @@ export const useGameState = defineStore("gameState", () => {
     activeOverlay.value = "shop";
   }
 
-  function openSettings() {
+  function openSettings(section: SettingsSection = null) {
     activeOverlay.value = "settings";
+    settingsSection.value = section || "main"; // если секция не указана — открываем главное меню
+  }
+
+  // Метод для переключения секции внутри настроек
+  function setSettingsSection(section: SettingsSection) {
+    // Если настройки уже открыты — просто меняем секцию
+    if (activeOverlay.value === "settings") {
+      settingsSection.value = section;
+    } else {
+      // Если настройки закрыты — открываем с нужной секцией
+      openSettings(section);
+    }
   }
 
   function openLeaderBoards() {
@@ -257,6 +281,7 @@ export const useGameState = defineStore("gameState", () => {
 
   function closeOverlay() {
     activeOverlay.value = null;
+    settingsSection.value = null; // 🔥 Сбрасываем секцию
   }
 
   return {
@@ -265,6 +290,7 @@ export const useGameState = defineStore("gameState", () => {
     isPreloaderShown,
     isFirstGame,
     activeOverlay,
+    settingsSection,
 
     // FSM
     setState,
@@ -281,6 +307,7 @@ export const useGameState = defineStore("gameState", () => {
     setResetCallback,
 
     openSettings,
+    setSettingsSection,
     openShop,
     openLeaderBoards,
     openQuitGameWindow,

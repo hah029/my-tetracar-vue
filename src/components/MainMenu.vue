@@ -56,7 +56,7 @@
     function goToSettings() {
         isMainMenuEnabled.value = false;
         setTimeout(() => {
-            gameStore.openSettings();
+            gameStore.openSettings('main');
         }, 300);
     }
 
@@ -70,7 +70,9 @@
     watch(
         () => gameStore.activeOverlay,
         (newState) => {
-            if (!["settings", "leaderBoards", "shop"].includes(newState as string)) {
+            if (["settings", "leaderBoards", "shop"].includes(newState as string)) {
+                isMainMenuEnabled.value = false;
+            } else {
                 isMainMenuEnabled.value = true;
             }
         },

@@ -21,6 +21,7 @@
     import { TEAM_NAME } from "@/gameConfig";
 
     const gameState = useGameState();
+
     const isRightPanelShown = computed(() => {
         return gameState.currentState === GameStates.Menu;
     });
@@ -33,7 +34,7 @@
 
     // клик по лого команды
     function rightsClickingAction() {
-        console.log('asd');
+        gameState.setSettingsSection('about');
     };
 </script>
 
