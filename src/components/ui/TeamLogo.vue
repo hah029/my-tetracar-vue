@@ -88,7 +88,7 @@
     }
 
     .logo_container {
-        opacity: 0.7;
+        opacity: 0.6;
         transition: all 0.15s ease-in-out;
 
         // #region - width

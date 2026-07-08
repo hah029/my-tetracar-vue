@@ -64,7 +64,7 @@
         flex-direction: column;
         align-items: flex-start;
         justify-content: flex-end;
-        opacity: 0.65;
+        opacity: 0.55;
         
         @include text-copyright;
         color: $color_white;
