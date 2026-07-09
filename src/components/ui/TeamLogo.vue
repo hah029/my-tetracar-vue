@@ -17,7 +17,6 @@
     import { computed } from "vue";
     import { useGameState } from "@/store/gameState";
     import { GameStates } from "@/game/core/GameState";
-
     import { TEAM_NAME } from "@/gameConfig";
 
     const gameState = useGameState();
@@ -34,7 +33,10 @@
 
     // клик по лого команды
     function rightsClickingAction() {
-        gameState.setSettingsSection('about');
+        gameState.settingsSection = null;
+        setTimeout(() => {
+            gameState.setSettingsSection('about');
+        }, 50);
     };
 </script>
 
