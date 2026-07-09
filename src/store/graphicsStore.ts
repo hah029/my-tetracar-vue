@@ -36,7 +36,7 @@ export const useGraphicsStore = defineStore("graphics", () => {
     bloomEnabled.value = !bloomEnabled.value;
     await storage.setPlayerDataByKey("bloomEnabled", bloomEnabled.value);
   }
-  async function toggleAfterimage() {
+  async function toggleMotionBlur() {
     afterimageEnabled.value = !afterimageEnabled.value;
     await storage.setPlayerDataByKey(
       "afterimageEnabled",
@@ -58,12 +58,6 @@ export const useGraphicsStore = defineStore("graphics", () => {
   async function setShadowQuality(quality: shadowQualityTypes) {
     shadowQuality.value = quality;
     await storage.setPlayerDataByKey("shadowQuality", shadowQuality.value);
-  }
-
-  function cycleShadowQuality() {
-    if (shadowQuality.value === "low") setShadowQuality("medium");
-    else if (shadowQuality.value === "medium") setShadowQuality("high");
-    else setShadowQuality("low");
   }
 
   // меняем текущий pixel ratio
@@ -99,11 +93,10 @@ export const useGraphicsStore = defineStore("graphics", () => {
     toggleFxaa,
     toggleShadow,
     setShadowQuality,
-    cycleShadowQuality,
     getPixelRatio,
     getBloomStrength,
     getShadowQuality,
     toggleRGBShift,
-    toggleAfterimage,
+    toggleMotionBlur,
   };
 });

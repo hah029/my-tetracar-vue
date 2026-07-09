@@ -104,6 +104,9 @@
         "title": "настройки",
         "toggleOn": "вкл",
         "toggleOff": "выкл",
+        "low": "низкие",
+        "medium": "средние",
+        "high": "высокие",
         "menuList": {
             "graphics": "графика",
             "sounds": "звуки",

@@ -104,6 +104,9 @@
         "title": "settings",
         "toggleOn": "on",
         "toggleOff": "off",
+        "low": "low",
+        "medium": "medium",
+        "high": "medium",
         "menuList": {
             "graphics": "graphics",
             "sounds": "sounds",

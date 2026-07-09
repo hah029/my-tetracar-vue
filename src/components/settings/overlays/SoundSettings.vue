@@ -38,18 +38,12 @@
     import { useGraphicsStore } from "@/store/graphicsStore";
 
     const audioStore = useAudioStore();
-    const graphicsStore = useGraphicsStore();
     const soundManager = SoundManager.getInstance();
     const volume = ref(audioStore.masterVolume);
     const rowView = ref([false, false, false]);
     const rowViewCount = rowView.value.length;
 
     const foo = createNewText();
-
-    function toggleVfx() {
-        graphicsStore.toggleVfx();
-        console.log('🎮 Графические эффекты:', graphicsStore.vfxEnabled ? 'включены' : 'выключены');
-    };
 
     function toggleMusic() {
         audioStore.toggleMusic();
