@@ -1,51 +1,98 @@
-// src/composables/useDevice.ts
 import { ref, onMounted, onUnmounted, readonly } from 'vue';
 
 export function useDevice() {
-  // Реактивные переменные
-  const isMobile = ref(true);   // по умолчанию mobile-first
-  const isTablet = ref(false);
-  const isDesktop = ref(false);
-  const deviceType = ref<string>('тип устройства не определен...');
+//   type DeviceType = 'mobile-small' | 'mobile' | 'tablet' | 'laptop' | 'desktop';
+  type DeviceType = 
+    | 'mobile' 
+    | 'tablet' 
+    | 'laptop' 
+    | 'desktop';
+
+  type BrowserType =
+    | 'Chrome'
+    | 'Firefox'
+    | 'Safari'
+    | 'Edge'
+    | 'Opera'
+    | 'Yandex'
+    | 'Samsung Internet'
+    | 'Brave'
+    | 'Vivaldi'
+    | 'UC'
+    | 'Unknown';
+
+  const deviceType = ref<DeviceType>('desktop'); // по умолчанию mobile-first
+  const browser = ref<BrowserType>('Unknown');
   const os = ref<string>('ОС не определена...');
-  const resolution = ref<string>('');
+  const resolution = ref<string>('разрешение не определено...');
   const dpr = ref<number>(window.devicePixelRatio || 1);
 
-  // Функция обновления всех данных
+  // функция обновления всех данных
   function updateDevice() {
     const width = window.innerWidth;
     const height = window.innerHeight;
     const isLandscape = window.matchMedia('(orientation: landscape)').matches;
-    const ua = navigator.userAgent;
+    const userAgent = navigator.userAgent;
 
-    // 1. Определение по ширине (Mobile-first)
-    isDesktop.value = width >= 1920 && isLandscape;
-    isTablet.value = width >= 1024 && width < 1920 && isLandscape;
-    isMobile.value = width < 1024 && isLandscape;
-
-    // 2. Определение типа по userAgent (для дополнительной информации)
-    if (/Mobi|Android|iPhone|iPod|BlackBerry|IEMobile|Opera Mini/i.test(ua)) {
-      deviceType.value = 'Mobile';
-    } else if (/Tablet|iPad/i.test(ua) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1)) {
-      deviceType.value = 'Tablet';
+    // определение типа устройства по ширине окна браузера (Mobile-first)
+    if (isLandscape) {
+        if (width < 1024) {
+            deviceType.value = 'mobile'
+        } else if (width >= 1024 && width < 1440) {
+            deviceType.value = 'tablet'
+        } else if (width >= 1440 && width < 1920) {
+            deviceType.value = 'laptop'
+        } else if (width >= 1920) {
+            deviceType.value = 'desktop'
+        };
+    };
+    
+    // определение ОС устройства
+    if (userAgent.indexOf('Android') !== -1) {
+        os.value = 'Android';
+    } else if (/iPhone|iPad|iPod/.test(userAgent)) {
+        os.value = 'iOS';
+    } else if (userAgent.indexOf('Win') !== -1) {
+        os.value = 'Windows';
+    } else if (userAgent.indexOf('Mac') !== -1) {
+        os.value = 'macOS';
+    } else if (userAgent.indexOf('Linux') !== -1) {
+        os.value = 'Linux';
     } else {
-      deviceType.value = 'Desktop';
+        os.value = 'Unknown OS';
     };
 
-    // 3. Определение ОС
-    if (ua.indexOf('Win') !== -1) os.value = 'Windows';
-    else if (ua.indexOf('Mac') !== -1) os.value = 'macOS';
-    else if (ua.indexOf('Linux') !== -1) os.value = 'Linux';
-    else if (ua.indexOf('Android') !== -1) os.value = 'Android';
-    else if (/iPhone|iPad|iPod/.test(ua)) os.value = 'iOS';
-    else os.value = 'Unknown OS';
+    // определение браузера устройства
+    if (userAgent.indexOf('YaBrowser') !== -1) {
+        browser.value = 'Yandex';
+    } else if (userAgent.indexOf('Edg') !== -1) {
+        browser.value = 'Edge';
+    } else if (userAgent.indexOf('OPR') !== -1 || userAgent.indexOf('Opera') !== -1) {
+        browser.value = 'Opera';
+    } else if (userAgent.indexOf('Firefox') !== -1) {
+        browser.value = 'Firefox';
+    } else if (userAgent.indexOf('SamsungBrowser') !== -1) {
+        browser.value = 'Samsung Internet';
+    } else if (userAgent.indexOf('Brave') !== -1) {
+        browser.value = 'Brave';
+    } else if (userAgent.indexOf('Vivaldi') !== -1) {
+        browser.value = 'Vivaldi';
+    } else if (userAgent.indexOf('UCBrowser') !== -1) {
+        browser.value = 'UC';
+    } else if (userAgent.indexOf('Safari') !== -1 && userAgent.indexOf('Chrome') === -1) {
+        browser.value = 'Safari';
+    } else if (userAgent.indexOf('Chrome') !== -1) {
+        browser.value = 'Chrome';
+    } else {
+        browser.value = 'Unknown';
+    };
 
-    // 4. Разрешение
+    // определение разрешения экрана
     resolution.value = `${width}×${height}`;
     dpr.value = window.devicePixelRatio || 1;
   };
 
-  // Подписка на изменение размера окна
+  // подписка на изменение размера окна
   let resizeCleanup: (() => void) | null = null;
 
   onMounted(() => {
@@ -59,16 +106,13 @@ export function useDevice() {
     if (resizeCleanup) resizeCleanup();
   });
 
-  // Возвращаем только для чтения, чтобы избежать случайных мутаций
+  // возвращаем только для чтения, чтобы избежать случайных мутаций
   return {
-    isMobile: readonly(isMobile),
-    isTablet: readonly(isTablet),
-    isDesktop: readonly(isDesktop),
     deviceType: readonly(deviceType),
     os: readonly(os),
     resolution: readonly(resolution),
+    browser: readonly(browser),
     dpr: readonly(dpr),
-    // если нужно обновить вручную (например, при изменении ориентации вручную)
-    updateDevice,
+    updateDevice,   // если нужно обновить вручную (например, при изменении ориентации вручную)
   };
 };

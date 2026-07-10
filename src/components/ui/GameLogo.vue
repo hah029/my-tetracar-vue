@@ -32,7 +32,7 @@
 
 
 <script setup lang="ts">
-    import { ref, watch, computed, onMounted, onUnmounted } from "vue";
+    import { ref, watch, computed } from "vue";
     import { useGameState } from "@/store/gameState";
     import { useDevice } from '@/composables/useDevice';
     import { GameStates } from "@/game/core/GameState";
@@ -42,36 +42,7 @@
     const isLettersShown = ref(false);
     const isLettersMovedToTop = ref(false);
     const isLinesShown = ref(false);
-    const { isMobile, isTablet, isDesktop } = useDevice();
-
-    // #region - Определение устройства
-    // const isDesktop = ref(false);
-    // const isTablet = ref(false);
-    // const isMobile = ref(true); // по умолчанию true
-
-    // function updateDevice() {
-    //     const width = window.innerWidth;
-    //     const isLandscape = window.matchMedia("(orientation: landscape)").matches;
-        
-    //     // Определяем по ширине (Mobile-first)
-    //     isDesktop.value = width >= 1920 && isLandscape;
-    //     isTablet.value = width >= 1024 && width < 1920 && isLandscape;
-    //     isMobile.value = width < 1024 && isLandscape;
-    // }
-
-    // let resizeCleanup: (() => void) | null = null;
-
-    // onMounted(() => {
-    //     updateDevice();
-    //     const handler = () => updateDevice();
-    //     window.addEventListener('resize', handler);
-    //     resizeCleanup = () => window.removeEventListener('resize', handler);
-    // });
-
-    // onUnmounted(() => {
-    //     if (resizeCleanup) resizeCleanup();
-    // });
-    // #endregion
+    const { deviceType } = useDevice();
     
     // #region - Логика состояний
     watch(
@@ -92,7 +63,7 @@
                     isLettersMovedToTop.value = true;
                     
                     // скрываем логотип игры при нужных сценариях
-                    if ((isMobile.value || isTablet.value) && gameState.activeOverlay !== null) {
+                    if ((deviceType.value==='mobile' || deviceType.value==='tablet') && gameState.activeOverlay !== null) {
                         isLettersShown.value = false;
                         isLinesShown.value = false;
                     } else {
@@ -115,7 +86,7 @@
                     isWholeLogoShown.value = false;
                     isLettersShown.value = false;
                     break;
-            }
+            };
         },
         { immediate: true },
     );
@@ -134,19 +105,25 @@
         let widthPreloader;
         let widthMenu;
 
-        if (isMobile.value) {
+        if (deviceType.value==='mobile') {
             // Mobile-first: базовые значения для мобильных
             topPreloader = 13.68;
             topMenu = 10.26;
             widthPreloader = 86.26;
             widthMenu = 78.44;
-        } else if (isTablet.value) {
+        } else if (deviceType.value==='tablet') {
             // планшеты
             topPreloader = 15;
             topMenu = 10;
             widthPreloader = 83;
             widthMenu = 70;
-        } else if (isDesktop.value) {
+        // } else if (deviceType.value==='laptop') {
+        //     // ноутбуки (позже переписать корректные значения)
+        //     topPreloader = 15;
+        //     topMenu = 10;
+        //     widthPreloader = 83;
+        //     widthMenu = 70;
+        } else if (deviceType.value==='desktop') {
             // десктоп
             topPreloader = 18.47;
             topMenu = 9.783;

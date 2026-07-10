@@ -20,13 +20,13 @@
     const foo = createNewText();
     const isEntering = ref(false);      // флаг для анимации появления
     const isLeaving = ref(false);       // флаг для анимации исчезновения
-    const { isMobile, isTablet, isDesktop } = useDevice();
+    const { deviceType } = useDevice();
 
     // выводим текст в зависимости от типа устройства
     const splashScreenText = computed(() => {
-        if (isMobile.value || isTablet.value) {
+        if (deviceType.value==='mobile' || deviceType.value==='tablet') {
             return foo.makeText("preloader.pressAnyButtonMob");
-        } else if (isDesktop.value) {
+        } else if (deviceType.value==='laptop' || deviceType.value==='desktop') {
             return foo.makeText("preloader.pressAnyButton");
         };
     });

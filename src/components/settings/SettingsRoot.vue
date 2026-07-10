@@ -300,10 +300,10 @@
 
     .back_button {
         position: absolute;
-        bottom: 7.265vh;
+        bottom: 5.556vh;
 
         @media (min-width: $breakpoint-mobile) and (orientation: landscape) { 
-            bottom: 7.265vh;
+            bottom: 5.556vh;
         }
         // позже расчитать:
         // @media (min-width: $breakpoint-tablet) and (orientation: landscape) { 

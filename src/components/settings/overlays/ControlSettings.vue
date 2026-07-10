@@ -1,6 +1,6 @@
 <template>
     <div class="controls_global_container">
-        <Transition v-if="isMobile || isTablet" name="buttons_group_showing" tag="div">
+        <Transition v-if="deviceType==='mobile' || deviceType==='tablet'" name="buttons_group_showing" tag="div">
             <div class="mobile_container" v-if="imageView">
                 <span v-for="(control, index) in mobileControls" :key="control.id"
                     class="addit_font" :class="setMobileTextStyle(control.id)"
@@ -11,7 +11,7 @@
             </div>
         </Transition>
 
-        <TransitionGroup v-if="isDesktop" name="buttons_group_showing" tag="div"
+        <TransitionGroup v-if="deviceType==='laptop' || deviceType==='desktop'" name="buttons_group_showing" tag="div"
             class="settings_sub_container">
             <div v-for="(row, index) in desktopControls" v-if="rowView" class="settings_row addit_font" :key="row.id"
                 :style="{ animationDelay: `${index * 0.06}s` }">
@@ -30,30 +30,14 @@
 
 
 <script setup lang="ts">
-    import { onMounted, onUnmounted, ref, watch, computed } from "vue";
+    import { onMounted, ref, watch, computed } from "vue";
     import { createNewText } from '@/helpers/functions';
+    import { useDevice } from '@/composables/useDevice';
 
     const imageView = ref(false);
     const rowView = ref(false);
     const foo = createNewText();
-
-    // #region - Определение устройства
-    const isDesktop = ref(false);
-    const isTablet = ref(false);
-    const isMobile = ref(true); // по умолчанию true
-
-    function updateDevice() {
-        const width = window.innerWidth;
-        const isLandscape = window.matchMedia("(orientation: landscape)").matches;
-        
-        // Определяем по ширине (Mobile-first)
-        isDesktop.value = width >= 1920 && isLandscape;
-        isTablet.value = width >= 1024 && width < 1920 && isLandscape;
-        isMobile.value = width < 1024 && isLandscape;
-    }
-
-    let resizeCleanup: (() => void) | null = null;
-    // #endregion
+    const { deviceType } = useDevice();
 
     const desktopControls = computed(() => [
         {
@@ -109,9 +93,9 @@
     // отлавливаем нажатие кнопки "Назад"
     watch(() => props.backStatus, (newVal) => {
         if (newVal) {
-            if (isMobile.value || isTablet.value) {
+            if (deviceType.value==='mobile' || deviceType.value==='tablet') {
                 imageView.value = false;
-            } else {
+            } else if (deviceType.value==='laptop' || deviceType.value==='desktop') {
                 rowView.value = false;
             };
         };
@@ -141,21 +125,13 @@
 
     onMounted(() => {
         setTimeout(() => {
-            if (isMobile.value || isTablet.value) {
+            if (deviceType.value==='mobile' || deviceType.value==='tablet') {
                 imageView.value = true;
-            } else {
+            } else if (deviceType.value==='laptop' || deviceType.value==='desktop') {
                 rowView.value = true;
             };
         }, 750);
-
-        updateDevice();
-        const handler = () => updateDevice();
-        window.addEventListener('resize', handler);
-        resizeCleanup = () => window.removeEventListener('resize', handler);
     }); 
-    onUnmounted(() => {
-        if (resizeCleanup) resizeCleanup();
-    });
 </script>
 
 
