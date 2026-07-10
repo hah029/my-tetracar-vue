@@ -76,12 +76,27 @@
 
     .btn_correction {
         position: absolute;
-        bottom: 30.435%;
         opacity: 0;
         transition: all 0.2s ease-in-out;
-        
+
         @include text-splash-button;
         color: $color-yellow-super-light;
+
+        bottom: 32.479vh;
+
+        @media (min-width: $breakpoint-mobile) and (orientation: landscape) { 
+            bottom: 32.479vh;
+        }
+        // позже расчитать:
+        // @media (min-width: $breakpoint-tablet) and (orientation: landscape) { 
+        //     bottom: 12.8125rem;
+        // }  
+        // @media (min-width: $breakpoint-laptop) and (orientation: landscape) { 
+        //     bottom: 12.8125rem;
+        // }
+        @media (min-width: $breakpoint-desktop) and (orientation: landscape) {
+            bottom: 17.5rem;
+        }
     }
 
     // появление надписи + ее мерцание (пока пользователь не нажмет на кнопку)

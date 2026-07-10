@@ -38,9 +38,9 @@ export function useDevice() {
     if (isLandscape) {
         if (width < 1024) {
             deviceType.value = 'mobile'
-        } else if (width >= 1024 && width < 1440) {
+        } else if (width >= 1024 && width < 1280) {
             deviceType.value = 'tablet'
-        } else if (width >= 1440 && width < 1920) {
+        } else if (width >= 1280 && width < 1920) {
             deviceType.value = 'laptop'
         } else if (width >= 1920) {
             deviceType.value = 'desktop'

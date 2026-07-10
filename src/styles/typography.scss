@@ -4,10 +4,10 @@ $font-secondary: 'jost-regular', sans-serif;
 $font-secondary-light: 'jost-light', sans-serif;
 
 // брейкпоинты
-$breakpoint-mobile-small: 480px;
+// $breakpoint-mobile-small: 480px; // возможно добавлю позже...
 $breakpoint-mobile: 768px;
 $breakpoint-tablet: 1024px;
-$breakpoint-laptop: 1440px;
+$breakpoint-laptop: 1280px; // (раньше было 1440px, решил немного снизить, чтобы охватить боьлше устройств)
 $breakpoint-desktop: 1920px;
 
 // миксины:
@@ -19,7 +19,7 @@ $breakpoint-desktop: 1920px;
         line-height: 1.1;
 
         @media (min-width: $breakpoint-mobile) and (orientation: landscape) { font-size: 5.13vh; }
-        // @media (min-width: $breakpoint-tablet) and (orientation: landscape) { font-size: 2.56vw; }  // позже расчитать
+        @media (min-width: $breakpoint-tablet) and (orientation: landscape) { font-size: 1.944vw; }
         // @media (min-width: $breakpoint-laptop) and (orientation: landscape) { font-size: 2.22vw; }  // позже расчитать
         @media (min-width: $breakpoint-desktop) and (orientation: landscape) { font-size: 2.188rem; }
     }
@@ -31,8 +31,8 @@ $breakpoint-desktop: 1920px;
         line-height: 1.05;
 
         @media (min-width: $breakpoint-mobile) and (orientation: landscape) { font-size: 5.56vh; }
-        @media (min-width: $breakpoint-tablet) and (orientation: landscape) { font-size: 2.56vw; }
-        @media (min-width: $breakpoint-laptop) and (orientation: landscape) { font-size: 2.22vw; }
+        @media (min-width: $breakpoint-tablet) and (orientation: landscape) { font-size: 1.944vw; }
+        // @media (min-width: $breakpoint-laptop) and (orientation: landscape) { font-size: 2.22vw; }   // позже расчитать
         @media (min-width: $breakpoint-desktop) and (orientation: landscape) { font-size: 2.188rem; }
     }
 
@@ -86,8 +86,7 @@ $breakpoint-desktop: 1920px;
         @media (min-width: $breakpoint-desktop) and (orientation: landscape) { font-size: 0.75rem; }
     }
 
-/* 7) TeamLogo
-    (Desktop 12px → Laptop 12px → Tablet 18px → Mobile 23px → Small 19px) */
+// 7) TeamLogo
     @mixin text-team-logo {
         font-family: $font-secondary-light;
         font-size: 1.97vh;  // позже расчитать (для мини-мобил)

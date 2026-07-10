@@ -115,11 +115,11 @@
             bottom: 11.111vh;
             gap: 5.56vh;
         }
+        @media (min-width: $breakpoint-tablet) and (orientation: landscape) { 
+            bottom: 9.722vw;
+            gap: 1.736vw; 
+        }  
         // позже расчитать:
-        // @media (min-width: $breakpoint-tablet) and (orientation: landscape) { 
-        //     bottom: 12.8125rem;
-        //     gap: 5.56vh; 
-        // }  
         // @media (min-width: $breakpoint-laptop) and (orientation: landscape) { 
         //     bottom: 12.8125rem;
         //     gap: 5.56vh; 
