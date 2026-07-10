@@ -34,6 +34,7 @@
 <script setup lang="ts">
     import { ref, watch, computed, onMounted, onUnmounted } from "vue";
     import { useGameState } from "@/store/gameState";
+    import { useDevice } from '@/composables/useDevice';
     import { GameStates } from "@/game/core/GameState";
 
     const gameState = useGameState();
@@ -41,38 +42,35 @@
     const isLettersShown = ref(false);
     const isLettersMovedToTop = ref(false);
     const isLinesShown = ref(false);
+    const { isMobile, isTablet, isDesktop } = useDevice();
 
     // #region - Определение устройства
-    const isDesktop = ref(false);
-    const isTablet = ref(false);
-    const isMobile = ref(true); // по умолчанию true
+    // const isDesktop = ref(false);
+    // const isTablet = ref(false);
+    // const isMobile = ref(true); // по умолчанию true
 
-    function updateDevice() {
-        const width = window.innerWidth;
-        const isLandscape = window.matchMedia("(orientation: landscape)").matches;
+    // function updateDevice() {
+    //     const width = window.innerWidth;
+    //     const isLandscape = window.matchMedia("(orientation: landscape)").matches;
         
-        // Определяем по ширине (Mobile-first)
-        isDesktop.value = width >= 1920 && isLandscape;
-        isTablet.value = width >= 1024 && width < 1920 && isLandscape;
-        isMobile.value = width < 1024 && isLandscape;
-        
-        // console.log('isMobile:', isMobile.value);
-        // console.log('isTablet:', isTablet.value);
-        // console.log('isDesktop:', isDesktop.value);
-    }
+    //     // Определяем по ширине (Mobile-first)
+    //     isDesktop.value = width >= 1920 && isLandscape;
+    //     isTablet.value = width >= 1024 && width < 1920 && isLandscape;
+    //     isMobile.value = width < 1024 && isLandscape;
+    // }
 
-    let resizeCleanup: (() => void) | null = null;
+    // let resizeCleanup: (() => void) | null = null;
 
-    onMounted(() => {
-        updateDevice();
-        const handler = () => updateDevice();
-        window.addEventListener('resize', handler);
-        resizeCleanup = () => window.removeEventListener('resize', handler);
-    });
+    // onMounted(() => {
+    //     updateDevice();
+    //     const handler = () => updateDevice();
+    //     window.addEventListener('resize', handler);
+    //     resizeCleanup = () => window.removeEventListener('resize', handler);
+    // });
 
-    onUnmounted(() => {
-        if (resizeCleanup) resizeCleanup();
-    });
+    // onUnmounted(() => {
+    //     if (resizeCleanup) resizeCleanup();
+    // });
     // #endregion
     
     // #region - Логика состояний

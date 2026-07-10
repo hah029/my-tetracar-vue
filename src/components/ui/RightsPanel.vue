@@ -1,6 +1,7 @@
 <template>
     <Transition name="rights_panel_showing">
         <div v-show="isRightPanelShown" class="rights_root">
+            <DeviceInfo />
             <span>{{ APP_NAME }} v{{ APP_VERSION }}</span>
             <span>© {{ CURRENT_YEAR }} {{ randomRightsPhrase }}</span>
         </div>
@@ -13,6 +14,7 @@
     import { useGameState } from "@/store/gameState";
     import { GameStates } from "@/game/core/GameState";
     import { createNewText } from '@/helpers/functions';
+    import DeviceInfo from '@/components/ui/DeviceInfo.vue';
 
     import { APP_VERSION, APP_NAME, CURRENT_YEAR} from "@/gameConfig";
 
