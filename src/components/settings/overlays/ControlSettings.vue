@@ -163,12 +163,12 @@
         width: 102.564vh;   // позже расчитать (для мини-мобил)    
         // height: 42.274vh;   // позже расчитать (для мини-мобил)
 
-        @media (min-width: $breakpoint-mobile) and (orientation: landscape) { 
+        @media (min-width: $breakpoint-mobile) and (orientation: landscape) and (hover: none) and (pointer: coarse) { 
             width: 102.564vh;
             // height: 42.274vh;
         }
         // позже расчитать:
-        // @media (min-width: $breakpoint-tablet) and (orientation: landscape) { 
+        // @media (min-width: $breakpoint-tablet) and (orientation: landscape) and (hover: none) and (pointer: coarse) { 
             // width: 102.564vh;
             // height: 42.274vh;
         // }
@@ -180,13 +180,13 @@
         left: 2.222vh;      // позже расчитать (для мини-мобил)
         width: 18.889vh;    // позже расчитать (для мини-мобил)
 
-        @media (min-width: $breakpoint-mobile) and (orientation: landscape) { 
+        @media (min-width: $breakpoint-mobile) and (orientation: landscape) and (hover: none) and (pointer: coarse) { 
             top: 0.8vh;
             left: 2.222vh;
             width: 18.889vh;
         }
         // позже расчитать:
-        // @media (min-width: $breakpoint-tablet) and (orientation: landscape) { 
+        // @media (min-width: $breakpoint-tablet) and (orientation: landscape) and (hover: none) and (pointer: coarse) { 
             // top: 0.8vh;
             // left: 2.222vh;
             // width: 18.889vh;
@@ -199,13 +199,13 @@
         left: 82.051vh;      // позже расчитать (для мини-мобил)
         width: 20.513vh;    // позже расчитать (для мини-мобил)
 
-        @media (min-width: $breakpoint-mobile) and (orientation: landscape) { 
+        @media (min-width: $breakpoint-mobile) and (orientation: landscape) and (hover: none) and (pointer: coarse) { 
             top: 38vh;
             left: 82.051vh;
             width: 20.513vh;
         }
         // позже расчитать:
-        // @media (min-width: $breakpoint-tablet) and (orientation: landscape) { 
+        // @media (min-width: $breakpoint-tablet) and (orientation: landscape) and (hover: none) and (pointer: coarse) { 
             // top: 38.889vh;
             // left: 82.051vh;
             // width: 20.513vh;
@@ -218,13 +218,13 @@
         left: 0vh;      // позже расчитать (для мини-мобил)
         width: 17.179vh;    // позже расчитать (для мини-мобил)
 
-        @media (min-width: $breakpoint-mobile) and (orientation: landscape) { 
+        @media (min-width: $breakpoint-mobile) and (orientation: landscape) and (hover: none) and (pointer: coarse) { 
             top: 19.1vh;
             left: 0vh;
             width: 17.179vh;
         }
         // позже расчитать:
-        // @media (min-width: $breakpoint-tablet) and (orientation: landscape) { 
+        // @media (min-width: $breakpoint-tablet) and (orientation: landscape) and (hover: none) and (pointer: coarse) { 
             // top: 19.1vh;
             // left: 0vh;
             // width: 17.179vh;
@@ -237,13 +237,13 @@
         left: 84.188vh;      // позже расчитать (для мини-мобил)
         width: 18.462vh;    // позже расчитать (для мини-мобил)
 
-        @media (min-width: $breakpoint-mobile) and (orientation: landscape) { 
+        @media (min-width: $breakpoint-mobile) and (orientation: landscape) and (hover: none) and (pointer: coarse) { 
             top: 19.3vh;
             left: 84.188vh;
             width: 18.462vh;
         }
         // позже расчитать:
-        // @media (min-width: $breakpoint-tablet) and (orientation: landscape) { 
+        // @media (min-width: $breakpoint-tablet) and (orientation: landscape) and (hover: none) and (pointer: coarse) { 
             // top: 19.3vh;
             // left: 84.188vh;
             // width: 18.462vh;

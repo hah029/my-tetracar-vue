@@ -51,18 +51,18 @@ $z-layers: (
 
         margin-bottom: 4.6vh;   // позже расчитать (для мини-мобил)
 
-        @media (min-width: $breakpoint-mobile) and (orientation: landscape) { 
+        @media (min-width: $breakpoint-mobile) and (orientation: landscape) and (hover: none) and (pointer: coarse) { 
             margin-bottom: 4.6vh;
         }
         // позже расчитать:
-        // @media (min-width: $breakpoint-tablet) and (orientation: landscape) { 
-        //     margin-bottom: 5.56vh; 
+        // @media (min-width: $breakpoint-tablet) and (orientation: landscape) and (hover: none) and (pointer: coarse) { 
+        //     margin-bottom: 5.56vw; 
         // }  
-        // @media (min-width: $breakpoint-laptop) and (orientation: landscape) { 
-        //     margin-bottom: 5.56vh; 
-        // }
+        @media (min-width: $breakpoint-laptop) and (orientation: landscape) { 
+            margin-bottom: 1.389vw; 
+        }
         @media (min-width: $breakpoint-desktop) and (orientation: landscape) {
-            margin-bottom: 2.5rem;
+            margin-bottom: 2.344vw;
         }
     }
 
@@ -71,36 +71,36 @@ $z-layers: (
         color: $color-blue;
         margin-bottom: 3.1vh;    // позже расчитать (для мини-мобил)
 
-        @media (min-width: $breakpoint-mobile) and (orientation: landscape) { 
+        @media (min-width: $breakpoint-mobile) and (orientation: landscape) and (hover: none) and (pointer: coarse) { 
             margin-bottom: 3.1vh;
         }
         // позже расчитать:
-        // @media (min-width: $breakpoint-tablet) and (orientation: landscape) { 
-        //     margin-bottom: 34.625rem
+        // @media (min-width: $breakpoint-tablet) and (orientation: landscape) and (hover: none) and (pointer: coarse) { 
+        //     margin-bottom: 34.625vw;
         // }  
-        // @media (min-width: $breakpoint-laptop) and (orientation: landscape) { 
-        //     margin-bottom: 34.625rem
-        // }
+        @media (min-width: $breakpoint-laptop) and (orientation: landscape) { 
+            margin-bottom: 0.9vw;
+        }
         @media (min-width: $breakpoint-desktop) and (orientation: landscape) {
-            margin-bottom: 0.9rem;
+            margin-bottom: 0.75vw;
         }
     }
 
     .header_image {
         width: 85.812vh;    // позже расчитать (для мини-мобил)
 
-        @media (min-width: $breakpoint-mobile) and (orientation: landscape) { 
+        @media (min-width: $breakpoint-mobile) and (orientation: landscape) and (hover: none) and (pointer: coarse) { 
             width: 85.812vh;
         }
         // позже расчитать:
-        // @media (min-width: $breakpoint-tablet) and (orientation: landscape) { 
-        //     width: 34.625rem
+        // @media (min-width: $breakpoint-tablet) and (orientation: landscape) and (hover: none) and (pointer: coarse) { 
+        //     width: 34.625vw;
         // }  
-        // @media (min-width: $breakpoint-laptop) and (orientation: landscape) { 
-        //     width: 34.625rem
-        // }
+        @media (min-width: $breakpoint-laptop) and (orientation: landscape) { 
+            width: 28.819vw;
+        }
         @media (min-width: $breakpoint-desktop) and (orientation: landscape) {
-            width: 34.625rem;
+            width: 28.854vw;
         }
     }
 

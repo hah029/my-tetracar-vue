@@ -53,22 +53,22 @@
         bottom: 5.13vh;     // позже расчитать (для мини-мобил)
         right: 5.98vh;      // позже расчитать (для мини-мобил)
 
-        @media (min-width: $breakpoint-mobile) and (orientation: landscape) { 
+        @media (min-width: $breakpoint-mobile) and (orientation: landscape) and (hover: none) and (pointer: coarse) { 
             bottom: 5.13vh;
             right: 5.98vh;
         }
         // позже расчитать:
-        // @media (min-width: $breakpoint-tablet) and (orientation: landscape) { 
-            // bottom: 1.875rem;
-            // right: 2.5rem;
+        // @media (min-width: $breakpoint-tablet) and (orientation: landscape) and (hover: none) and (pointer: coarse) { 
+            // bottom: 1.875vw;
+            // right: 2.5vw;
         // }  
-        // @media (min-width: $breakpoint-laptop) and (orientation: landscape) { 
-            // bottom: 1.875rem;
-            // right: 2.5rem;
-        // }
+        @media (min-width: $breakpoint-laptop) and (orientation: landscape) { 
+            bottom: 1.4vw;
+            right: 2.43vw;
+        }
         @media (min-width: $breakpoint-desktop) and (orientation: landscape) {
-            bottom: 1.875rem;
-            right: 2.5rem;
+            bottom: 1.563vw;
+            right: 2.083vw;
         }
         // #endregion
         
@@ -93,23 +93,21 @@
     .logo_container {
         opacity: 0.6;
         transition: all 0.15s ease-in-out;
+        width: 8.487vh; // позже расчитать (для мини-мобил)
 
-        // #region - width
-        width: 8.2vh; // позже расчитать (для мини-мобил)
-        @media (min-width: $breakpoint-mobile) and (orientation: landscape) { 
-            margin-top: 8.2vh;
+        @media (min-width: $breakpoint-mobile) and (orientation: landscape) and (hover: none) and (pointer: coarse) { 
+            width: 8.487vh;
         }
         // позже расчитать:
-        // @media (min-width: $breakpoint-tablet) and (orientation: landscape) { 
-        //     width: 5.56vh; 
+        // @media (min-width: $breakpoint-tablet) and (orientation: landscape) and (hover: none) and (pointer: coarse) { 
+        //     width: 5.56vw; 
         // }  
-        // @media (min-width: $breakpoint-laptop) and (orientation: landscape) { 
-        //     width: 5.56vh; 
-        // }
-        @media (min-width: $breakpoint-desktop) and (orientation: landscape) {
-            width: 3rem;
+        @media (min-width: $breakpoint-laptop) and (orientation: landscape) { 
+            width: 3.25vw; 
         }
-        // #endregion
+        @media (min-width: $breakpoint-desktop) and (orientation: landscape) {
+            width: 2.5vw;
+        }
     }
 
     .logo_img {
@@ -124,7 +122,6 @@
         justify-content: flex-end;
         text-transform: uppercase;
         opacity: 0.7;
-        font-size: 0.875rem;
         transition: all 0.15s ease-in-out;
         margin-bottom: 0.3rem;
     }
@@ -142,16 +139,16 @@
         // #region - margin-top
         margin-top: 0.1vh; // позже расчитать (для мини-мобил)
 
-        @media (min-width: $breakpoint-mobile) and (orientation: landscape) { 
+        @media (min-width: $breakpoint-mobile) and (orientation: landscape) and (hover: none) and (pointer: coarse) { 
             margin-top: 0.1vh;
         }
         // позже расчитать:
-        // @media (min-width: $breakpoint-tablet) and (orientation: landscape) { 
-        //     margin-top: 12.8125rem;
+        // @media (min-width: $breakpoint-tablet) and (orientation: landscape) and (hover: none) and (pointer: coarse) { 
+        //     margin-top: 12.8125vw;
         // }  
-        // @media (min-width: $breakpoint-laptop) and (orientation: landscape) { 
-        //     margin-top: 12.8125rem;
-        // }
+        @media (min-width: $breakpoint-laptop) and (orientation: landscape) { 
+            margin-top: -0.1vw;
+        }
         @media (min-width: $breakpoint-desktop) and (orientation: landscape) {
             margin-top: -0.15rem;
         }

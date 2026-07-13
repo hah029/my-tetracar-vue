@@ -111,22 +111,22 @@
         bottom: 11.111vh;
         gap: 5.56vh;
 
-        @media (min-width: $breakpoint-mobile) and (orientation: landscape) { 
+        @media (min-width: $breakpoint-mobile) and (orientation: landscape) and (hover: none) and (pointer: coarse) { 
             bottom: 11.111vh;
             gap: 5.56vh;
         }
-        @media (min-width: $breakpoint-tablet) and (orientation: landscape) { 
+        // позже расчитать:
+        // @media (min-width: $breakpoint-tablet) and (orientation: landscape) and (hover: none) and (pointer: coarse) { 
+        //     bottom: 9.722vw;
+        //     gap: 1.736vw; 
+        // }  
+        @media (min-width: $breakpoint-laptop) and (orientation: landscape) { 
             bottom: 9.722vw;
             gap: 1.736vw; 
-        }  
-        // позже расчитать:
-        // @media (min-width: $breakpoint-laptop) and (orientation: landscape) { 
-        //     bottom: 12.8125rem;
-        //     gap: 5.56vh; 
-        // }
+        }
         @media (min-width: $breakpoint-desktop) and (orientation: landscape) {
-            bottom: 12.8125rem;
-            gap: 2rem;
+            bottom: 10.677vw;
+            gap: 1.667vw;
         }
         // #endregion
     }

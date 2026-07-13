@@ -84,18 +84,18 @@
 
         bottom: 32.479vh;
 
-        @media (min-width: $breakpoint-mobile) and (orientation: landscape) { 
+        @media (min-width: $breakpoint-mobile) and (orientation: landscape) and (hover: none) and (pointer: coarse) { 
             bottom: 32.479vh;
         }
         // позже расчитать:
-        // @media (min-width: $breakpoint-tablet) and (orientation: landscape) { 
-        //     bottom: 12.8125rem;
+        // @media (min-width: $breakpoint-tablet) and (orientation: landscape) and (hover: none) and (pointer: coarse) { 
+        //     bottom: 12.8125vw;
         // }  
-        // @media (min-width: $breakpoint-laptop) and (orientation: landscape) { 
-        //     bottom: 12.8125rem;
-        // }
+        @media (min-width: $breakpoint-laptop) and (orientation: landscape) { 
+            bottom: 33.435vh;
+        }
         @media (min-width: $breakpoint-desktop) and (orientation: landscape) {
-            bottom: 17.5rem;
+            bottom: 14.583vw;
         }
     }
 

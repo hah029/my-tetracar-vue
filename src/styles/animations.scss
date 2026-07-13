@@ -51,12 +51,21 @@
 
     // анимация поднятия текста лого вверх при переходе в главное меню
     // mobile
-    @media (max-width: $breakpoint-mobile) and (orientation: landscape) {
+    @media (max-width: $breakpoint-mobile) and (orientation: landscape) and (hover: none) and (pointer: coarse) {
         :root {
             --logo-top-start: 13.68vh;
             --logo-top-end: 10.26vh;
             --logo-width-start: 86.26vw;
             --logo-width-end: 78.44vw;
+        }
+    }
+    // laptop
+    @media (min-width: $breakpoint-laptop) and (orientation: landscape) {
+        :root {
+            --logo-top-start: 16.717vh;
+            --logo-top-end: 6.079vh;
+            --logo-width-start: 81.25vw;
+            --logo-width-end: 65.556vw;
         }
     }
     // desktop

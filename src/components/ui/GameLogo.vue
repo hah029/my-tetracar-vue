@@ -111,18 +111,18 @@
             topMenu = 10.26;
             widthPreloader = 86.26;
             widthMenu = 78.44;
-        } else if (deviceType.value==='tablet') {
-            // планшеты
-            topPreloader = 15;
-            topMenu = 10;
-            widthPreloader = 83;
-            widthMenu = 70;
-        // } else if (deviceType.value==='laptop') {
-        //     // ноутбуки (позже переписать корректные значения)
+        // } else if (deviceType.value==='tablet') {
+        //     // планшеты (позже переписать корректные значения)
         //     topPreloader = 15;
         //     topMenu = 10;
         //     widthPreloader = 83;
         //     widthMenu = 70;
+        } else if (deviceType.value==='laptop') {
+            // ноутбуки 
+            topPreloader = 16.717;
+            topMenu = 6.079;
+            widthPreloader = 81.25;
+            widthMenu = 65.556;
         } else if (deviceType.value==='desktop') {
             // десктоп
             topPreloader = 18.47;

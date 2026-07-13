@@ -37,13 +37,13 @@ export function useDevice() {
     // определение типа устройства по ширине окна браузера (Mobile-first)
     if (isLandscape) {
         if (width < 1024) {
-            deviceType.value = 'mobile'
+            deviceType.value = 'mobile';
         } else if (width >= 1024 && width < 1280) {
-            deviceType.value = 'tablet'
+            deviceType.value = 'tablet';
         } else if (width >= 1280 && width < 1920) {
-            deviceType.value = 'laptop'
+            deviceType.value = 'laptop';
         } else if (width >= 1920) {
-            deviceType.value = 'desktop'
+            deviceType.value = 'desktop';
         };
     };
     

@@ -43,22 +43,22 @@
         bottom: 5.13vh;     // позже расчитать (для мини-мобил)
         left: 5.98vh;      // позже расчитать (для мини-мобил)
 
-        @media (min-width: $breakpoint-mobile) and (orientation: landscape) { 
+        @media (min-width: $breakpoint-mobile) and (orientation: landscape) and (hover: none) and (pointer: coarse) { 
             bottom: 5.13vh;
             left: 5.98vh;
         }
         // позже расчитать:
-        // @media (min-width: $breakpoint-tablet) and (orientation: landscape) { 
-            // bottom: 1.875rem;
-            // left: 2.5rem;
+        // @media (min-width: $breakpoint-tablet) and (orientation: landscape) and (hover: none) and (pointer: coarse) { 
+            // bottom: 1.875vw;
+            // left: 2.5vw;
         // }  
-        // @media (min-width: $breakpoint-laptop) and (orientation: landscape) { 
-            // bottom: 1.875rem;
-            // left: 2.5rem;
-        // }
+        @media (min-width: $breakpoint-laptop) and (orientation: landscape) { 
+            bottom: 1.736vw;
+            left: 2.43vw;
+        }
         @media (min-width: $breakpoint-desktop) and (orientation: landscape) {
-            bottom: 1.875rem;
-            left: 2.5rem;
+            bottom: 1.563vw;
+            left: 2.083vw;
         }
         // #endregion
 

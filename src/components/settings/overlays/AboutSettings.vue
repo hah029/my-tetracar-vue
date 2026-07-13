@@ -59,31 +59,7 @@
     @use "@/styles/colors" as *;
 
     .group_correction {
-        display: flex;
-        flex-direction: column;
-        justify-content: flex-start;
-        align-items: center;
         width: max-content;
-
-        gap: 3.846vh;   // позже расчитать (для мини-мобил)
-
-        @media (min-width: $breakpoint-mobile) and (orientation: landscape) { 
-            gap: 3.846vh;
-        }
-        // позже расчитать:
-        // @media (min-width: $breakpoint-tablet) and (orientation: landscape) { 
-        //     bottom: 12.8125rem;
-        //     gap: 5.56vh; 
-        //     justify-content: center !important;
-        // }  
-        // @media (min-width: $breakpoint-laptop) and (orientation: landscape) { 
-        //     bottom: 12.8125rem;
-        //     gap: 5.56vh; 
-        //     justify-content: center !important;
-        // }
-        @media (min-width: $breakpoint-desktop) and (orientation: landscape) {
-            gap: 1.125rem;
-        }
     }
 
     .btn_correction {

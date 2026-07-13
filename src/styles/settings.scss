@@ -8,18 +8,22 @@
     width: 75.214vh;    // позже расчитать (для мини-мобил)
     gap: 5.128vh;
 
-    @media (min-width: $breakpoint-mobile) and (orientation: landscape) { 
+    @media (min-width: $breakpoint-mobile) and (orientation: landscape) and (hover: none) and (pointer: coarse) { 
         width: 75.214vh;
         gap: 5.128vh;
     }
     // позже расчитать:
-    // @media (min-width: $breakpoint-tablet) and (orientation: landscape) { 
-        // width: 25rem;
-    // @media (min-width: $breakpoint-laptop) and (orientation: landscape) { 
-        // width: 25rem;
+    // @media (min-width: $breakpoint-tablet) and (orientation: landscape) and (hover: none) and (pointer: coarse) { 
+        // width: 25vw;
+        // gap: 5.128vw;
+    // }
+    @media (min-width: $breakpoint-laptop) and (orientation: landscape) { 
+        width: 25.4vw;
+        gap: 1vw;
+    }
     @media (min-width: $breakpoint-desktop) and (orientation: landscape) {
-        width: 25rem;
-        gap: 1.25rem;
+        width: 20.833vw;
+        gap: 1.2vw;
     }
 }
 

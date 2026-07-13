@@ -149,14 +149,6 @@
         };
     };
 
-    // function setContainerPos() {
-    //     if (gameState.currentState == 'menu') {
-    //         return 'container_pos_main_menu';
-    //     } else if (gameState.currentState == 'pause') {
-    //         return 'container_pos_pause';
-    //     };
-    // };
-
     function setHeaderSize() {
         if (gameState.currentState == 'pause') {
             return 'header_pause';
@@ -239,18 +231,20 @@
 
     .container_correction {
         position: relative;
-        padding: 7.265vh 0 0 0;             // позже расчитать (для мини-мобил)
+        padding-top: 7.265vh;             // позже расчитать (для мини-мобил)
 
-        @media (min-width: $breakpoint-mobile) and (orientation: landscape) { 
-            padding: 7.265vh 0 0 0;
+        @media (min-width: $breakpoint-mobile) and (orientation: landscape) and (hover: none) and (pointer: coarse) { 
+            padding-top: 7.265vh;
         }
         // позже расчитать:
-        // @media (min-width: $breakpoint-tablet) and (orientation: landscape) { 
-            // padding: 7.265vh 0 0 0;
-        // @media (min-width: $breakpoint-laptop) and (orientation: landscape) { 
-            // padding: 7.265vh 0 0 0;
+        // @media (min-width: $breakpoint-tablet) and (orientation: landscape) and (hover: none) and (pointer: coarse) { 
+            // padding-top: 7.265vw;
+        // }
+        @media (min-width: $breakpoint-laptop) and (orientation: landscape) { 
+            padding-top: 16.1vw;
+        }
         @media (min-width: $breakpoint-desktop) and (orientation: landscape) {
-            padding: 22.5rem 0 0 0;
+            padding-top: 18.75vw;
         }
     }
 
@@ -274,22 +268,18 @@
 
         gap: 3.846vh;   // позже расчитать (для мини-мобил)
 
-        @media (min-width: $breakpoint-mobile) and (orientation: landscape) { 
+        @media (min-width: $breakpoint-mobile) and (orientation: landscape) and (hover: none) and (pointer: coarse) { 
             gap: 3.846vh;
         }
         // позже расчитать:
-        // @media (min-width: $breakpoint-tablet) and (orientation: landscape) { 
-        //     bottom: 12.8125rem;
-        //     gap: 5.56vh; 
-        //     justify-content: center !important;
+        // @media (min-width: $breakpoint-tablet) and (orientation: landscape) and (hover: none) and (pointer: coarse) { 
+        //     gap: 5.56vw; 
         // }  
-        // @media (min-width: $breakpoint-laptop) and (orientation: landscape) { 
-        //     bottom: 12.8125rem;
-        //     gap: 5.56vh; 
-        //     justify-content: center !important;
-        // }
+        @media (min-width: $breakpoint-laptop) and (orientation: landscape) { 
+            gap: 1.25vw; 
+        }
         @media (min-width: $breakpoint-desktop) and (orientation: landscape) {
-            gap: 1.125rem;
+            gap: 0.9375vw;
         }
     }
 
@@ -302,16 +292,18 @@
         position: absolute;
         bottom: 5.556vh;
 
-        @media (min-width: $breakpoint-mobile) and (orientation: landscape) { 
+        @media (min-width: $breakpoint-mobile) and (orientation: landscape) and (hover: none) and (pointer: coarse) { 
             bottom: 5.556vh;
         }
         // позже расчитать:
-        // @media (min-width: $breakpoint-tablet) and (orientation: landscape) { 
-            // bottom: 3.75rem;
-        // @media (min-width: $breakpoint-laptop) and (orientation: landscape) { 
-            // bottom: 3.75rem;
+        // @media (min-width: $breakpoint-tablet) and (orientation: landscape) and (hover: none) and (pointer: coarse) { 
+            // bottom: 3.75vw;
+        // }  
+        @media (min-width: $breakpoint-laptop) and (orientation: landscape) { 
+            bottom: 1.736vw;
+        }  
         @media (min-width: $breakpoint-desktop) and (orientation: landscape) {
-            bottom: 3.75rem;
+            bottom: 3.125vw;
         }
     }
 </style>

@@ -108,7 +108,7 @@
         width: 78.632vh;
         gap: 3.5vh;
         
-        // // #region - кастомный скролл-бар 
+        // #region - кастомный скролл-бар 
         // overflow-y: scroll;
 
         // // для Firefox
@@ -142,35 +142,41 @@
         // // }
         // #endregion
 
-        @media (min-width: $breakpoint-mobile) and (orientation: landscape) { 
+        @media (min-width: $breakpoint-mobile) and (orientation: landscape) and (hover: none) and (pointer: coarse) { 
             width: 78.632vh;
             gap: 3.5vh;
         }
         // позже расчитать:
-        // @media (min-width: $breakpoint-tablet) and (orientation: landscape) { 
-            // width: 25rem;
-        // @media (min-width: $breakpoint-laptop) and (orientation: landscape) { 
-            // width: 25rem;
+        // @media (min-width: $breakpoint-tablet) and (orientation: landscape) and (hover: none) and (pointer: coarse) { 
+            // width: 25vw;
+            // gap: 0.313vw;
+        // }
+        @media (min-width: $breakpoint-laptop) and (orientation: landscape) { 
+            width: 26.389vw;
+            gap: 0.2vw;
+        }
         @media (min-width: $breakpoint-desktop) and (orientation: landscape) {
-            width: 28.75rem;
-            height: 19rem;
-            gap: 0.313rem;
+            width: 23.958vw;
+            height: 15.833vw;
+            gap: 0.2608vw;
         }
     }
 
     .row_correction {
-        // padding: 1.71vh;
+        padding: 0vh;
 
-        @media (min-width: $breakpoint-mobile) and (orientation: landscape) { 
-            // padding: 1.71vh;
+        @media (min-width: $breakpoint-mobile) and (orientation: landscape) and (hover: none) and (pointer: coarse) { 
+            padding: 0vh;
         }
         // позже расчитать:
-        // @media (min-width: $breakpoint-tablet) and (orientation: landscape) { 
-            // padding: 25rem;
-        // @media (min-width: $breakpoint-laptop) and (orientation: landscape) { 
-            // padding: 25rem;
+        // @media (min-width: $breakpoint-tablet) and (orientation: landscape) and (hover: none) and (pointer: coarse) { 
+            // padding: 25vw;
+        // }
+        @media (min-width: $breakpoint-laptop) and (orientation: landscape) { 
+            padding: 0.694vw;
+        }
         @media (min-width: $breakpoint-desktop) and (orientation: landscape) {
-            padding: 0.625rem;
+            padding: 0.521vw;
         }
         
         background: none;
@@ -189,21 +195,37 @@
         background: none;
         gap: 3.419vh;
 
-        @media (min-width: $breakpoint-mobile) and (orientation: landscape) { 
+        @media (min-width: $breakpoint-mobile) and (orientation: landscape) and (hover: none) and (pointer: coarse) { 
             gap: 3.419vh;
         }
         // позже расчитать:
-        // @media (min-width: $breakpoint-tablet) and (orientation: landscape) { 
-            // gap: 25rem;
-        // @media (min-width: $breakpoint-laptop) and (orientation: landscape) { 
-            // gap: 25rem;
+        // @media (min-width: $breakpoint-tablet) and (orientation: landscape) and (hover: none) and (pointer: coarse) { 
+            // gap: 25vw;
+        // }
+        @media (min-width: $breakpoint-laptop) and (orientation: landscape) { 
+            gap: 1.389vw;
+        }
         @media (min-width: $breakpoint-desktop) and (orientation: landscape) {
-            gap: 1.25rem;
+            gap: 1.042vw;
         }
     }
 
     .checker_image_container {
-        height: 1.875rem;
+        height: 5.7vh;
+
+        @media (min-width: $breakpoint-mobile) and (orientation: landscape) and (hover: none) and (pointer: coarse) { 
+            height: 5.7vh;
+        }
+        // позже расчитать:
+        // @media (min-width: $breakpoint-tablet) and (orientation: landscape) and (hover: none) and (pointer: coarse) { 
+            // height: 1.875vw;
+        // }
+        @media (min-width: $breakpoint-laptop) and (orientation: landscape) { 
+            height: 1.667vw;
+        }
+        @media (min-width: $breakpoint-desktop) and (orientation: landscape) {
+            height: 1.563vw;
+        }
     }
 
     .flag_image_container {
@@ -213,24 +235,30 @@
         border: 0.289vh solid #FDFFE3;
         border-radius: 0.962vh;
 
-        @media (min-width: $breakpoint-mobile) and (orientation: landscape) { 
+        @media (min-width: $breakpoint-mobile) and (orientation: landscape) and (hover: none) and (pointer: coarse) { 
             width: 8.034vh;
             height: 5.812vh;
             border: 0.289vh solid #FDFFE3;
             border-radius: 0.962vh;
         }
         // позже расчитать:
-        // @media (min-width: $breakpoint-tablet) and (orientation: landscape) { 
-            // width: 2.625rem;
-            // height: 1.875rem;
-        // @media (min-width: $breakpoint-laptop) and (orientation: landscape) { 
-            // width: 2.625rem;
-            // height: 1.875rem;
+        // @media (min-width: $breakpoint-tablet) and (orientation: landscape) and (hover: none) and (pointer: coarse) { 
+            // width: 2.625vw;
+            // height: 1.875vw;
+            // border: 0.0625vw solid #FDFFE3;
+            // border-radius: 0.313vw;
+        // }
+        @media (min-width: $breakpoint-laptop) and (orientation: landscape) { 
+            width: 2.917vw;
+            height: 2.083vw;
+            border: 0.069vw solid #FDFFE3;
+            border-radius: 0.347vw;
+        }
         @media (min-width: $breakpoint-desktop) and (orientation: landscape) {
-            width: 2.625rem;
-            height: 1.875rem;
-            border: 0.0625rem solid #FDFFE3;
-            border-radius: 0.313rem;
+            width: 2.1875vw;
+            height: 1.5625vw;
+            border: 0.0521vw solid #FDFFE3;
+            border-radius: 0.261vw;
         }
     }
 
@@ -245,16 +273,18 @@
         width: 80%;
         border-radius: 0.962vh;
 
-        @media (min-width: $breakpoint-mobile) and (orientation: landscape) { 
+        @media (min-width: $breakpoint-mobile) and (orientation: landscape) and (hover: none) and (pointer: coarse) { 
             border-radius: 0.962vh;
         }
         // позже расчитать:
-        // @media (min-width: $breakpoint-tablet) and (orientation: landscape) { 
+        // @media (min-width: $breakpoint-tablet) and (orientation: landscape) and (hover: none) and (pointer: coarse) { 
             // border-radius: 0.962vh
-        // @media (min-width: $breakpoint-laptop) and (orientation: landscape) { 
-            // border-radius: 0.962vh
+        // }
+        @media (min-width: $breakpoint-laptop) and (orientation: landscape) { 
+            border-radius: 0.347vw;
+        }
         @media (min-width: $breakpoint-desktop) and (orientation: landscape) {
-            border-radius: 0.313rem;
+            border-radius: 0.261vw;
         }
     }
 

@@ -98,14 +98,34 @@
     @use "@/styles/menu.scss";
     @use "@/styles/settings.scss";
     @use "@/styles/animations.scss";
+    @use "@/styles/typography" as *;
 
     // стили трека
     .custom_slider {
         appearance: none; // сброс дефолтных стилей бегунка
-        width: 7.5rem;
-        height: 0.125rem;
+        width: 28.205vh;
+        height: 0.427vh;
+
+        @media (min-width: $breakpoint-mobile) and (orientation: landscape) and (hover: none) and (pointer: coarse) { 
+            width: 28.205vh;
+            height: 0.427vh;
+        }
+        // позже расчитать:
+        // @media (min-width: $breakpoint-tablet) and (orientation: landscape) and (hover: none) and (pointer: coarse) { 
+            // width: 7.5vw;
+            // height: 0.125vw;
+        // }
+        @media (min-width: $breakpoint-laptop) and (orientation: landscape) { 
+            width: 8.333vw;
+            height: 0.139vw;
+        }
+        @media (min-width: $breakpoint-desktop) and (orientation: landscape) {
+            width: 6.25vw;
+            height: 0.104vw;
+        }
+
         background-color: #72B3EE;
-        border-radius: 2px;
+        // border-radius: 2px;
 
         &::-webkit-slider-thumb {
             -webkit-appearance: none;
