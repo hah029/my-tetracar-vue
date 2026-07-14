@@ -169,6 +169,31 @@
     @use "@/styles/typography" as *;
     @use "@/styles/colors" as *;
 
+    .container_correction {
+        position: relative;
+        padding-top: 7.265vh;             // позже расчитать (для мини-мобил)
+
+        @media (min-width: $breakpoint-mobile) and (orientation: landscape) and (hover: none) and (pointer: coarse) { 
+            padding-top: 7.265vh;
+        }
+        // позже расчитать:
+        // @media (min-width: $breakpoint-tablet) and (orientation: landscape) and (hover: none) and (pointer: coarse) { 
+            // padding-top: 7.265vw;
+        // }
+        @media (min-width: $breakpoint-laptop) and (orientation: landscape) { 
+            padding-top: 16.1vw;
+        }
+        @media (min-width: $breakpoint-desktop) and (orientation: landscape) {
+            padding-top: 18.75vw;
+        }
+
+        justify-content: center;
+        background-color: rgba(0, 0, 0, 0.72);
+        backdrop-filter: blur(2px);
+
+        // gap: 2.5rem;
+    }
+
     .warning {
         font-family: 'jost-light';
         text-transform: uppercase;
@@ -177,24 +202,6 @@
         width: min(25rem, 90vw);
         text-align: center;
         margin-bottom: 1.563rem;
-    }
-
-    .container_correction {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        position: fixed;
-        top: 0;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        width: 100%;
-        height: 100%;
-        background-color: rgba(0, 0, 0, 0.72);
-        backdrop-filter: blur(2px);
-
-        gap: 2.5rem;
     }
 
     .group_correction {
