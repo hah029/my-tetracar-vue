@@ -246,6 +246,7 @@
         @media (min-width: $breakpoint-desktop) and (orientation: landscape) {
             padding-top: 18.75vw;
         }
+        transition: all 0.5s ease-out;
     }
 
     .settings_container {
@@ -256,7 +257,7 @@
     }
 
     .header_pause {
-        font-size: clamp(2rem, 4vmin, 3.125rem);
+        @include text-menu-title-pause;
     }
 
     .group_correction {

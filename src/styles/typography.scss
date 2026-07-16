@@ -124,6 +124,23 @@ $breakpoint-desktop: 1920px;
             font-size: 2.083vw; 
         }
     }
+    // (тоже самое но в режиме паузы)
+    @mixin text-menu-title-pause {
+        font-family: $font-primary;
+        line-height: 1.05;
+
+        // для мобил не пересчитываем (не переопределяем оригинальные размеры с text-menu-title)
+
+        // @media (min-width: $breakpoint-tablet) and (orientation: landscape) and (hover: none) and (pointer: coarse) { 
+        //     font-size: 2.56vw;  // позже расчитать
+        // }   
+        @media (min-width: $breakpoint-laptop) and (orientation: landscape) { 
+            font-size: 2.917vw;
+        }   
+        @media (min-width: $breakpoint-desktop) and (orientation: landscape) { 
+            font-size: 2.604vw; 
+        }
+    }
 
 // 6) Copyrights
     @mixin text-copyright {

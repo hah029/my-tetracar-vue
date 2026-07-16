@@ -1,10 +1,10 @@
 <template>
-    <div class="container">
+    <div class="container container_blur">
         <!-- SETTINGS OVERLAY -->
         <SettingsRoot v-if="gameStore.activeOverlay === 'settings'" :key="'settings'" />
 
         <!-- PAUSE MENU -->
-        <div v-if="gameStore.activeOverlay !== 'settings'" :key="'pause'" class="container container_correction">
+        <div v-if="gameStore.activeOverlay !== 'settings'" :key="'pause'" class="container container_correction_pause">
             <!-- HEADER с анимацией -->
             <Transition name="header_footer_block_anim">
                 <div v-if="isHeaderShown" class="header_block">
@@ -169,29 +169,29 @@
     @use "@/styles/typography" as *;
     @use "@/styles/colors" as *;
 
-    .container_correction {
+    .container_blur {
+        background-color: rgba(0, 0, 0, 0.72);
+        backdrop-filter: blur(2px);
+    }
+
+    .container_correction_pause {
         position: relative;
-        padding-top: 7.265vh;             // позже расчитать (для мини-мобил)
+        padding-top: 24vh;             // позже расчитать (для мини-мобил)
 
         @media (min-width: $breakpoint-mobile) and (orientation: landscape) and (hover: none) and (pointer: coarse) { 
-            padding-top: 7.265vh;
+            padding-top: 24vh;
         }
         // позже расчитать:
         // @media (min-width: $breakpoint-tablet) and (orientation: landscape) and (hover: none) and (pointer: coarse) { 
             // padding-top: 7.265vw;
         // }
         @media (min-width: $breakpoint-laptop) and (orientation: landscape) { 
-            padding-top: 16.1vw;
+            padding-top: 15.417vw;
         }
         @media (min-width: $breakpoint-desktop) and (orientation: landscape) {
-            padding-top: 18.75vw;
+            padding-top: 16.458vw;
         }
-
-        justify-content: center;
-        background-color: rgba(0, 0, 0, 0.72);
-        backdrop-filter: blur(2px);
-
-        // gap: 2.5rem;
+        transition: all 0.5s ease-out;
     }
 
     .warning {
@@ -218,21 +218,7 @@
     }
 
     .header_correction {
-        @media (min-width: $breakpoint-mobile-small) and (orientation: landscape) and (hover: none) and (pointer: coarse) { 
-            font-size: 6.838vh;  // позже расчитать (для мини-мобил)
-        }
-        @media (min-width: $breakpoint-mobile) and (orientation: landscape) and (hover: none) and (pointer: coarse) { 
-            font-size: 6.838vh; 
-        }
-        // @media (min-width: $breakpoint-tablet) and (orientation: landscape) and (hover: none) and (pointer: coarse) { 
-        //     font-size: 2.56vw;  // позже расчитать
-        // }   
-        @media (min-width: $breakpoint-laptop) and (orientation: landscape) { 
-            font-size: 2.361vw;
-        }   
-        @media (min-width: $breakpoint-desktop) and (orientation: landscape) { 
-            font-size: 2.604vw; 
-        }
+        @include text-menu-title-pause;
     }
 
     .btn_correction {
