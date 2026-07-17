@@ -156,9 +156,6 @@
 
     // перемещаем весь контейнер вверх/вниз (для мобильной версии)
     function setContainerClass() {
-        console.log(isSettingsPreparing.value);
-        console.log(deviceType.value);
-        
         if (!isSettingsPreparing.value) {
             // 1. вхожу в паузу 
             // 2. или выхожу из настроек
@@ -211,15 +208,24 @@
     }
 
     .group_correction {
-        position: static !important;
-        min-height: 10rem;
         display: flex;
         flex-direction: column;
         justify-content: flex-start;
         align-items: center;
+        gap: 3.846vh;
 
-        &>*+* {
-            margin-top: 1.56rem; // 25px - row-gap (между кнопками)
+        @media (min-width: $breakpoint-mobile) and (orientation: landscape) and (hover: none) and (pointer: coarse) { 
+            gap: 3.846vh;
+        }
+        // позже расчитать:
+        // @media (min-width: $breakpoint-tablet) and (orientation: landscape) and (hover: none) and (pointer: coarse) { 
+        //     gap: 5.56vw; 
+        // }  
+        @media (min-width: $breakpoint-laptop) and (orientation: landscape) { 
+            gap: 1.25vw; 
+        }
+        @media (min-width: $breakpoint-desktop) and (orientation: landscape) {
+            gap: 1.302vw;
         }
     }
 

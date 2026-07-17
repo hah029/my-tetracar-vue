@@ -178,7 +178,7 @@
         };
     };
 
-    // позиционирование контейнера сверху экрана (если находимся в меню (не в паузе))
+    // позиционирование контейнера сверху экрана (если находимся в меню или в паузе)
     function setContainerClass() {
         if (gameState.currentState == 'menu') {
             return 'container_correction_settings';
@@ -187,7 +187,7 @@
         };
     };
 
-    // позиционирование контейнера сверху экрана (если находимся в меню (не в паузе))
+    // позиционирование кнопки "Назад" снизу экрана (если находимся в меню или в паузе)
     function setBackButtonClass() {
         if (gameState.currentState == 'menu') {
             return 'back_button_settings';
@@ -214,20 +214,10 @@
                 currentView.value = SettingsView.Main;
             }
         },
-        // { immediate: true }
     );
 
     onMounted(() => {
         isHeaderShown.value = true;
-        
-        // setTimeout(() => {
-        //     currentView.value = SettingsView.Main;
-        // }, 200);
-        // setTimeout(() => {
-        //     isBackButtonShown.value = true;
-        // }, 550);
-
-        // 🔥 Если settingsSection уже установлен — применяем его
         const section = gameState.settingsSection;
 
         if (section && section !== 'main') {
@@ -242,8 +232,6 @@
             } else if (section === 'controls') {
                 currentView.value = SettingsView.Controls;
             }
-            // setTimeout(() => {
-            // }, 300); // Задержка, чтобы Main успел отрендериться
             setTimeout(() => {
                 isBackButtonShown.value = true;
             }, 1000);
@@ -256,10 +244,6 @@
                 isBackButtonShown.value = true;
             }, 550);
         };
-        
-        // setTimeout(() => {
-        //     isBackButtonShown.value = true;
-        // }, 550);
     });
 </script>
 
@@ -286,7 +270,6 @@
     }
 
     .group_correction {
-        // position: static !important;
         display: flex;
         flex-direction: column;
         justify-content: flex-start;
