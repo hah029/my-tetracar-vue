@@ -1,10 +1,11 @@
 <template>
     <div class="container container_blur">
+        <!-- <div ></div> -->
         <!-- SETTINGS OVERLAY -->
         <SettingsRoot v-if="gameStore.activeOverlay === 'settings'" :key="'settings'" />
 
         <!-- PAUSE MENU -->
-        <div v-if="gameStore.activeOverlay !== 'settings'" :key="'pause'" class="container container_correction_pause">
+        <div v-if="gameStore.activeOverlay !== 'settings'" :key="'pause'" class="container" :class="setContainerClass()">
             <!-- HEADER с анимацией -->
             <Transition name="header_footer_block_anim">
                 <div v-if="isHeaderShown" class="header_block">
@@ -41,6 +42,7 @@
 <script setup lang="ts">
     import { onMounted, watch, computed, ref } from "vue";
     import { useGameState } from "@/store/gameState";
+    import { useDevice } from '@/composables/useDevice';
     import SettingsRoot from "./settings/SettingsRoot.vue";
     import { GameStates } from "@/game/core/GameState";
     import { createNewText } from '@/helpers/functions';
@@ -51,9 +53,11 @@
 
     const isHeaderShown = ref(false);
     const isButtonsShown = ref(false);
+    const isSettingsPreparing = ref(false);
     const isConfirmButtonsShown = ref(false);
     const isWarningShown = ref(false);
     const progressStore = useProgressStore();
+    const { deviceType } = useDevice();
 
     // кнопки меню "Пауза"
     const menuButtonsPause = computed(() => [
@@ -80,6 +84,7 @@
     // показываем (анимацией) титул и все кнопки меню
     function showHideAllPauseElements(type_, isQuitGame = false) {
         isHeaderShown.value = type_;
+        isSettingsPreparing.value = false;
 
         if (isQuitGame) {
             isWarningShown.value = false;
@@ -142,9 +147,36 @@
     // переходим в настройки
     function goToSettings() {
         isButtonsShown.value = false;
+        isSettingsPreparing.value = true;
         setTimeout(() => {
             gameStore.openSettings();
         }, 400);
+    };
+
+    // перемещаем весь контейнер вверх/вниз (для мобильной версии)
+    function setContainerClass() {
+        console.log(isSettingsPreparing.value);
+        console.log(deviceType.value);
+        
+        if (!isSettingsPreparing.value) {
+            // выхожу из настроек
+            if (deviceType.value =='mobile') {
+                return 'container_correction_pause';
+            } else {
+                return 'container_correction_settings';
+            };
+        } else {
+            // готовлюсь ко входу в настройки
+            if (gameStore.currentState == 'pause') {
+                if (deviceType.value =='mobile') {
+                    return 'container_correction_settings';
+                } else {
+                    return 'container_correction_pause';
+                };
+            } else {
+                return 'container_correction_settings';
+            };
+        };
     };
 
     // следим за стостоянием оверлея
@@ -172,26 +204,6 @@
     .container_blur {
         background-color: rgba(0, 0, 0, 0.72);
         backdrop-filter: blur(2px);
-    }
-
-    .container_correction_pause {
-        position: relative;
-        padding-top: 24vh;             // позже расчитать (для мини-мобил)
-
-        @media (min-width: $breakpoint-mobile) and (orientation: landscape) and (hover: none) and (pointer: coarse) { 
-            padding-top: 24vh;
-        }
-        // позже расчитать:
-        // @media (min-width: $breakpoint-tablet) and (orientation: landscape) and (hover: none) and (pointer: coarse) { 
-            // padding-top: 7.265vw;
-        // }
-        @media (min-width: $breakpoint-laptop) and (orientation: landscape) { 
-            padding-top: 15.417vw;
-        }
-        @media (min-width: $breakpoint-desktop) and (orientation: landscape) {
-            padding-top: 16.458vw;
-        }
-        transition: all 0.5s ease-out;
     }
 
     .warning {

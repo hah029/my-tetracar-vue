@@ -106,7 +106,7 @@ $breakpoint-desktop: 1920px;
 // 5) заголовки во всех меню (Menu Titles)
     @mixin text-menu-title {
         font-family: $font-primary;
-        line-height: 1.05;
+        line-height: 0.7;
 
         @media (min-width: $breakpoint-mobile-small) and (orientation: landscape) and (hover: none) and (pointer: coarse) { 
             font-size: 6.838vh;  // позже расчитать (для мини-мобил)
@@ -127,7 +127,7 @@ $breakpoint-desktop: 1920px;
     // (тоже самое но в режиме паузы)
     @mixin text-menu-title-pause {
         font-family: $font-primary;
-        line-height: 1.05;
+        line-height: 0.7;
 
         // для мобил не пересчитываем (не переопределяем оригинальные размеры с text-menu-title)
 

@@ -17,6 +17,7 @@ $z-layers: (
     @return map.get($z-layers, $layer);
 }
 
+// #region - контейнеры...
 .container {
     position: absolute;
     box-sizing: border-box;
@@ -28,8 +29,47 @@ $z-layers: (
     height: 100%;
 }
 
+.container_correction_settings {
+    position: relative;
+    padding-top: 7.265vh;             // позже расчитать (для мини-мобил)
+
+    @media (min-width: $breakpoint-mobile) and (orientation: landscape) and (hover: none) and (pointer: coarse) { 
+        padding-top: 7.265vh;
+    }
+    // позже расчитать:
+    // @media (min-width: $breakpoint-tablet) and (orientation: landscape) and (hover: none) and (pointer: coarse) { 
+        // padding-top: 7.265vw;
+    // }
+    @media (min-width: $breakpoint-laptop) and (orientation: landscape) { 
+        padding-top: 16.1vw;
+    }
+    @media (min-width: $breakpoint-desktop) and (orientation: landscape) {
+        padding-top: 18.75vw;
+    }
+    transition: all 0.5s ease-out;
+}
+
+.container_correction_pause {
+    position: relative;
+    padding-top: 24vh;             // позже расчитать (для мини-мобил)
+
+    @media (min-width: $breakpoint-mobile) and (orientation: landscape) and (hover: none) and (pointer: coarse) { 
+        padding-top: 24vh;
+    }
+    // позже расчитать:
+    // @media (min-width: $breakpoint-tablet) and (orientation: landscape) and (hover: none) and (pointer: coarse) { 
+        // padding-top: 7.265vw;
+    // }
+    @media (min-width: $breakpoint-laptop) and (orientation: landscape) { 
+        padding-top: 15.417vw;
+    }
+    @media (min-width: $breakpoint-desktop) and (orientation: landscape) {
+        padding-top: 16.458vw;
+    }
+    transition: all 0.5s ease-out;
+}
+
 .sub_container {
-    // position: relative;
     height: 100%;
     box-sizing: border-box;
     display: flex;
@@ -37,6 +77,7 @@ $z-layers: (
     align-items: center;
     justify-content: flex-start;
 }
+// #endregion
 
 // #region - header
     .header_block {
@@ -82,7 +123,7 @@ $z-layers: (
             margin-bottom: 0.9vw;
         }
         @media (min-width: $breakpoint-desktop) and (orientation: landscape) {
-            margin-bottom: 0.75vw;
+            margin-bottom: 1.09vw;
         }
     }
 
@@ -110,6 +151,7 @@ $z-layers: (
     }
 // #endregion
 
+// #region - кнопки
 .buttons_group {
     height: fit-content;
     display: flex;
@@ -131,3 +173,4 @@ $z-layers: (
         transition: all 0.1s ease-in-out;
     }
 }
+// #endregion

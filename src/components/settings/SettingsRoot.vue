@@ -1,5 +1,5 @@
 <template>
-    <div class="container container_correction">
+    <div class="container" :class="setContainerClass()">
         <div class="settings_container">
 
             <!-- HEADER -->
@@ -46,10 +46,11 @@
     import LanguageSettings from "./overlays/LanguageSettings.vue";
     import ControlSettings from "./overlays/ControlSettings.vue";
     import AboutSettings from "./overlays/AboutSettings.vue";
-
+    
     import { onMounted, computed, ref, watch } from "vue";
     import { createNewText, deleteTextLines } from '@/helpers/functions';
     import { useGameState } from "@/store/gameState";
+    import { useDevice } from '@/composables/useDevice';
 
     enum SettingsView {
         Main,
@@ -70,6 +71,8 @@
     const isHeaderShown = ref(false);
     const isBackButtonShown = ref(false);
     const isBackButtonClicked = ref(false);
+    const isSettingsPreparing = ref(true);
+    const { deviceType } = useDevice();
 
     // ===== TEXT =====
     const foo_1 = createNewText();
@@ -132,20 +135,40 @@
                 currentView.value = SettingsView.Main;
             }, 500);
 
-        } else {
+        } else {     
+            // кликаем по кнопке "Назад" из "Настроек" в:
             if (gameState.currentState == 'menu') {
+                // - главном экране
                 isHeaderShown.value = false;
-            };
-            setTimeout(() => {
-                currentView.value = SettingsView.null;
-            }, 100);
-            setTimeout(() => {
-                isBackButtonShown.value = false;
-            }, 400);
 
-            setTimeout(() => {
-                gameState.closeOverlay();
-            }, 500);
+                setTimeout(() => {
+                    currentView.value = SettingsView.null;
+                }, 100);
+                setTimeout(() => {
+                    isSettingsPreparing.value = false;
+                }, 200);
+                setTimeout(() => {
+                    isBackButtonShown.value = false;
+                }, 400);
+                setTimeout(() => {
+                    gameState.closeOverlay();
+                }, 500);
+                
+            } else if (gameState.currentState == 'pause') {
+                // - игровом режиме (в паузе)
+                setTimeout(() => {
+                    currentView.value = SettingsView.null;
+                }, 100);
+                setTimeout(() => {
+                    isBackButtonShown.value = false;
+                }, 400);
+                setTimeout(() => {
+                    isSettingsPreparing.value = false;
+                }, 500);
+                setTimeout(() => {
+                    gameState.closeOverlay();
+                }, 900);
+            };
         };
     };
 
@@ -154,6 +177,43 @@
             return 'header_pause';
         };
     };
+
+    // перемещаем весь контейнер вверх/вниз (для мобильной версии)
+    function setContainerClass() {
+        console.log(isSettingsPreparing.value);
+        console.log(deviceType.value);
+        
+        if (!isSettingsPreparing.value) {
+            // выхожу из настроек
+            if (deviceType.value =='mobile') {
+                return 'container_correction_pause';
+            } else {
+                return 'container_correction_settings';
+            };
+        } else {
+            // готовлюсь ко входу в настройки
+            if (gameState.currentState == 'pause') {
+                if (deviceType.value =='mobile') {
+                    return 'container_correction_settings';
+                } else {
+                    return 'container_correction_pause';
+                };
+            } else {
+                return 'container_correction_settings';
+            };
+        };
+    };
+    // function setContainerClass() {
+    //     if (!isSettingsPreparing.value) {
+    //         return 'container_correction_pause';
+    //     } else {
+    //         if (gameState.currentState == 'pause') {
+    //             return 'container_correction_pause';
+    //         } else {
+    //             return 'container_correction_settings';
+    //         };
+    //     };
+    // };
 
     // 🔥 Следим за изменением секции настроек
     watch(
@@ -228,26 +288,6 @@
     @use "@/styles/animations.scss";
     @use "@/styles/typography" as *;
     @use "@/styles/colors" as *;
-
-    .container_correction {
-        position: relative;
-        padding-top: 7.265vh;             // позже расчитать (для мини-мобил)
-
-        @media (min-width: $breakpoint-mobile) and (orientation: landscape) and (hover: none) and (pointer: coarse) { 
-            padding-top: 7.265vh;
-        }
-        // позже расчитать:
-        // @media (min-width: $breakpoint-tablet) and (orientation: landscape) and (hover: none) and (pointer: coarse) { 
-            // padding-top: 7.265vw;
-        // }
-        @media (min-width: $breakpoint-laptop) and (orientation: landscape) { 
-            padding-top: 16.1vw;
-        }
-        @media (min-width: $breakpoint-desktop) and (orientation: landscape) {
-            padding-top: 18.75vw;
-        }
-        transition: all 0.5s ease-out;
-    }
 
     .settings_container {
         display: flex;
