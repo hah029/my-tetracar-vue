@@ -1,6 +1,6 @@
 <template>
-    <div class="container" :class="setContainerClass()">
-        <div class="settings_container">
+    <div class="container">
+        <div class="settings_container" :class="setContainerClass()">
 
             <!-- HEADER -->
             <Transition :name="gameState.currentState == 'menu' ? 'header_footer_block_anim' : ''">
@@ -32,7 +32,7 @@
 
         <!-- BACK -->
         <Transition name="header_footer_block_anim">
-            <button v-if="isBackButtonShown" class="menu_btn btn_correction back_button" @click="backButtonClick">
+            <button v-if="isBackButtonShown" class="menu_btn btn_correction" :class="setBackButtonClass()" @click="backButtonClick">
                 {{ foo_1.makeText("mainMenu.goBack") }}
             </button>
         </Transition>
@@ -178,42 +178,23 @@
         };
     };
 
-    // перемещаем весь контейнер вверх/вниз (для мобильной версии)
+    // позиционирование контейнера сверху экрана (если находимся в меню (не в паузе))
     function setContainerClass() {
-        console.log(isSettingsPreparing.value);
-        console.log(deviceType.value);
-        
-        if (!isSettingsPreparing.value) {
-            // выхожу из настроек
-            if (deviceType.value =='mobile') {
-                return 'container_correction_pause';
-            } else {
-                return 'container_correction_settings';
-            };
+        if (gameState.currentState == 'menu') {
+            return 'container_correction_settings';
         } else {
-            // готовлюсь ко входу в настройки
-            if (gameState.currentState == 'pause') {
-                if (deviceType.value =='mobile') {
-                    return 'container_correction_settings';
-                } else {
-                    return 'container_correction_pause';
-                };
-            } else {
-                return 'container_correction_settings';
-            };
+            return 'settings_container_alternative';
         };
     };
-    // function setContainerClass() {
-    //     if (!isSettingsPreparing.value) {
-    //         return 'container_correction_pause';
-    //     } else {
-    //         if (gameState.currentState == 'pause') {
-    //             return 'container_correction_pause';
-    //         } else {
-    //             return 'container_correction_settings';
-    //         };
-    //     };
-    // };
+
+    // позиционирование контейнера сверху экрана (если находимся в меню (не в паузе))
+    function setBackButtonClass() {
+        if (gameState.currentState == 'menu') {
+            return 'back_button_settings';
+        } else {
+            return 'back_button_pause';
+        };
+    };
 
     // 🔥 Следим за изменением секции настроек
     watch(
@@ -296,6 +277,10 @@
         justify-content: flex-start;
     }
 
+    .settings_container_alternative {
+        position: relative;
+    }
+
     .header_pause {
         @include text-menu-title-pause;
     }
@@ -329,7 +314,7 @@
         color: $color-yellow-super-light;
     }
 
-    .back_button {
+    .back_button_settings {
         position: absolute;
         bottom: 5.556vh;
 
@@ -345,6 +330,25 @@
         }  
         @media (min-width: $breakpoint-desktop) and (orientation: landscape) {
             bottom: 3.125vw;
+        }
+    }
+
+    .back_button_pause {
+        position: absolute;
+        bottom: 12.821vh;
+
+        @media (min-width: $breakpoint-mobile) and (orientation: landscape) and (hover: none) and (pointer: coarse) { 
+            bottom: 12.821vh;
+        }
+        // позже расчитать:
+        // @media (min-width: $breakpoint-tablet) and (orientation: landscape) and (hover: none) and (pointer: coarse) { 
+            // bottom: 3.75vw;
+        // }  
+        @media (min-width: $breakpoint-laptop) and (orientation: landscape) { 
+            bottom: 18.194vw;
+        }  
+        @media (min-width: $breakpoint-desktop) and (orientation: landscape) {
+            bottom: 22.188vw;
         }
     }
 </style>
