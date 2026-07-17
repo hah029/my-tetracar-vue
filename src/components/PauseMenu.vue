@@ -198,13 +198,28 @@
     }
 
     .warning {
-        font-family: 'jost-light';
-        text-transform: uppercase;
-        font-size: clamp(1rem, 2vmin, 1.375rem);
-        color: #F79CFF;
-        width: min(25rem, 90vw);
+        @include text-warning;
+        color: $color-pink;
         text-align: center;
-        margin-bottom: 1.563rem;
+        margin-bottom: 6.837vh;
+        width: 61.88vh;
+
+        @media (min-width: $breakpoint-mobile) and (orientation: landscape) and (hover: none) and (pointer: coarse) { 
+            margin-bottom: 6.837vh;
+            width: 61.88vh;
+        }
+        // позже расчитать:
+        // @media (min-width: $breakpoint-tablet) and (orientation: landscape) and (hover: none) and (pointer: coarse) { 
+        //     gap: 5.56vw; 
+        // }  
+        @media (min-width: $breakpoint-laptop) and (orientation: landscape) { 
+            margin-bottom: 3.472vw;
+            width: 22.917vw;
+        }
+        @media (min-width: $breakpoint-desktop) and (orientation: landscape) {
+            margin-bottom: 2.604vw;
+            width: 20.833vw;
+        }
     }
 
     .group_correction {
