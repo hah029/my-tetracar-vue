@@ -97,6 +97,7 @@
         setTimeout(() => {
             isButtonsShown.value = type_;
         }, 100);
+        console.log('pause finished');
     };
 
     // продолжаем игру

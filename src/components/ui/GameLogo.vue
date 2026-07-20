@@ -48,6 +48,10 @@
     watch(
         () => [gameState.currentState, gameState.activeOverlay] as const,
         ([state, activeOverlay]) => {
+            console.log('gamelogo resumed');
+            console.log(gameState.currentState, state);
+            console.log(gameState.activeOverlay, activeOverlay);
+            
             switch (state) {
                 case GameStates.Preloader:
                     isWholeLogoShown.value = true;
@@ -60,6 +64,7 @@
                     break;
 
                 case GameStates.Menu:
+                    isWholeLogoShown.value = true;
                     isLettersMovedToTop.value = true;
                     
                     // скрываем логотип игры при нужных сценариях
