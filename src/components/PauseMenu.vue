@@ -201,11 +201,11 @@
         @include text-warning;
         color: $color-pink;
         text-align: center;
-        margin-bottom: 6.837vh;
+        margin-bottom: 1.709vh;
         width: 61.88vh;
 
         @media (min-width: $breakpoint-mobile) and (orientation: landscape) and (hover: none) and (pointer: coarse) { 
-            margin-bottom: 6.837vh;
+            margin-bottom: 1.709vh;
             width: 61.88vh;
         }
         // позже расчитать:
@@ -213,11 +213,11 @@
         //     gap: 5.56vw; 
         // }  
         @media (min-width: $breakpoint-laptop) and (orientation: landscape) { 
-            margin-bottom: 3.472vw;
+            margin-bottom: 2.222vw;
             width: 22.917vw;
         }
         @media (min-width: $breakpoint-desktop) and (orientation: landscape) {
-            margin-bottom: 2.604vw;
+            margin-bottom: 1.823vw;
             width: 20.833vw;
         }
     }
@@ -227,10 +227,10 @@
         flex-direction: column;
         justify-content: flex-start;
         align-items: center;
-        gap: 3.846vh;
+        gap: 5.128vh;
 
         @media (min-width: $breakpoint-mobile) and (orientation: landscape) and (hover: none) and (pointer: coarse) { 
-            gap: 3.846vh;
+            gap: 5.128vh;
         }
         // позже расчитать:
         // @media (min-width: $breakpoint-tablet) and (orientation: landscape) and (hover: none) and (pointer: coarse) { 
