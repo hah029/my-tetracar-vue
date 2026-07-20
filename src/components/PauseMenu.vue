@@ -164,7 +164,7 @@
         } else {
             // готовлюсь ко входу в настройки
             if (deviceType.value =='mobile') {
-                return 'container_correction_settings';
+                return 'container_correction_menu';
             } else {
                 return 'container_correction_pause';
             };

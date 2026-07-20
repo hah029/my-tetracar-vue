@@ -181,7 +181,7 @@
     // позиционирование контейнера сверху экрана (если находимся в меню или в паузе)
     function setContainerClass() {
         if (gameState.currentState == 'menu') {
-            return 'container_correction_settings';
+            return 'container_correction_menu';
         } else {
             return 'settings_container_alternative';
         };
@@ -190,7 +190,7 @@
     // позиционирование кнопки "Назад" снизу экрана (если находимся в меню или в паузе)
     function setBackButtonClass() {
         if (gameState.currentState == 'menu') {
-            return 'back_button_settings';
+            return 'back_button_menu';
         } else {
             return 'back_button_pause';
         };
@@ -295,43 +295,5 @@
     .btn_correction {
         @include text-secondary-menu-button;
         color: $color-yellow-super-light;
-    }
-
-    .back_button_settings {
-        position: absolute;
-        bottom: 5.556vh;
-
-        @media (min-width: $breakpoint-mobile) and (orientation: landscape) and (hover: none) and (pointer: coarse) { 
-            bottom: 5.556vh;
-        }
-        // позже расчитать:
-        // @media (min-width: $breakpoint-tablet) and (orientation: landscape) and (hover: none) and (pointer: coarse) { 
-            // bottom: 3.75vw;
-        // }  
-        @media (min-width: $breakpoint-laptop) and (orientation: landscape) { 
-            bottom: 1.736vw;
-        }  
-        @media (min-width: $breakpoint-desktop) and (orientation: landscape) {
-            bottom: 3.125vw;
-        }
-    }
-
-    .back_button_pause {
-        position: absolute;
-        bottom: 12.821vh;
-
-        @media (min-width: $breakpoint-mobile) and (orientation: landscape) and (hover: none) and (pointer: coarse) { 
-            bottom: 12.821vh;
-        }
-        // позже расчитать:
-        // @media (min-width: $breakpoint-tablet) and (orientation: landscape) and (hover: none) and (pointer: coarse) { 
-            // bottom: 3.75vw;
-        // }  
-        @media (min-width: $breakpoint-laptop) and (orientation: landscape) { 
-            bottom: 18.194vw;
-        }  
-        @media (min-width: $breakpoint-desktop) and (orientation: landscape) {
-            bottom: 22.188vw;
-        }
     }
 </style>

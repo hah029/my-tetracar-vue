@@ -29,7 +29,7 @@ $z-layers: (
     height: 100%;
 }
 
-.container_correction_settings {
+.container_correction_menu {
     position: relative;
     padding-top: 7.265vh;             // позже расчитать (для мини-мобил)
 
@@ -171,6 +171,44 @@ $z-layers: (
         color: $color-blue;
         filter: drop-shadow(0 0 1.25rem rgb(140, 186, 229));
         transition: all 0.1s ease-in-out;
+    }
+}
+
+.back_button_menu {
+    position: absolute;
+    bottom: 5.556vh;
+
+    @media (min-width: $breakpoint-mobile) and (orientation: landscape) and (hover: none) and (pointer: coarse) { 
+        bottom: 5.556vh;
+    }
+    // позже расчитать:
+    // @media (min-width: $breakpoint-tablet) and (orientation: landscape) and (hover: none) and (pointer: coarse) { 
+        // bottom: 3.75vw;
+    // }  
+    @media (min-width: $breakpoint-laptop) and (orientation: landscape) { 
+        bottom: 1.736vw;
+    }  
+    @media (min-width: $breakpoint-desktop) and (orientation: landscape) {
+        bottom: 3.125vw;
+    }
+}
+
+.back_button_pause {
+    position: absolute;
+    bottom: 12.821vh;
+
+    @media (min-width: $breakpoint-mobile) and (orientation: landscape) and (hover: none) and (pointer: coarse) { 
+        bottom: 12.821vh;
+    }
+    // позже расчитать:
+    // @media (min-width: $breakpoint-tablet) and (orientation: landscape) and (hover: none) and (pointer: coarse) { 
+        // bottom: 3.75vw;
+    // }  
+    @media (min-width: $breakpoint-laptop) and (orientation: landscape) { 
+        bottom: 18.194vw;
+    }  
+    @media (min-width: $breakpoint-desktop) and (orientation: landscape) {
+        bottom: 22.188vw;
     }
 }
 // #endregion

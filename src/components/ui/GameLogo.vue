@@ -48,9 +48,9 @@
     watch(
         () => [gameState.currentState, gameState.activeOverlay] as const,
         ([state, activeOverlay]) => {
-            console.log('gamelogo resumed');
-            console.log(gameState.currentState, state);
-            console.log(gameState.activeOverlay, activeOverlay);
+            // console.log('gamelogo resumed');
+            // console.log(gameState.currentState, state);
+            // console.log(gameState.activeOverlay, activeOverlay);
             
             switch (state) {
                 case GameStates.Preloader:
@@ -77,9 +77,9 @@
                     };
                     break;
 
-                case GameStates.LevelSelect:
-                    isWholeLogoShown.value = false;
-                    break;
+                // case GameStates.LevelSelect:
+                //     isWholeLogoShown.value = false;
+                //     break;
 
                 case GameStates.Countdown:
                 case GameStates.Play:
