@@ -1,5 +1,11 @@
 import type { LeaderboardDescription, LeaderboardEntry, LeaderboardEntriesData } from "ysdk";
 import type { IGamePlatform } from "../IGamePlatform";
+const DEFAULT_AVATAR = [
+    '/src/assets/images/avatars/awatar_anonymous_1.jpg',
+    '/src/assets/images/avatars/awatar_anonymous_2.jpg',
+    '/src/assets/images/avatars/awatar_anonymous_3.jpg',
+    '/src/assets/images/avatars/awatar_anonymous_4.jpg'
+];
 
 type Stats = Record<string | number, number>;
 type PlayerData = import("ysdk").Serializable | undefined;
@@ -290,10 +296,14 @@ export class LocalStoragePlatform implements IGamePlatform {
         },
         uniqueID: entry.playerId,
         getAvatarSrc: (size?: 'small' | 'medium' | 'large') => {
-          return entry.getAvatarSrc || '/default-avatar.png';
+          //   return entry.getAvatarSrc || '/src/assets/images/avatars/awatar_anonymous_1.jpg';
+          const imageIndex = Math.floor(Math.random() * 4);
+          return entry.getAvatarSrc || DEFAULT_AVATAR[imageIndex];
         },
         getAvatarSrcSet: (size?: 'small' | 'medium' | 'large') => {
-          return entry.getAvatarSrc || '/default-avatar.png';
+          //   return entry.getAvatarSrc || '/src/assets/images/avatars/awatar_anonymous_1.jpg';
+          const imageIndex = Math.floor(Math.random() * 4);
+          return entry.getAvatarSrc || DEFAULT_AVATAR[imageIndex];
         },
       },
     }));
