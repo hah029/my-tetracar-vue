@@ -39,7 +39,7 @@
                     <div class="leaderboard_row_second">
                         <div class="leaderboard_row_third">
                             <div class="player_avatar_img_container" :class="setPlayerCornerStyle(record.player)">
-                                <img class="img" :src="getAvatarUrl(record.player)" />
+                                <img class="avatar_img" :src="getAvatarUrl(record.player)" />
                             </div>
                             <span class="player_name">{{ record.player.publicName || "Player" }}</span>
                         </div>
@@ -305,57 +305,36 @@
     }
     // #endregion
 
-    // #region - вкладки
-    .tabs {
-        width: 100%;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        gap: 40px;
-        margin-top: 10px;
-    }
-
-    .tab {
-        flex: 1;
-        display: flex;
-    }
-
-    .tab_left {
-        justify-content: flex-end;
-    }
-
-    .tab_right {
-        justify-content: flex-start;
-    }
-
-    .cube_divider {
-        width: 0.9375rem;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-    }
-
-    .btn_tab_correction {
-        @include text-tab-button;
-        color: $color-yellow-super-light;
-    }
-
-    .btn_tab_markered {
-        color: $color-blue;
-        text-decoration: underline;
-        text-decoration-thickness: 1px;
-        text-underline-offset: 9px;
-        filter: drop-shadow(0 0 0.9375rem rgba(169, 239, 247, 0.4));
-    }
-    // #endregion
-
     // #region - таблица
     .leaderboard_table {
-        width: 420px;
         display: flex;
         flex-direction: column;
         justify-content: flex-start;
-        gap: 12px;
+        width: 85.47vh;
+        gap: 1.709vh;
+        margin-top: 3.077vh;
+
+        @media (min-width: $breakpoint-mobile) and (orientation: landscape) and (hover: none) and (pointer: coarse) { 
+            width: 85.47vh;
+            gap: 1.709vh;
+            margin-top: 3.077vh;
+        }
+        // позже расчитать:
+        // @media (min-width: $breakpoint-tablet) and (orientation: landscape) and (hover: none) and (pointer: coarse) { 
+        //     width: 420px;
+        //     gap: 12px;
+        //     margin-top: 50px;
+        // }  
+        @media (min-width: $breakpoint-laptop) and (orientation: landscape) { 
+            width: 27.778vw;
+            gap: 0.417vw;
+            margin-top: 0.6vw;
+        }
+        @media (min-width: $breakpoint-desktop) and (orientation: landscape) {
+            width: 21.875vw;
+            gap: 0.625vw;
+            margin-top: 0;
+        }
     }
 
     .leaderboard_row_first {
@@ -363,21 +342,57 @@
         display: flex;
         align-items: center;
         justify-content: space-between;
-        gap: 20px;
-
+        
         @include text-third-menu-button;
         color: $color-yellow-super-light;   
         text-transform: none;
+        gap: 3.846vh;
+
+        @media (min-width: $breakpoint-mobile) and (orientation: landscape) and (hover: none) and (pointer: coarse) { 
+            gap: 3.846vh;
+        }
+        // позже расчитать:
+        // @media (min-width: $breakpoint-tablet) and (orientation: landscape) and (hover: none) and (pointer: coarse) { 
+        //     gap: 20px;
+        // }  
+        @media (min-width: $breakpoint-laptop) and (orientation: landscape) { 
+            gap: 1.111vw;
+        }
+        @media (min-width: $breakpoint-desktop) and (orientation: landscape) {
+            gap: 1.042vw;
+        }
     }
 
     .row_text_markered {
         color: #F79CFF;
-        font-size: 26px;
         font-weight: 600;
         text-decoration: underline;
         text-decoration-color: rgba(247, 156, 255, 0.5);
-        text-decoration-thickness: 1px;
-        text-underline-offset: 6px;
+        font-size: 5.128vh;
+        text-underline-offset: 1.2vh;
+        text-decoration-thickness: 0.171vh;
+
+        @media (min-width: $breakpoint-mobile) and (orientation: landscape) and (hover: none) and (pointer: coarse) { 
+            font-size: 5.128vh;
+            text-underline-offset: 1.2vh;
+            text-decoration-thickness: 0.171vh;
+        }
+        // позже расчитать:
+        // @media (min-width: $breakpoint-tablet) and (orientation: landscape) and (hover: none) and (pointer: coarse) { 
+        //     font-size: 26px;
+        //     text-underline-offset: 6px;
+        //     text-decoration-thickness: 1px;
+        // }  
+        @media (min-width: $breakpoint-laptop) and (orientation: landscape) { 
+            font-size: 1.667vw;
+            text-underline-offset: 0.417vw;
+            text-decoration-thickness: 0.069vw;
+        }
+        @media (min-width: $breakpoint-desktop) and (orientation: landscape) {
+            font-size: 1.354vw;
+            text-underline-offset: 0.313vw;
+            text-decoration-thickness: 0.052vw;
+        }
     }
 
     .leaderboard_row_second {
@@ -391,28 +406,100 @@
         display: flex;
         align-items: center;
         justify-content: flex-start;
-        gap: 20px;
+        gap: 3.846vh;
+
+        @media (min-width: $breakpoint-mobile) and (orientation: landscape) and (hover: none) and (pointer: coarse) { 
+            gap: 3.846vh;
+        }
+        // позже расчитать:
+        // @media (min-width: $breakpoint-tablet) and (orientation: landscape) and (hover: none) and (pointer: coarse) { 
+        //     gap: 20px;
+        // }  
+        @media (min-width: $breakpoint-laptop) and (orientation: landscape) { 
+            gap: 1.111vw;
+        }
+        @media (min-width: $breakpoint-desktop) and (orientation: landscape) {
+            gap: 1.042vw;
+        }
     }
 
     .player_avatar_img_container {
-        width: 30px;
-        height: 30px;
         display: flex;
         justify-content: center;
         align-items: center;
-        border: solid 1px rgba(253, 255, 227, 0.5);
-        border-radius: 5px;
+        border: solid 1px rgba(253, 255, 227, 0.3);
+        width: 5.641vh;
+        height: 5.641vh;
+        border-radius: 0.94vh;
+
+        @media (min-width: $breakpoint-mobile) and (orientation: landscape) and (hover: none) and (pointer: coarse) { 
+            width: 5.641vh;
+            height: 5.641vh;
+            border-radius: 0.94vh;
+        }
+        // позже расчитать:
+        // @media (min-width: $breakpoint-tablet) and (orientation: landscape) and (hover: none) and (pointer: coarse) { 
+        //     width: 30px;
+        //     height: 30px;
+        //     border-radius: 5px;
+        // }  
+        @media (min-width: $breakpoint-laptop) and (orientation: landscape) { 
+            width: 1.944vw;
+            height: 1.944vw;
+            border-radius: 0.347vw;
+        }
+        @media (min-width: $breakpoint-desktop) and (orientation: landscape) {
+            width: 1.563vw;
+            height: 1.563vw;
+            border-radius: 0.26vw;
+        }
     }
 
     .img_container_markered {
         border: solid 1px rgba(247, 156, 255, 1);
-        margin-left: -3px;
+        margin-left: -0.6vh;
+
+        @media (min-width: $breakpoint-mobile) and (orientation: landscape) and (hover: none) and (pointer: coarse) { 
+            margin-left: -0.6vh;
+        }
+        // позже расчитать:
+        // @media (min-width: $breakpoint-tablet) and (orientation: landscape) and (hover: none) and (pointer: coarse) { 
+        //     margin-left: -3px;
+        // }  
+        @media (min-width: $breakpoint-laptop) and (orientation: landscape) { 
+            margin-left: -0.208vw;
+        }
+        @media (min-width: $breakpoint-desktop) and (orientation: landscape) {
+            margin-left: -0.156vw;
+        }
     }
 
-    .img {
-        width: 22px;
-        height: 22px;
-        border-radius: 3px;
+    .avatar_img {
+        width: 82%;
+        height: 82%;
+        border-radius: 0.564vh;
+
+        @media (min-width: $breakpoint-mobile) and (orientation: landscape) and (hover: none) and (pointer: coarse) { 
+            width: 82%;
+            height: 82%;
+            border-radius: 0.564vh;
+        }
+        // позже расчитать:
+        // @media (min-width: $breakpoint-tablet) and (orientation: landscape) and (hover: none) and (pointer: coarse) { 
+        //     width: 22px;
+        //     height: 22px;
+        //     border-radius: 3px;
+        // }  
+        @media (min-width: $breakpoint-laptop) and (orientation: landscape) { 
+            width: 79%;
+            height: 79%;
+            border-radius: 0.208vw;
+        }
+        @media (min-width: $breakpoint-desktop) and (orientation: landscape) {
+            width: 74%;
+            height: 74%;
+            border-radius: 0.156vw;
+        }
     }
     // #endregion
 </style>

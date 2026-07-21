@@ -213,23 +213,23 @@ $breakpoint-desktop: 1920px;
     }
 
 // 9) вкладки
-@mixin text-tab-button {
-    font-family: $font-primary;
-    line-height: 1.05;
+    @mixin text-tab-button {
+        font-family: $font-primary;
+        line-height: 1.05;
 
-    @media (min-width: $breakpoint-mobile-small) and (orientation: landscape) and (hover: none) and (pointer: coarse) { 
-        font-size: 5.56vh; // позже расчитать (для мини-мобил)
+        @media (min-width: $breakpoint-mobile-small) and (orientation: landscape) and (hover: none) and (pointer: coarse) { 
+            font-size: 5.128vh; // позже расчитать (для мини-мобил)
+        }
+        @media (min-width: $breakpoint-mobile) and (orientation: landscape) and (hover: none) and (pointer: coarse) { 
+            font-size: 5.128vh; 
+        }
+        // @media (min-width: $breakpoint-tablet) and (orientation: landscape) and (hover: none) and (pointer: coarse) { 
+        //     font-size: 2.56vw;  // позже расчитать
+        // }   
+        @media (min-width: $breakpoint-laptop) and (orientation: landscape) { 
+            font-size: 1.667vw;
+        }   
+        @media (min-width: $breakpoint-desktop) and (orientation: landscape) { 
+            font-size: 1.354vw; 
+        }
     }
-    @media (min-width: $breakpoint-mobile) and (orientation: landscape) and (hover: none) and (pointer: coarse) { 
-        font-size: 5.56vh; 
-    }
-    // @media (min-width: $breakpoint-tablet) and (orientation: landscape) and (hover: none) and (pointer: coarse) { 
-    //     font-size: 2.56vw;  // позже расчитать
-    // }   
-    @media (min-width: $breakpoint-laptop) and (orientation: landscape) { 
-        font-size: 1.806vw;
-    }   
-    @media (min-width: $breakpoint-desktop) and (orientation: landscape) { 
-        font-size: 1.354vw; 
-    }
-}
