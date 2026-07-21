@@ -35,6 +35,10 @@
                 "магнит"
             ]
         },
+        "control": {
+            "title": "управляй"
+        },
+        "nextButton": "далее",
         "startButton": "погнали!"
     },
     "gamePlay": {

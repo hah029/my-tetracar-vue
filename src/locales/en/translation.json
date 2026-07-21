@@ -35,6 +35,10 @@
                 "magnet"
             ]
         },
+        "control": {
+            "title": "control"
+        },
+        "nextButton": "next",
         "startButton": "let's go!"
     },
     "gamePlay": {
