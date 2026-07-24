@@ -28,7 +28,8 @@
 }
 
 .addit_font {
-    @include text-third-menu-button;
+    @include text-info-size-m;
+    text-transform: uppercase;
     color: $color-yellow-super-light;
 }
 
@@ -43,7 +44,8 @@
     border: none;
     cursor: pointer;
        
-    @include text-third-menu-button;
+    @include text-info-size-m;
+    text-transform: uppercase;
     color: $color-blue;
 
     &:hover {

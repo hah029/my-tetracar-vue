@@ -300,7 +300,7 @@
     }
 
     .btn_correction {
-        @include text-secondary-menu-button;
+        @include text-button-size-s;
         color: $color-yellow-super-light;
     }
     // #endregion
@@ -343,9 +343,8 @@
         align-items: center;
         justify-content: space-between;
         
-        @include text-third-menu-button;
+        @include text-info-size-m;
         color: $color-yellow-super-light;   
-        text-transform: none;
         gap: 3.846vh;
 
         @media (min-width: $breakpoint-mobile) and (orientation: landscape) and (hover: none) and (pointer: coarse) { 

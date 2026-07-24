@@ -266,7 +266,7 @@
     }
 
     .header_pause {
-        @include text-menu-title-pause;
+        @include text-button-size-xl;
     }
 
     .group_correction {
@@ -293,7 +293,7 @@
     }
 
     .btn_correction {
-        @include text-secondary-menu-button;
+        @include text-button-size-s;
         color: $color-yellow-super-light;
     }
 </style>

@@ -13,23 +13,23 @@
             <div class="central_panel">
                 <div class="metrics_group">
                     <div class="metrics_block color_yellow_light">
-                        <div class="score_value_row">
-                            <div class="font_adaptation metrics_number">{{ score }}</div>
-                            <div v-if="currentMultiplier > 1" class="score_multiplier">
-                                <span class="x_sign">x</span>{{ currentMultiplier }}
-                            </div>
-                        </div>
                         <div class="metrics_text">{{ foo.makeText('gamePlay.keyStats.progress', 'empty') }}</div>
+                        <div class="score_value_row">
+                            <div class="score_value font_adaptation metrics_number">{{ score }}</div>
+                            <!-- <div v-if="currentMultiplier > 1" class="score_multiplier">
+                                <span class="x_sign">x</span>{{ currentMultiplier }}
+                            </div> -->
+                        </div>
                     </div>
                     <div class="divider"></div>
                     <div class="metrics_block color_blue">
-                        <div class="font_adaptation metrics_number">{{ currentSpeed }}</div>
                         <div class="metrics_text">{{ foo.makeText('gamePlay.keyStats.speed', 'empty') }}</div>
+                        <div class="score_value font_adaptation metrics_number">{{ currentSpeed }}</div>
                     </div>
                     <div class="divider"></div>
                     <div class="metrics_block" :class="massColorClass">
-                        <div class="font_adaptation metrics_number">{{ currentMass }}</div>
                         <div class="metrics_text">mass</div>
+                        <div class="score_value font_adaptation metrics_number">{{ currentMass }}</div>
                     </div>
                 </div>
             </div>
@@ -37,13 +37,13 @@
             <div class="buttons_right_group">
                 <div class="currency_block">
                     <div class="currency_subblock">
-                        <div class="currency_value font_adaptation color_yellow_light">{{ goldens }}</div>
+                        <div class="currency_value currency_goldens font_adaptation">{{ goldens }}</div>
                         <div class="currency_image_container">
                             <img class="icon" src="@/assets/images/hud/cube_golden.svg" />
                         </div>
                     </div>
                     <div class="currency_subblock">
-                        <div class="currency_value font_adaptation color_blue_light">{{ energons }}</div>
+                        <div class="currency_value currency_energons font_adaptation">{{ energons }}</div>
                         <div class="currency_image_container energon_glow_general">
                             <img class="icon icon_abs" src="@/assets/images/hud/cube_energon_grid_backward.svg" />
                             <img class="icon icon_abs energon_glow_core"
@@ -66,7 +66,7 @@
                 <template v-for="(group, groupIndex) in boosterGroups" :key="group.key">
                     <div class="booster_group" :class="`booster_group--${group.key}`">
                         <div v-for="booster in group.items" :key="booster.key" class="booster_item">
-                            <div :class="booster.textColorClass">{{ booster.displayValue }}</div>
+                            <div class="booster_value" :class="booster.textColorClass">{{ booster.displayValue }}</div>
                             <div class="boosters_image_container">
                                 <img v-if="booster.isActive" class="icon with_shadow" :src="booster.activeIcon" />
                                 <img v-else class="icon with_white_glow"
@@ -144,7 +144,6 @@
         nitro: 'color_green_light',
         magnet: 'color_ultramarine',
         default: 'color_gray',
-        newrecord: 'color_yellow new_record_msg'
     };
 
     function getBoosterColorClass(type: string, isActive: boolean, countOrTimer: number): string {
@@ -220,6 +219,7 @@
     @use "@/styles/menu.scss" as *;
     @use "@/styles/animations.scss";
     @use "@/styles/colors" as *;
+    @use "@/styles/typography" as *;
 
     // Переменныеs
     $icon-size: 2.3125rem;
@@ -231,11 +231,13 @@
         inset: 0;
         pointer-events: none;
         z-index: z("ui_component");
-        font-family: 'jost-light';
-        text-transform: uppercase;
-        line-height: 1;
-        letter-spacing: 0.06rem;
-        font-size: clamp(1rem, 2vmin, 2rem);
+
+        // font-family: 'jost-light';
+        // text-transform: uppercase;
+        // line-height: 1;
+        // letter-spacing: 0.06rem;
+        // font-size: clamp(1rem, 2vmin, 2rem);
+
         --hud-pad-x: clamp(0.75rem, 4vmin, 2.5rem);
         --hud-top: clamp(0.75rem, 3vmin, 1.875rem);
         --hud-bottom-panel-height: clamp(4.5rem, 12vmin, 8rem);
@@ -265,33 +267,6 @@
         --hud-timed-bg: rgba(255, 255, 255, 0.42);
         --hud-timed-border: rgba(33, 62, 80, 0.18);
         --hud-timed-shadow: inset 0 0 1.2rem rgba(20, 42, 56, 0.05);
-
-        .color_yellow,
-        .color_yellow_light {
-            color: $color-yellow;
-        }
-
-        .color_blue,
-        .color_blue_light,
-        .color_ultramarine {
-            color: #155b86;
-        }
-
-        .color_red_light {
-            color: #9c242c;
-        }
-
-        .color_green_light {
-            color: #2d681d;
-        }
-
-        .color_white {
-            color: #1c2530;
-        }
-
-        .color_gray {
-            color: var(--hud-muted-color);
-        }
     }
 
     .font_adaptation {
@@ -389,6 +364,15 @@
 
     .currency_value {
         text-align: right;
+        @include text-info-size-m;
+    }
+
+    .currency_goldens {
+        color: $color-yellow-light;
+    }
+
+    .currency_energons {
+        color: $color-blue-light;
     }
 
     .currency_image_container {
@@ -413,7 +397,6 @@
     .x_sign {
         text-transform: lowercase;
     }
-
     // #endregion
 
     // #region - central_panel
@@ -444,14 +427,15 @@
         flex-direction: column;
         justify-content: flex-start;
         align-items: center;
-        gap: clamp(0.35rem, 1.6vmin, 1rem);
-        min-width: 0;
+        line-height: 1;
+        gap: 6px;
     }
 
     .metrics_text {
-        font-size: clamp(0.78rem, 1.4vmin, 1rem);
         text-align: center;
         white-space: nowrap;
+        @include text-info-size-s;
+        text-transform: uppercase;
     }
 
     .metrics_number {
@@ -468,6 +452,11 @@
         justify-content: center;
         gap: clamp(0.35rem, 1.2vmin, 0.75rem);
         min-width: 0;
+    }
+
+    .score_value {
+        @include text-info-size-l;
+        letter-spacing: 0;
     }
 
     .score_multiplier {
@@ -541,6 +530,10 @@
         min-width: 0;
     }
 
+    .booster_value {
+        @include text-info-size-m;
+    }
+
     .booster_group_divider {
         height: clamp(1.6rem, 4vmin, 2.25rem);
         width: 1px;
@@ -567,105 +560,4 @@
     }
 
     // #endregion
-
-    @media (max-width: 720px) {
-        .top_panel {
-            grid-template-columns: auto minmax(0, 1fr) auto;
-            grid-template-areas:
-                "pause spacer currency"
-                "metrics metrics metrics"
-                "notifications notifications notifications";
-            row-gap: clamp(0.75rem, 2.4vmin, 1rem);
-        }
-
-        .buttons_left_group {
-            grid-area: pause;
-        }
-
-        .buttons_right_group {
-            grid-area: currency;
-        }
-
-        //.central_panel {
-        //    grid-area: metrics;
-        //}
-
-        .notifications_panel {
-            grid-area: notifications;
-        }
-
-        .metrics_group {
-            width: 100%;
-            justify-content: center;
-        }
-
-        .metrics_number {
-            max-width: min(18rem, 42vw);
-        }
-
-        .bottom_subpanel {
-            justify-content: space-evenly;
-            padding: 0 clamp(0.5rem, 2vmin, 1rem);
-        }
-
-        .booster_group {
-            gap: clamp(0.45rem, 1.6vmin, 0.85rem);
-        }
-    }
-
-    @media (max-width: 460px),
-    (max-height: 520px) {
-        .game_hud {
-            --hud-pad-x: 0.625rem;
-            --hud-top: 0.625rem;
-        }
-
-        .top_panel {
-            row-gap: 0.55rem;
-        }
-
-        .pause_btn_container {
-            width: clamp(2.5rem, 9vmin, 3rem);
-        }
-
-        .currency_block {
-            font-size: clamp(0.86rem, 3.2vmin, 1rem);
-        }
-
-        .metrics_group {
-            gap: 0.55rem;
-        }
-
-        .metrics_text {
-            font-size: clamp(0.62rem, 2.6vmin, 0.78rem);
-        }
-
-        .metrics_number {
-            font-size: clamp(0.95rem, 4vmin, 1.25rem);
-        }
-
-        .score_multiplier {
-            font-size: clamp(0.72rem, 3vmin, 0.9rem);
-        }
-
-        .divider {
-            height: 1rem;
-        }
-
-        .bottom_panel {
-            height: clamp(3.75rem, 13vmin, 4.5rem);
-        }
-
-        .bottom_subpanel {
-            gap: 0.35rem;
-        }
-
-        .booster_group--timed {
-            padding: 0.25rem 0.35rem;
-        }
-
-        .booster_group_divider {
-            display: none;
-        }
-    }
 </style>

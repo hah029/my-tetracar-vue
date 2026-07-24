@@ -13,17 +13,167 @@ $breakpoint-desktop: 1920px;
 // @media (hover: none) and (pointer: coarse) { ... }   /* смартфоны, устройства с сенсорным экраном, с которым работают пальцами */
 // @media (hover: hover) and (pointer: fine) { ... }    /* мышь, тачпад */
 
-// миксины:
-// 1) главная кнопка входа в Splash Screen 
-    @mixin text-splash-button {
+
+// --------------------------------
+// #region - подсказка по размерам:
+
+    // Шрифт кнопочный:
+    // ----------------
+    // - 120px (xxxl): 
+    // - countdown (цифры таймера обратного отсчета);
+
+    // - 90px (xxl): 
+    // - countdown (текст "погнали!");
+
+    // - 50px (xl): 
+    //   - title (в паузе: пауза, завершить игру, конец игры)
+
+    // - 40px (l):
+    //   - title (в меню),
+    //   - кнопка (Далее, Погнали) в trainingScreen
+
+    // - 35px (m):
+    //   -splash,
+    //   - mainMenu
+
+    // - 30px (s):
+    //  - кнопки в: pause (пауза и завершить игру), gameOver, leaderbords, settingsRoot, aboutSettings
+
+    // - 26px (xs):
+    //   - tabs
+
+
+
+    // Шрифт информационный:
+    // ---------------------
+    // - 30px (l):
+    //   - титулы над значками в trainingScreen(uppercase)
+    //   - цифры в HUD: кол-во очков прогресса, макс.прогресса и величина скорости
+    //   - цифры в HUD: коэф-т умножения (x2, x4,...)
+    //   - текст в HUD: есть рекорд!, очки х2!(uppercase)
+
+    // - 22px (m): 
+    //   - имена игроков в leaderboard, 
+    //   - строки в опциях(uppercase),
+    //   - подписи под значками в trainingScreen(uppercase),
+    //   - надпись предупреждения в "Завершить игру"(uppercase),
+    //   - цифры в HUD: кол-во брони, патронов и т.д. (внизу экрана),
+    //   - цифры в HUD: кол-во голденов и энерогонов (в правом-верхнем углу экрана)
+
+    // - 16px (s): 
+    //   - названия кнопок/буквы в разделе "Управление"(uppercase)
+    //   - текст в HUD: прогресс, макс. и скорость(uppercase)
+    //   - текст в HUD: простые уведомления (нет патронов, броня установлена и т.д.)(uppercase)
+
+    // - 12px (xs):
+    //   - copyrights,
+    //   - teamLogo(uppercase)
+
+// #endregion
+//            \/ \/ \/
+// --------------------------------
+
+
+// --------------------------
+// #region - миксины (шрифт кнопочный):
+// 1) шрифт кнопочный - размер XXXL
+    @mixin text-button-size-xxxl {
+        font-family: $font-primary;
+        line-height: 0.7;
+
+        // @media (min-width: $breakpoint-mobile-small) and (orientation: landscape) and (hover: none) and (pointer: coarse) { 
+        //     font-size: 6.838vh;  // позже расчитать (для мини-мобил)
+        // }
+        // @media (min-width: $breakpoint-mobile) and (orientation: landscape) and (hover: none) and (pointer: coarse) { 
+        //     font-size: 6.838vh; 
+        // }
+        // @media (min-width: $breakpoint-tablet) and (orientation: landscape) and (hover: none) and (pointer: coarse) { 
+        //     font-size: 2.56vw;  // позже расчитать
+        // }   
+        // @media (min-width: $breakpoint-laptop) and (orientation: landscape) { 
+        //     font-size: 2.917vw;
+        // }   
+        @media (min-width: $breakpoint-desktop) and (orientation: landscape) { 
+            font-size: 6.25vw; 
+        }
+    }
+
+// 2) шрифт кнопочный - размер XXL
+    @mixin text-button-size-xxl {
+        font-family: $font-primary;
+        line-height: 0.7;
+
+        // @media (min-width: $breakpoint-mobile-small) and (orientation: landscape) and (hover: none) and (pointer: coarse) { 
+        //     font-size: 6.838vh;  // позже расчитать (для мини-мобил)
+        // }
+        // @media (min-width: $breakpoint-mobile) and (orientation: landscape) and (hover: none) and (pointer: coarse) { 
+        //     font-size: 6.838vh; 
+        // }
+        // @media (min-width: $breakpoint-tablet) and (orientation: landscape) and (hover: none) and (pointer: coarse) { 
+        //     font-size: 2.56vw;  // позже расчитать
+        // }   
+        // @media (min-width: $breakpoint-laptop) and (orientation: landscape) { 
+        //     font-size: 2.917vw;
+        // }   
+        @media (min-width: $breakpoint-desktop) and (orientation: landscape) { 
+            font-size: 4.688vw; 
+        }
+    }
+
+// 3) шрифт кнопочный - размер XL
+    @mixin text-button-size-xl {
+        font-family: $font-primary;
+        line-height: 0.7;
+
+        @media (min-width: $breakpoint-mobile-small) and (orientation: landscape) and (hover: none) and (pointer: coarse) { 
+            font-size: 6.838vh;  // позже расчитать (для мини-мобил)
+        }
+        @media (min-width: $breakpoint-mobile) and (orientation: landscape) and (hover: none) and (pointer: coarse) { 
+            font-size: 6.838vh; 
+        }
+        // @media (min-width: $breakpoint-tablet) and (orientation: landscape) and (hover: none) and (pointer: coarse) { 
+        //     font-size: 2.56vw;  // позже расчитать
+        // }   
+        @media (min-width: $breakpoint-laptop) and (orientation: landscape) { 
+            font-size: 2.917vw;
+        }   
+        @media (min-width: $breakpoint-desktop) and (orientation: landscape) { 
+            font-size: 2.604vw; 
+        }
+    }
+
+// 4) шрифт кнопочный - размер L
+    @mixin text-button-size-l {
+        font-family: $font-primary;
+        line-height: 0.7;
+
+        @media (min-width: $breakpoint-mobile-small) and (orientation: landscape) and (hover: none) and (pointer: coarse) { 
+            font-size: 6.838vh;  // позже расчитать (для мини-мобил)
+        }
+        @media (min-width: $breakpoint-mobile) and (orientation: landscape) and (hover: none) and (pointer: coarse) { 
+            font-size: 6.838vh; 
+        }
+        // @media (min-width: $breakpoint-tablet) and (orientation: landscape) and (hover: none) and (pointer: coarse) { 
+        //     font-size: 2.56vw;  // позже расчитать
+        // }   
+        @media (min-width: $breakpoint-laptop) and (orientation: landscape) { 
+            font-size: 2.361vw;
+        }   
+        @media (min-width: $breakpoint-desktop) and (orientation: landscape) { 
+            font-size: 2.083vw; 
+        }
+    }
+
+// 5) шрифт кнопочный - размер M
+    @mixin text-button-size-m {
         font-family: $font-primary;
         line-height: 1.1;
 
         @media (min-width: $breakpoint-mobile-small) and (orientation: landscape) and (hover: none) and (pointer: coarse) { 
-            font-size: 5.13vh; // позже расчитать (для мини-мобил)
+            font-size: 5.56vh; // позже расчитать (для мини-мобил)
         }
         @media (min-width: $breakpoint-mobile) and (orientation: landscape) and (hover: none) and (pointer: coarse) { 
-            font-size: 5.13vh; 
+            font-size: 5.56vh; 
         }
         // @media (min-width: $breakpoint-tablet) and (orientation: landscape) and (hover: none) and (pointer: coarse) { 
         //     font-size: 1.944vw;     // позже расчитать
@@ -36,30 +186,8 @@ $breakpoint-desktop: 1920px;
         }
     }
 
-// 2) кнопки первого уровня (в главном меню - Main Menu)
-    @mixin text-main-menu-button {
-        font-family: $font-primary;
-        line-height: 1.05;
-
-        @media (min-width: $breakpoint-mobile-small) and (orientation: landscape) and (hover: none) and (pointer: coarse) { 
-            font-size: 4.53vh; 
-        }
-        @media (min-width: $breakpoint-mobile) and (orientation: landscape) and (hover: none) and (pointer: coarse) { 
-            font-size: 5.56vh; 
-        }
-        // @media (min-width: $breakpoint-tablet) and (orientation: landscape) and (hover: none) and (pointer: coarse) { 
-        //     font-size: 1.944vw;     // позже расчитать
-        // }
-        @media (min-width: $breakpoint-laptop) and (orientation: landscape) { 
-            font-size: 1.944vw;
-        }     
-        @media (min-width: $breakpoint-desktop) and (orientation: landscape) { 
-            font-size: 1.823vw; 
-        }
-    }
-
-// 3) кнопки второго уровня в меню (Secondary Menu Buttons)
-    @mixin text-secondary-menu-button {
+// 6) шрифт кнопочный - размер S
+    @mixin text-button-size-s {
         font-family: $font-primary;
         line-height: 1.05;
 
@@ -80,11 +208,57 @@ $breakpoint-desktop: 1920px;
         }
     }
 
-// 4) кнопки третьего уровня в меню (Third Menu Buttons)
-    @mixin text-third-menu-button {
+// 7) шрифт кнопочный - размер XS
+    @mixin text-button-size-xs {
+        font-family: $font-primary;
+        line-height: 1.05;
+
+        @media (min-width: $breakpoint-mobile-small) and (orientation: landscape) and (hover: none) and (pointer: coarse) { 
+            font-size: 5.128vh; // позже расчитать (для мини-мобил)
+        }
+        @media (min-width: $breakpoint-mobile) and (orientation: landscape) and (hover: none) and (pointer: coarse) { 
+            font-size: 5.128vh; 
+        }
+        // @media (min-width: $breakpoint-tablet) and (orientation: landscape) and (hover: none) and (pointer: coarse) { 
+        //     font-size: 2.56vw;  // позже расчитать
+        // }   
+        @media (min-width: $breakpoint-laptop) and (orientation: landscape) { 
+            font-size: 1.667vw;
+        }   
+        @media (min-width: $breakpoint-desktop) and (orientation: landscape) { 
+            font-size: 1.354vw; 
+        }
+    }
+// #endregion
+
+// -------------------------------
+// #region - миксины (шрифт информационный):
+// 1) шрифт информационный - размер L
+    @mixin text-info-size-l {
+        font-family: $font-secondary-light;
+        letter-spacing: 0.0416vw;   // позже поправить ?
+        
+        // @media (min-width: $breakpoint-mobile-small) and (orientation: landscape) and (hover: none) and (pointer: coarse) { 
+        //     font-size: 4.274vh;  // позже расчитать (для мини-мобил)
+        // }
+        // @media (min-width: $breakpoint-mobile) and (orientation: landscape) and (hover: none) and (pointer: coarse) { 
+        //     font-size: 4.274vh; 
+        // }
+        // @media (min-width: $breakpoint-tablet) and (orientation: landscape) and (hover: none) and (pointer: coarse) { 
+        //     font-size: 2.56vw;  // позже расчитать
+        // }  
+        // @media (min-width: $breakpoint-laptop) and (orientation: landscape) { 
+        //     font-size: 1.389vw;
+        // }  
+        @media (min-width: $breakpoint-desktop) and (orientation: landscape) { 
+            font-size: 1.563vw; 
+        }
+    }
+
+// 2) шрифт информационный - размер M
+    @mixin text-info-size-m {
         font-family: $font-secondary-light;
         letter-spacing: 0.0416vw;
-        text-transform: uppercase;
         
         @media (min-width: $breakpoint-mobile-small) and (orientation: landscape) and (hover: none) and (pointer: coarse) { 
             font-size: 4.274vh;  // позже расчитать (для мини-мобил)
@@ -103,47 +277,30 @@ $breakpoint-desktop: 1920px;
         }
     }
 
-// 5) заголовки во всех меню (Menu Titles)
-    @mixin text-menu-title {
-        font-family: $font-primary;
-        line-height: 0.7;
-
-        @media (min-width: $breakpoint-mobile-small) and (orientation: landscape) and (hover: none) and (pointer: coarse) { 
-            font-size: 6.838vh;  // позже расчитать (для мини-мобил)
-        }
-        @media (min-width: $breakpoint-mobile) and (orientation: landscape) and (hover: none) and (pointer: coarse) { 
-            font-size: 6.838vh; 
-        }
+// 3) шрифт информационный - размер S
+    @mixin text-info-size-s {
+        font-family: $font-secondary-light;
+        letter-spacing: 0.0416vw;   // позже поправить ?
+        
+        // @media (min-width: $breakpoint-mobile-small) and (orientation: landscape) and (hover: none) and (pointer: coarse) { 
+        //     font-size: 4.274vh;  // позже расчитать (для мини-мобил)
+        // }
+        // @media (min-width: $breakpoint-mobile) and (orientation: landscape) and (hover: none) and (pointer: coarse) { 
+        //     font-size: 4.274vh; 
+        // }
         // @media (min-width: $breakpoint-tablet) and (orientation: landscape) and (hover: none) and (pointer: coarse) { 
         //     font-size: 2.56vw;  // позже расчитать
-        // }   
-        @media (min-width: $breakpoint-laptop) and (orientation: landscape) { 
-            font-size: 2.361vw;
-        }   
+        // }  
+        // @media (min-width: $breakpoint-laptop) and (orientation: landscape) { 
+        //     font-size: 1.389vw;
+        // }  
         @media (min-width: $breakpoint-desktop) and (orientation: landscape) { 
-            font-size: 2.083vw; 
-        }
-    }
-    // (тоже самое но в режиме паузы)
-    @mixin text-menu-title-pause {
-        font-family: $font-primary;
-        line-height: 0.7;
-
-        // для мобил не пересчитываем (не переопределяем оригинальные размеры с text-menu-title)
-
-        // @media (min-width: $breakpoint-tablet) and (orientation: landscape) and (hover: none) and (pointer: coarse) { 
-        //     font-size: 2.56vw;  // позже расчитать
-        // }   
-        @media (min-width: $breakpoint-laptop) and (orientation: landscape) { 
-            font-size: 2.917vw;
-        }   
-        @media (min-width: $breakpoint-desktop) and (orientation: landscape) { 
-            font-size: 2.604vw; 
+            font-size: 0.8333vw; 
         }
     }
 
-// 6) Copyrights
-    @mixin text-copyright {
+// 4) шрифт информационный - размер XS
+    @mixin text-info-size-xs {
         font-family: $font-secondary-light;
         line-height: 1.4;   // позже расчитать (?)
         letter-spacing: 0.0416vw;
@@ -164,72 +321,4 @@ $breakpoint-desktop: 1920px;
             font-size: 0.625vw; 
         }
     }
-
-// 7) TeamLogo
-    @mixin text-team-logo {
-        font-family: $font-secondary-light;
-        line-height: 1.3;   // позже расчитать (?)
-        letter-spacing: 0.0416vw;
-        
-        @media (min-width: $breakpoint-mobile-small) and (orientation: landscape) and (hover: none) and (pointer: coarse) { 
-            font-size: 1.97vh;  // позже расчитать (для мини-мобил)
-        }
-        @media (min-width: $breakpoint-mobile) and (orientation: landscape) and (hover: none) and (pointer: coarse) { 
-            font-size: 1.97vh; 
-        }
-        // @media (min-width: $breakpoint-tablet) and (orientation: landscape) and (hover: none) and (pointer: coarse) { 
-        //     font-size: 2.56vw;  // позже расчитать
-        // }  
-        @media (min-width: $breakpoint-laptop) and (orientation: landscape) { 
-            font-size: 0.764vw;  
-        }  
-        @media (min-width: $breakpoint-desktop) and (orientation: landscape) { 
-            font-size: 0.625vw; 
-        }
-    }
-
-// 8) Предупреждающие надписи (Warning)
-    @mixin text-warning {
-        font-family: $font-secondary-light;
-        // line-height: 1.3;   // позже расчитать (?)
-        letter-spacing: 0.0416vw;
-        text-transform: uppercase;
-        
-        @media (min-width: $breakpoint-mobile-small) and (orientation: landscape) and (hover: none) and (pointer: coarse) { 
-            font-size: 3.419vh;  // позже расчитать (для мини-мобил)
-        }
-        @media (min-width: $breakpoint-mobile) and (orientation: landscape) and (hover: none) and (pointer: coarse) { 
-            font-size: 3.419vh; 
-        }
-        // @media (min-width: $breakpoint-tablet) and (orientation: landscape) and (hover: none) and (pointer: coarse) { 
-        //     font-size: 2.56vw;  // позже расчитать
-        // }  
-        @media (min-width: $breakpoint-laptop) and (orientation: landscape) { 
-            font-size: 1.25vw;  
-        }  
-        @media (min-width: $breakpoint-desktop) and (orientation: landscape) { 
-            font-size: 1.146vw; 
-        }
-    }
-
-// 9) вкладки
-    @mixin text-tab-button {
-        font-family: $font-primary;
-        line-height: 1.05;
-
-        @media (min-width: $breakpoint-mobile-small) and (orientation: landscape) and (hover: none) and (pointer: coarse) { 
-            font-size: 5.128vh; // позже расчитать (для мини-мобил)
-        }
-        @media (min-width: $breakpoint-mobile) and (orientation: landscape) and (hover: none) and (pointer: coarse) { 
-            font-size: 5.128vh; 
-        }
-        // @media (min-width: $breakpoint-tablet) and (orientation: landscape) and (hover: none) and (pointer: coarse) { 
-        //     font-size: 2.56vw;  // позже расчитать
-        // }   
-        @media (min-width: $breakpoint-laptop) and (orientation: landscape) { 
-            font-size: 1.667vw;
-        }   
-        @media (min-width: $breakpoint-desktop) and (orientation: landscape) { 
-            font-size: 1.354vw; 
-        }
-    }
+// #endregion

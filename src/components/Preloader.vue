@@ -79,7 +79,7 @@
         opacity: 0;
         transition: all 0.2s ease-in-out;
 
-        @include text-splash-button;
+        @include text-button-size-m;
         color: $color-yellow-super-light;
 
         bottom: 32.479vh;

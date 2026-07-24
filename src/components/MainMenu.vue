@@ -132,7 +132,7 @@
     }
 
     .btn_correction {
-        @include text-main-menu-button;
+        @include text-button-size-m;
         color: $color-yellow-super-light;
     }
 </style>

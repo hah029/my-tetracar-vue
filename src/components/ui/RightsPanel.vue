@@ -68,7 +68,7 @@
         justify-content: flex-end;
         opacity: 0.55;
         
-        @include text-copyright;
+        @include text-info-size-xs;
         color: $color_white;
 
         z-index: z("rights_and_logo");

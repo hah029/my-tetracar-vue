@@ -108,7 +108,7 @@ $z-layers: (
     }
 
     .header_text {
-        @include text-menu-title;
+        @include text-button-size-l;
         color: $color-blue;
         margin-bottom: 3.1vh;    // позже расчитать (для мини-мобил)
 
@@ -217,7 +217,7 @@ $z-layers: (
     }
 
     .btn_tab_correction {
-        @include text-tab-button;
+        @include text-button-size-xs;
         color: $color-yellow-super-light;
     }
 

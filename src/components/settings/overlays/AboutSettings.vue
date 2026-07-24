@@ -63,7 +63,7 @@
     }
 
     .btn_correction {
-        @include text-secondary-menu-button;
+        @include text-button-size-s;
         color: $color-yellow-super-light;
     }
 </style>

@@ -127,13 +127,13 @@
     }
 
     .wicked {
-        @include text-team-logo;
+        @include text-info-size-xs;
         color: $color_white;
         margin-right: 0.4rem;
     }
 
     .team {
-        @include text-team-logo;
+        @include text-info-size-xs;
         color: $color_orange;
 
         // #region - margin-top

@@ -199,15 +199,16 @@
     }
 
     .warning {
-        @include text-warning;
+        @include text-info-size-m;
         color: $color-pink;
+        text-transform: uppercase;
         text-align: center;
-        margin-bottom: 1.709vh;
-        width: 61.88vh;
+        margin-bottom: 3vh;
+        width: 74.53vh;
 
         @media (min-width: $breakpoint-mobile) and (orientation: landscape) and (hover: none) and (pointer: coarse) { 
-            margin-bottom: 1.709vh;
-            width: 61.88vh;
+            margin-bottom: 3vh;
+            width: 74.53vh;
         }
         // позже расчитать:
         // @media (min-width: $breakpoint-tablet) and (orientation: landscape) and (hover: none) and (pointer: coarse) { 
@@ -215,7 +216,7 @@
         // }  
         @media (min-width: $breakpoint-laptop) and (orientation: landscape) { 
             margin-bottom: 2.222vw;
-            width: 22.917vw;
+            width: 25.139vw;
         }
         @media (min-width: $breakpoint-desktop) and (orientation: landscape) {
             margin-bottom: 1.823vw;
@@ -246,11 +247,11 @@
     }
 
     .header_correction {
-        @include text-menu-title-pause;
+        @include text-button-size-xl;
     }
 
     .btn_correction {
-        @include text-secondary-menu-button;
+        @include text-button-size-s;
         color: $color-yellow-super-light;
     }
 </style>
