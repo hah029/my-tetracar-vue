@@ -23,97 +23,118 @@
 
         <div v-if="rowView[2]" class="settings_row">
             <span>{{ $t("settings.vfxAndMusic.volumeLevel") }}</span>
-            <input type="range" min="0" max="1" step="0.01" v-model="volume" @input="updateVolume"
-                class="custom_slider" />
+            <input type="range" min="0" max="1" step="0.01" v-model="volume" @input="updateVolume" class="custom_slider" />
         </div>
+
     </TransitionGroup>
 </template>
 
 
 <script setup lang="ts">
-import { onMounted, watch, ref } from "vue";
-import { useAudioStore } from "@/store/audioStore";
-import { SoundManager } from "@/game/sound/SoundManager";
-import { createNewText } from '@/helpers/functions';
-import { useGraphicsStore } from "@/store/graphicsStore";
+    import { onMounted, watch, ref } from "vue";
+    import { useAudioStore } from "@/store/audioStore";
+    import { SoundManager } from "@/game/sound/SoundManager";
+    import { createNewText } from '@/helpers/functions';
+    import { useGraphicsStore } from "@/store/graphicsStore";
 
-const audioStore = useAudioStore();
-const graphicsStore = useGraphicsStore();
-const soundManager = SoundManager.getInstance();
-const volume = ref(Number(localStorage.getItem("masterVolume") ?? 0.6));
-const rowView = ref([false, false, false, false]);
+    const audioStore = useAudioStore();
+    const soundManager = SoundManager.getInstance();
+    const volume = ref(audioStore.masterVolume);
+    const rowView = ref([false, false, false]);
+    const rowViewCount = rowView.value.length;
 
-const foo = createNewText();
+    const foo = createNewText();
 
-function toggleVfx() {
-    graphicsStore.toggleVfx();
-    console.log('🎮 Графические эффекты:', graphicsStore.vfxEnabled ? 'включены' : 'выключены');
-};
+    function toggleMusic() {
+        audioStore.toggleMusic();
+        if (audioStore.musicEnabled) soundManager.play("music_background");
+    };
 
-function toggleMusic() {
-    audioStore.toggleMusic();
-    if (audioStore.musicEnabled) soundManager.play("music_background");
-};
+    function toggleSound() {
+        audioStore.toggleSFX();
+    };
 
-function toggleSound() {
-    audioStore.toggleSFX();
-};
+    function updateVolume() {
+        soundManager.setMasterVolume(volume.value);
+        audioStore.setVolume(volume.value);
+        soundManager.play("sfx_jump");
+    };
 
-function updateVolume() {
-    soundManager.setMasterVolume(volume.value);
-    audioStore.setVolume(volume.value);
-    soundManager.play("sfx_jump");
-};
+    watch(
+        () => audioStore.masterVolume,
+        (value) => {
+            volume.value = value;
+        },
+        { immediate: true },
+    );
 
-const props = defineProps<{
-    backStatus: boolean;
-}>();
+    const props = defineProps<{
+        backStatus: boolean;
+    }>();
 
-watch(() => props.backStatus, (newVal) => {
-    if (newVal) {
-        // Скрываем в обратном порядке с задержками
-        const total = rowView.value.length;
-        for (let i = 0; i < total; i++) {
-            setTimeout(() => {
-                rowView.value[total - 1 - i] = false;
-            }, i * 100);
+    watch(() => props.backStatus, (newVal) => {
+        if (newVal) {
+            // Скрываем в обратном порядке с задержками
+            for (let i = 0; i < rowViewCount; i++) {
+                setTimeout(() => {
+                    rowView.value[rowViewCount - 1 - i] = false;
+                }, i * 100);
+            }
         }
-    }
-});
+    });
 
-onMounted(() => {
-    // Появление с задержками
-    const total = rowView.value.length;
-    for (let i = 0; i < total; i++) {
-        setTimeout(() => {
-            rowView.value[i] = true;
-        }, 400 + i * 100); // начинаем с задержки 400 мс
-    }
-});
+    onMounted(() => {
+        // Появление с задержками
+        for (let i = 0; i < rowViewCount; i++) {
+            setTimeout(() => {
+                rowView.value[i] = true;
+            }, 750 + i * 100);
+        }
+    });
 </script>
 
 
 <style scoped lang="scss">
-@use "@/styles/menu.scss";
-@use "@/styles/settings.scss";
-@use "@/styles/animations.scss";
+    @use "@/styles/menu.scss";
+    @use "@/styles/settings.scss";
+    @use "@/styles/animations.scss";
+    @use "@/styles/typography" as *;
 
-// стили трека
-.custom_slider {
-    appearance: none; // сброс дефолтных стилей бегунка
-    width: 7.5rem;
-    height: 0.125rem;
-    background-color: #72B3EE;
-    border-radius: 2px;
+    // стили трека
+    .custom_slider {
+        appearance: none; // сброс дефолтных стилей бегунка
+        width: 28.205vh;
+        height: 0.427vh;
 
-    &::-webkit-slider-thumb {
-        -webkit-appearance: none;
-        width: 1.125rem;
-        height: 1.125rem;
+        @media (min-width: $breakpoint-mobile) and (orientation: landscape) and (hover: none) and (pointer: coarse) { 
+            width: 28.205vh;
+            height: 0.427vh;
+        }
+        // позже расчитать:
+        // @media (min-width: $breakpoint-tablet) and (orientation: landscape) and (hover: none) and (pointer: coarse) { 
+            // width: 7.5vw;
+            // height: 0.125vw;
+        // }
+        @media (min-width: $breakpoint-laptop) and (orientation: landscape) { 
+            width: 8.333vw;
+            height: 0.139vw;
+        }
+        @media (min-width: $breakpoint-desktop) and (orientation: landscape) {
+            width: 6.25vw;
+            height: 0.104vw;
+        }
+
         background-color: #72B3EE;
-        border: none;
-        border-radius: 50%;
-        position: relative;
+        // border-radius: 2px;
+
+        &::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 1.125rem;
+            height: 1.125rem;
+            background-color: #72B3EE;
+            border: none;
+            border-radius: 50%;
+            position: relative;
+        }
     }
-}
 </style>

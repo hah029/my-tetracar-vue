@@ -1,76 +1,66 @@
-// src/store/progressStore.ts
 import { usePlayerStore } from "@/store/playerStore";
+import { useMetaStore } from "@/store/metaStore";
 import { defineStore } from "pinia";
 import { ref } from "vue";
 import { SoundManager } from "@/game/sound/SoundManager";
 import { Platform } from "@/sdk/Platform";
+import progressConfig from "@/configs/progress";
+import { fill } from "three/src/extras/TextureUtils.js";
 
 export const useProgressStore = defineStore("progressStore", () => {
   const platform = Platform.getInstance();
   const playerStore = usePlayerStore();
+  const metaStore = useMetaStore();
+  const config = ref(progressConfig); // реактивный конфиг
+
   const currentDistance = ref(0);
   const score = ref(0);
   const highScore = ref(0);
-  const goldens = ref(0);
-  const energons = ref(0);
   const currentMultiplier = ref(1);
   const isNewRecord = ref(false);
+  const currentGoldens = ref(0);
+  const currentEnergons = ref(0);
 
   let lastReportedCubes = 0;
-
-  // коэф-ты умножения очков при:
-  const DISTANCE_MLT = 1; // прохождении одной единицы дистанции
-  const GOLDEN_MLT = 5; // поимке Голдена
-  const ENERGON_MLT = 50; // поимке Энергона
-  const OBSTACLE_CRUSHED_MLT = 50; // разрушении препятствия (выстрелом или броней)
-  const JUMP_MLT = 35; // прыжке на трамплине
-
-  // коэф-ты роста множителя:
-  const MULTI_BASE = 1; // базовый коэф-т
-  const MULTI_GROW_NITRO = 2; // умножение при поимке нитро
-  const MULTI_GROW_GOLDENS = 0.5; // суммирование при поимке N-го кол-ва голденов
-  const MULTI_GROW_DISTANCE = 0.5; // суммирование при прохождении N-го кол-ва дистанции
-  const MULTI_GROW_BOOSTER = 2; // суммирование при прохождении N-го кол-ва дистанции
-
   let soundManager: SoundManager;
   soundManager = SoundManager.getInstance();
 
-  // #region - очки прогресса
   function calcScore(type_: string, amount_: number) {
-    let points = 0;
-
-    const pointsMapper = {
-      distance: DISTANCE_MLT,
-      golden: GOLDEN_MLT,
-      energon: ENERGON_MLT,
-      jump: JUMP_MLT,
-      reduceShield: OBSTACLE_CRUSHED_MLT,
-      bulletHit: OBSTACLE_CRUSHED_MLT,
+    const cfg = config.value;
+    const pointsMapper: Record<string, number> = {
+      distance: cfg.multipliers.distance,
+      golden: cfg.multipliers.golden,
+      energon: cfg.multipliers.energon,
+      jump: cfg.multipliers.jump,
+      reduceShield: cfg.multipliers.obstacleCrushed,
+      bulletHit: cfg.multipliers.obstacleCrushed,
     };
 
-    points = amount_ * pointsMapper[type_];
-
+    const points = amount_ * pointsMapper[type_];
     currentMultiplier.value = getScoreMultiplier();
     score.value += points * currentMultiplier.value;
 
-    if (highScore.value != 0) {
-      if (score.value > highScore.value) {
-        if (!isNewRecord.value) {
-          isNewRecord.value = true;
-          playerStore.addNewMsg("newRecord");
-          soundManager.play("sfx_new_record");
-          //   oldHighScore.value = highScore.value; // запоминаем предыдущий рекорд
-        }
-        highScore.value = score.value;
+    if (highScore.value !== 0 && score.value > highScore.value) {
+      if (!isNewRecord.value) {
+        isNewRecord.value = true;
+        playerStore.addNewMsg("newRecord");
+        soundManager.play("sfx_new_record");
       }
+      highScore.value = score.value;
     }
   }
 
   function getScoreMultiplier() {
-    let mplr = MULTI_BASE;
+    const cfg = config.value;
+    let mplr = cfg.scoreMultiplier.base;
 
-    if (playerStore.isNitroEnabled) mplr *= MULTI_GROW_NITRO;
-    // if (playerStore.isNitroEnabled) mplr *= 2;
+    if (playerStore.isNitroEnabled) {
+      mplr *= cfg.scoreMultiplier.growNitro;
+    }
+
+    if (metaStore.isFeatureActive("scoreMultiplier")) {
+      mplr *= metaStore.getTimedEffect("scoreMultiplier")?.value || 1;
+    }
 
     return mplr;
   }
@@ -81,79 +71,56 @@ export const useProgressStore = defineStore("progressStore", () => {
 
   async function restoreHighScore() {
     platform
-      .getPlayerStatByKey("highScore")
+      .getPlayerStats(["highScore"])
       .then((value) => {
-        if (value) highScore.value = value;
+        const savedHighScore = value?.highScore;
+        if (savedHighScore) highScore.value = savedHighScore;
         resetNewRecord();
       })
       .catch((err) => console.error("Failed to restore high score:", err));
   }
 
   async function saveHighScore(): Promise<void> {
-    // Сохраняем рекорд, если установлен флаг нового рекорда или текущий счёт превышает сохранённый
     if (isNewRecord.value || score.value > highScore.value) {
-      // Обновляем локальный highScore на случай, если флаг не установлен, но счёт больше
       highScore.value = score.value;
       await platform.setPlayerStatByKey("highScore", highScore.value);
       await platform.setLeaderboardScore("debugLeaderboard1", highScore.value);
     }
-    // Сбрасываем флаг после сохранения
     isNewRecord.value = false;
   }
 
   function resetNewRecord() {
     isNewRecord.value = false;
   }
-  // #endregion
 
-  // #region - работа с множителем
-  // увеличиваем множитель
   function riseMultiplier(amount_: number, operation_: string) {
-    if (operation_ == "multiply") {
+    if (operation_ === "multiply") {
       currentMultiplier.value *= amount_;
-    } else if (operation_ == "add") {
+    } else if (operation_ === "add") {
       currentMultiplier.value += amount_;
     }
   }
 
-  // понижаем множитель
   function reduceMultiplier(amount_: number) {
     currentMultiplier.value /= amount_;
   }
 
-  // сбрасываем множитель до единицы
   function clearMultiplier() {
     currentMultiplier.value = 1;
   }
-  // #endregion
 
-  // #region - софт и хард валюта
   function addGolden(amount: number) {
-    goldens.value += amount;
+    metaStore.addGolden(amount);
+    currentGoldens.value += amount;
     calcScore("golden", amount);
   }
 
   function addEnergon(amount: number) {
-    energons.value += amount;
+    metaStore.addEnergon(amount);
+    currentEnergons.value += amount;
     calcScore("energon", amount);
   }
 
-  async function saveCoins(): Promise<void> {
-    await platform.setPlayerStatByKey("goldens", goldens.value);
-    await platform.setPlayerStatByKey("energons", energons.value);
-  }
-
-  function restoreCoins() {
-    platform.getPlayerStatByKey("goldens").then((value) => {
-      if (value) goldens.value = value;
-    });
-    platform.getPlayerStatByKey("energons").then((value) => {
-      if (value) energons.value = value;
-    });
-  }
-  // #endregion
-
-  // #region - дистанция
   function getDangerLevel() {
     return 0;
   }
@@ -163,13 +130,17 @@ export const useProgressStore = defineStore("progressStore", () => {
     lastReportedCubes = 0;
   }
 
+  function resetCoins() {
+    currentEnergons.value = 0;
+    currentGoldens.value = 0;
+  }
+
   function addDistance(value: number) {
     currentDistance.value += value;
     const currentCubes = getDistanceInCubes();
     const newCubes = currentCubes - lastReportedCubes;
-
     if (newCubes > 0) {
-      calcScore("distance", newCubes); // добавляем очки только за НОВЫЕ целые кубы
+      calcScore("distance", newCubes);
       lastReportedCubes = currentCubes;
     }
   }
@@ -182,35 +153,82 @@ export const useProgressStore = defineStore("progressStore", () => {
     return Math.floor(currentDistance.value);
   }
 
-  async function saveProgress(): Promise<void> {
+  async function saveArmorAndAmmo(): Promise<void> {
     try {
-      await saveCoins();
-      await saveHighScore();
-      // save to leaderboad
-    } catch (error) {
-      console.error("Failed to save progress:", error);
+      await platform.setPlayerStats({
+        armor: playerStore.armor,
+        ammo: playerStore.ammo,
+      });
+    } catch (err) {
+      console.error("Failed to save armor/ammo:", err);
     }
   }
 
-  function restoreProgress(): void {
-    restoreHighScore();
-    restoreCoins();
-
-    // restore local leaderboad
+  async function restoreArmorAndAmmo(): Promise<void> {
+    try {
+      const stats = await platform.getPlayerStats(["armor", "ammo"]);
+      const savedArmor = stats?.armor;
+      if (savedArmor != null) {
+        const armorVal = Number(savedArmor);
+        for (let i = 0; i < armorVal; i++) playerStore.addArmor();
+      }
+      const savedAmmo = stats?.ammo;
+      if (savedAmmo != null) {
+        const ammoVal = Number(savedAmmo);
+        for (let i = 0; i < ammoVal; i++) playerStore.addAmmo();
+      }
+    } catch (err) {
+      console.error("Failed to restore armor/ammo:", err);
+    }
   }
-  // #endregion
+
+  async function saveProgress(): Promise<void> {
+    try {
+      await metaStore.saveProgress();
+    } catch (error) {
+      console.error("Failed to save meta progress:", error);
+    }
+    try {
+      await saveHighScore();
+    } catch (error) {
+      console.error("Failed to save high score:", error);
+    }
+    try {
+      await saveArmorAndAmmo();
+    } catch (error) {
+      console.error("Failed to save armor/ammo:", error);
+    }
+  }
+
+  async function restoreProgress(): Promise<void> {
+    restoreHighScore();
+    await metaStore.restoreProgress();
+    await restoreArmorAndAmmo();
+  }
+
+  function checkFullFilling(fillType: string): boolean {
+    switch (fillType) {
+      case "armor":
+        return playerStore.armor >= metaStore.maxArmor;
+      case "ammo":
+        return playerStore.ammo >= metaStore.maxAmmo;
+      default:
+        return false;
+    }
+  }
 
   return {
     currentDistance,
+    currentGoldens,
+    currentEnergons,
     score,
     highScore,
-    goldens,
-    energons,
     currentMultiplier,
     isNewRecord,
 
     calcScore,
     resetScore,
+    resetCoins,
     saveHighScore,
     resetNewRecord,
     riseMultiplier,
@@ -226,7 +244,10 @@ export const useProgressStore = defineStore("progressStore", () => {
     getDistance,
     getDistanceInCubes,
 
+    saveArmorAndAmmo,
+    restoreArmorAndAmmo,
     restoreProgress,
     saveProgress,
+    checkFullFilling,
   };
 });

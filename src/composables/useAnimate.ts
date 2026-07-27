@@ -100,8 +100,8 @@ export function GameLoop(
       let currentSpeed = playerStore.getCurrentSpeed();
 
       if (!isGameOver) {
-        if (playerStore.baseSpeed < playerStore.BASE_SPEED)
-          playerStore.baseSpeed = playerStore.BASE_SPEED;
+        if (playerStore.baseSpeed < playerStore.startSpeed)
+          playerStore.baseSpeed = playerStore.startSpeed;
         playerStore.baseSpeed += playerStore.getCurrentAcceleration();
         if (playerStore.baseSpeed > playerStore.maxSpeed)
           playerStore.baseSpeed = playerStore.maxSpeed;
@@ -119,8 +119,16 @@ export function GameLoop(
           isFinite(v.y) &&
           isFinite(v.z);
         const carPos = realCar?.position;
+        const cameraAnchor =
+          realCar && "getGameOverCameraPosition" in realCar
+            ? (realCar as any).getGameOverCameraPosition()
+            : null;
         const safePosition =
-          carPos && isValidVector(carPos) ? carPos : undefined;
+          cameraAnchor && isValidVector(cameraAnchor)
+            ? cameraAnchor
+            : carPos && isValidVector(carPos)
+              ? carPos
+              : undefined;
         updateDestruction(deltaTime, 0, safePosition);
       } else {
         progressStore.addDistance(deltaTime * currentSpeed);
@@ -130,7 +138,7 @@ export function GameLoop(
           UpdateMode.Gameplay,
         );
         game.updateRoad(deltaTime, currentSpeed);
-        game.updateCity(deltaTime, currentSpeed);
+        game.updateCity(deltaTime, currentSpeed, game.car.value.mesh.position);
 
         BulletSystem.getInstance().update(deltaTime);
 
@@ -154,42 +162,49 @@ export function GameLoop(
 
         const itemCollision = game.checkItemsCollision();
         if (itemCollision != null) {
-          if (itemCollision.impactSubject instanceof CoinItem) {
+          if (
+            playerStore.magnetMode === "lethalPull" &&
+            (itemCollision.impactSubject as BaseItem).userData.status ===
+              "magnetized"
+          ) {
+            const impactSubject = itemCollision.impactSubject as BaseItem;
+            game.destroyCar(impactSubject.position.clone());
+            game.removeItem(impactSubject);
+            gameState.endGame();
+          } else if (itemCollision.impactSubject instanceof CoinItem) {
             // обработка Coin
             game.handleCoinCollision(itemCollision);
+            game.removeItem(itemCollision.impactSubject as BaseItem);
           } else if (itemCollision.impactSubject instanceof BoosterItem) {
             game.handleBoosterCollision(itemCollision);
+            game.removeItem(itemCollision.impactSubject as BaseItem);
           }
-          game.removeItem(itemCollision.impactSubject as BaseItem);
         }
 
         const realCar = game.car.value.mesh;
         if (realCar) {
+          const cameraFollowPosition =
+            "getCameraFollowPosition" in realCar
+              ? (realCar as any).getCameraFollowPosition()
+              : realCar.position;
           CameraSystem.update(
             {
-              position: realCar.position,
+              position: cameraFollowPosition,
               rotation: realCar.rotation,
               isDestroyed: () => game.car.value.isDestroyed,
             },
             currentSpeed,
-            // deltaTime,
+            deltaTime,
           );
         }
 
         game.updateEffects();
         usePlayerStore().updateNitro(deltaTime);
-
-        // const target = playerStore.isNitroEnabled ? maxShift : 0;
-        // // Плавно двигаем текущее значение к целевому
-        // currentShiftAmount +=
-        //   (target - currentShiftAmount) * Math.min(1, deltaTime * lerpSpeed);
-
-        // console.log("currentShiftAmount", currentShiftAmount);
-
-        // setRGBShiftAmount(currentShiftAmount);
-
+        usePlayerStore().updateStatusEffects(deltaTime);
         debugCollider?.update();
       }
+
+      game.updateEffects();
     } else {
       // Фоновые состояния: двигаем только дорогу и город
       const currentSpeed = playerStore.baseSpeed;

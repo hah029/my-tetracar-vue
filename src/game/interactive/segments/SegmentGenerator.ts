@@ -1,4 +1,5 @@
 import { SEGMENTS } from "./SegmentLibrary";
+import { EASY_SEGMENTS } from "./SegmentLibraryEasy";
 import type { Segment } from "./Segment";
 // import { SegmentTypes } from "../types/SegmentType";
 import { LanePattern } from "../types/LanePattern";
@@ -7,9 +8,18 @@ export class SegmentGenerator {
   private static history: Segment[] = [];
   private static historySize = 3;
 
-  static getSegment(difficulty: number): Segment {
+  static getSegment(
+    difficulty: number,
+    laneCount = 5,
+    segmentPool?: readonly Segment[],
+  ): Segment {
+    const segments =
+      segmentPool && segmentPool.length > 0
+        ? [...segmentPool]
+        : SegmentGenerator.getSegmentsForLaneCount(laneCount);
+
     // 1️⃣ фильтр по сложности
-    const available = SEGMENTS.filter((s) => s.difficulty <= difficulty);
+    const available = segments.filter((s) => s.difficulty <= difficulty);
 
     // 2️⃣ оставляем только playable сегменты
     let pool = available.filter((s) =>
@@ -107,5 +117,10 @@ export class SegmentGenerator {
     if (pool_ === undefined) throw new Error("No segment found");
 
     return pool_;
+  }
+
+  private static getSegmentsForLaneCount(laneCount: number): Segment[] {
+    if (laneCount === 4) return EASY_SEGMENTS;
+    return SEGMENTS;
   }
 }

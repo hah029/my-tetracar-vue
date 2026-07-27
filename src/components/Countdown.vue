@@ -97,6 +97,9 @@
 
 
 <style lang="scss" scoped>
+    @use "@/styles/typography" as *;
+    @use "@/styles/colors" as *;
+
     .countdown_root {
         position: relative;
         width: 100%;
@@ -109,15 +112,15 @@
         display: flex;
         align-items: center;
         justify-content: center;
-        font-size: 7.5rem;
-        color: #FDFFE3;
+        transition: all 0.1s ease-in-out;
+        
+        @include text-button-size-xxxl;
+        color: $color-yellow-super-light;
         filter: drop-shadow(0 0 1rem rgba(255, 246, 25, 0.4));
         font-weight: bold;
-        font-family: 'vla_shu';
-        transition: all 0.1s ease-in-out;
     }
     .msgGo {
-        font-size: 5.625rem;
+        @include text-button-size-xxl;
     }
 
     .countdown_anim-enter-active {

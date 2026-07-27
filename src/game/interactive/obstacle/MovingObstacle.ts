@@ -7,7 +7,7 @@ import { CubeObstacle } from "./CubeObstacle";
 import { useCommonStore } from "@/store/commonStore";
 
 export class MovingObstacle extends CubeObstacle {
-  private speedX = useCommonStore().MOVING_OBSTACLE_SPEED;
+  private speedX = useCommonStore().config.movingObstacleSpeed;
   private direction: 1 | -1;
   private minX: number;
   private maxX: number;
@@ -22,6 +22,7 @@ export class MovingObstacle extends CubeObstacle {
     direction: 1 | -1 = 1,
     formConfig: GeometryConfig[],
     materialConfig?: MaterialConfig,
+    formDetailConfig?: GeometryConfig[],
   ) {
     super(
       startLane,
@@ -30,7 +31,7 @@ export class MovingObstacle extends CubeObstacle {
       scene,
       useGLB,
       undefined,
-      useCommonStore().FULL_OBSTACLE_FORMS[0],
+      formDetailConfig ?? useCommonStore().fullObstacleForms[0],
       materialConfig,
     );
 
@@ -39,6 +40,15 @@ export class MovingObstacle extends CubeObstacle {
     this.minX = road.getLanePosition(0);
     this.maxX = road.getLanePosition(lanes - width);
     this.direction = direction;
+  }
+
+  public update(dt: number, speed: number): boolean {
+    if (this.isDestroyed) return false;
+    if (this.userData.curvedItemState) {
+      return super.update(dt, speed);
+    }
+    this.updateNormalCubes(dt, speed);
+    return this.position.z > useCommonStore().config.itemsRemovingZpos;
   }
 
   protected updateNormalCubes(dt: number, speed: number) {
@@ -51,6 +61,7 @@ export class MovingObstacle extends CubeObstacle {
     if (this.position.x > this.maxX) {
       this.direction = -1;
     }
+    this.position.y = this.getSurfaceY(this.getLane(), this.position.z);
   }
 
   public getLane(): number {

@@ -1,8 +1,11 @@
 // src/game/car/CarManager.ts
 import { useGameState } from "@/store/gameState";
+import { useLevelStore } from "@/store/levelStore";
+import { usePlayerStore } from "@/store/playerStore";
 import { Car } from "./Car";
 import { type CarConfig, type CarStats } from "./types";
 import * as THREE from "three";
+import { watch, type WatchStopHandle } from "vue";
 
 import nitroFragmentShader from "@/game/shaders/nitro/fragment.glsl";
 import nitroVertexShader from "@/game/shaders/nitro/vertex.glsl";
@@ -14,6 +17,7 @@ export class CarManager {
   private nitroLeft: THREE.Mesh | null = null;
   private nitroRight: THREE.Mesh | null = null;
   private nitroMaterial: THREE.ShaderMaterial | null = null;
+  private stopPlayerVisualWatcher: WatchStopHandle | null = null;
 
   private constructor() {}
 
@@ -26,6 +30,14 @@ export class CarManager {
 
   public initialize(scene: THREE.Scene): void {
     this.scene = scene;
+    this.stopPlayerVisualWatcher?.();
+
+    const levelStore = useLevelStore();
+    this.stopPlayerVisualWatcher = watch(
+      () => levelStore.currentLevel.player.visual,
+      () => this.applyPlayerVisualConfig(),
+      { deep: true },
+    );
   }
 
   public createCar(config?: CarConfig): Car {
@@ -48,12 +60,18 @@ export class CarManager {
   private createNitroEffect(): void {
     if (!this.car) return;
 
-    const geometry = new THREE.PlaneGeometry(2.2, 0.8);
+    this.disposeNitroEffect();
+
+    const nitroTrail = usePlayerStore().getNitroTrailConfig();
+    const geometry = new THREE.PlaneGeometry(
+      nitroTrail.width,
+      nitroTrail.height,
+    );
 
     this.nitroMaterial = new THREE.ShaderMaterial({
       uniforms: {
         time: { value: 0 },
-        color: { value: new THREE.Color("#66ff66") },
+        color: { value: new THREE.Color(nitroTrail.color) },
       },
       vertexShader: nitroVertexShader,
       fragmentShader: nitroFragmentShader,
@@ -66,8 +84,16 @@ export class CarManager {
     this.nitroLeft = new THREE.Mesh(geometry, this.nitroMaterial);
     this.nitroRight = new THREE.Mesh(geometry, this.nitroMaterial);
 
-    this.nitroLeft.position.set(-0.85, 0.25, 2);
-    this.nitroRight.position.set(0.85, 0.25, 2);
+    this.nitroLeft.position.set(
+      -nitroTrail.offsetX,
+      nitroTrail.offsetY,
+      nitroTrail.offsetZ,
+    );
+    this.nitroRight.position.set(
+      nitroTrail.offsetX,
+      nitroTrail.offsetY,
+      nitroTrail.offsetZ,
+    );
 
     this.nitroLeft.rotation.y = Math.PI / 2;
     this.nitroRight.rotation.y = -Math.PI / 2;
@@ -77,6 +103,27 @@ export class CarManager {
 
     this.car.add(this.nitroLeft);
     this.car.add(this.nitroRight);
+  }
+
+  private disposeNitroEffect(): void {
+    if (this.car) {
+      if (this.nitroLeft) this.car.remove(this.nitroLeft);
+      if (this.nitroRight) this.car.remove(this.nitroRight);
+    }
+
+    this.nitroLeft?.geometry.dispose();
+    this.nitroMaterial?.dispose();
+
+    this.nitroLeft = null;
+    this.nitroRight = null;
+    this.nitroMaterial = null;
+  }
+
+  private applyPlayerVisualConfig(): void {
+    if (!this.car) return;
+
+    this.createNitroEffect();
+    this.car.applyVisualConfig();
   }
 
   // private createShieldEffect(): void {
@@ -124,7 +171,8 @@ export class CarManager {
     this.car.toggleDebugCollider(useGameState().isDebug);
 
     if (this.nitroMaterial) {
-      this.nitroMaterial.uniforms.time.value += dt * 4.0;
+      this.nitroMaterial.uniforms.time.value +=
+        dt * usePlayerStore().getNitroTrailConfig().timeScale;
     }
   }
 
@@ -162,15 +210,16 @@ export class CarManager {
       // if (field) this.scene.remove(field);
     }
 
-    this.nitroLeft?.geometry.dispose();
-    this.nitroRight?.geometry.dispose();
-    this.nitroMaterial?.dispose();
-
-    this.nitroLeft = null;
-    this.nitroRight = null;
-    this.nitroMaterial = null;
+    this.disposeNitroEffect();
 
     this.car = null;
+  }
+
+  public dispose(): void {
+    this.stopPlayerVisualWatcher?.();
+    this.stopPlayerVisualWatcher = null;
+    this.destroyCar();
+    this.scene = null;
   }
 
   public getCar(): Car {

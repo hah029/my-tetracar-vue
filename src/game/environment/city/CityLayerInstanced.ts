@@ -10,6 +10,7 @@ async function createInstancedMeshFromModel(
   url: string,
   count: number,
   scene: THREE.Scene,
+  config: CityLayerConfig,
 ): Promise<THREE.InstancedMesh> {
   const model = await loadCubeModel(url); // возвращает клонированную группу
 
@@ -18,14 +19,14 @@ async function createInstancedMeshFromModel(
   model.updateMatrixWorld(true);
 
   const geometries: THREE.BufferGeometry[] = [];
-  let material: THREE.Material | null = null;
+  let sourceMaterial: THREE.Material | null = null;
 
   model.traverse((child) => {
     if ((child as THREE.Mesh).isMesh) {
       const mesh = child as THREE.Mesh;
       // Берём материал первого меша (предполагаем, что все материалы одинаковы)
-      if (!material && mesh.material) {
-        material = Array.isArray(mesh.material)
+      if (!sourceMaterial && mesh.material) {
+        sourceMaterial = Array.isArray(mesh.material)
           ? mesh.material[0]!
           : mesh.material;
       }
@@ -50,9 +51,9 @@ async function createInstancedMeshFromModel(
   }
 
   // Если материал не найден, создаём стандартный
-  if (!material) {
-    material = new THREE.MeshStandardMaterial({ color: 0xffffff });
-  }
+  const material =
+    (sourceMaterial as THREE.Material | null)?.clone() ??
+    new THREE.MeshStandardMaterial({ color: 0xffffff });
 
   const instancedMesh = new THREE.InstancedMesh(
     mergedGeometry,
@@ -62,18 +63,10 @@ async function createInstancedMeshFromModel(
 
   if (Array.isArray(instancedMesh.material)) {
     instancedMesh.material.forEach((mat) => {
-      if (mat instanceof THREE.MeshStandardMaterial) {
-        mat.emissive.setHex(0xffffff);
-        mat.emissiveIntensity = 1;
-        mat.emissiveMap = mat.map;
-      }
+      applyMaterialConfig(mat, config);
     });
   } else {
-    if (instancedMesh.material instanceof THREE.MeshStandardMaterial) {
-      instancedMesh.material.emissive.setHex(0xffffff);
-      instancedMesh.material.emissiveIntensity = 1;
-      instancedMesh.material.emissiveMap = instancedMesh.material.map;
-    }
+    applyMaterialConfig(instancedMesh.material, config);
   }
 
   instancedMesh.castShadow = false;
@@ -81,6 +74,20 @@ async function createInstancedMeshFromModel(
   instancedMesh.frustumCulled = false; // для постоянно движущихся объектов
 
   return instancedMesh;
+}
+
+function applyMaterialConfig(
+  material: THREE.Material,
+  config: CityLayerConfig,
+) {
+  if (!(material instanceof THREE.MeshStandardMaterial)) return;
+
+  material.color.setHex(config.color);
+  material.emissive.setHex(config.emissive ?? 0xffffff);
+  material.emissiveIntensity = config.emissiveIntensity ?? 3;
+  material.emissiveMap = material.map;
+  material.transparent = (config.opacity ?? 1) < 1;
+  material.opacity = config.opacity ?? 1;
 }
 
 export class CityLayerInstanced {
@@ -148,8 +155,7 @@ export class CityLayerInstanced {
       const height = THREE.MathUtils.randFloat(minHeight, maxHeight);
       const width = THREE.MathUtils.randFloat(minWidth, maxWidth);
 
-      // Позиция по y = -height, чтобы низ здания был на уровне земли
-      const pos = new THREE.Vector3(x, -100, z);
+      const pos = new THREE.Vector3(x, this.config.y, z);
       const scale = new THREE.Vector3(width, height, width);
       const modelIndex = Math.floor(Math.random() * this.modelUrls.length);
 
@@ -172,7 +178,12 @@ export class CityLayerInstanced {
       if (count === 0) continue;
 
       // Создаём инстанс-меш для текущей модели
-      const mesh = await createInstancedMeshFromModel(url, count, this.scene);
+      const mesh = await createInstancedMeshFromModel(
+        url,
+        count,
+        this.scene,
+        this.config,
+      );
 
       // Заполняем матрицы
       for (let i = 0; i < count; i++) {

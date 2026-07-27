@@ -1,0 +1,54 @@
+[
+    {
+        "id": "carSkinBasic1",
+        "type": "cosmetic",
+        "title": "Базовый скин 1",
+        "description": "Базовый цветовой вариант кузова №1",
+        "price": {
+            "value": 2500,
+            "currency": "golden"
+        },
+        "effect": {
+            "skinId": "basic1"
+        }
+    },
+    {
+        "id": "carSkinBasic2",
+        "type": "cosmetic",
+        "title": "Базовый скин 2",
+        "description": "Базовый цветовой вариант кузова №2",
+        "price": {
+            "value": 2500,
+            "currency": "golden"
+        },
+        "effect": {
+            "skinId": "basic2"
+        }
+    },
+    {
+        "id": "carSkinPremium1",
+        "type": "cosmetic",
+        "title": "Премиум скин 1",
+        "description": "Эксклюзивный премиум-скин кузова №1",
+        "price": {
+            "value": 25,
+            "currency": "energon"
+        },
+        "effect": {
+            "skinId": "premium1"
+        }
+    },
+    {
+        "id": "carSkinPremium2",
+        "type": "cosmetic",
+        "title": "Премиум скин 2",
+        "description": "Эксклюзивный премиум-скин кузова №2",
+        "price": {
+            "value": 25,
+            "currency": "energon"
+        },
+        "effect": {
+            "skinId": "premium2"
+        }
+    }
+]

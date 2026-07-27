@@ -4,225 +4,287 @@
 
     <!-- UI -->
     <GameLogo />
+    <HUD v-if="showHUD" />
     <component :is="getUIComponent" class="ui_components_root" />
     <RightsPanel />
     <TeamLogo />
     <DebugPanel />
+    <div class="blindness_overlay" :style="{ opacity: playerStore.shieldBlindnessTimer > 0 ? 1 : 0 }" />
 </template>
 
 
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted, computed } from "vue";
-// composable
-import { useThree } from "./composables/useThree";
-import { useGame } from "./composables/useGame";
-import { useGameState } from "./store/gameState";
-import { useControls } from "./composables/useControls";
-import { GameLoop } from "./composables/useAnimate";
-// components
-import MainMenu from "./components/MainMenu.vue";
-import Preloader from "./components/Preloader.vue";
-import PauseMenu from "./components/PauseMenu.vue";
-import HUD from "./components/hud/HUD.vue";
-import GameOverMenu from "./components/GameOverMenu.vue";
-import Countdown from "./components/Countdown.vue";
-import GameLogo from "@/components/ui/GameLogo.vue";
-import RightsPanel from "@/components/ui/RightsPanel.vue";
-import TeamLogo from "@/components/ui/TeamLogo.vue";
-// managers
-import { CameraSystem } from "@/game/camera/CameraSystem";
-import { SoundManager } from "./game/sound/SoundManager";
-import { DebugColliderVisualizer } from "./helpers/debug/DebugColliderVisualizer";
-import { GameStates } from "./game/core/GameState";
-import { provide } from 'vue';
-import DebugPanel from '@/components/hud/panels/DebugPanel.vue';
-import { usePlayerStore } from "./store/playerStore";
-// import { useProgressStore } from "./store/progressStore";
+    import { ref, onMounted, onUnmounted, computed } from "vue";
+    // composable
+    import { useThree } from "./composables/useThree";
+    import { useGame } from "./composables/useGame";
+    import { useGameState } from "./store/gameState";
+    import { useControls } from "./composables/useControls";
+    import { GameLoop } from "./composables/useAnimate";
+    // components
+    import MainMenu from "./components/MainMenu.vue";
+    import LevelSelect from "./components/LevelSelect.vue";
+    import Preloader from "./components/Preloader.vue";
+    import PauseMenu from "./components/PauseMenu.vue";
+    import HUD from "./components/hud/HUD.vue";
+    import GameOverMenu from "./components/GameOverMenu.vue";
+    import Countdown from "./components/Countdown.vue";
+    import GameLogo from "@/components/ui/GameLogo.vue";
+    import RightsPanel from "@/components/ui/RightsPanel.vue";
+    import TeamLogo from "@/components/ui/TeamLogo.vue";
+    // managers
+    import { CameraSystem } from "@/game/camera/CameraSystem";
+    import { SoundManager } from "./game/sound/SoundManager";
+    import { DebugColliderVisualizer } from "./helpers/debug/DebugColliderVisualizer";
+    import { GameStates } from "./game/core/GameState";
+    import { provide } from 'vue';
+    import DebugPanel from '@/components/hud/panels/DebugPanel.vue';
+    import { usePlayerStore } from "./store/playerStore";
+    // import { useProgressStore } from "./store/progressStore";
 
-const threeRoot = ref<HTMLDivElement | null>(null);
-const threeInstance = useThree(threeRoot);
-const game = useGame();
-const gameState = useGameState();
-const controls = useControls(game);
-
-// Добавляем controls в объект game для доступа из HUD
-const gameWithControls = {
-    ...game,
-    controls
-};
-
-// Предоставляем game для дочерних компонентов
-provide('game', gameWithControls);
-
-const getUIComponent = computed(() => {
-    switch (gameState.currentState) {
-        case GameStates.Preloader:
-            return Preloader;
-        case GameStates.Menu:
-            return MainMenu;
-        case GameStates.Pause:
-            return PauseMenu;
-        case GameStates.Gameover:
-            return GameOverMenu;
-        case GameStates.Play:
-            return HUD;
-        case GameStates.Countdown:   // ←
-            return Countdown;
-    };
-});
-
-let loop: ReturnType<typeof GameLoop>;
-let soundManager: SoundManager;
-
-onMounted(() => {
-    const scene = threeInstance.getScene();
-    const camera = threeInstance.getCamera();
-    const composer = threeInstance.getComposer();
-
+    const threeRoot = ref<HTMLDivElement | null>(null);
+    const threeInstance = useThree(threeRoot);
+    const game = useGame();
+    const gameState = useGameState();
     const playerStore = usePlayerStore();
-    playerStore.renderInstance = threeInstance;
+    const controls = useControls(game);
 
-
-    // console.log('🔍 App: Got scene:', !!scene);
-    // console.log('🔍 App: Got composer:', !!composer);
-    // console.log('🔍 App: Got renderer:', !!composer?.renderer);
-
-    // регистрация ThreeJS объектов для дебаг панели
-    if (scene && composer?.renderer) {
-        (window as any).__THREE_DEBUG__ = {
-            scene: scene,
-            renderer: composer.renderer
-        };
-        console.log('✅ ThreeJS debug panel registered');
-
-        // Проверка - есть ли объекты в сцене
-        let objectCount = 0;
-        scene.traverse(() => objectCount++);
-        console.log(`📊 Scene has ${objectCount} objects`);
-    } else {
-        console.error('❌ Failed to register debug panel');
+    // Добавляем controls в объект game для доступа из HUD
+    const gameWithControls = {
+        ...game,
+        controls
     };
 
-    // game init
-    game.init(scene);
+    // Предоставляем game для дочерних компонентов
+    provide('game', gameWithControls);
 
-    // camera system init
-    CameraSystem.initialize(camera);
+    const getUIComponent = computed(() => {
+        switch (gameState.currentState) {
+            case GameStates.Preloader:
+                return Preloader;
+            case GameStates.Menu:
+                return MainMenu;
+            case GameStates.LevelSelect:
+                return LevelSelect;
+            case GameStates.Pause:
+                return PauseMenu;
+            case GameStates.Gameover:
+                return GameOverMenu;
+            case GameStates.Countdown:   // ←
+                return Countdown;
+        };
+    });
+    const showHUD = computed(() => {
+        switch (gameState.currentState) {
+            case GameStates.Play:
+            case GameStates.Pause:
+            case GameStates.Gameover:
+            case GameStates.Countdown:
+                return true
+            default:
+                return false;
+        };
+    });
 
-    // audio settings
-    soundManager = SoundManager.getInstance();
-    soundManager.initialize(camera);
+    let loop: ReturnType<typeof GameLoop>;
+    let soundManager: SoundManager;
 
-    // main loop initialize
-    const debugCollider = new DebugColliderVisualizer(scene);
-    loop = GameLoop(game, composer, debugCollider, threeInstance.setRGBShiftAmount);
-    loop.setupEventListeners();
-    loop.start();
+    onMounted(() => {
+        const scene = threeInstance.getScene();
+        const camera = threeInstance.getCamera();
+        const composer = threeInstance.getComposer();
 
-    gameState.setResetCallback(() => {
-        console.log("🔄 FSM reset");
+        playerStore.renderInstance = threeInstance;
 
-        game.reset();
 
-        const carMesh = game.car.value.mesh;
-        if (carMesh) {
-            CameraSystem.reset(carMesh.position.clone());
+        // console.log('🔍 App: Got scene:', !!scene);
+        // console.log('🔍 App: Got composer:', !!composer);
+        // console.log('🔍 App: Got renderer:', !!composer?.renderer);
+
+        // регистрация ThreeJS объектов для дебаг панели
+        if (scene && composer?.renderer) {
+            (window as any).__THREE_DEBUG__ = {
+                scene: scene,
+                renderer: composer.renderer
+            };
+            console.log('✅ ThreeJS debug panel registered');
+
+            // Проверка - есть ли объекты в сцене
+            let objectCount = 0;
+            scene.traverse(() => objectCount++);
+            console.log(`📊 Scene has ${objectCount} objects`);
+        } else {
+            console.error('❌ Failed to register debug panel');
         };
 
-        console.log("✅ Game reset complete");
-    });
-});
+        // game init
+        game.init(scene);
 
-onUnmounted(() => {
-    loop?.cleanupEventListeners();
-    loop?.stop();
-    console.log('onUnmounted');
-});
+        // camera system init
+        CameraSystem.initialize(camera);
+
+        // audio settings
+        soundManager = SoundManager.getInstance();
+        soundManager.initialize(camera);
+
+        // main loop initialize
+        const debugCollider = new DebugColliderVisualizer(scene);
+        loop = GameLoop(game, composer, debugCollider, threeInstance.setRGBShiftAmount);
+        loop.setupEventListeners();
+        loop.start();
+
+        gameState.setResetCallback(() => {
+            console.log("🔄 FSM reset");
+
+            game.reset();
+
+            const carMesh = game.car.value.mesh;
+            if (carMesh) {
+                CameraSystem.reset(carMesh.position.clone());
+            };
+
+            console.log("✅ Game reset complete");
+        });
+    });
+
+    onUnmounted(() => {
+        loop?.cleanupEventListeners();
+        loop?.stop();
+        game.dispose();
+        console.log('onUnmounted');
+    });
 </script>
 
 
 <style lang='scss'>
-@use "@/styles/menu.scss" as *;
+    @use "@/styles/menu.scss" as *;
 
-@font-face {
-    font-family: 'vla_shu';
-    src: url('./assets/fonts/VlaShu.ttf')
-}
+    @font-face {
+        font-family: 'vla_shu';
+        src: url('./assets/fonts/VlaShu.ttf')
+    }
 
-@font-face {
-    font-family: 'jost-light';
-    src: url('./assets/fonts/Jost-Light.ttf')
-}
+    @font-face {
+        font-family: 'jost-light';
+        src: url('./assets/fonts/Jost-Light.ttf')
+    }
 
-@font-face {
-    font-family: 'jost-regular';
-    src: url('./assets/fonts/Jost-Regular.ttf')
-}
+    @font-face {
+        font-family: 'jost-regular';
+        src: url('./assets/fonts/Jost-Regular.ttf')
+    }
 
-html,
-body,
-#app {
-    margin: 0;
-    width: 100%;
-    height: 100%;
-    overflow: hidden;
-    font-size: 0.833vw;
-}
+    html,
+    body,
+    #app {
+        margin: 0;
+        width: 100dvw;
+        height: 100dvh;
+        min-width: 320px;
+        overflow: hidden;
+        background: #222222;
+        font-size: 16px;
+        // font-size: clamp(12px, 0.72vw, 15px);
+        // font-size: 0.833vw;
+        
+        // /* 16px на телефонах */
+        // @media (max-width: 768px) {
+        //     font-size: 1rem; 
+        // }
+    }
 
-img {
-    pointer-events: none;
-}
+    html {
+        position: fixed;
+        inset: 0;
+    }
 
-button,
-input,
-label,
-span {
-    user-select: none;
-    -webkit-user-select: none;
-    -moz-user-select: none;
-    -ms-user-select: none;
-}
+    body {
+        position: fixed;
+        inset: 0;
+        display: block;
+    }
 
-.three_js__root,
-.ui_components_root {
-    position: relative;
-    width: 100%;
-    height: 100%;
-}
+    #app {
+        position: fixed;
+        inset: 0;
+        max-width: none;
+        padding: 0;
+        text-align: initial;
+    }
 
-.three_js__root {
-    z-index: z("canvas");
-}
+    img {
+        pointer-events: none;
+    }
 
-.ui_components_root {
-    z-index: z("ui_component");
-}
+    button,
+    input,
+    label,
+    span {
+        user-select: none;
+        -webkit-user-select: none;
+        -moz-user-select: none;
+        -ms-user-select: none;
+    }
 
-.menu_layout {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
+    .three_js__root,
+    .ui_components_root {
+        position: absolute;
+        inset: 0;
+        width: 100dvw;
+        height: 100dvh;
+        overflow: hidden;
+    }
 
-    gap: -10rem;
+    .three_js__root {
+        z-index: z("canvas");
 
-    width: 100%;
-    max-width: 900px;
-    padding: 2rem;
-}
+        canvas {
+            display: block;
+            width: 100% !important;
+            height: 100% !important;
+        }
+    }
 
-.background {
-    /* position: absolute; */
-    /* left: 0; */
-    /* width: 100%; */
-    /* height: 200%; */
-    background: linear-gradient(to bottom,
-            #000000 0%,
-            /* Черный цвет вверху */
-            #000000bb 100%,
-            /* Черный цвет до середины */
-            rgba(204, 183, 183, 0) 100%
-            /* Прозрачность внизу */
-        );
-}
+    .ui_components_root {
+        z-index: z("ui_component");
+    }
+
+    .menu_layout {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+
+        gap: -10rem;
+
+        width: 100%;
+        max-width: 900px;
+        padding: 2rem;
+    }
+
+    .background {
+        /* position: absolute; */
+        /* left: 0; */
+        /* width: 100%; */
+        /* height: 200%; */
+        background: linear-gradient(to bottom,
+                #000000 0%,
+                /* Черный цвет вверху */
+                #000000bb 100%,
+                /* Черный цвет до середины */
+                rgba(204, 183, 183, 0) 100%
+                /* Прозрачность внизу */
+            );
+    }
+
+    .blindness_overlay {
+        position: fixed;
+        inset: 0;
+        z-index: 9998;
+        pointer-events: none;
+        background: #ffffff;
+        transition: opacity 220ms ease-out;
+    }
 </style>
+
+

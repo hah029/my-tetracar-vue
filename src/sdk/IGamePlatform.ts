@@ -1,18 +1,4 @@
-// общий интерфейс для всех платформ
-export type LeaderBoardPlayer = {
-  publicName: string;
-  uniqueId: string;
-};
-
-export type LeaderBoardRecord = {
-  player: LeaderBoardPlayer;
-  rank: number;
-  score: number;
-};
-
-export type LeaderBoard = {
-  entries: Array<LeaderBoardRecord>;
-};
+import type { Product } from "ysdk";
 
 export interface IGamePlatform {
   init(): Promise<void>;
@@ -22,14 +8,14 @@ export interface IGamePlatform {
     object: any,
     openCallbackMethod: Function,
     closeCallback: Function,
-  ): Promise<void>;
+  ): void;
 
   showRewardedVideoAd(
     object: any,
     openCallbackMethod: Function,
     rewardCallback: Function,
     closeCallback: Function,
-  ): Promise<void>;
+  ): void;
   // #endregion
 
   // #region - работа с Player
@@ -47,7 +33,7 @@ export interface IGamePlatform {
 
   setPlayerDataByKey(key: string, value: any): any | null;
 
-  getPlayerStats(keys: Array<string> | null): any | null;
+  getPlayerStats(keys?: string[]): Promise<Partial<Stats> | null>;
 
   getPlayerStatByKey(key: string): any | null;
 
@@ -69,15 +55,17 @@ export interface IGamePlatform {
   ): any | null;
   // #endregion
 
-  // #region - работа с внутриигровыми покупками
-  consumePrevPurchases(consumePurchase: Function); // дозавершаем подвисшие предыдущие покупки (начисляем игроку купленные игровые предметы)
+  // #region - shop
+  consumePrevPurchases(consumePurchaseCallback: Function): Promise<any>;
 
-  getShopCatalog(): any | null; // получаем список товаров магазина
+  getShopCatalog(): Promise<Product[] | null>;
 
-  buyShopItem(productId: string, consumePurchase: Function); // запускаем процесс покупки
+  buyShopItem(productId: string, consumePurchase: Function): Promise<any>;
   // #endregion
 
   gameReady(); // дёргаем, когда всё загрузилось и игра полностью готова к геймплею
+  gameStart();
+  gameStop();
 }
 
 // export type UserData = {

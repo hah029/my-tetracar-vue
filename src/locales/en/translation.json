@@ -35,6 +35,10 @@
                 "magnet"
             ]
         },
+        "control": {
+            "title": "control"
+        },
+        "nextButton": "next",
         "startButton": "let's go!"
     },
     "gamePlay": {
@@ -91,6 +95,12 @@
             "distance": {
                 "label": "distance",
                 "units": "cubes"
+            },
+            "goldens": {
+                "label": "goldens"
+            },
+            "energons": {
+                "label": "energons"
             }
         }
     },
@@ -98,6 +108,9 @@
         "title": "settings",
         "toggleOn": "on",
         "toggleOff": "off",
+        "low": "low",
+        "medium": "medium",
+        "high": "medium",
         "menuList": {
             "graphics": "graphics",
             "sounds": "sounds",
@@ -113,7 +126,6 @@
             "rgbShiftEnabled": "RGB shift",
             "shadowEnabled": "shadows",
             "shadowQuality": "shadows quality",
-            "nightMode": "night",
             "musicEnabled": "music",
             "sfxEnabled": "sounds",
             "volumeLevel": "volume"
@@ -127,8 +139,8 @@
             "mobileLabels": {
                 "pause": "pause",
                 "fire": "fire",
-                "swipe": "swipe",
-                "switcher": "left / right handed"
+                "left": "left",
+                "right": "right"
             },
             "labels": {
                 "left": "left",
@@ -169,5 +181,42 @@
         "All rights neon-served",
         "All rights preserved… in neon",
         "All rights electrified"
-    ]
+    ],
+    "shop": {
+        "title": "shop",
+        "tabList": {
+            "currency": "currency",
+            "stuff": "stuff",
+            "visual": "visual"
+        },
+        "product": {
+            "owned": "owned",
+            "maxLevel": "max level",
+            "notEnoughCurrency": "not enough",
+            "alreadyOwned": "already owned",
+            "buy": "buy",
+            "activate": "activate",
+            "purchaseSuccess": "purchase successful!",
+            "purchaseError": "purchase failed"
+        },
+        "balance": {
+            "golden": "golden",
+            "energon": "energon"
+        },
+        "ownedBadge": "owned",
+        "previewBtn": {
+            "applied": "applied",
+            "apply": "apply",
+            "buy": "buy"
+        },
+        "noItems": "пусто"
+    },
+    "currency": {
+        "golden": "golden",
+        "energon": "energon",
+        "rub": "rub",
+        "usd": "usd",
+        "euro": "euro",
+        "yan": "yan"
+    }
 }

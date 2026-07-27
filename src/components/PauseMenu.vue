@@ -1,52 +1,40 @@
 <template>
-    <div class="container">
-        <!-- SETTINGS OVERLAY -->
-        <SettingsRoot v-if="gameStore.activeOverlay === 'settings'" :key="'settings'" />
-    
-        <!-- PAUSE MENU -->
-        <div v-if="gameStore.activeOverlay !== 'settings'" :key="'pause'" class="container container_correction">
-            <!-- HEADER с анимацией -->
-            <Transition name="header_footer_block_anim">
-                <div v-if="isHeaderShown" class="header_block">
-                    <div class="header_text header_correction">{{ dynamicTitleName }}</div>
-                    <div class="header_image">
-                        <img class='image' src="@/assets/images/title_line_image.svg" />
+    <div class="container container_blur">
+        <div class="container" :class="setContainerClass()">
+            <!-- SETTINGS OVERLAY -->
+            <SettingsRoot v-if="gameStore.activeOverlay === 'settings'" :key="'settings'" />
+
+            <!-- PAUSE MENU -->
+            <div v-if="gameStore.activeOverlay !== 'settings'" :key="'pause'" class="container">
+                <!-- HEADER с анимацией -->
+                <Transition name="header_footer_block_anim">
+                    <div v-if="isHeaderShown" class="header_block">
+                        <div class="header_text header_correction">{{ dynamicTitleName }}</div>
+                        <div class="header_image">
+                            <img class='image' src="@/assets/images/title_line_image.svg" />
+                        </div>
                     </div>
-                </div>
-            </Transition>
-    
-            <!-- Кнопки меню "Пауза" -->
-            <TransitionGroup v-if="gameStore.activeOverlay !== 'quitConfirm'"
-                name="buttons_group_showing" tag="div" class="buttons_group group_correction"
-            >
-                <button 
-                    v-for="(btn, index) in menuButtonsPause" 
-                    v-if="isButtonsShown" 
-                    :key="btn.id"
-                    class="menu_btn btn_correction" 
-                    :style="{ animationDelay: `${index * 0.06}s` }" 
-                    @click="btn.action"
-                >
-                    {{ btn.text }}
-                </button>
-            </TransitionGroup>
-    
-            <!-- Кнопки диалогового окна "Завершить игру?" -->
-            <TransitionGroup v-if="gameStore.activeOverlay === 'quitConfirm'"
-                name="buttons_group_showing" tag="div" class="buttons_group group_correction"
-            >
-                <span v-if="isWarningShown" class="warning">{{ foo.makeText('quitConfirm.warning', 'empty') }}</span>
-                <button 
-                    v-for="(btn, index) in menuButtonsQuitConfirm" 
-                    v-if="isConfirmButtonsShown" 
-                    :key="btn.id"
-                    class="menu_btn btn_correction" 
-                    :style="{ animationDelay: `${index * 0.06}s` }" 
-                    @click="btn.action"
-                >
-                    {{ btn.text }}
-                </button>
-            </TransitionGroup>
+                </Transition>
+
+                <!-- Кнопки меню "Пауза" -->
+                <TransitionGroup v-if="gameStore.activeOverlay !== 'quitConfirm'" name="buttons_group_showing" tag="div"
+                    class="buttons_group group_correction">
+                    <button v-for="(btn, index) in menuButtonsPause" v-if="isButtonsShown" :key="btn.id"
+                        class="menu_btn btn_correction" :style="{ animationDelay: `${index * 0.06}s` }" @click="btn.action">
+                        {{ btn.text }}
+                    </button>
+                </TransitionGroup>
+
+                <!-- Кнопки диалогового окна "Завершить игру?" -->
+                <TransitionGroup v-if="gameStore.activeOverlay === 'quitConfirm'" name="buttons_group_showing" tag="div"
+                    class="buttons_group group_correction">
+                    <span v-if="isWarningShown" class="warning">{{ foo.makeText('quitConfirm.warning', 'empty') }}</span>
+                    <button v-for="(btn, index) in menuButtonsQuitConfirm" v-if="isConfirmButtonsShown" :key="btn.id"
+                        class="menu_btn btn_correction" :style="{ animationDelay: `${index * 0.06}s` }" @click="btn.action">
+                        {{ btn.text }}
+                    </button>
+                </TransitionGroup>
+            </div>
         </div>
     </div>
 </template>
@@ -55,6 +43,7 @@
 <script setup lang="ts">
     import { onMounted, watch, computed, ref } from "vue";
     import { useGameState } from "@/store/gameState";
+    import { useDevice } from '@/composables/useDevice';
     import SettingsRoot from "./settings/SettingsRoot.vue";
     import { GameStates } from "@/game/core/GameState";
     import { createNewText } from '@/helpers/functions';
@@ -65,9 +54,11 @@
 
     const isHeaderShown = ref(false);
     const isButtonsShown = ref(false);
+    const isSettingsPreparing = ref(false);
     const isConfirmButtonsShown = ref(false);
     const isWarningShown = ref(false);
     const progressStore = useProgressStore();
+    const { deviceType } = useDevice();
 
     // кнопки меню "Пауза"
     const menuButtonsPause = computed(() => [
@@ -94,6 +85,7 @@
     // показываем (анимацией) титул и все кнопки меню
     function showHideAllPauseElements(type_, isQuitGame = false) {
         isHeaderShown.value = type_;
+        isSettingsPreparing.value = false;
 
         if (isQuitGame) {
             isWarningShown.value = false;
@@ -101,10 +93,11 @@
                 isConfirmButtonsShown.value = false;
             }, 100);
         };
-        
+
         setTimeout(() => {
             isButtonsShown.value = type_;
         }, 100);
+        console.log('pause finished');
     };
 
     // продолжаем игру
@@ -130,7 +123,7 @@
     };
 
     // скрываем диалоговое окно с подтверждением выхода из игры
-    function hideQuitConfirmMenu () {
+    function hideQuitConfirmMenu() {
         isWarningShown.value = false;
         setTimeout(() => {
             isConfirmButtonsShown.value = false;
@@ -156,9 +149,26 @@
     // переходим в настройки
     function goToSettings() {
         isButtonsShown.value = false;
+        isSettingsPreparing.value = true;
         setTimeout(() => {
             gameStore.openSettings();
         }, 400);
+    };
+
+    // перемещаем весь контейнер вверх/вниз (для мобильной версии)
+    function setContainerClass() {
+        if (!isSettingsPreparing.value) {
+            // 1. вхожу в паузу 
+            // 2. или выхожу из настроек
+            return 'container_correction_pause';
+        } else {
+            // готовлюсь ко входу в настройки
+            if (deviceType.value =='mobile') {
+                return 'container_correction_menu';
+            } else {
+                return 'container_correction_pause';
+            };
+        };
     };
 
     // следим за стостоянием оверлея
@@ -180,35 +190,68 @@
 <style scoped lang="scss">
     @use "@/styles/menu.scss";
     @use "@/styles/animations.scss";
+    @use "@/styles/typography" as *;
+    @use "@/styles/colors" as *;
 
-    .warning {
-        font-family: 'jost-light';
-        text-transform: uppercase;
-        font-size: 1.375rem;
-        color: #F79CFF;
-        width: 25rem;
-        text-align: center;
-        margin-bottom: 1.563rem;
+    .container_blur {
+        background-color: rgba(0, 0, 0, 0.72);
+        backdrop-filter: blur(2px);
     }
 
-    .container_correction {
-        justify-content: flex-start !important;
-        top: 19.75rem;
+    .warning {
+        @include text-info-size-m;
+        color: $color-pink;
+        text-transform: uppercase;
+        text-align: center;
+        margin-bottom: 3vh;
+        width: 74.53vh;
+
+        @media (min-width: $breakpoint-mobile) and (orientation: landscape) and (hover: none) and (pointer: coarse) { 
+            margin-bottom: 3vh;
+            width: 74.53vh;
+        }
+        // позже расчитать:
+        // @media (min-width: $breakpoint-tablet) and (orientation: landscape) and (hover: none) and (pointer: coarse) { 
+        //     gap: 5.56vw; 
+        // }  
+        @media (min-width: $breakpoint-laptop) and (orientation: landscape) { 
+            margin-bottom: 2.222vw;
+            width: 25.139vw;
+        }
+        @media (min-width: $breakpoint-desktop) and (orientation: landscape) {
+            margin-bottom: 1.823vw;
+            width: 20.833vw;
+        }
     }
 
     .group_correction {
-        margin-top: 8.3125rem;
-        
-        &>*+* {
-            margin-top: 1.56rem; // 25px - row-gap (между кнопками)
+        display: flex;
+        flex-direction: column;
+        justify-content: flex-start;
+        align-items: center;
+        gap: 5.128vh;
+
+        @media (min-width: $breakpoint-mobile) and (orientation: landscape) and (hover: none) and (pointer: coarse) { 
+            gap: 5.128vh;
+        }
+        // позже расчитать:
+        // @media (min-width: $breakpoint-tablet) and (orientation: landscape) and (hover: none) and (pointer: coarse) { 
+        //     gap: 5.56vw; 
+        // }  
+        @media (min-width: $breakpoint-laptop) and (orientation: landscape) { 
+            gap: 1.25vw; 
+        }
+        @media (min-width: $breakpoint-desktop) and (orientation: landscape) {
+            gap: 1.302vw;
         }
     }
-    
+
     .header_correction {
-        font-size: 3.125rem; // (50px)
+        @include text-button-size-xl;
     }
 
     .btn_correction {
-        font-size: 1.875rem; // (30px)
+        @include text-button-size-s;
+        color: $color-yellow-super-light;
     }
 </style>

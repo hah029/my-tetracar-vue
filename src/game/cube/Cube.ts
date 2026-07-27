@@ -1,12 +1,9 @@
 import * as THREE from "three";
-
 import { loadCubeModel } from "./loadCube";
-
 import type { GeometryConfig, CubeUserData, MaterialConfig } from "./types";
-
 import { loadTexture } from "@/helpers/loaders";
-
 import { useCommonStore } from "@/store/commonStore";
+import { applyAtlasSpriteUV, applyCubeSpriteUV } from "@/helpers/applyAtlasUV";
 
 export class CubeBuilder {
   private static modelCache = new Map<string, THREE.Group>();
@@ -17,13 +14,29 @@ export class CubeBuilder {
     geomConfig: GeometryConfig;
     useTexture?: boolean;
     materialConfig?: MaterialConfig;
+    existingMaterial?: THREE.Material; // 👈 НОВЫЙ ПАРАМЕТР
   }): Promise<THREE.Object3D> {
-    const { index, geomConfig, useGLB, materialConfig, useTexture } = params;
+    const {
+      index,
+      geomConfig,
+      useGLB,
+      materialConfig,
+      useTexture,
+      existingMaterial,
+    } = params;
 
     let cube: THREE.Object3D;
 
+    const cfg = useCommonStore().config.materials.base;
     const _materialConfig: MaterialConfig = {
-      ...useCommonStore().BASE_CUBE_MATERIAL_CONFIG,
+      color: cfg.color ?? 0xffffff,
+      emissive: cfg.emissive ?? 0x000000,
+      emissiveIntensity: cfg.emissiveIntensity ?? 1,
+      ior: cfg.ior ?? 1,
+      transmission: cfg.transmission ?? 1,
+      metalness: cfg.metalness ?? 1,
+      roughness: cfg.roughness ?? 1,
+      thickness: cfg.thickness ?? 1,
       ...materialConfig,
     };
 
@@ -37,10 +50,20 @@ export class CubeBuilder {
       cube = CubeBuilder.createCubeFromGLB(model, geomConfig);
 
       //
+      // Если передан готовый материал — используем его
+      //
+      if (existingMaterial) {
+        cube.traverse((child) => {
+          if ((child as THREE.Mesh).isMesh) {
+            const mesh = child as THREE.Mesh;
+            mesh.material = existingMaterial;
+          }
+        });
+      }
+      //
       // ATLAS
       //
-
-      if (_materialConfig.atlas && _materialConfig.atlasSprite) {
+      else if (_materialConfig.atlas && _materialConfig.atlasSprite) {
         const atlasTexture = _materialConfig.atlas.getAtlasTexture();
 
         const sprite = _materialConfig.atlas.getSprite(
@@ -62,21 +85,7 @@ export class CubeBuilder {
               // APPLY UV
               //
 
-              const uv = mesh.geometry.attributes.uv;
-
-              for (let i = 0; i < uv.count; i++) {
-                const u = uv.getX(i);
-                const v = uv.getY(i);
-
-                uv.setXY(
-                  i,
-                  sprite.uvRect.u + u * sprite.uvRect.w,
-
-                  sprite.uvRect.v + v * sprite.uvRect.h,
-                );
-              }
-
-              uv.needsUpdate = true;
+              applyAtlasSpriteUV(mesh.geometry, sprite);
 
               //
               // MATERIAL
@@ -96,11 +105,11 @@ export class CubeBuilder {
             }
           });
         }
-
-        //
-        // NORMAL TEXTURE
-        //
-      } else if (useTexture && _materialConfig.textureUrl) {
+      }
+      //
+      // NORMAL TEXTURE
+      //
+      else if (useTexture && _materialConfig.textureUrl) {
         const texture = loadTexture(_materialConfig.textureUrl);
 
         texture.flipY = false;
@@ -130,11 +139,14 @@ export class CubeBuilder {
     } else {
       let material: THREE.Material;
 
+      // Если передан готовый материал — используем его
+      if (existingMaterial) {
+        material = existingMaterial;
+      }
       //
       // ATLAS
       //
-
-      if (_materialConfig.atlas && _materialConfig.atlasSprite) {
+      else if (_materialConfig.atlas && _materialConfig.atlasSprite) {
         const atlasTexture = _materialConfig.atlas.getAtlasTexture();
 
         material = new THREE.MeshStandardMaterial({
@@ -148,11 +160,11 @@ export class CubeBuilder {
 
           transparent: true,
         });
-
-        //
-        // NORMAL TEXTURE
-        //
-      } else if (useTexture && _materialConfig.textureUrl) {
+      }
+      //
+      // NORMAL TEXTURE
+      //
+      else if (useTexture && _materialConfig.textureUrl) {
         const texture = loadTexture(_materialConfig.textureUrl);
 
         material = new THREE.MeshStandardMaterial({
@@ -166,11 +178,11 @@ export class CubeBuilder {
 
           transparent: true,
         });
-
-        //
-        // NO TEXTURE
-        //
-      } else {
+      }
+      //
+      // NO TEXTURE
+      //
+      else {
         material = new THREE.MeshStandardMaterial({
           color: _materialConfig.color ?? 0xffffff,
 
@@ -204,6 +216,7 @@ export class CubeBuilder {
     return cube;
   }
 
+  // ... остальные методы остаются без изменений ...
   private static async loadModel(url: string): Promise<THREE.Group> {
     if (CubeBuilder.modelCache.has(url)) {
       return CubeBuilder.modelCache.get(url)!.clone();
@@ -255,23 +268,7 @@ export class CubeBuilder {
       const sprite = materialConfig.atlas.getSprite(materialConfig.atlasSprite);
 
       if (sprite) {
-        geometry = geometry.clone();
-
-        const uv = geometry.attributes.uv;
-
-        for (let i = 0; i < uv.count; i++) {
-          const u = uv.getX(i);
-          const v = uv.getY(i);
-
-          uv.setXY(
-            i,
-            sprite.uvRect.u + u * sprite.uvRect.w,
-
-            sprite.uvRect.v + v * sprite.uvRect.h,
-          );
-        }
-
-        uv.needsUpdate = true;
+        applyCubeSpriteUV(geometry, sprite);
       }
     }
 

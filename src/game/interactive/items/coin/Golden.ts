@@ -1,7 +1,8 @@
-// src/game/coin/Coin.ts
+// src/game/interactive/items/coin/Golden.ts
 
 import { useCommonStore } from "@/store/commonStore";
 import { CoinItem } from "./CoinItem";
+import { MaterialPool } from "@/helpers/MaterialPool";
 
 export class Golden extends CoinItem {
   constructor(
@@ -9,11 +10,10 @@ export class Golden extends CoinItem {
     laneIndex?: number,
     xPos?: number,
     yPos?: number,
-    value: number = useCommonStore().BASE_COIN_VALUE,
+    value: number = useCommonStore().config.baseCoinValue,
   ) {
-    super(zPos, laneIndex, xPos, yPos, {
-      ...useCommonStore().GOLDEN_MATERIAL_CONFIG,
-    });
+    // Передаём готовый материал из пула
+    super(zPos, laneIndex, xPos, yPos, null, MaterialPool.getGoldenMaterial());
     this.value = value;
   }
 }

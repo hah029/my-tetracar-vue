@@ -4,15 +4,27 @@ import { ref } from "vue";
 
 import { usePlayerStore } from "@/store/playerStore";
 import { useProgressStore } from "./progressStore";
+import { useLevelStore } from "@/store/levelStore";
 import { GameStates } from "@/game/core/GameState";
 import { SoundManager } from "@/game/sound/SoundManager";
+import { Platform } from "@/sdk";
 
 type UIOverlay =
   | null
   | "settings"
+  | "shop"
   | "quitConfirm"
   | "leaderBoards"
   | "trainingScreen";
+
+export type SettingsSection =
+  | null
+  | "main"
+  | "sound"
+  | "graphics"
+  | "language"
+  | "controls"
+  | "about";
 
 export const useGameState = defineStore("gameState", () => {
   // ===== STATE =====
@@ -22,20 +34,26 @@ export const useGameState = defineStore("gameState", () => {
   const isFirstGame = ref(false);
   const activeOverlay = ref<UIOverlay>(null);
   const previousState = ref<GameStates>(GameStates.Preloader); // Запоминаем предыдущее состояние
-  const playerStore = usePlayerStore();
+  
+  const settingsSection = ref<SettingsSection>(null);
 
+  const playerStore = usePlayerStore();
+  const platform = Platform.getInstance();
+  
   let resetCallback: (() => void) | null = null;
 
   // ===== FSM: allowed transitions =====
   const transitions: Record<GameStates, GameStates[]> = {
     [GameStates.Preloader]: [GameStates.Menu],
-    [GameStates.Menu]: [GameStates.Countdown],
+    [GameStates.Menu]: [GameStates.LevelSelect],
+    [GameStates.LevelSelect]: [GameStates.Menu, GameStates.Countdown],
     [GameStates.Countdown]: [GameStates.Play],
     [GameStates.Play]: [GameStates.Pause, GameStates.Gameover],
     [GameStates.Pause]: [GameStates.Play, GameStates.Menu],
     [GameStates.Gameover]: [GameStates.Menu, GameStates.Countdown],
     [GameStates.QuitConfirm]: [
       GameStates.Menu,
+      GameStates.LevelSelect,
       GameStates.Play,
       GameStates.Pause,
       GameStates.Gameover,
@@ -45,6 +63,7 @@ export const useGameState = defineStore("gameState", () => {
   // ===== HOOKS =====
   function onEnter(state: GameStates, prev: GameStates) {
     const progress = useProgressStore();
+    const levelStore = useLevelStore();
     const sound = SoundManager.getInstance();
 
     switch (state) {
@@ -53,27 +72,51 @@ export const useGameState = defineStore("gameState", () => {
         break;
 
       case GameStates.Menu:
-        sound.playMusicSequence("music_intro", "music_background");
-        // Асинхронное сохранение прогресса, ошибки логируем
-        progress
-          .saveProgress()
-          .catch((err) =>
-            console.error("Failed to save progress on menu:", err),
+        if (levelStore.currentMusic.menuTrack) {
+          sound.playMusicSequence(
+            levelStore.currentMusic.menuTrack,
+            levelStore.currentMusic.gameTrack,
           );
+        } else {
+          sound.playMusic(levelStore.currentMusic.gameTrack, true);
+        }
+
+        // Сохраняем прогресс только если данные уже были восстановлены
+        // (при первом входе Preloader → Menu restoreProgress() ещё не вызывался,
+        //  и saveProgress() перезапишет сохранённые данные нулями)
+        if (prev !== GameStates.Preloader) {
+          progress
+            .saveProgress()
+            .catch((err) =>
+              console.error("Failed to save progress on menu:", err),
+            );
+        }
 
         if (prev === GameStates.Gameover || prev === GameStates.Pause) {
           resetCallback?.();
         }
+        break;
+
+      case GameStates.LevelSelect:
         break;
 
       case GameStates.Countdown:
-        if (prev === GameStates.Gameover || prev === GameStates.Pause) {
+        if (
+          prev === GameStates.LevelSelect ||
+          prev === GameStates.Gameover ||
+          prev === GameStates.Pause
+        ) {
           resetCallback?.();
         }
+
+        playerStore.applyGameplayConfig(levelStore.currentGameplay);
+        playerStore.resetPlayerAchievements();
+        playerStore.resetGameData();
         break;
 
       case GameStates.Play:
-        sound.playMusic("music_background", true);
+        sound.playMusic(levelStore.currentMusic.gameTrack, true);
+        platform.gameStart();
         break;
 
       case GameStates.Gameover:
@@ -84,6 +127,7 @@ export const useGameState = defineStore("gameState", () => {
             console.error("Failed to save progress on gameover:", err),
           );
         sound.playMusic("music_gameover");
+        platform.gameStop();
         break;
 
       case GameStates.QuitConfirm:
@@ -98,9 +142,19 @@ export const useGameState = defineStore("gameState", () => {
 
   function onExit(state: GameStates, next: GameStates) {
     switch (state) {
-      case GameStates.Play:
+      case GameStates.Play: {
         console.log("⬅️ Exit Play");
+        // Сохраняем прогресс при выходе из игры (в т.ч. при переходе в меню)
+        const progress = useProgressStore();
+        progress
+          .saveProgress()
+          .catch((err) =>
+            console.error("Failed to save progress on exit play:", err),
+          );
+
+        platform.gameStop();
         break;
+      }
 
       case GameStates.QuitConfirm:
         // При выходе из состояния подтверждения
@@ -144,6 +198,10 @@ export const useGameState = defineStore("gameState", () => {
   // ===== PUBLIC API =====
 
   function startGame() {
+    setState(GameStates.LevelSelect);
+  }
+
+  function confirmLevelSelection() {
     setState(GameStates.Countdown);
   }
 
@@ -161,7 +219,6 @@ export const useGameState = defineStore("gameState", () => {
 
   function endGame() {
     playerStore.resetPlayerAchievements();
-    playerStore.resetPlayerAchievements();
     setState(GameStates.Gameover);
   }
 
@@ -177,8 +234,24 @@ export const useGameState = defineStore("gameState", () => {
     resetCallback = cb;
   }
 
-  function openSettings() {
+  function openShop() {
+    activeOverlay.value = "shop";
+  }
+
+  function openSettings(section: SettingsSection = null) {
     activeOverlay.value = "settings";
+    settingsSection.value = section || "main"; // если секция не указана — открываем главное меню
+  }
+
+  // Метод для переключения секции внутри настроек
+  function setSettingsSection(section: SettingsSection) {
+    // Если настройки уже открыты — просто меняем секцию
+    if (activeOverlay.value === "settings") {
+      settingsSection.value = section;
+    } else {
+      // Если настройки закрыты — открываем с нужной секцией
+      openSettings(section);
+    }
   }
 
   function openLeaderBoards() {
@@ -208,6 +281,7 @@ export const useGameState = defineStore("gameState", () => {
 
   function closeOverlay() {
     activeOverlay.value = null;
+    settingsSection.value = null; // 🔥 Сбрасываем секцию
   }
 
   return {
@@ -216,6 +290,7 @@ export const useGameState = defineStore("gameState", () => {
     isPreloaderShown,
     isFirstGame,
     activeOverlay,
+    settingsSection,
 
     // FSM
     setState,
@@ -223,6 +298,7 @@ export const useGameState = defineStore("gameState", () => {
 
     // API
     startGame,
+    confirmLevelSelection,
     startCountdown,
     pauseGame,
     resumeGame,
@@ -231,6 +307,8 @@ export const useGameState = defineStore("gameState", () => {
     setResetCallback,
 
     openSettings,
+    setSettingsSection,
+    openShop,
     openLeaderBoards,
     openQuitGameWindow,
     confirmQuit,

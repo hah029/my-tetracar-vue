@@ -4,8 +4,19 @@ export interface RoadLineConfig {
   z: number;
   color?: number;
   emissive?: number;
+  emissiveIntensity?: number;
   opacity?: number;
   length?: number;
+}
+
+export interface RoadLaneConfig {
+  x: number;
+  z: number;
+  color?: number;
+  emissive?: number;
+  opacity?: number;
+  length?: number;
+  width?: number;
 }
 
 export interface RoadConfig {
@@ -14,12 +25,44 @@ export interface RoadConfig {
   length: number;
   color?: number;
   emissive?: number;
+  laneColor?: number;
   emissiveIntensity?: number;
   opacity?: number;
   yPosition?: number;
   gap?: number;
   edgeOffset?: number;
   textureUrl?: string;
+  sideObjects?: RoadSideObjectsConfig;
+  elevatedSections?: RoadElevatedSectionConfig[];
+  segmentSurfaces?: boolean;
+}
+
+export interface RoadElevatedSectionConfig {
+  lanes: number[];
+  zStart: number;
+  length: number;
+  height: number;
+  rampLength: number;
+  rampIn?: boolean;
+  rampOut?: boolean;
+  speedFactor?: number;
+  color?: number;
+  emissive?: number;
+  emissiveIntensity?: number;
+  opacity?: number;
+  loop?: boolean;
+}
+
+export interface RoadSideObjectsConfig {
+  enabled: boolean;
+  color: number;
+  emissive?: number;
+  emissiveIntensity?: number;
+  opacity?: number;
+  spacing: number;
+  offset: number;
+  y: number;
+  scale: [number, number, number];
 }
 
 export interface SpeedLineConfig {

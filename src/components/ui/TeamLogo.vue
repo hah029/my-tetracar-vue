@@ -14,46 +14,16 @@
 
 
 <script setup lang="ts">
-    import { ref, watch } from "vue";
+    import { computed } from "vue";
     import { useGameState } from "@/store/gameState";
     import { GameStates } from "@/game/core/GameState";
-
-    import { TEAM_NAME} from "@/gameConfig";
+    import { TEAM_NAME } from "@/gameConfig";
 
     const gameState = useGameState();
-    const isRightPanelShown = ref(true);
 
-    // ===== STATE MACHINE =====
-    // (сценарии работы с логотипом)
-    watch(
-        () => gameState.currentState,
-        (state, _) => {
-            switch (state) {
-
-                // ===== PRELOADER =====
-                case GameStates.Preloader:
-                    isRightPanelShown.value = false;
-                    break;
-
-                // ===== MENU =====
-                case GameStates.Menu:
-                    setTimeout(() => {
-                        isRightPanelShown.value = true;                   
-                    }, 400);
-                    break;
-
-                // ===== START GAME =====
-                case GameStates.Countdown:
-                case GameStates.Play:
-                    // стартуем гонку
-                    setTimeout(() => {
-                        isRightPanelShown.value = false;
-                    }, 400);
-                    break;
-            }
-        },
-        { immediate: true }
-    );
+    const isRightPanelShown = computed(() => {
+        return gameState.currentState === GameStates.Menu;
+    });
 
     // разделяем название команды на два слова
     function getTeamNamePart(number_) {
@@ -63,45 +33,88 @@
 
     // клик по лого команды
     function rightsClickingAction() {
-        console.log('asd');
+        gameState.settingsSection = null;
+        setTimeout(() => {
+            gameState.setSettingsSection('about');
+        }, 50);
     };
 </script>
 
 
 <style lang='scss' scoped>
     @use "@/styles/menu.scss" as *;
-    
+    @use "@/styles/typography" as *;
+    @use "@/styles/colors" as *;
+
     .team_logo_group {
         position: absolute;
-        bottom: 1.875rem;
-        right: 2.5rem;
+
+        // #region - bottom and right
+        bottom: 5.13vh;     // позже расчитать (для мини-мобил)
+        right: 5.98vh;      // позже расчитать (для мини-мобил)
+
+        @media (min-width: $breakpoint-mobile) and (orientation: landscape) and (hover: none) and (pointer: coarse) { 
+            bottom: 5.13vh;
+            right: 5.98vh;
+        }
+        // позже расчитать:
+        // @media (min-width: $breakpoint-tablet) and (orientation: landscape) and (hover: none) and (pointer: coarse) { 
+            // bottom: 1.875vw;
+            // right: 2.5vw;
+        // }  
+        @media (min-width: $breakpoint-laptop) and (orientation: landscape) { 
+            bottom: 1.4vw;
+            right: 2.43vw;
+        }
+        @media (min-width: $breakpoint-desktop) and (orientation: landscape) {
+            bottom: 1.563vw;
+            right: 2.083vw;
+        }
+        // #endregion
+        
         display: flex;
         align-items: flex-end;
         justify-content: flex-end;
+        
         z-index: z("rights_and_logo");
-
-        font-family: 'jost-light';
-        letter-spacing: 0.05rem;
         cursor: pointer;
 
         &:hover .logo_container {
             opacity: 1;
             transition: all 0.15s ease-in-out;
         }
+
         &:hover .team_name_text_group {
             opacity: 1;
             transition: all 0.15s ease-in-out;
         }
     }
+
     .logo_container {
-        width: 3.25rem;
-        opacity: 0.7;
+        opacity: 0.6;
         transition: all 0.15s ease-in-out;
+        width: 8.487vh; // позже расчитать (для мини-мобил)
+
+        @media (min-width: $breakpoint-mobile) and (orientation: landscape) and (hover: none) and (pointer: coarse) { 
+            width: 8.487vh;
+        }
+        // позже расчитать:
+        // @media (min-width: $breakpoint-tablet) and (orientation: landscape) and (hover: none) and (pointer: coarse) { 
+        //     width: 5.56vw; 
+        // }  
+        @media (min-width: $breakpoint-laptop) and (orientation: landscape) { 
+            width: 3.25vw; 
+        }
+        @media (min-width: $breakpoint-desktop) and (orientation: landscape) {
+            width: 2.5vw;
+        }
     }
+
     .logo_img {
         width: 112%;
         shape-rendering: geometricPrecision;
     }
+
     .team_name_text_group {
         display: flex;
         flex-direction: column;
@@ -109,23 +122,46 @@
         justify-content: flex-end;
         text-transform: uppercase;
         opacity: 0.7;
-        font-size: 0.875rem;
         transition: all 0.15s ease-in-out;
         margin-bottom: 0.3rem;
     }
+
     .wicked {
-        color: white;
+        @include text-info-size-xs;
+        color: $color_white;
         margin-right: 0.4rem;
     }
+
     .team {
-        color: #F49B00;
-        margin-top: -0.15rem;
+        @include text-info-size-xs;
+        color: $color_orange;
+
+        // #region - margin-top
+        margin-top: 0.1vh; // позже расчитать (для мини-мобил)
+
+        @media (min-width: $breakpoint-mobile) and (orientation: landscape) and (hover: none) and (pointer: coarse) { 
+            margin-top: 0.1vh;
+        }
+        // позже расчитать:
+        // @media (min-width: $breakpoint-tablet) and (orientation: landscape) and (hover: none) and (pointer: coarse) { 
+        //     margin-top: 12.8125vw;
+        // }  
+        @media (min-width: $breakpoint-laptop) and (orientation: landscape) { 
+            margin-top: -0.1vw;
+        }
+        @media (min-width: $breakpoint-desktop) and (orientation: landscape) {
+            margin-top: -0.15rem;
+        }
+        // #endregion
     }
 
-    .team_logo_showing-enter-active, .team_logo_showing-leave-active {
+    .team_logo_showing-enter-active,
+    .team_logo_showing-leave-active {
         transition: all ease-in-out 0.5s;
     }
-    .team_logo_showing-enter-from, .team_logo_showing-leave-to {
+
+    .team_logo_showing-enter-from,
+    .team_logo_showing-leave-to {
         opacity: 0;
     }
 </style>

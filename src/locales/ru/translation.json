@@ -35,6 +35,10 @@
                 "магнит"
             ]
         },
+        "control": {
+            "title": "управляй"
+        },
+        "nextButton": "далее",
         "startButton": "погнали!"
     },
     "gamePlay": {
@@ -91,6 +95,12 @@
             "distance": {
                 "label": "расстояние",
                 "units": "кубов"
+            },
+            "goldens": {
+                "label": "голдены"
+            },
+            "energons": {
+                "label": "энергоны"
             }
         }
     },
@@ -98,6 +108,9 @@
         "title": "настройки",
         "toggleOn": "вкл",
         "toggleOff": "выкл",
+        "low": "низкие",
+        "medium": "средние",
+        "high": "высокие",
         "menuList": {
             "graphics": "графика",
             "sounds": "звуки",
@@ -113,7 +126,6 @@
             "rgbShiftEnabled": "RGB смещение",
             "shadowEnabled": "тени",
             "shadowQuality": "качество теней",
-            "nightMode": "ночь",
             "musicEnabled": "музыка",
             "sfxEnabled": "звуки",
             "volumeLevel": "громкость"
@@ -127,8 +139,8 @@
             "mobileLabels": {
                 "pause": "пауза",
                 "fire": "выстрел",
-                "swipe": "свайп",
-                "switcher": "левша / правша"
+                "left": "влево",
+                "right": "вправо"
             },
             "labels": {
                 "left": "влево",
@@ -168,6 +180,43 @@
     "rightsList": [
         "Все права светятся",
         "Все права под неоновой защитой",
-        "Все праsва защищены неоном"
-    ]
+        "Все права защищены неоном"
+    ],
+    "shop": {
+        "title": "магазин",
+        "tabList": {
+            "currency": "валюта",
+            "stuff": "предметы",
+            "visual": "скины"
+        },
+        "product": {
+            "owned": "куплено",
+            "maxLevel": "макс. уровень",
+            "notEnoughCurrency": "не хватает",
+            "alreadyOwned": "уже куплено",
+            "buy": "купить",
+            "activate": "надеть",
+            "purchaseSuccess": "покупка удалась!",
+            "purchaseError": "ошибка покупки"
+        },
+        "balance": {
+            "golden": "голдены",
+            "energon": "энергоны"
+        },
+        "ownedBadge": "куплено",
+        "previewBtn": {
+            "applied": "применено",
+            "apply": "применить",
+            "buy": "купить"
+        },
+        "noItems": "пусто"
+    },
+    "currency": {
+        "golden": "голд",
+        "energon": "энерг",
+        "rub": "руб",
+        "usd": "долл",
+        "euro": "евро",
+        "yan": "ян"
+    }
 }

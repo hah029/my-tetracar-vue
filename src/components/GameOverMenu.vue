@@ -31,13 +31,19 @@
                 </span>
             </div>
             <div class="settings_row">
-                <span>{{ $t("gameOverMenu.summary.distance.label") }}</span>
+                <span>{{ $t("gameOverMenu.summary.goldens.label") }}</span>
                 <span>
                     <span class="score-value gold">
-                        {{ distance }}
+                        +{{ goldens }}
                     </span>
-                    <span class="score-value gold newRecord">
-                        {{ $t("gameOverMenu.summary.distance.units") }}
+                </span>
+
+            </div>
+            <div class="settings_row">
+                <span>{{ $t("gameOverMenu.summary.energons.label") }}</span>
+                <span>
+                    <span class="score-value gold">
+                        +{{ energons }}
                     </span>
                 </span>
             </div>
@@ -79,8 +85,9 @@ const dynamicTitleName = computed(() => foo.makeText("gameOverMenu.title", 'empt
 // генерируем результаты гонки
 const scoreRounded = computed(() => Math.floor(progressStore.score));
 const highScoreRounded = computed(() => Math.floor(progressStore.highScore));
-const distance = computed(() => progressStore.getDistanceInCubes());
-const currentSpeedRounded = computed(() => playerStore.getCurrentSpeedInCubesPerHour(1));
+const currentSpeedRounded = computed(() => (playerStore.getCurrentSpeed() * 100).toFixed(2));
+const goldens = computed(() => progressStore.currentGoldens);
+const energons = computed(() => progressStore.currentEnergons);
 
 const menuButtons = computed(() => [
     { id: 1, text: foo.makeText("gameOverMenu.menuList.restartGame"), action: restartGame },
@@ -106,14 +113,30 @@ onMounted(() => {
 <style scoped lang="scss">
 @use "@/styles/menu.scss";
 @use "@/styles/animations.scss";
+@use "@/styles/typography" as *;
+@use "@/styles/colors" as *;
 
 .container_correction {
-    justify-content: flex-start !important;
-    top: 13.313rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.72);
+    backdrop-filter: blur(2px);
+
+    gap: 2.5rem;
+
 }
 
 .header_correction {
-    font-size: 3.125rem; // (50px)
+    @include text-button-size-xl;
     color: #F79CFF;
 }
 
@@ -126,28 +149,35 @@ onMounted(() => {
 }
 
 .btn_correction {
-    font-size: 1.875rem; // (30px)
+    @include text-button-size-s;
+    color: $color-yellow-super-light;
 }
 
 .group_correction {
-    margin-top: 25rem;
+    position: static !important;
+    min-height: 5.75rem;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    align-items: center;
 
     &>*+* {
-        margin-top: 1.56rem; // 25px - row-gap (между кнопками)
+        margin-top: 2rem; // 25px - row-gap (между кнопками)
     }
 }
 
 .score_container {
-    width: 25rem;
-    margin: 2.5rem;
+    width: min(25rem, 90vw);
+    // margin: 2.5rem;
     gap: 1rem;
     display: flex;
     flex-direction: column;
+    // height: 100%;
 
 
     font-family: 'jost-light';
     text-transform: uppercase;
-    font-size: 1.375rem;
+    font-size: clamp(1rem, 2vmin, 1.375rem);
     color: #F79CFF;
 }
 
@@ -160,7 +190,7 @@ onMounted(() => {
 }
 
 .score-value {
-    font-size: 20px;
+    font-size: clamp(1rem, 1.8vmin, 1.25rem);
 
     &.gold {
         color: #ffd700;
@@ -168,7 +198,7 @@ onMounted(() => {
 
     &.newRecord {
         color: #ffd900bc;
-        font-size: 16px;
+        font-size: clamp(0.9rem, 1.55vmin, 1rem);
     }
 }
 </style>

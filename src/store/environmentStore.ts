@@ -1,58 +1,97 @@
-// src/store/gameState.ts
 import { defineStore } from "pinia";
+import { computed, ref } from "vue";
 import { useCommonStore } from "./commonStore";
+import { useLevelStore } from "@/store/levelStore";
 import type { RoadConfig } from "@/game/environment/road";
-import textureUrl from "@/assets/textures/road_tile.svg";
-import type { GeometryConfig, MaterialConfig } from "@/game/cube/types";
-import { MODELS } from "@/assets/models";
-import { TEXTURES } from "@/assets/textures";
+import environmentConfig from "@/configs/environment";
 
 export const useEnvironmentStore = defineStore("environmentStore", () => {
   const commonStore = useCommonStore();
-  const AXES_SIZE = 5;
+  const levelStore = useLevelStore();
+  const config = ref(environmentConfig);
 
-  const NIGHT_BACKGROUND = 0x222222;
-  const DAY_BACKGROUND = 0xdddddd;
-  const FOG_NEAR = 0.01;
-  const FOG_FAR = 200;
+  const defaultLanes = computed(() =>
+    config.value.getDefaultLanes(
+      commonStore.config.xzScaling,
+      levelStore.currentGameplay.laneCount,
+    ),
+  );
 
-  const DEFAULT_LANES = [
-    -(12 * commonStore.XZ_SCALING),
-    -(6 * commonStore.XZ_SCALING),
-    0,
-    6 * commonStore.XZ_SCALING,
-    12 * commonStore.XZ_SCALING,
-  ];
+  const defaultRoadConfig = computed<RoadConfig>(() => ({
+    ...config.value.defaultRoadBase,
+    lanes: defaultLanes.value,
+  }));
 
-  const DEFAULT_ROAD_CONFIG: RoadConfig = {
-    lanes: DEFAULT_LANES,
-    // width: 11, // Можно вычислять: (max lane - min lane) + edgeOffset*2
-    // width: 5.9,
-    length: 800,
-    color: 0xeeeeee,
-    emissive: 0xeeeeee,
-    opacity: 0.25,
-    yPosition: 0.0,
-    gap: 0,
-    edgeOffset: 0.3, // Отступ от крайних полос до границ
-    textureUrl: textureUrl,
-  };
-  const NEON_ROAD_CONFIG: RoadConfig = {
-    ...DEFAULT_ROAD_CONFIG,
-    color: 0xeeeeee,
-    emissive: 0xeeeeee,
-    opacity: 0.25,
-    emissiveIntensity: 0.1,
-  };
+  const neonRoadConfig = computed<RoadConfig>(() => ({
+    ...defaultRoadConfig.value,
+    ...config.value.neonRoadExtras,
+  }));
 
-  // Вспомогательная функция для вычисления ширины дороги
+  const currentRender = computed(() => levelStore.currentLevel.visual.render);
+  const currentLighting = computed(
+    () => levelStore.currentLevel.visual.lighting,
+  );
+  const currentRoad = computed(() => levelStore.currentLevel.environment.road);
+  const currentScenery = computed(
+    () => levelStore.currentLevel.environment.scenery,
+  );
+  const currentWeather = computed(
+    () => levelStore.currentLevel.environment.weather,
+  );
+
+  function colorToNumber(color: string): number {
+    return Number.parseInt(color.replace("#", ""), 16);
+  }
+
+  function getLevelRoadConfig(): RoadConfig {
+    const road = currentRoad.value;
+    const lanes =
+      "lanes" in road && Array.isArray(road.lanes)
+        ? (road.lanes as number[])
+        : defaultLanes.value;
+    const sideObjects = road.sideObjects
+      ? {
+          enabled: road.sideObjects.enabled,
+          color: colorToNumber(road.sideObjects.color),
+          emissive: road.sideObjects.emissiveColor
+            ? colorToNumber(road.sideObjects.emissiveColor)
+            : undefined,
+          emissiveIntensity: road.sideObjects.emissiveIntensity,
+          opacity: road.sideObjects.opacity,
+          spacing: road.sideObjects.spacing,
+          offset: road.sideObjects.offset,
+          y: road.sideObjects.y,
+          scale: road.sideObjects.scale,
+        }
+      : undefined;
+
+    return {
+      ...neonRoadConfig.value,
+      lanes,
+      length: road.length,
+      color: colorToNumber(road.color),
+      emissive: colorToNumber(road.emissiveColor),
+      laneColor: colorToNumber(road.laneColor),
+      emissiveIntensity: road.emissiveIntensity,
+      opacity: road.opacity,
+      sideObjects,
+      segmentSurfaces: road.segmentSurfaces,
+      elevatedSections: road.elevatedSections?.map((section) => ({
+        ...section,
+        color: section.color ? colorToNumber(section.color) : undefined,
+        emissive: section.emissiveColor
+          ? colorToNumber(section.emissiveColor)
+          : undefined,
+      })),
+    };
+  }
+
   function calculateRoadWidth(lanes: number[]): number {
     const minLane = Math.min(...lanes);
     const maxLane = Math.max(...lanes);
-    return maxLane - minLane + commonStore.XZ_SCALING * 10;
+    return maxLane - minLane + commonStore.config.xzScaling * 10;
   }
 
-  // Вспомогательная функция для получения позиций границ
   function getEdgePositions(lanes: number[]): {
     left: number;
     right: number;
@@ -60,39 +99,23 @@ export const useEnvironmentStore = defineStore("environmentStore", () => {
     const minLane = Math.min(...lanes);
     const maxLane = Math.max(...lanes);
     return {
-      left: minLane - commonStore.XZ_SCALING * 3.5,
-      right: maxLane + commonStore.XZ_SCALING * 3.5,
+      left: minLane - commonStore.config.xzScaling * 3.5,
+      right: maxLane + commonStore.config.xzScaling * 3.5,
     };
   }
 
-  const SIDE_OBJECT_GEOMETRY_CONFIG: GeometryConfig = {
-    scale: [
-      // commonStore.XZ_SCALING,
-      // commonStore.XZ_SCALING,
-      // commonStore.XZ_SCALING,
-      2, 2, 2,
-    ],
-    modelUrl: MODELS.cube,
-  };
-
-  const SIDE_OBJECT_MATERIAL_CONFIG: MaterialConfig = {
-    textureUrl: TEXTURES.cube.base,
-  };
-
   return {
-    AXES_SIZE,
-    DEFAULT_ROAD_CONFIG,
-    NEON_ROAD_CONFIG,
-    DEFAULT_LANES,
-    SIDE_OBJECT_GEOMETRY_CONFIG,
-    SIDE_OBJECT_MATERIAL_CONFIG,
-
-    NIGHT_BACKGROUND,
-    DAY_BACKGROUND,
-    FOG_NEAR,
-    FOG_FAR,
-
+    config,
+    defaultRoadConfig,
+    neonRoadConfig,
+    currentRender,
+    currentLighting,
+    currentRoad,
+    currentScenery,
+    currentWeather,
     calculateRoadWidth,
     getEdgePositions,
+    colorToNumber,
+    getLevelRoadConfig,
   };
 });

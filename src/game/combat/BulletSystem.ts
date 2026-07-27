@@ -12,7 +12,7 @@ export class BulletSystem {
   private bullets: Bullet[] = [];
   private scene!: THREE.Scene;
 
-  private readonly MAX_DISTANCE = useCommonStore().BULLET_MAX_DISTANCE;
+  private readonly MAX_DISTANCE = useCommonStore().config.bulletMaxDistance;
 
   private bulletBox = new THREE.Box3();
   private obstacleBox = new THREE.Box3();
@@ -34,7 +34,7 @@ export class BulletSystem {
     const bullet = new Bullet(lane);
 
     bullet.position.copy(car.position);
-    bullet.position.y = car.position.y + useCommonStore().BASE_ITEM_YPOS;
+    bullet.position.y = car.position.y + useCommonStore().baseItemYpos;
     bullet.position.z -= 1;
 
     this.scene.add(bullet);

@@ -10,9 +10,10 @@ export class Road extends THREE.Mesh {
 
   constructor(config?: RoadConfig) {
     const tmpConfig = {
-      ...useEnvironmentStore().DEFAULT_ROAD_CONFIG,
+      ...useEnvironmentStore().defaultRoadConfig,
       ...config,
     };
+
     if (!tmpConfig.lanes || tmpConfig.lanes.length === 0) {
       throw new Error("Road must have at least one lane");
     }
@@ -22,14 +23,19 @@ export class Road extends THREE.Mesh {
     let material: THREE.Material;
 
     if (tmpConfig.textureUrl) {
-      const texture = loadTexture(tmpConfig.textureUrl!);
-
-      // Настраиваем повторение
-      texture.wrapS = THREE.RepeatWrapping;
-      texture.wrapT = THREE.RepeatWrapping;
-
       const tileSize = 2;
-      texture.repeat.set(width / tileSize, tmpConfig.length! / tileSize);
+
+      // const texture = loadTexture(tmpConfig.textureUrl!);
+      // // Настраиваем повторение
+      // texture.wrapS = THREE.RepeatWrapping;
+      // texture.wrapT = THREE.RepeatWrapping;
+      // texture.repeat.set(width / tileSize, tmpConfig.length! / tileSize);
+
+      const texture = loadTexture(tmpConfig.textureUrl!, {
+        wrapS: THREE.RepeatWrapping,
+        wrapT: THREE.RepeatWrapping,
+        repeat: { x: width / tileSize, y: tmpConfig.length! / tileSize },
+      });
 
       material = new THREE.MeshStandardMaterial({
         map: texture,
@@ -40,26 +46,23 @@ export class Road extends THREE.Mesh {
       });
     } else {
       material = new THREE.MeshStandardMaterial({
-        color: 0xffffff,
-        emissiveIntensity: 0.8,
+        color: tmpConfig.color ?? 0xffffff,
+        emissive: tmpConfig.emissive ?? tmpConfig.color ?? 0xffffff,
+        emissiveIntensity: tmpConfig.emissiveIntensity ?? 0.8,
         transparent: true,
         opacity: tmpConfig.opacity ?? 0.2,
       });
     }
 
     super(geometry, material);
-
     this.lanes = [...tmpConfig.lanes];
     this.width = width;
     this.length = tmpConfig.length!;
-
     this.rotation.x = -Math.PI / 2;
     this.position.z = 0;
     this.position.y = tmpConfig.yPosition!;
-
     this.castShadow = false;
     this.receiveShadow = true;
-
     console.log(this);
   }
 
@@ -74,7 +77,6 @@ export class Road extends THREE.Mesh {
     const lane = this.lanes[index];
     if (lane === undefined)
       throw new Error(`Lane at index ${index} is undefined`);
-
     return lane;
   }
 

@@ -2,6 +2,7 @@
 export const GameStates = {
   Preloader: "preloader",
   Menu: "menu",
+  LevelSelect: "levelSelect",
   Play: "play",
   Gameover: "gameover",
   Pause: "pause",
