@@ -44,6 +44,9 @@ export class MovingObstacle extends CubeObstacle {
 
   public update(dt: number, speed: number): boolean {
     if (this.isDestroyed) return false;
+    if (this.userData.curvedItemState) {
+      return super.update(dt, speed);
+    }
     this.updateNormalCubes(dt, speed);
     return this.position.z > useCommonStore().config.itemsRemovingZpos;
   }

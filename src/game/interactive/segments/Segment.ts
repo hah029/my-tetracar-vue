@@ -9,6 +9,15 @@ export type Segment = {
   pattern: LanePattern[][];
   canReversed?: boolean;
   elevatedSections?: SegmentElevatedSection[];
+  curve?: SegmentCurve;
+};
+
+export type SegmentCurve = {
+  direction: "left" | "right";
+  /** Полный угол дуги в градусах (насколько изогнут сегмент) */
+  totalAngleDeg?: number;
+  rowStart?: number;
+  rowEnd?: number;
 };
 
 export type SegmentElevatedSection = {

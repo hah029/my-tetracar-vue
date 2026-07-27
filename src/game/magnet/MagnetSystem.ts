@@ -10,8 +10,8 @@ export class MagnetSystem {
   private static instance: MagnetSystem | null = null;
   private scene!: THREE.Scene;
   private magnetField: THREE.Group | null = null;
-  private readonly fieldLineCount = 8;
-  private readonly markersPerFieldLine = 3;
+  private readonly fieldLineCount = 24;
+  private readonly markersPerFieldLine = 1;
 
   public static getInstance(): MagnetSystem {
     if (!MagnetSystem.instance) {
@@ -253,34 +253,35 @@ export class MagnetSystem {
       uniforms: {
         time: { value: 0 },
         color: { value: new THREE.Color(color) },
-        opacity: { value: 0.28 },
+        opacity: { value: 0.18 },
       },
       vertexShader: magnetLineVertex,
       fragmentShader: magnetLineFragment,
     });
-    const markerGeometry = new THREE.ConeGeometry(0.12, 0.34, 10);
+    const markerGeometry = new THREE.ConeGeometry(0.075, 0.22, 8);
     const markerMaterial = new THREE.MeshBasicMaterial({
       color,
       transparent: true,
-      opacity: 0.62,
+      opacity: 0.25,
       depthWrite: false,
       blending: THREE.AdditiveBlending,
     });
 
     for (let i = 0; i < this.fieldLineCount; i++) {
       const lineGroup = new THREE.Group();
-      const turn = (i / this.fieldLineCount) * Math.PI * 2;
-      const lineRadius = radius * (0.64 + (i % 3) * 0.1);
-      const lineHeight = radius * (0.82 + (i % 2) * 0.1);
-      lineGroup.userData.radius = lineRadius;
-      lineGroup.userData.height = lineHeight;
+      const majorAngle = (i / this.fieldLineCount) * Math.PI * 2;
+      const majorRadius = radius * 0.58;
+      const minorRadius = radius * 0.28;
+      lineGroup.userData.majorRadius = majorRadius;
+      lineGroup.userData.minorRadius = minorRadius;
+      lineGroup.userData.majorAngle = majorAngle;
       lineGroup.userData.phase = (i / this.fieldLineCount) * Math.PI * 2;
-      lineGroup.rotation.y = turn;
 
       const geometry = this.createFieldLineGeometry(
-        lineRadius,
-        lineHeight,
-        radius * 0.025,
+        majorRadius,
+        minorRadius,
+        majorAngle,
+        radius * 0.012,
       );
       const line = new THREE.Mesh(geometry, lineMaterial);
       lineGroup.add(line);
@@ -304,8 +305,9 @@ export class MagnetSystem {
   }
 
   private createFieldLineGeometry(
-    radius: number,
-    height: number,
+    majorRadius: number,
+    minorRadius: number,
+    majorAngle: number,
     width: number,
   ): THREE.BufferGeometry {
     const positions: number[] = [];
@@ -317,18 +319,27 @@ export class MagnetSystem {
       const t = (i / segments) * Math.PI * 2;
       const sinT = Math.sin(t);
       const cosT = Math.cos(t);
-      const x = radius * sinT;
-      const y = height * sinT * cosT;
-      const z = radius * 0.18 * cosT;
+      const ringRadius = majorRadius + minorRadius * cosT;
+      // Линия огибает поперечное сечение тора. При majorAngle=0 она
+      // лежит в XZ — это поворот направления линий на 90° по поверхности.
+      const x = ringRadius * Math.cos(majorAngle);
+      const y = ringRadius * Math.sin(majorAngle);
+      const z = minorRadius * sinT;
       const center = new THREE.Vector3(x, y, z);
       const tangent = new THREE.Vector3(
-        radius * cosT,
-        height * Math.cos(2 * t),
-        -radius * 0.18 * sinT,
+        -minorRadius * sinT * Math.cos(majorAngle),
+        -minorRadius * sinT * Math.sin(majorAngle),
+        minorRadius * cosT,
       ).normalize();
-      const normal = new THREE.Vector3(-tangent.y, tangent.x, 0);
+      const surfaceNormal = new THREE.Vector3(
+        cosT * Math.cos(majorAngle),
+        cosT * Math.sin(majorAngle),
+        sinT,
+      ).normalize();
+      const normal = new THREE.Vector3()
+        .crossVectors(tangent, surfaceNormal)
+        .normalize();
       if (normal.lengthSq() < 0.0001) normal.set(1, 0, 0);
-      normal.normalize();
 
       const inner = center.clone().addScaledVector(normal, -width * 0.5);
       const outer = center.clone().addScaledVector(normal, width * 0.5);
@@ -361,8 +372,9 @@ export class MagnetSystem {
     if (!this.magnetField) return;
 
     this.magnetField.children.forEach((lineGroup) => {
-      const radius = lineGroup.userData.radius as number;
-      const height = lineGroup.userData.height as number;
+      const majorRadius = lineGroup.userData.majorRadius as number;
+      const minorRadius = lineGroup.userData.minorRadius as number;
+      const majorAngle = lineGroup.userData.majorAngle as number;
       const phase = lineGroup.userData.phase as number;
       lineGroup.children
         .filter((child) => child.userData.isMagnetFieldMarker)
@@ -371,16 +383,17 @@ export class MagnetSystem {
           const t = phase + phaseOffset + now * 0.0022 * direction;
           const sinT = Math.sin(t);
           const cosT = Math.cos(t);
+          const ringRadius = majorRadius + minorRadius * cosT;
           marker.position.set(
-            radius * sinT,
-            height * sinT * cosT,
-            radius * 0.18 * cosT,
+            ringRadius * Math.cos(majorAngle),
+            ringRadius * Math.sin(majorAngle),
+            minorRadius * sinT,
           );
 
           const tangent = new THREE.Vector3(
-            radius * cosT * direction,
-            height * Math.cos(2 * t) * direction,
-            -radius * 0.18 * sinT * direction,
+            -minorRadius * sinT * Math.cos(majorAngle) * direction,
+            -minorRadius * sinT * Math.sin(majorAngle) * direction,
+            minorRadius * cosT * direction,
           ).normalize();
           marker.quaternion.setFromUnitVectors(
             new THREE.Vector3(0, 1, 0),

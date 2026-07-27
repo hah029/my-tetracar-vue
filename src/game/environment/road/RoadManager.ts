@@ -12,7 +12,10 @@ import { RoadElevatedSection } from "./RoadElevatedSection";
 import {
   RoadSegmentSurface,
   type RoadSegmentSurfaceCoverage,
+  type RoadSegmentSurfaceCurve,
   type RoadSegmentSurfaceInterval,
+  type RoadCurveMotion,
+  type RoadRouteAttachment,
 } from "./RoadSegmentSurface";
 import { useCommonStore } from "@/store/commonStore";
 import { useEnvironmentStore } from "@/store/environmentStore";
@@ -29,6 +32,9 @@ export class RoadManager {
   private edges: THREE.Mesh[] = [];
   private elevatedSections: RoadElevatedSection[] = [];
   private segmentSurfaces: RoadSegmentSurface[] = [];
+  private activeRoute:
+    | { motion: RoadCurveMotion; tailDistance: number }
+    | null = null;
   private idleSegmentSurface: RoadSegmentSurface | null = null;
   private leftSideObjects: SideObjectsInstanced | null = null;
   private rightSideObjects: SideObjectsInstanced | null = null;
@@ -51,6 +57,10 @@ export class RoadManager {
       RoadManager.instance = new RoadManager();
     }
     return RoadManager.instance;
+  }
+
+  public hasActiveRouteTransform(): boolean {
+    return this.activeRoute !== null && !this.activeRoute.motion.completed;
   }
 
   public createRoad(): void {
@@ -110,11 +120,40 @@ export class RoadManager {
     rowLength: number,
     rowCount: number,
     coverage: RoadSegmentSurfaceCoverage[] = [],
-  ): void {
+    curve?: RoadSegmentSurfaceCurve,
+  ): RoadRouteAttachment | undefined {
     if (!this.road || !this.scene || !this.config.segmentSurfaces) return;
 
     const lanes = this.road.getLanePositions();
     const laneWidth = this.road.width / lanes.length;
+
+    let motion: RoadCurveMotion | undefined;
+    let routeAttachment: RoadRouteAttachment | undefined;
+
+    if (curve) {
+      motion = {
+        direction: curve.direction,
+        pivotX: curve.pivotX,
+        pivotZ: baseZ,
+        // До прохождения ближнего конца мимо игрока дуга движется как обычный
+        // сегмент с нулевым углом. Ранний старт на rotateStartZ разрывает стык
+        // с предыдущей прямой почти сразу после спавна.
+        turnStartZ: curve.rotateEndZ,
+        radius: curve.radius,
+        totalAngleRad: curve.totalAngleRad,
+        angleRad: 0,
+        phase: "approach",
+        completed: false,
+      };
+      this.activeRoute = { motion, tailDistance: 0 };
+      routeAttachment = { motion, startDistance: 0 };
+    } else if (this.activeRoute && !this.activeRoute.motion.completed) {
+      routeAttachment = {
+        motion: this.activeRoute.motion,
+        startDistance: this.activeRoute.tailDistance,
+      };
+      this.activeRoute.tailDistance += rowCount * rowLength;
+    }
 
     this.segmentSurfaces.push(
       new RoadSegmentSurface(
@@ -126,8 +165,11 @@ export class RoadManager {
         rowLength,
         rowCount,
         coverage,
+        { curve, motion, routeAttachment: curve ? undefined : routeAttachment },
       ),
     );
+
+    return routeAttachment;
   }
 
   private addElevatedSections(): void {
@@ -194,6 +236,9 @@ export class RoadManager {
         spacing: sideObjects.spacing * useCommonStore().config.xzScaling,
       },
     );
+    this.leftSideObjects.setOcclusionProvider(() =>
+      this.getCurvedRoadIntervals(),
+    );
 
     this.rightSideObjects = new SideObjectsInstanced(
       this.scene!,
@@ -204,6 +249,9 @@ export class RoadManager {
         ...sideObjects,
         spacing: sideObjects.spacing * useCommonStore().config.xzScaling,
       },
+    );
+    this.rightSideObjects.setOcclusionProvider(() =>
+      this.getCurvedRoadIntervals(),
     );
   }
 
@@ -302,6 +350,34 @@ export class RoadManager {
   }
 
   public update(deltaTime: number, speed: number): void {
+    if (this.activeRoute && !this.activeRoute.motion.completed) {
+      const motion = this.activeRoute.motion;
+      let remainingTravel = deltaTime * speed;
+      if (motion.phase === "approach") {
+        const approachDistance = Math.max(
+          0,
+          motion.turnStartZ - motion.pivotZ,
+        );
+        const approachTravel = Math.min(remainingTravel, approachDistance);
+        motion.pivotZ += approachTravel;
+        remainingTravel -= approachTravel;
+        if (motion.pivotZ >= motion.turnStartZ) {
+          motion.pivotZ = motion.turnStartZ;
+          motion.phase = "turning";
+        }
+      }
+
+      if (motion.phase === "turning" && remainingTravel > 0) {
+        motion.angleRad -= remainingTravel / motion.radius;
+        if (motion.angleRad <= -motion.totalAngleRad) {
+          motion.angleRad = -motion.totalAngleRad;
+          motion.phase = "completed";
+          motion.completed = true;
+          this.activeRoute = null;
+        }
+      }
+    }
+
     this.leftSideObjects?.update(deltaTime, speed);
     this.rightSideObjects?.update(deltaTime, speed);
     for (let i = this.segmentSurfaces.length - 1; i >= 0; i--) {
@@ -354,6 +430,7 @@ export class RoadManager {
     this.elevatedSections = [];
     this.segmentSurfaces.forEach((surface) => surface.dispose());
     this.segmentSurfaces = [];
+    this.activeRoute = null;
     this.clearIdleSegmentSurface();
 
     this.clearSideObjects();
@@ -372,6 +449,10 @@ export class RoadManager {
     const visibleFrontZ =
       useCommonStore().config.itemsRemovingZpos + IDLE_SURFACE_DISABLE_PADDING;
 
+    if (this.segmentSurfaces.some((surface) => surface.isCurved())) {
+      return true;
+    }
+
     return this.segmentSurfaces.some(
       (surface) => surface.getFrontEdgeZ() >= visibleFrontZ,
     );
@@ -386,6 +467,14 @@ export class RoadManager {
         section.getSurfaceIntervals(),
       ),
     ];
+  }
+
+  private getCurvedRoadIntervals(): { back: number; front: number }[] {
+    return this.segmentSurfaces
+      .map((surface) => surface.getSideObjectOcclusionInterval())
+      .filter((interval): interval is { back: number; front: number } =>
+        interval !== null,
+      );
   }
 
   public dispose(): void {
