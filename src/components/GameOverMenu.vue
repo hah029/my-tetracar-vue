@@ -113,6 +113,8 @@ onMounted(() => {
 <style scoped lang="scss">
 @use "@/styles/menu.scss";
 @use "@/styles/animations.scss";
+@use "@/styles/typography" as *;
+@use "@/styles/colors" as *;
 
 .container_correction {
     display: flex;
@@ -134,9 +136,8 @@ onMounted(() => {
 }
 
 .header_correction {
-    font-size: clamp(2.4rem, 5vmin, 4rem);
+    @include text-button-size-xl;
     color: #F79CFF;
-    text-shadow: 0px 0px 10px #F79CFF;
 }
 
 .rotate_180 {
@@ -148,7 +149,8 @@ onMounted(() => {
 }
 
 .btn_correction {
-    font-size: clamp(1.25rem, 2.4vmin, 1.875rem);
+    @include text-button-size-s;
+    color: $color-yellow-super-light;
 }
 
 .group_correction {

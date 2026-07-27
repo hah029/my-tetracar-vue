@@ -124,22 +124,22 @@ async function init() {
   app.use(I18NextVue, { i18next });
   app.mount("#app");
 
-  const p = document.getElementsByClassName("team_logo_group");
+//   const p = document.getElementsByClassName("team_logo_group");
 
-  if (p !== null) {
-    p[0].addEventListener("click", () => {
-      console.log("debug buy, platform = " + platform);
+//   if (p !== null) {
+//     p[0].addEventListener("click", () => {
+//       console.log("debug buy, platform = " + platform);
 
-      platform!.buyShopItem("bulletPack1", (purchase) => {
-        console.log(
-          "купили, purchase = " +
-            (purchase ? JSON.stringify(purchase) : "null"),
-        );
-        // купили, purchase = {"productID":"bulletPack1","purchaseToken":"b4032de6-8255-42f8-a2cd-a13bef97d6b4"}
-        // здесь совершаем начисление товара purchase.productID игроку
-      });
-    });
-  }
+//       platform!.buyShopItem("bulletPack1", (purchase) => {
+//         console.log(
+//           "купили, purchase = " +
+//             (purchase ? JSON.stringify(purchase) : "null"),
+//         );
+//         // купили, purchase = {"productID":"bulletPack1","purchaseToken":"b4032de6-8255-42f8-a2cd-a13bef97d6b4"}
+//         // здесь совершаем начисление товара purchase.productID игроку
+//       });
+//     });
+//   }
 }
 
 loadAtlas()

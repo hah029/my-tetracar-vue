@@ -1,21 +1,69 @@
-import type { LeaderboardEntriesData } from "ysdk";
+import type { LeaderboardDescription, LeaderboardEntry, LeaderboardEntriesData } from "ysdk";
 import type { IGamePlatform } from "../IGamePlatform";
+const DEFAULT_AVATAR = [
+    '/src/assets/images/avatars/awatar_anonymous_1.jpg',
+    '/src/assets/images/avatars/awatar_anonymous_2.jpg',
+    '/src/assets/images/avatars/awatar_anonymous_3.jpg',
+    '/src/assets/images/avatars/awatar_anonymous_4.jpg'
+];
 
 type Stats = Record<string | number, number>;
 type PlayerData = import("ysdk").Serializable | undefined;
 type PlayerDataSet = Record<string, PlayerData>;
+type Locale = string;
 
 interface LocalPlayer {
   id: string;
   name: string;
   stats: Stats;
   data: PlayerDataSet;
+  getAvatarSrc: string;
 }
 
 interface LocalLeaderboardEntry {
   playerId: string;
   playerName: string;
   score: number;
+  getAvatarSrc: string;
+}
+
+// Описание таблицы лидеров
+interface ILeaderboardDescription {
+    appID: string;
+    default: boolean;
+    description: {
+        invert_sort_order: boolean;
+        score_format: {
+            options: {
+                decimal_offset: number;
+            };
+            type: 'numeric' | 'time';
+        };
+        sort_order: string;
+    };
+    name: string;
+    title: Record<Locale, string>;
+}
+
+// Запись в таблице лидеров
+interface ILeaderboardEntry {
+    extraData: string;
+    rank: number;
+    score: number;
+    player: {
+        publicName: string;
+        uniqueID: string;
+        getAvatarSrc: (size?: 'small' | 'medium' | 'large') => string;
+        getAvatarSrcSet: (size?: 'small' | 'medium' | 'large') => string;
+    }
+}
+
+// Результат метода getEntries()
+interface ILeaderboardEntries {
+    leaderboard: ILeaderboardDescription;
+    ranges: { start: number; size: number; }[];
+    userRank: number;
+    entries: ILeaderboardEntry[];
 }
 
 export class LocalStoragePlatform implements IGamePlatform {
@@ -35,6 +83,7 @@ export class LocalStoragePlatform implements IGamePlatform {
         name: "Developer",
         stats: {},
         data: {},
+        getAvatarSrc: '',
       };
       this.storage.setItem(this.PLAYER_KEY, JSON.stringify(defaultPlayer));
     }
@@ -196,6 +245,7 @@ export class LocalStoragePlatform implements IGamePlatform {
         playerId: player!.id,
         playerName: player!.name,
         score,
+        getAvatarSrc: player!.getAvatarSrc || '',
       });
     }
 
@@ -212,40 +262,71 @@ export class LocalStoragePlatform implements IGamePlatform {
     const boards = this.getLeaderboards();
     const board = boards[leaderboardName] || [];
     const player = this.getPlayer();
-
-    // Топ‑N записей
-    const topEntries = board.slice(0, quantityTop).map((entry, index) => ({
+  
+    // 1. Формируем leaderboard (убран лишний sort_order)
+    const leaderboardDescription: LeaderboardDescription = {
+      appID: 'local_app',
+      default: false,
+      description: {
+        invert_sort_order: false,
+        score_format: {
+          options: { decimal_offset: 0 },
+        },
+        type: 'numberic', // ← "numberic" (с опечаткой, как в SDK)
+      },
+      name: leaderboardName,
+      title: {
+        ru: 'Таблица лидеров',
+        en: 'Leaderboard',
+      },
+    };
+  
+    // 2. Формируем entries с правильным player
+    const topEntries: LeaderboardEntry[] = board.slice(0, quantityTop).map((entry, index) => ({
       rank: index + 1,
       score: entry.score,
+      extraData: '',
+      formattedScore: String(entry.score),
       player: {
+        lang: 'ru', // ← обязательное поле
         publicName: entry.playerName,
+        scopePermissions: { // ← обязательное поле
+          avatar: '',
+          public_name: entry.playerName,
+        },
         uniqueID: entry.playerId,
+        getAvatarSrc: (size?: 'small' | 'medium' | 'large') => {
+          //   return entry.getAvatarSrc || '/src/assets/images/avatars/awatar_anonymous_1.jpg';
+          const imageIndex = Math.floor(Math.random() * 4);
+          return entry.getAvatarSrc || DEFAULT_AVATAR[imageIndex];
+        },
+        getAvatarSrcSet: (size?: 'small' | 'medium' | 'large') => {
+          //   return entry.getAvatarSrc || '/src/assets/images/avatars/awatar_anonymous_1.jpg';
+          const imageIndex = Math.floor(Math.random() * 4);
+          return entry.getAvatarSrc || DEFAULT_AVATAR[imageIndex];
+        },
       },
     }));
-
-    // Поиск записи текущего пользователя
-    let userEntry = null;
+  
+    // 3. Поиск пользователя (только rank)
+    let userRank: number = 0;
+  
     if (includeUser) {
-      const userRank = board.findIndex(
+      const userRankIndex = board.findIndex(
         (entry) => entry.playerId === player!.id,
       );
-      if (userRank !== -1) {
-        userEntry = {
-          rank: userRank + 1,
-          score: board[userRank].score,
-          player: {
-            publicName: board[userRank].playerName,
-            uniqueID: board[userRank].playerId,
-          },
-        };
+      if (userRankIndex !== -1) {
+        userRank = userRankIndex + 1;
       }
     }
-
+  
+    // 4. Возвращаем объект без userEntry
     return {
-      entries: topEntries,
-      userEntry,
-      pages: 1, // Заглушка
-    } as LeaderboardEntriesData;
+        leaderboard: leaderboardDescription,
+        entries: topEntries,
+        userRank,
+        ranges: [],
+      };
   }
 
   // ------------------------------------------------------------------

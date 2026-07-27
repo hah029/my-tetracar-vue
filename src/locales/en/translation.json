@@ -35,6 +35,10 @@
                 "magnet"
             ]
         },
+        "control": {
+            "title": "control"
+        },
+        "nextButton": "next",
         "startButton": "let's go!"
     },
     "gamePlay": {
@@ -104,6 +108,9 @@
         "title": "settings",
         "toggleOn": "on",
         "toggleOff": "off",
+        "low": "low",
+        "medium": "medium",
+        "high": "medium",
         "menuList": {
             "graphics": "graphics",
             "sounds": "sounds",
@@ -132,8 +139,8 @@
             "mobileLabels": {
                 "pause": "pause",
                 "fire": "fire",
-                "swipe": "swipe",
-                "switcher": "left / right handed"
+                "left": "left",
+                "right": "right"
             },
             "labels": {
                 "left": "left",

@@ -1,6 +1,7 @@
 <template>
     <Transition name="rights_panel_showing">
         <div v-show="isRightPanelShown" class="rights_root">
+            <DeviceInfo />
             <span>{{ APP_NAME }} v{{ APP_VERSION }}</span>
             <span>© {{ CURRENT_YEAR }} {{ randomRightsPhrase }}</span>
         </div>
@@ -13,13 +14,14 @@
     import { useGameState } from "@/store/gameState";
     import { GameStates } from "@/game/core/GameState";
     import { createNewText } from '@/helpers/functions';
+    import DeviceInfo from '@/components/ui/DeviceInfo.vue';
 
     import { APP_VERSION, APP_NAME, CURRENT_YEAR} from "@/gameConfig";
 
     const gameState = useGameState();
     const foo = createNewText();
     const isRightPanelShown = computed(() => {
-        return gameState.currentState === GameStates.Menu && gameState.activeOverlay === null;
+        return gameState.currentState === GameStates.Menu;
     });
 
     // получаем рандомную фразу "Все права защищены" в нужном переводе
@@ -31,20 +33,44 @@
 
 <style lang='scss' scoped>
     @use "@/styles/menu.scss" as *;
+    @use "@/styles/typography" as *;
+    @use "@/styles/colors" as *;
     
     .rights_root {
         position: absolute;
-        bottom: 1.875rem;
-        left: 2.5rem;
+
+        // #region - bottom and left
+        bottom: 5.13vh;     // позже расчитать (для мини-мобил)
+        left: 5.98vh;      // позже расчитать (для мини-мобил)
+
+        @media (min-width: $breakpoint-mobile) and (orientation: landscape) and (hover: none) and (pointer: coarse) { 
+            bottom: 5.13vh;
+            left: 5.98vh;
+        }
+        // позже расчитать:
+        // @media (min-width: $breakpoint-tablet) and (orientation: landscape) and (hover: none) and (pointer: coarse) { 
+            // bottom: 1.875vw;
+            // left: 2.5vw;
+        // }  
+        @media (min-width: $breakpoint-laptop) and (orientation: landscape) { 
+            bottom: 1.736vw;
+            left: 2.43vw;
+        }
+        @media (min-width: $breakpoint-desktop) and (orientation: landscape) {
+            bottom: 1.563vw;
+            left: 2.083vw;
+        }
+        // #endregion
+
         display: flex;
         flex-direction: column;
         align-items: flex-start;
         justify-content: flex-end;
-        color: white;
-        opacity: 0.65;
-        font-size: 0.75rem;
-        font-family: 'jost-light';
-        letter-spacing: 0.05rem;
+        opacity: 0.55;
+        
+        @include text-info-size-xs;
+        color: $color_white;
+
         z-index: z("rights_and_logo");
     }
 

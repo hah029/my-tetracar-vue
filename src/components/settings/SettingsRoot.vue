@@ -1,7 +1,6 @@
 <template>
-    <!-- <div class="container correction"> -->
-    <div class="container container_correction" :class="setContainerPos()">
-        <div class="settings_container">
+    <div class="container">
+        <div class="settings_container" :class="setContainerClass()">
 
             <!-- HEADER -->
             <Transition :name="gameState.currentState == 'menu' ? 'header_footer_block_anim' : ''">
@@ -26,14 +25,14 @@
             <SoundSettings v-if="currentView === SettingsView.Sound" :backStatus="isBackButtonClicked" />
             <GraphicSettings v-if="currentView === SettingsView.Graphics" :backStatus="isBackButtonClicked" />
             <LanguageSettings v-else-if="currentView === SettingsView.Language" :backStatus="isBackButtonClicked" />
-            <ControlSettings v-else-if="currentView === SettingsView.Controls" :backStatus="isBackButtonClicked" />
+            <ControlSettings v-else-if="currentView === SettingsView.Controls" :backStatus="isBackButtonClicked" :isOnTrainingScreen="false" />
             <AboutSettings v-else-if="currentView === SettingsView.About" :backStatus="isBackButtonClicked" />
 
         </div>
 
         <!-- BACK -->
         <Transition name="header_footer_block_anim">
-            <button v-if="isBackButtonShown" class="menu_btn btn_correction" @click="backButtonClick">
+            <button v-if="isBackButtonShown" class="menu_btn btn_correction" :class="setBackButtonClass()" @click="backButtonClick">
                 {{ foo_1.makeText("mainMenu.goBack") }}
             </button>
         </Transition>
@@ -42,204 +41,259 @@
 
 
 <script setup lang="ts">
-import SoundSettings from "./overlays/SoundSettings.vue";
-import GraphicSettings from "./overlays/GraphicSettings.vue";
-import LanguageSettings from "./overlays/LanguageSettings.vue";
-import ControlSettings from "./overlays/ControlSettings.vue";
-import AboutSettings from "./overlays/AboutSettings.vue";
+    import SoundSettings from "./overlays/SoundSettings.vue";
+    import GraphicSettings from "./overlays/GraphicSettings.vue";
+    import LanguageSettings from "./overlays/LanguageSettings.vue";
+    import ControlSettings from "./overlays/ControlSettings.vue";
+    import AboutSettings from "./overlays/AboutSettings.vue";
+    
+    import { onMounted, computed, ref, watch } from "vue";
+    import { createNewText, deleteTextLines } from '@/helpers/functions';
+    import { useGameState } from "@/store/gameState";
+    import { useDevice } from '@/composables/useDevice';
 
-import { onMounted, computed, ref } from "vue";
-import { createNewText, deleteTextLines } from '@/helpers/functions';
-import { useGameState } from "@/store/gameState";
+    enum SettingsView {
+        Main,
+        Sound,
+        Graphics,
+        Language,
+        Controls,
+        About,
+        null,
+    }
 
-enum SettingsView {
-    Main,
-    Sound,
-    Graphics,
-    Language,
-    Controls,
-    About,
-    null,
-}
+    // ===== STORES =====
+    const gameState = useGameState();
+    
+    // ===== LOCAL STATE =====
+    const currentView = ref<SettingsView>(SettingsView.null);
 
-// ===== STORES =====
-const gameState = useGameState();
+    const isHeaderShown = ref(false);
+    const isBackButtonShown = ref(false);
+    const isBackButtonClicked = ref(false);
+    const isSettingsPreparing = ref(true);
+    const { deviceType } = useDevice();
 
-// ===== LOCAL STATE =====
-const currentView = ref<SettingsView>(SettingsView.null);
+    // ===== TEXT =====
+    const foo_1 = createNewText();
+    const foo_2 = deleteTextLines();
 
-const isHeaderShown = ref(false);
-const isBackButtonShown = ref(false);
-const isBackButtonClicked = ref(false);
+    // ===== UI STATE (без таймаутов) =====
+    const isInSubMenu = computed(() => currentView.value !== SettingsView.Main && currentView.value !== SettingsView.null);
 
-// ===== TEXT =====
-const foo_1 = createNewText();
-const foo_2 = deleteTextLines();
+    // ===== MENU =====
+    const menuButtons = computed(() => [
+        {
+            id: 1,
+            text: foo_1.makeText("settings.menuList.graphics"),
+            action: () => currentView.value = SettingsView.Graphics,
+        },
+        {
+            id: 2,
+            text: foo_1.makeText("settings.menuList.sounds"),
+            action: () => currentView.value = SettingsView.Sound,
+        },
+        {
+            id: 3,
+            text: foo_1.makeText("settings.menuList.lang"),
+            action: () => currentView.value = SettingsView.Language,
+        },
+        {
+            id: 4,
+            text: foo_1.makeText("settings.menuList.controls"),
+            action: () => currentView.value = SettingsView.Controls,
+        },
+        {
+            id: 5,
+            text: foo_1.makeText("settings.menuList.about"),
+            action: () => currentView.value = SettingsView.About,
+        },
+    ]);
 
-// ===== UI STATE (без таймаутов) =====
-const isInSubMenu = computed(() => currentView.value !== SettingsView.Main && currentView.value !== SettingsView.null);
-
-// ===== MENU =====
-const menuButtons = computed(() => [
-    {
-        id: 1,
-        text: foo_1.makeText("settings.menuList.graphics"),
-        action: () => currentView.value = SettingsView.Graphics,
-    },
-    {
-        id: 2,
-        text: foo_1.makeText("settings.menuList.sounds"),
-        action: () => currentView.value = SettingsView.Sound,
-    },
-    {
-        id: 3,
-        text: foo_1.makeText("settings.menuList.lang"),
-        action: () => currentView.value = SettingsView.Language,
-    },
-    {
-        id: 4,
-        text: foo_1.makeText("settings.menuList.controls"),
-        action: () => currentView.value = SettingsView.Controls,
-    },
-    {
-        id: 5,
-        text: foo_1.makeText("settings.menuList.about"),
-        action: () => currentView.value = SettingsView.About,
-    },
-]);
-
-// ===== TITLE =====
-const dynamicTitleName = computed(() => {
-    if (isInSubMenu.value) {
-        const map = {
-            [SettingsView.Graphics]: menuButtons.value[0]!.text,
-            [SettingsView.Sound]: menuButtons.value[1]!.text,
-            [SettingsView.Language]: menuButtons.value[2]!.text,
-            [SettingsView.Controls]: menuButtons.value[3]!.text,
-            [SettingsView.About]: menuButtons.value[4]!.text,
+    // ===== TITLE =====
+    const dynamicTitleName = computed(() => {
+        if (isInSubMenu.value) {
+            const map = {
+                [SettingsView.Graphics]: menuButtons.value[0]!.text,
+                [SettingsView.Sound]: menuButtons.value[1]!.text,
+                [SettingsView.Language]: menuButtons.value[2]!.text,
+                [SettingsView.Controls]: menuButtons.value[3]!.text,
+                [SettingsView.About]: menuButtons.value[4]!.text,
+            };
+            return foo_2.correctText(map[currentView.value]);
+        } else {
+            return foo_1.makeText("settings.title", "empty");
         };
-        return foo_2.correctText(map[currentView.value]);
-    } else {
-        return foo_1.makeText("settings.title", "empty");
+    });
+
+    // ===== BACK =====
+    function backButtonClick() {
+        if (isInSubMenu.value) {
+            isBackButtonClicked.value = true;
+            setTimeout(() => {
+                isBackButtonClicked.value = false;
+                currentView.value = SettingsView.Main;
+            }, 500);
+
+        } else {     
+            // кликаем по кнопке "Назад" из "Настроек" в:
+            if (gameState.currentState == 'menu') {
+                // - главном экране
+                isHeaderShown.value = false;
+
+                setTimeout(() => {
+                    currentView.value = SettingsView.null;
+                }, 100);
+                setTimeout(() => {
+                    isSettingsPreparing.value = false;
+                }, 200);
+                setTimeout(() => {
+                    isBackButtonShown.value = false;
+                }, 400);
+                setTimeout(() => {
+                    gameState.closeOverlay();
+                }, 500);
+                
+            } else if (gameState.currentState == 'pause') {
+                // - игровом режиме (в паузе)
+                setTimeout(() => {
+                    currentView.value = SettingsView.null;
+                }, 100);
+                setTimeout(() => {
+                    isBackButtonShown.value = false;
+                }, 400);
+                setTimeout(() => {
+                    isSettingsPreparing.value = false;
+                }, 500);
+                setTimeout(() => {
+                    gameState.closeOverlay();
+                }, 900);
+            };
+        };
     };
-});
 
-// ===== BACK =====
-function backButtonClick() {
-    if (isInSubMenu.value) {
-        isBackButtonClicked.value = true;
-        setTimeout(() => {
-            isBackButtonClicked.value = false;
-            currentView.value = SettingsView.Main;
-        }, 500);
+    function setHeaderSize() {
+        if (gameState.currentState == 'pause') {
+            return 'header_pause';
+        };
+    };
 
-    } else {
+    // позиционирование контейнера сверху экрана (если находимся в меню или в паузе)
+    function setContainerClass() {
         if (gameState.currentState == 'menu') {
-            isHeaderShown.value = false;
+            return 'container_correction_menu';
+        } else {
+            return 'settings_container_alternative';
         };
-        setTimeout(() => {
-            currentView.value = SettingsView.null;
-        }, 100);
-        setTimeout(() => {
-            isBackButtonShown.value = false;
-        }, 400);
-
-        setTimeout(() => {
-            gameState.closeOverlay();
-        }, 500);
     };
-};
 
-function setContainerPos() {
-    if (gameState.currentState == 'menu') {
-        return 'container_pos_main_menu';
-    } else if (gameState.currentState == 'pause') {
-        return 'container_pos_pause';
+    // позиционирование кнопки "Назад" снизу экрана (если находимся в меню или в паузе)
+    function setBackButtonClass() {
+        if (gameState.currentState == 'menu') {
+            return 'back_button_menu';
+        } else {
+            return 'back_button_pause';
+        };
     };
-};
-function setHeaderSize() {
-    if (gameState.currentState == 'pause') {
-        return 'header_pause';
-    };
-};
 
-onMounted(() => {
-    isHeaderShown.value = true;
-    setTimeout(() => {
-        currentView.value = SettingsView.Main;
-    }, 200);
-    setTimeout(() => {
-        isBackButtonShown.value = true;
-    }, 500);
-});
+    // 🔥 Следим за изменением секции настроек
+    watch(
+        () => gameState.settingsSection,
+        (section) => {
+            if (section === 'about') {
+                currentView.value = SettingsView.About;
+            } else if (section === 'sound') {
+                currentView.value = SettingsView.Sound;
+            } else if (section === 'graphics') {
+                currentView.value = SettingsView.Graphics;
+            } else if (section === 'language') {
+                currentView.value = SettingsView.Language;
+            } else if (section === 'controls') {
+                currentView.value = SettingsView.Controls;
+            } else if (section === 'main' || section === null) {
+                currentView.value = SettingsView.Main;
+            }
+        },
+    );
+
+    onMounted(() => {
+        isHeaderShown.value = true;
+        const section = gameState.settingsSection;
+
+        if (section && section !== 'main') {
+            if (section === 'about') {
+                currentView.value = SettingsView.About;
+            } else if (section === 'sound') {
+                currentView.value = SettingsView.Sound;
+            } else if (section === 'graphics') {
+                currentView.value = SettingsView.Graphics;
+            } else if (section === 'language') {
+                currentView.value = SettingsView.Language;
+            } else if (section === 'controls') {
+                currentView.value = SettingsView.Controls;
+            }
+            setTimeout(() => {
+                isBackButtonShown.value = true;
+            }, 1000);
+            
+        } else {
+            setTimeout(() => {
+                currentView.value = SettingsView.Main;
+            }, 200);
+            setTimeout(() => {
+                isBackButtonShown.value = true;
+            }, 550);
+        };
+    });
 </script>
 
 
 <style scoped lang="scss">
-@use "@/styles/menu.scss";
-@use "@/styles/animations.scss";
+    @use "@/styles/menu.scss";
+    @use "@/styles/animations.scss";
+    @use "@/styles/typography" as *;
+    @use "@/styles/colors" as *;
 
-.container {
-    position: fixed !important;
-    justify-content: center !important;
-}
-
-.container_correction {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    width: 100%;
-    height: 100%;
-    background-color: rgba(0, 0, 0, 0.72);
-    backdrop-filter: blur(2px);
-
-    gap: clamp(1.2rem, 3vmin, 2.5rem);
-
-}
-
-.header_pause {
-    font-size: clamp(2rem, 4vmin, 3.125rem);
-}
-
-.settings_container {
-    position: relative;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    box-sizing: border-box;
-    gap: 1rem;
-}
-
-.group_correction {
-    position: static !important;
-    min-height: 10.25rem;
-    display: flex;
-    flex-direction: column;
-    justify-content: flex-start;
-    align-items: center;
-
-    &>*+* {
-        margin-top: 0.938rem; // 15px - row-gap (между кнопками)
+    .settings_container {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: flex-start;
     }
-}
 
-.btn_correction {
-    font-size: clamp(1.25rem, 2.4vmin, 1.875rem);
-}
+    .settings_container_alternative {
+        position: relative;
+    }
 
-/* we will explain what these classes do next! */
-// .v-enter-active {
-//     transition: opacity 0.5s ease;
-// }
+    .header_pause {
+        @include text-button-size-xl;
+    }
 
-// .v-enter-from,
-// .v-leave-to {
-//     opacity: 1;
-// }
+    .group_correction {
+        display: flex;
+        flex-direction: column;
+        justify-content: flex-start;
+        align-items: center;
+
+        gap: 3.846vh;   // позже расчитать (для мини-мобил)
+
+        @media (min-width: $breakpoint-mobile) and (orientation: landscape) and (hover: none) and (pointer: coarse) { 
+            gap: 3.846vh;
+        }
+        // позже расчитать:
+        // @media (min-width: $breakpoint-tablet) and (orientation: landscape) and (hover: none) and (pointer: coarse) { 
+        //     gap: 5.56vw; 
+        // }  
+        @media (min-width: $breakpoint-laptop) and (orientation: landscape) { 
+            gap: 1.25vw; 
+        }
+        @media (min-width: $breakpoint-desktop) and (orientation: landscape) {
+            gap: 0.9375vw;
+        }
+    }
+
+    .btn_correction {
+        @include text-button-size-s;
+        color: $color-yellow-super-light;
+    }
 </style>

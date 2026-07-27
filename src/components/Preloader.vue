@@ -1,144 +1,150 @@
 <template>
     <div class="container">
-        <button class="menu_btn btn_correction" :class="{
-            'button-enter': isEntering,     // класс для анимации появления
-            'leaving': isLeaving            // класс для анимации исчезновения
-        }" @click="letsPlay" @animationend="onAnimationEnd">
-            {{ foo.makeText("preloader.pressAnyButton") }}
-            <!-- {{ text("preloader.pressAnyButton") }} -->
+        <button class="menu_btn btn_correction" 
+            :class="{ 'button-enter': isEntering, 'leaving': isLeaving }" @animationend="onAnimationEnd" @click="letsPlay">
+            {{ splashScreenText }}
         </button>
     </div>
 </template>
 
 
 <script setup lang="ts">
-import { GameStates } from "@/game/core/GameState";
-import { useGameState } from "@/store/gameState";
-import { createNewText } from '@/helpers/functions';
-import { onMounted, ref } from "vue";
+    import { GameStates } from "@/game/core/GameState";
+    import { useGameState } from "@/store/gameState";
+    import { useDevice } from '@/composables/useDevice';
+    import { createNewText } from '@/helpers/functions';
+    import { onMounted, ref, computed } from "vue";
 
-// подключаем store
-const gameState = useGameState();
-const foo = createNewText();
+    // подключаем store
+    const gameState = useGameState();
+    const foo = createNewText();
+    const isEntering = ref(false);      // флаг для анимации появления
+    const isLeaving = ref(false);       // флаг для анимации исчезновения
+    const { deviceType } = useDevice();
 
-const isEntering = ref(false);      // флаг для анимации появления
-const isLeaving = ref(false);       // флаг для анимации исчезновения
-
-// переходим в главное меню
-function letsPlay() {
-    // смещаем лого наверх
-    isLeaving.value = true;
-    isEntering.value = false;
+    // выводим текст в зависимости от типа устройства
+    const splashScreenText = computed(() => {
+        if (deviceType.value==='mobile' || deviceType.value==='tablet') {
+            return foo.makeText("preloader.pressAnyButtonMob");
+        } else if (deviceType.value==='laptop' || deviceType.value==='desktop') {
+            return foo.makeText("preloader.pressAnyButton");
+        };
+    });
 
     // переходим в главное меню
-    setTimeout(() => {
-        gameState.isPreloaderShown = false;
-        gameState.setState(GameStates.Menu);
-    }, 500);
-};
-
-function onAnimationEnd(event: AnimationEvent) {
-    // Проверяем, какая анимация закончилась
-    if (event.animationName === 'buttonFadeOut') {
-        // Анимация исчезновения завершена
-        // isLeaving.value = false;
-        gameState.setState(GameStates.Menu);
-    };
-
-    if (event.animationName === 'buttonFadeIn') {
-        // Анимация появления завершена
+    function letsPlay() {
+        // смещаем лого наверх
+        isLeaving.value = true;
         isEntering.value = false;
-    };
-};
 
-onMounted(() => {
-    // выводим кнопку
-    setTimeout(() => {
+        // переходим в главное меню
         setTimeout(() => {
-            isEntering.value = true;
-        }, 50);
-    }, 3200);
-});
+            gameState.isPreloaderShown = false;
+            gameState.setState(GameStates.Menu);
+        }, 150);
+    };
+
+    function onAnimationEnd(event: AnimationEvent) {
+        // Проверяем, какая анимация закончилась
+        if (event.animationName === 'buttonFadeOut') {
+            // Анимация исчезновения завершена
+            // isLeaving.value = false;
+            gameState.setState(GameStates.Menu);
+        };
+
+        if (event.animationName === 'buttonFadeIn') {
+            // Анимация появления завершена
+            isEntering.value = false;
+        };
+    };
+
+    onMounted(() => {
+        // выводим кнопку
+        setTimeout(() => {
+            setTimeout(() => {
+                isEntering.value = true;
+            }, 50);
+        }, 3200);
+    });
 </script>
 
 
 <style lang="scss" scoped>
-@use "@/styles/menu.scss";
+    @use "@/styles/menu.scss";
+    @use "@/styles/typography" as *;
+    @use "@/styles/colors" as *;
 
-.btn_correction {
-    position: absolute;
-    bottom: 30.435%;
-    height: fit-content;
-    opacity: 0;
-
-    font-size: clamp(1.45rem, 3.2vmin, 2.1875rem);
-    transition: all 0.2s ease-in-out;
-
-    // Неоновое свечение с анимацией мерцания
-    // animation: enhancedBreathing 2s ease-in-out infinite;
-
-    &:hover {
-        transform: scale(1.02);
-        color: #ffffff;
-        filter: drop-shadow(0 0 20px rgba(255, 255, 255, 0.6));
+    .btn_correction {
+        position: absolute;
+        opacity: 0;
         transition: all 0.2s ease-in-out;
-        // animation: enhancedBreathing 2s ease-in-out infinite;
-    }
-}
 
-// класс для анимации появления
-.btn_correction.button-enter {
-    animation: buttonFadeIn 1.5s ease-in-out forwards;
-    animation-delay: 1s;
-}
+        @include text-button-size-m;
+        color: $color-yellow-super-light;
 
-// класс для анимации исчезновения
-.btn_correction.leaving {
-    animation: buttonFadeOut 300ms ease-in-out forwards;
-    // animation-delay: 1s;
-}
+        bottom: 32.479vh;
 
-/* анимация появления */
-@keyframes buttonFadeIn {
-    0% {
-        opacity: 0;
-    }
-
-    100% {
-        opacity: 1;
-    }
-}
-
-/* анимация исчезновения */
-@keyframes buttonFadeOut {
-    0% {
-        opacity: 1;
+        @media (min-width: $breakpoint-mobile) and (orientation: landscape) and (hover: none) and (pointer: coarse) { 
+            bottom: 32.479vh;
+        }
+        // позже расчитать:
+        // @media (min-width: $breakpoint-tablet) and (orientation: landscape) and (hover: none) and (pointer: coarse) { 
+        //     bottom: 12.8125vw;
+        // }  
+        @media (min-width: $breakpoint-laptop) and (orientation: landscape) { 
+            bottom: 33.435vh;
+        }
+        @media (min-width: $breakpoint-desktop) and (orientation: landscape) {
+            bottom: 14.583vw;
+        }
     }
 
-    100% {
-        opacity: 0;
-    }
-}
-
-// постоянное свечение кнопки входа в игру
-@keyframes enhancedBreathing {
-
-    0%,
-    100% {
-        filter: drop-shadow(0 0 15px rgba(255, 246, 25, 0.4));
+    // появление надписи + ее мерцание (пока пользователь не нажмет на кнопку)
+    .btn_correction.button-enter {
+        animation: 
+            buttonFadeIn 1.5s ease-in-out forwards,
+            enhancedBreathing 2s ease-in-out infinite;  // бесконечное мерцание
+        animation-delay: 1.5s, 3.5s;  // задержки по анимациям (соответствено их порядку)
     }
 
-    30% {
-        filter: drop-shadow(0 0 0.75rem rgba(255, 246, 25, 0.25)) drop-shadow(0 0 1.0625rem rgba(255, 246, 25, 0.1));
+    // исчезновение надписи
+    .btn_correction.leaving {
+        animation: buttonFadeOut 300ms ease-in-out forwards;
+        animation-delay: 0s;
     }
 
-    60% {
-        filter: drop-shadow(0 0 1.375rem rgba(255, 246, 25, 0.55)) drop-shadow(0 0 1.5625rem rgba(255, 246, 25, 0.2));
+    /* анимация появления надписи */
+    @keyframes buttonFadeIn {
+        0% {
+            opacity: 0;
+        }
+        100% {
+            opacity: 1;
+        }
     }
 
-    80% {
-        filter: drop-shadow(0 0 1.1875rem rgba(255, 246, 25, 0.42)) drop-shadow(0 0 1.1875rem rgba(255, 246, 25, 0.12));
-        color: #ffffff;
+    /* анимация исчезновения надписи */
+    @keyframes buttonFadeOut {
+        0% {
+            opacity: 1;
+            filter: drop-shadow(0 0 1.25rem rgba(255, 246, 25, 0.4));
+        }
+        100% {
+            opacity: 0;
+            filter: drop-shadow(0 0 1.25rem rgba(255, 246, 25, 0));
+        }
     }
-}
+
+    /* анимация постоянного мерцания надписи */
+    @keyframes enhancedBreathing {
+        0% {
+            filter: drop-shadow(0 0 1.25rem rgba(255, 246, 25, 1));
+        }
+        50% {
+            filter: drop-shadow(0 0 1.25rem rgba(255, 246, 25, 0.2));
+        }
+        100% {
+            filter: drop-shadow(0 0 1.25rem rgba(255, 246, 25, 1));
+        }
+    }
 </style>

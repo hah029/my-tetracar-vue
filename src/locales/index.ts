@@ -1,7 +1,6 @@
 import ru from "./ru/translation.json";
 import en from "./en/translation.json";
 
-import flag_frame from "@/assets/images/flags/flag_frame.svg";          // Рамка для флага страны (универсальная)
 import flag_auto from "@/assets/images/flags/flag_auto.svg";            // Значок автоматического определения языка (auto)
 import flag_ru from "@/assets/images/flags/flag_ru.svg";                // Россия
 
@@ -24,18 +23,17 @@ export const locales = {
 };
 
 export const langSrc: Record<string, string> = {
-  frame: flag_frame,
   auto: flag_auto,
   ru: flag_ru,
   en: flag_en_brit,
   // en: flag_en_usa,
   // de: flag_de,
-  // es: flag_es,
-  // zh: flag_zh,
+//   es: flag_es,
+//   zh: flag_zh,
   // pt: flag_pt_PT,   // Европ
   // pt: flag_pt_BR,   // Бразил
-  // ja: flag_ja,
-  // ko: flag_ko,
+//   ja: flag_ja,
+//   ko: flag_ko,
   // tr: flag_tr,
   // fr: flag_fr,
   // it: flag_it,
