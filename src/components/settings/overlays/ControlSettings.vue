@@ -1,7 +1,7 @@
 <template>
-    <div class="controls_global_container">
-        <Transition v-if="deviceType==='mobile' || deviceType==='tablet'" name="buttons_group_showing" tag="div">
-            <div class="mobile_container" v-if="imageView">
+    <div class="controls_global_container" :class="setContainerAdditSettings()">
+        <Transition v-if="deviceType==='mobile' || deviceType==='tablet'" :name="!props.isOnTrainingScreen ? 'buttons_group_showing' : ''" tag="div">
+            <div v-if="imageView" class="mobile_container">
                 <span v-for="(control, index) in mobileControls" :key="control.id"
                     class="addit_font" :class="setMobileTextStyle(control.id)"
                     :style="{ animationDelay: `${index * 0.06}s` }">
@@ -11,7 +11,7 @@
             </div>
         </Transition>
 
-        <TransitionGroup v-if="deviceType==='laptop' || deviceType==='desktop'" name="buttons_group_showing" tag="div"
+        <TransitionGroup v-if="deviceType==='laptop' || deviceType==='desktop'" :name="!props.isOnTrainingScreen ? 'buttons_group_showing' : ''" tag="div"
             class="settings_sub_container">
             <div v-for="(row, index) in desktopControls" v-if="rowView" class="settings_row addit_font" :key="row.id"
                 :style="{ animationDelay: `${index * 0.06}s` }">
@@ -88,6 +88,7 @@
 
     const props = defineProps<{
         backStatus: boolean;
+        isOnTrainingScreen: boolean;
     }>();
 
     // отлавливаем нажатие кнопки "Назад"
@@ -123,14 +124,22 @@
         };
     };
 
+    // устанавливаем доп свойства глобального контейнера
+    function setContainerAdditSettings() {
+        if (deviceType.value==='mobile') {
+            return 'mobile_container_correction';
+        };
+    };
+
     onMounted(() => {
+        const showingDelay = props.isOnTrainingScreen ? 0 : 750;
         setTimeout(() => {
             if (deviceType.value==='mobile' || deviceType.value==='tablet') {
                 imageView.value = true;
             } else if (deviceType.value==='laptop' || deviceType.value==='desktop') {
                 rowView.value = true;
             };
-        }, 750);
+        }, showingDelay);
     }); 
 </script>
 
@@ -171,6 +180,18 @@
         // @media (min-width: $breakpoint-tablet) and (orientation: landscape) and (hover: none) and (pointer: coarse) { 
             // width: 102.564vh;
             // height: 42.274vh;
+        // }
+    }
+
+    .mobile_container_correction {
+        padding-top: 1vh;
+
+        @media (min-width: $breakpoint-mobile) and (orientation: landscape) and (hover: none) and (pointer: coarse) { 
+            padding-top: 1vh;
+        }
+        // позже расчитать:
+        // @media (min-width: $breakpoint-tablet) and (orientation: landscape) and (hover: none) and (pointer: coarse) { 
+            // padding-top: 1vh;
         // }
     }
 
@@ -260,20 +281,28 @@
         }
 
         .button_icon {
-            width: 1.875rem;
-            height: 1.875rem;
             box-sizing: border-box;
-            font-size: 1rem;
+            @include text-info-size-s;
             display: flex;
             justify-content: center;
             align-items: center;
             border: solid 2px #FDFFE3;
-            border-radius: 0.3125rem;
-
+            
             user-select: none;
             -webkit-user-select: none;
             -moz-user-select: none;
             -ms-user-select: none;
+
+            @media (min-width: $breakpoint-laptop) and (orientation: landscape) { 
+                width: 2.083vw;
+                height: 2.083vw;
+                border-radius: 0.347vw;
+            }
+            @media (min-width: $breakpoint-desktop) and (orientation: landscape) {
+                width: 1.563vw;
+                height: 1.563vw;
+                border-radius: 0.26vw;
+            }
         }
 
         .button_icon--extended {

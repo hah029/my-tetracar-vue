@@ -25,7 +25,7 @@
             <SoundSettings v-if="currentView === SettingsView.Sound" :backStatus="isBackButtonClicked" />
             <GraphicSettings v-if="currentView === SettingsView.Graphics" :backStatus="isBackButtonClicked" />
             <LanguageSettings v-else-if="currentView === SettingsView.Language" :backStatus="isBackButtonClicked" />
-            <ControlSettings v-else-if="currentView === SettingsView.Controls" :backStatus="isBackButtonClicked" />
+            <ControlSettings v-else-if="currentView === SettingsView.Controls" :backStatus="isBackButtonClicked" :isOnTrainingScreen="false" />
             <AboutSettings v-else-if="currentView === SettingsView.About" :backStatus="isBackButtonClicked" />
 
         </div>

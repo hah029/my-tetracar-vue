@@ -15,7 +15,7 @@ $breakpoint-desktop: 1920px;
 
 
 // --------------------------------
-// #region - подсказка по размерам:
+// #region - подсказка по размерам (в px в десктопной версии):
 
     // Шрифт кнопочный:
     // ----------------
@@ -238,18 +238,18 @@ $breakpoint-desktop: 1920px;
         font-family: $font-secondary-light;
         letter-spacing: 0.0416vw;   // позже поправить ?
         
-        // @media (min-width: $breakpoint-mobile-small) and (orientation: landscape) and (hover: none) and (pointer: coarse) { 
-        //     font-size: 4.274vh;  // позже расчитать (для мини-мобил)
-        // }
+        @media (min-width: $breakpoint-mobile-small) and (orientation: landscape) and (hover: none) and (pointer: coarse) { 
+            font-size: 5.983vh;  // позже расчитать (для мини-мобил)
+        }
         // @media (min-width: $breakpoint-mobile) and (orientation: landscape) and (hover: none) and (pointer: coarse) { 
         //     font-size: 4.274vh; 
         // }
         // @media (min-width: $breakpoint-tablet) and (orientation: landscape) and (hover: none) and (pointer: coarse) { 
         //     font-size: 2.56vw;  // позже расчитать
         // }  
-        // @media (min-width: $breakpoint-laptop) and (orientation: landscape) { 
-        //     font-size: 1.389vw;
-        // }  
+        @media (min-width: $breakpoint-laptop) and (orientation: landscape) { 
+            font-size: 1.806vw;
+        }  
         @media (min-width: $breakpoint-desktop) and (orientation: landscape) { 
             font-size: 1.563vw; 
         }
@@ -291,9 +291,9 @@ $breakpoint-desktop: 1920px;
         // @media (min-width: $breakpoint-tablet) and (orientation: landscape) and (hover: none) and (pointer: coarse) { 
         //     font-size: 2.56vw;  // позже расчитать
         // }  
-        // @media (min-width: $breakpoint-laptop) and (orientation: landscape) { 
-        //     font-size: 1.389vw;
-        // }  
+        @media (min-width: $breakpoint-laptop) and (orientation: landscape) { 
+            font-size: 1.111vw;
+        }  
         @media (min-width: $breakpoint-desktop) and (orientation: landscape) { 
             font-size: 0.8333vw; 
         }
