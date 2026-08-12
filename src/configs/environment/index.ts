@@ -24,7 +24,8 @@ export default {
 
   // Базовый конфиг дороги (без lanes — они вычисляются динамически)
   defaultRoadBase: {
-    length: 800,
+    // length: 800,
+    length: 200,
     color: 0xeeeeee,
     emissive: 0xeeeeee,
     opacity: 0.25,

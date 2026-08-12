@@ -48,33 +48,35 @@ function makeTurnPattern(direction: "left" | "right"): L[][] {
   });
 }
 
-export const TURN_SEGMENTS: Segment[] = [
-  {
-    id: "longLeftTurn",
-    type: T.Scenario,
-    weight: 4,
-    canReversed: false,
-    difficulty: 2,
-    curve: {
-      direction: "left",
-      totalAngleDeg: 45,
-      rowStart: TURN_CURVE_START,
-      rowEnd: TURN_CURVE_END,
-    },
-    pattern: makeTurnPattern("left"),
-  },
-  {
-    id: "longRightTurn",
-    type: T.Scenario,
-    weight: 4,
-    canReversed: false,
-    difficulty: 2,
-    curve: {
-      direction: "right",
-      totalAngleDeg: 45,
-      rowStart: TURN_CURVE_START,
-      rowEnd: TURN_CURVE_END,
-    },
-    pattern: makeTurnPattern("right"),
-  },
-];
+export const TURN_SEGMENTS: Segment[] = [];
+
+// export const TURN_SEGMENTS: Segment[] = [
+//   {
+//     id: "longLeftTurn",
+//     type: T.Scenario,
+//     weight: 4,
+//     canReversed: false,
+//     difficulty: 2,
+//     curve: {
+//       direction: "left",
+//       totalAngleDeg: 45,
+//       rowStart: TURN_CURVE_START,
+//       rowEnd: TURN_CURVE_END,
+//     },
+//     pattern: makeTurnPattern("left"),
+//   },
+//   {
+//     id: "longRightTurn",
+//     type: T.Scenario,
+//     weight: 4,
+//     canReversed: false,
+//     difficulty: 2,
+//     curve: {
+//       direction: "right",
+//       totalAngleDeg: 45,
+//       rowStart: TURN_CURVE_START,
+//       rowEnd: TURN_CURVE_END,
+//     },
+//     pattern: makeTurnPattern("right"),
+//   },
+// ];

@@ -51,7 +51,8 @@ const nightCity = {
       emissiveIntensity: 0.1,
       opacity: 0.25,
       laneColor: "#FFFFFF",
-      length: 800,
+    //   length: 800,
+      length: 200,
       segmentSurfaces: true,
       edges: {
         color: "#00ffff",

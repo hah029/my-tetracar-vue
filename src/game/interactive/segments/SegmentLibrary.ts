@@ -4,8 +4,8 @@ import { HAZARD_SEGMENTS } from "./sets/hazardsSegments";
 import { JUMPER_SEGMENTS } from "./sets/jumpersSegments";
 import { REWARD_SEGMENTS } from "./sets/rewardsSegments";
 import { TRAFFIC_SEGMENTS } from "./sets/trafficSegments";
-import { TURN_SEGMENTS } from "./sets/turnSegments";
-import { VERTICAL_SEGMENTS } from "./sets/verticalSegments";
+// import { TURN_SEGMENTS } from "./sets/turnSegments";
+// import { VERTICAL_SEGMENTS } from "./sets/verticalSegments";
 
 export const SEGMENT_SETS = {
   base: BASE_SEGMENTS,
@@ -13,8 +13,8 @@ export const SEGMENT_SETS = {
   rewards: REWARD_SEGMENTS,
   jumpers: JUMPER_SEGMENTS,
   hazards: HAZARD_SEGMENTS,
-  vertical: VERTICAL_SEGMENTS,
-  turns: TURN_SEGMENTS,
+//   vertical: VERTICAL_SEGMENTS,
+//   turns: TURN_SEGMENTS,
 } as const satisfies Record<string, Segment[]>;
 
 export type SegmentSetId = keyof typeof SEGMENT_SETS;

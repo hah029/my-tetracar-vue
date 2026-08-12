@@ -23,7 +23,8 @@ export default {
   itemsRemovingZpos: 30,
   baseSegmentDifficultyStep: 100,
   segmentRowMinLength: 8,
-  segmentRowTargetTravelMs: 140,
+//   segmentRowTargetTravelMs: 140,
+  segmentRowTargetTravelMs: 80,
 
   // Монеты и бустеры
   baseCoinValue: 1,

@@ -198,6 +198,8 @@ export class RoadSegmentSurface {
         mesh.position.z -= wrapDistance;
       }
 
+    //   mesh.visible = true;  // 👈 Всегда видим
+
       mesh.visible = !this.overlapsAnyInterval(
         mesh.position.z - this.rowLength / 2,
         mesh.position.z + this.rowLength / 2,

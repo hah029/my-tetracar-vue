@@ -97,7 +97,14 @@ export class RoadManager {
       2,
       useCommonStore().config.segmentRowMinLength / 4,
     );
-    const rowCount = Math.ceil(this.config.length / rowLength);
+    let rowCount = Math.ceil(this.config.length / rowLength);
+
+    // ===== ОГРАНИЧЕНИЕ КОЛИЧЕСТВА РЯДОВ =====
+    const MAX_ROWS = 40;  // 👈 Было 400, стало 40
+    if (rowCount > MAX_ROWS) {
+        rowCount = MAX_ROWS;
+        console.log(`⚠️ Road idle rows ограничен до ${MAX_ROWS}`);
+    }
 
     this.idleSegmentSurface = new RoadSegmentSurface(
       this.scene,
@@ -122,38 +129,46 @@ export class RoadManager {
     coverage: RoadSegmentSurfaceCoverage[] = [],
     curve?: RoadSegmentSurfaceCurve,
   ): RoadRouteAttachment | undefined {
+    const MAX_ROWS_PER_SEGMENT = 30;  // 👈 Максимум 30 рядов на сегмент
+    if (rowCount > MAX_ROWS_PER_SEGMENT) {
+        rowCount = MAX_ROWS_PER_SEGMENT;
+    }
     if (!this.road || !this.scene || !this.config.segmentSurfaces) return;
 
     const lanes = this.road.getLanePositions();
     const laneWidth = this.road.width / lanes.length;
 
-    let motion: RoadCurveMotion | undefined;
+    // let motion: RoadCurveMotion | undefined;
     let routeAttachment: RoadRouteAttachment | undefined;
 
-    if (curve) {
-      motion = {
-        direction: curve.direction,
-        pivotX: curve.pivotX,
-        pivotZ: baseZ,
-        // До прохождения ближнего конца мимо игрока дуга движется как обычный
-        // сегмент с нулевым углом. Ранний старт на rotateStartZ разрывает стык
-        // с предыдущей прямой почти сразу после спавна.
-        turnStartZ: curve.rotateEndZ,
-        radius: curve.radius,
-        totalAngleRad: curve.totalAngleRad,
-        angleRad: 0,
-        phase: "approach",
-        completed: false,
-      };
-      this.activeRoute = { motion, tailDistance: 0 };
-      routeAttachment = { motion, startDistance: 0 };
-    } else if (this.activeRoute && !this.activeRoute.motion.completed) {
-      routeAttachment = {
-        motion: this.activeRoute.motion,
-        startDistance: this.activeRoute.tailDistance,
-      };
-      this.activeRoute.tailDistance += rowCount * rowLength;
-    }
+    if (this.activeRoute) {
+        this.activeRoute = null;
+    };
+
+    // if (curve) {
+    //   motion = {
+    //     direction: curve.direction,
+    //     pivotX: curve.pivotX,
+    //     pivotZ: baseZ,
+    //     // До прохождения ближнего конца мимо игрока дуга движется как обычный
+    //     // сегмент с нулевым углом. Ранний старт на rotateStartZ разрывает стык
+    //     // с предыдущей прямой почти сразу после спавна.
+    //     turnStartZ: curve.rotateEndZ,
+    //     radius: curve.radius,
+    //     totalAngleRad: curve.totalAngleRad,
+    //     angleRad: 0,
+    //     phase: "approach",
+    //     completed: false,
+    //   };
+    //   this.activeRoute = { motion, tailDistance: 0 };
+    //   routeAttachment = { motion, startDistance: 0 };
+    // } else if (this.activeRoute && !this.activeRoute.motion.completed) {
+    //   routeAttachment = {
+    //     motion: this.activeRoute.motion,
+    //     startDistance: this.activeRoute.tailDistance,
+    //   };
+    //   this.activeRoute.tailDistance += rowCount * rowLength;
+    // }
 
     this.segmentSurfaces.push(
       new RoadSegmentSurface(
@@ -165,7 +180,7 @@ export class RoadManager {
         rowLength,
         rowCount,
         coverage,
-        { curve, motion, routeAttachment: curve ? undefined : routeAttachment },
+        // { curve, motion, routeAttachment: curve ? undefined : routeAttachment },
       ),
     );
 
@@ -350,33 +365,35 @@ export class RoadManager {
   }
 
   public update(deltaTime: number, speed: number): void {
-    if (this.activeRoute && !this.activeRoute.motion.completed) {
-      const motion = this.activeRoute.motion;
-      let remainingTravel = deltaTime * speed;
-      if (motion.phase === "approach") {
-        const approachDistance = Math.max(
-          0,
-          motion.turnStartZ - motion.pivotZ,
-        );
-        const approachTravel = Math.min(remainingTravel, approachDistance);
-        motion.pivotZ += approachTravel;
-        remainingTravel -= approachTravel;
-        if (motion.pivotZ >= motion.turnStartZ) {
-          motion.pivotZ = motion.turnStartZ;
-          motion.phase = "turning";
-        }
-      }
+    // if (this.activeRoute && !this.activeRoute.motion.completed) {
+    //   const motion = this.activeRoute.motion;
+    //   let remainingTravel = deltaTime * speed;
+    //   if (motion.phase === "approach") {
+    //     const approachDistance = Math.max(
+    //       0,
+    //       motion.turnStartZ - motion.pivotZ,
+    //     );
+    //     const approachTravel = Math.min(remainingTravel, approachDistance);
+    //     motion.pivotZ += approachTravel;
+    //     remainingTravel -= approachTravel;
+    //     if (motion.pivotZ >= motion.turnStartZ) {
+    //       motion.pivotZ = motion.turnStartZ;
+    //       motion.phase = "turning";
+    //     }
+    //   }
 
-      if (motion.phase === "turning" && remainingTravel > 0) {
-        motion.angleRad -= remainingTravel / motion.radius;
-        if (motion.angleRad <= -motion.totalAngleRad) {
-          motion.angleRad = -motion.totalAngleRad;
-          motion.phase = "completed";
-          motion.completed = true;
-          this.activeRoute = null;
-        }
-      }
-    }
+    //   if (motion.phase === "turning" && remainingTravel > 0) {
+    //     motion.angleRad -= remainingTravel / motion.radius;
+    //     if (motion.angleRad <= -motion.totalAngleRad) {
+    //       motion.angleRad = -motion.totalAngleRad;
+    //       motion.phase = "completed";
+    //       motion.completed = true;
+    //       this.activeRoute = null;
+    //     }
+    //   }
+    // }
+
+    this.activeRoute = null;
 
     this.leftSideObjects?.update(deltaTime, speed);
     this.rightSideObjects?.update(deltaTime, speed);

@@ -78,7 +78,7 @@ export class InteractiveItemsManager {
         return useLevelStore().currentGameplay.laneCount;
       },
       () => {
-        const interactive = useLevelStore().currentInteractive;
+        const interactive = useLevelStore().currentInteractive as any;
         if (
           !interactive.segmentSets?.length &&
           !interactive.segmentIds?.length
@@ -184,14 +184,36 @@ export class InteractiveItemsManager {
       this.worldFrontZ = this.worldFrontZ - length;
       spawned++;
     }
+
+    console.log(`📊 World filled: spawned ${spawned} segments, total items: ${this.items.length}`);
   }
 
   public spawnSegment(dt: number, speed: number, baseZ: number) {
     const segment = this.segmentQueue.getNext();
+
+    const MAX_ROWS = 8;
+    const originalLength = segment.pattern.length;
+    if (segment.pattern.length > MAX_ROWS) {
+        segment.pattern = segment.pattern.slice(0, MAX_ROWS);
+        console.log(`✂️ Сегмент ${segment.id}: ${originalLength} → ${segment.pattern.length} строк`);
+    };
+
     const isReversed = segment.canReversed ? Math.random() < 0.5 : false;
     const spawnRules = useLevelStore().getCurrentSpawnRules();
 
     const cfg = useCommonStore().config;
+
+    // 🔹 Ограничиваем длину сегмента
+    const MAX_SEGMENT_ROWS = 12; // 👈 Максимальное количество строк в сегменте
+    const originalPatternLength = segment.pattern.length;
+
+    // Если паттерн слишком длинный — обрезаем его
+    if (originalPatternLength > MAX_SEGMENT_ROWS) {
+      segment.pattern = segment.pattern.slice(0, MAX_SEGMENT_ROWS);
+      console.warn(
+        `✂️ Segment ${segment.id} обрезан с ${originalPatternLength} до ${MAX_SEGMENT_ROWS} строк`,
+      );
+    }
 
     const segmentRowLength = Math.max(
       cfg.segmentRowMinLength,
@@ -199,11 +221,13 @@ export class InteractiveItemsManager {
     );
 
     // Резолвим curve для этого сегмента
-    const curve = this.resolveSegmentCurve(
-      segment,
-      isReversed,
-      segmentRowLength,
-    );
+    // const curve = this.resolveSegmentCurve(
+    //   segment,
+    //   isReversed,
+    //   segmentRowLength,
+    // );
+
+    const curve = undefined;
 
     this.spawnElevatedSectionsForSegment(
       segment,
@@ -218,8 +242,6 @@ export class InteractiveItemsManager {
       segmentRowLength,
       curve,
     );
-
-    // console.log("segmentRowLength", segmentRowLength);
 
     segment.pattern.forEach((row, rowIndex) => {
       const z = baseZ - rowIndex * segmentRowLength;
