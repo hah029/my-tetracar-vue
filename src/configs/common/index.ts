@@ -22,7 +22,8 @@ export default {
   baseSegmentsZpos: -100,
   itemsRemovingZpos: 30,
   baseSegmentDifficultyStep: 100,
-  segmentRowMinLength: 8,
+//   segmentRowMinLength: 8,
+  segmentRowMinLength: 4,
 //   segmentRowTargetTravelMs: 140,
   segmentRowTargetTravelMs: 80,
 

@@ -186,27 +186,35 @@ export class RoadSegmentSurface {
   }
 
   private updateLoopRows(deltaTime: number, speed: number): void {
-    const move = deltaTime * speed;
-    const wrapDistance = this.rowCount * this.rowLength;
-    const intervals = this.loopOcclusionProvider?.() ?? [];
+    // дорога динамическая (пока отключаем)
+    // ------------------------------------
+    // const move = deltaTime * speed;
+    // const wrapDistance = this.rowCount * this.rowLength;
+    // const intervals = this.loopOcclusionProvider?.() ?? [];
 
+    // for (const row of this.surfaceMeshes) {
+    //   const { mesh, lane } = row;
+    //   mesh.position.z += move;
+
+    //   if (mesh.position.z > RoadSegmentSurface.SAFE_REMOVE_Z) {
+    //     mesh.position.z -= wrapDistance;
+    //   }
+
+    // //   mesh.visible = true;  // 👈 Всегда видим
+
+    //   mesh.visible = !this.overlapsAnyInterval(
+    //     mesh.position.z - this.rowLength / 2,
+    //     mesh.position.z + this.rowLength / 2,
+    //     lane,
+    //     intervals,
+    //   );
+    // }
+
+    // дорога статичная
+    // -------------------------------------
     for (const row of this.surfaceMeshes) {
-      const { mesh, lane } = row;
-      mesh.position.z += move;
-
-      if (mesh.position.z > RoadSegmentSurface.SAFE_REMOVE_Z) {
-        mesh.position.z -= wrapDistance;
-      }
-
-    //   mesh.visible = true;  // 👈 Всегда видим
-
-      mesh.visible = !this.overlapsAnyInterval(
-        mesh.position.z - this.rowLength / 2,
-        mesh.position.z + this.rowLength / 2,
-        lane,
-        intervals,
-      );
-    }
+        row.mesh.visible = true;
+    };
   }
 
   public getFrontZ(): number {

@@ -88,39 +88,84 @@ export class RoadManager {
     this.addSideObjects();
   }
 
-  private addIdleSegmentSurface(): void {
-    if (!this.road || !this.scene) return;
+//   private addIdleSegmentSurface(): void {
+//     if (!this.road || !this.scene) return;
 
-    const lanes = this.road.getLanePositions();
-    const laneWidth = this.road.width / lanes.length;
-    const rowLength = Math.max(
-      2,
-      useCommonStore().config.segmentRowMinLength / 4,
-    );
-    let rowCount = Math.ceil(this.config.length / rowLength);
+//     const lanes = this.road.getLanePositions();
+//     const laneWidth = this.road.width / lanes.length;
 
-    // ===== ОГРАНИЧЕНИЕ КОЛИЧЕСТВА РЯДОВ =====
-    const MAX_ROWS = 40;  // 👈 Было 400, стало 40
-    if (rowCount > MAX_ROWS) {
-        rowCount = MAX_ROWS;
-        console.log(`⚠️ Road idle rows ограничен до ${MAX_ROWS}`);
+//     const roadLength = this.config.length;
+//     const rowLength = Math.max(1, useCommonStore().config.segmentRowMinLength / 2);
+//     let rowCount = Math.ceil(roadLength / rowLength);
+
+//     // const rowLength = Math.max(
+//     //   2,
+//     //   useCommonStore().config.segmentRowMinLength / 4,
+//     // );
+//     // let rowCount = Math.ceil(this.config.length / rowLength);
+
+//     // ===== ОГРАНИЧЕНИЕ КОЛИЧЕСТВА РЯДОВ =====
+//     const MAX_ROWS = 100;  // 👈 Было 400, стало 40
+//     if (rowCount > MAX_ROWS) {
+//         rowCount = MAX_ROWS;
+//         console.log(`⚠️ Road idle rows ограничен до ${MAX_ROWS}`);
+//     }
+
+//     const startZ = -roadLength;  // 👈 Начинаем с -200, чтобы дорога была видна от начала
+
+//     this.idleSegmentSurface = new RoadSegmentSurface(
+//       this.scene,
+//       this.config,
+//       lanes,
+//       laneWidth,
+//       startZ,
+//     //   0,
+//       rowLength,
+//       rowCount,
+//       [],
+//       { loop: true },
+//     );
+
+//     // ===== ДОРОГА СТАТИЧНАЯ — ОТКЛЮЧАЕМ ОБНОВЛЕНИЕ =====
+//     // this.idleSegmentSurface.setLoopOcclusionProvider(() =>
+//     //   this.getGameplayRoadIntervals(),
+//     // );
+//   }
+
+    private addIdleSegmentSurface(): void {
+        if (!this.road || !this.scene) return;
+
+        // ===== СОЗДАЁМ ОДНУ БОЛЬШУЮ ДОРОГУ =====
+        const roadMesh = this.road;
+        
+        // Длина дороги (увеличиваем, чтобы покрыть весь экран)
+        const length = 800;
+        
+        // Создаём новую геометрию с нужной длиной
+        const geometry = new THREE.PlaneGeometry(roadMesh.width, length);
+        
+        // Клонируем материал правильно
+        let material: THREE.Material;
+        if (Array.isArray(roadMesh.material)) {
+            material = roadMesh.material[0].clone();
+        } else {
+            material = roadMesh.material.clone();
+        }
+        
+        // Создаём большой меш дороги
+        const bigRoad = new THREE.Mesh(geometry, material);
+        bigRoad.rotation.x = -Math.PI / 2;
+        bigRoad.position.set(0, 0.01, -100);
+        bigRoad.receiveShadow = true;
+        bigRoad.name = "BigRoad";
+        
+        // Добавляем в сцену
+        this.scene.add(bigRoad);
+        
+        // Сохраняем ссылку для возможного удаления
+        this.idleSegmentSurface = null;
+        // =======================================
     }
-
-    this.idleSegmentSurface = new RoadSegmentSurface(
-      this.scene,
-      this.config,
-      lanes,
-      laneWidth,
-      0,
-      rowLength,
-      rowCount,
-      [],
-      { loop: true },
-    );
-    this.idleSegmentSurface.setLoopOcclusionProvider(() =>
-      this.getGameplayRoadIntervals(),
-    );
-  }
 
   public spawnSegmentSurface(
     baseZ: number,
@@ -397,14 +442,16 @@ export class RoadManager {
 
     this.leftSideObjects?.update(deltaTime, speed);
     this.rightSideObjects?.update(deltaTime, speed);
-    for (let i = this.segmentSurfaces.length - 1; i >= 0; i--) {
-      const surface = this.segmentSurfaces[i];
-      if (!surface) continue;
-      if (surface.update(deltaTime, speed)) {
-        surface.dispose();
-        this.segmentSurfaces.splice(i, 1);
-      }
-    }
+
+    // for (let i = this.segmentSurfaces.length - 1; i >= 0; i--) {
+    //   const surface = this.segmentSurfaces[i];
+    //   if (!surface) continue;
+    //   if (surface.update(deltaTime, speed)) {
+    //     surface.dispose();
+    //     this.segmentSurfaces.splice(i, 1);
+    //   }
+    // }
+
     for (let i = this.elevatedSections.length - 1; i >= 0; i--) {
       const section = this.elevatedSections[i];
       if (!section) continue;
@@ -413,11 +460,15 @@ export class RoadManager {
         this.elevatedSections.splice(i, 1);
       }
     }
-    if (this.shouldDisableIdleSegmentSurface()) {
-      this.clearIdleSegmentSurface();
-    } else {
-      this.idleSegmentSurface?.update(deltaTime, speed);
-    }
+    // if (this.shouldDisableIdleSegmentSurface()) {
+    //   this.clearIdleSegmentSurface();
+    // } else {
+    //   this.idleSegmentSurface?.update(deltaTime, speed);
+    // }
+
+    // if (this.idleSegmentSurface) {
+    //     // Ничего не делаем — дорога статична
+    // }
 
     this.updateCurrentLane(this.carManager.getCar().getCurrentLane());
   }
@@ -433,6 +484,22 @@ export class RoadManager {
   }
 
   public clear(): void {
+    // Удаляем большую дорогу, если она есть
+    if (this.scene) {
+        const bigRoad = this.scene.getObjectByName("BigRoad");
+        if (bigRoad) {
+            this.scene.remove(bigRoad);
+            if (bigRoad instanceof THREE.Mesh) {
+                bigRoad.geometry.dispose();
+                if (Array.isArray(bigRoad.material)) {
+                    bigRoad.material.forEach(m => m.dispose());
+                } else {
+                    bigRoad.material.dispose();
+                }
+            }
+        }
+    }
+
     if (this.road) {
       this.scene?.remove(this.road);
       this.road = null;

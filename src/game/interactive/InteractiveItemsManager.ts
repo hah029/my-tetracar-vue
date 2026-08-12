@@ -188,7 +188,7 @@ export class InteractiveItemsManager {
     console.log(`📊 World filled: spawned ${spawned} segments, total items: ${this.items.length}`);
   }
 
-  public spawnSegment(dt: number, speed: number, baseZ: number) {
+public spawnSegment(dt: number, speed: number, baseZ: number) {
     const segment = this.segmentQueue.getNext();
 
     const MAX_ROWS = 8;
@@ -204,239 +204,171 @@ export class InteractiveItemsManager {
     const cfg = useCommonStore().config;
 
     // 🔹 Ограничиваем длину сегмента
-    const MAX_SEGMENT_ROWS = 12; // 👈 Максимальное количество строк в сегменте
+    const MAX_SEGMENT_ROWS = 12;
     const originalPatternLength = segment.pattern.length;
-
-    // Если паттерн слишком длинный — обрезаем его
     if (originalPatternLength > MAX_SEGMENT_ROWS) {
-      segment.pattern = segment.pattern.slice(0, MAX_SEGMENT_ROWS);
-      console.warn(
-        `✂️ Segment ${segment.id} обрезан с ${originalPatternLength} до ${MAX_SEGMENT_ROWS} строк`,
-      );
+        segment.pattern = segment.pattern.slice(0, MAX_SEGMENT_ROWS);
+        console.warn(
+            `✂️ Segment ${segment.id} обрезан с ${originalPatternLength} до ${MAX_SEGMENT_ROWS} строк`,
+        );
     }
 
     const segmentRowLength = Math.max(
-      cfg.segmentRowMinLength,
-      speed * cfg.segmentRowTargetTravelMs,
+        cfg.segmentRowMinLength,
+        speed * cfg.segmentRowTargetTravelMs,
     );
 
-    // Резолвим curve для этого сегмента
-    // const curve = this.resolveSegmentCurve(
-    //   segment,
-    //   isReversed,
-    //   segmentRowLength,
-    // );
-
+    // ===== ПОВОРОТЫ ОТКЛЮЧЕНЫ =====
+    // const curve = this.resolveSegmentCurve(segment, isReversed, segmentRowLength);
     const curve = undefined;
+    // ==============================
 
-    this.spawnElevatedSectionsForSegment(
-      segment,
-      isReversed,
-      baseZ,
-      segmentRowLength,
-    );
-    const routeAttachment = this.spawnRoadSurfaceForSegment(
-      segment,
-      isReversed,
-      baseZ,
-      segmentRowLength,
-      curve,
-    );
+    // ===== ВЕРТИКАЛЬНЫЕ СЕГМЕНТЫ ОТКЛЮЧЕНЫ =====
+    // this.spawnElevatedSectionsForSegment(segment, isReversed, baseZ, segmentRowLength);
+    // ==========================================
+
+    // ===== ИГРОВЫЕ СЕГМЕНТЫ ДОРОГИ ОТКЛЮЧЕНЫ =====
+    // const routeAttachment = this.spawnRoadSurfaceForSegment(
+    //     segment,
+    //     isReversed,
+    //     baseZ,
+    //     segmentRowLength,
+    //     curve,
+    // );
+    const routeAttachment = undefined;
+    // ============================================
 
     segment.pattern.forEach((row, rowIndex) => {
-      const z = baseZ - rowIndex * segmentRowLength;
-      const row_ = isReversed ? [...row].reverse() : row;
+        const z = baseZ - rowIndex * segmentRowLength;
+        const row_ = isReversed ? [...row].reverse() : row;
 
-      row_.forEach((rawValue, lane) => {
-        const value = resolveLanePatternBySpawnRules(rawValue, spawnRules);
+        row_.forEach((rawValue, lane) => {
+            const value = resolveLanePatternBySpawnRules(rawValue, spawnRules);
 
-        // Для curved-сегмента создаём CurvedItemState
-        // Геометрия плоская — вращение pivotGroup создаёт дугу
-        let curvedState: CurvedItemState | undefined;
-        let itemSpawnX: number | undefined;
-        let itemSpawnZ: number | undefined;
-        if (curve && routeAttachment) {
-          const laneX = RoadManager.getInstance().getLanePosition(lane);
-          const directionSign = curve.direction === "left" ? 1 : -1;
-          const rowAngle =
-            directionSign *
-            (rowIndex / segment.pattern.length) *
-            curve.totalAngleRad;
-          const radiusAtLane = laneX - curve.pivotX;
-          const localPx = radiusAtLane * Math.cos(rowAngle);
-          const localPz = -radiusAtLane * Math.sin(rowAngle);
+            // ===== ОТКЛЮЧАЕМ CURVED STATE (повороты) =====
+            // let curvedState: CurvedItemState | undefined;
+            // let itemSpawnX: number | undefined;
+            // let itemSpawnZ: number | undefined;
+            // if (curve && routeAttachment) {
+            //     // ... весь код с curvedState
+            // }
+            const curvedState = undefined;
+            const itemSpawnX = undefined;
+            const itemSpawnZ = undefined;
+            // ============================================
 
-          curvedState = {
-            pivotX: curve.pivotX,
-            localPx,
-            localPz,
-            localAngleRad: rowAngle,
-            totalAngleRad: curve.totalAngleRad,
-            direction: curve.direction,
-            rotateStartZ: curve.rotateStartZ,
-            rotateEndZ: curve.rotateEndZ,
-            radius: curve.radius,
-            motion: routeAttachment.motion,
-          };
-
-          // Начальная мировая позиция (при максимальном угле поворота)
-          const angleSign = curve.direction === "left" ? 1 : -1;
-          const spawnAngle = angleSign * routeAttachment.motion.angleRad;
-          const cos = Math.cos(spawnAngle);
-          const sin = Math.sin(spawnAngle);
-          itemSpawnX = curve.pivotX + localPx * cos + localPz * sin;
-          itemSpawnZ =
-            routeAttachment.motion.pivotZ + localPz * cos - localPx * sin;
-        } else if (routeAttachment) {
-          const motion = routeAttachment.motion;
-          const laneX = RoadManager.getInstance().getLanePosition(lane);
-          const directionSign = motion.direction === "left" ? 1 : -1;
-          const endAngle = directionSign * motion.totalAngleRad;
-          const relativeX = laneX - motion.pivotX;
-          const farX = relativeX * Math.cos(endAngle);
-          const farZ = -relativeX * Math.sin(endAngle);
-          const tangentX = -Math.sin(endAngle);
-          const tangentZ = -Math.cos(endAngle);
-          const distance =
-            routeAttachment.startDistance + rowIndex * segmentRowLength;
-          const localPx = farX + tangentX * distance;
-          const localPz = farZ + tangentZ * distance;
-
-          curvedState = {
-            pivotX: motion.pivotX,
-            localPx,
-            localPz,
-            localAngleRad: endAngle,
-            totalAngleRad: motion.totalAngleRad,
-            direction: motion.direction,
-            rotateStartZ: baseZ,
-            rotateEndZ: motion.pivotZ,
-            radius: motion.radius,
-            motion,
-          };
-
-          const spawnAngle = directionSign * motion.angleRad;
-          const cos = Math.cos(spawnAngle);
-          const sin = Math.sin(spawnAngle);
-          itemSpawnX = motion.pivotX + localPx * cos + localPz * sin;
-          itemSpawnZ =
-            motion.pivotZ + localPz * cos - localPx * sin;
-        }
-
-        switch (value) {
-          case LanePattern.Obstacle:
-            this.obstacleManager
-              .spawnStaticObstacle(lane, itemSpawnZ ?? z, 2)
-              ?.setCurvedItemState(curvedState);
-            break;
-          case LanePattern.Obstacle1:
-            this.obstacleManager
-              .spawnStaticObstacle(lane, itemSpawnZ ?? z, 0)
-              ?.setCurvedItemState(curvedState);
-            break;
-          case LanePattern.Obstacle2:
-            this.obstacleManager
-              .spawnStaticObstacle(lane, itemSpawnZ ?? z, 1)
-              ?.setCurvedItemState(curvedState);
-            break;
-          case LanePattern.Obstacle3:
-            this.obstacleManager
-              .spawnStaticObstacle(lane, itemSpawnZ ?? z, 2)
-              ?.setCurvedItemState(curvedState);
-            break;
-          case LanePattern.Jump:
-            this.spawnJump(lane, dt, speed, z);
-            break;
-          case LanePattern.JumpCoins:
-            if (
-              usePlayerStore().isNitroEnabled &&
-              usePlayerStore().nitroTimer < Math.abs(z / speed)
-            ) {
-              this.spawnJumpWithCoins(
-                lane,
-                dt,
-                speed / usePlayerStore().NITRO_MULTIPLIER,
-                z,
-              );
-              break;
+            switch (value) {
+                case LanePattern.Obstacle:
+                    this.obstacleManager
+                        .spawnStaticObstacle(lane, z, 2)
+                        ?.setCurvedItemState(curvedState);
+                    break;
+                case LanePattern.Obstacle1:
+                    this.obstacleManager
+                        .spawnStaticObstacle(lane, z, 0)
+                        ?.setCurvedItemState(curvedState);
+                    break;
+                case LanePattern.Obstacle2:
+                    this.obstacleManager
+                        .spawnStaticObstacle(lane, z, 1)
+                        ?.setCurvedItemState(curvedState);
+                    break;
+                case LanePattern.Obstacle3:
+                    this.obstacleManager
+                        .spawnStaticObstacle(lane, z, 2)
+                        ?.setCurvedItemState(curvedState);
+                    break;
+                case LanePattern.Jump:
+                    this.spawnJump(lane, dt, speed, z);
+                    break;
+                case LanePattern.JumpCoins:
+                    if (
+                        usePlayerStore().isNitroEnabled &&
+                        usePlayerStore().nitroTimer < Math.abs(z / speed)
+                    ) {
+                        this.spawnJumpWithCoins(
+                            lane,
+                            dt,
+                            speed / usePlayerStore().NITRO_MULTIPLIER,
+                            z,
+                        );
+                        break;
+                    }
+                    this.spawnJumpWithCoins(lane, dt, speed, z);
+                    break;
+                case LanePattern.Coin:
+                    // this.attachCurvedState(
+                    //     this.spawnSingleCoin(z, lane, itemSpawnX, spawnRules.coinTypes),
+                    //     curvedState,
+                    // );
+                    this.spawnSingleCoin(z, lane, undefined, spawnRules.coinTypes);
+                    break;
+                case LanePattern.Energon:
+                    // this.attachCurvedState(
+                    //     this.spawnEnergonCoin(z, lane, itemSpawnX),
+                    //     curvedState,
+                    // );
+                    this.spawnEnergonCoin(z, lane, undefined);
+                    break;
+                case LanePattern.CoinLine:
+                    // this.attachCurvedLineStates(
+                    //     this.spawnCoinLine(z, lane),
+                    //     curvedState,
+                    //     4,
+                    // );
+                    this.spawnCoinLine(z, lane);
+                    break;
+                case LanePattern.Booster:
+                    // this.attachCurvedState(
+                    //     this.spawnBooster(z, lane, itemSpawnX, spawnRules.boosterTypes.filter((type) => type !== "nitro")),
+                    //     curvedState,
+                    // );
+                    this.spawnBooster(z, lane, undefined, spawnRules.boosterTypes.filter((type) => type !== "nitro"));
+                    break;
+                case LanePattern.Nitro:
+                    // this.attachCurvedState(
+                    //     this.spawnNitroBooster(z, lane, itemSpawnX),
+                    //     curvedState,
+                    // );
+                    this.spawnNitroBooster(z, lane, undefined);
+                    break;
+                case LanePattern.Shield:
+                    // this.attachCurvedState(
+                    //     this.spawnShieldBooster(z, lane, itemSpawnX),
+                    //     curvedState,
+                    // );
+                    this.spawnShieldBooster(z, lane, undefined);
+                    break;
+                case LanePattern.Magnet:
+                    // this.attachCurvedState(
+                    //     this.spawnMagnetBooster(z, lane, itemSpawnX),
+                    //     curvedState,
+                    // );
+                    this.spawnMagnetBooster(z, lane, undefined);
+                    break;
+                case LanePattern.BulletItem:
+                    // this.attachCurvedState(
+                    //     this.spawnBulletItem(z, lane, itemSpawnX),
+                    //     curvedState,
+                    // );
+                    this.spawnBulletItem(z, lane, undefined);
+                    break;
+                case LanePattern.MovingObstacle:
+                    this.obstacleManager
+                        .spawnMovingObstacle(lane, z, 1, 0)
+                        ?.setCurvedItemState(curvedState);
+                    break;
+                case LanePattern.EnemyCar:
+                    this.obstacleManager
+                        .spawnEnemyCar(lane, z)
+                        ?.setCurvedItemState(curvedState);
+                    break;
             }
-            this.spawnJumpWithCoins(lane, dt, speed, z);
-            break;
-          case LanePattern.Coin:
-            this.attachCurvedState(
-              this.spawnSingleCoin(
-                itemSpawnZ ?? z,
-                lane,
-                itemSpawnX,
-                spawnRules.coinTypes,
-              ),
-              curvedState,
-            );
-            break;
-          case LanePattern.Energon:
-            this.attachCurvedState(
-              this.spawnEnergonCoin(itemSpawnZ ?? z, lane, itemSpawnX),
-              curvedState,
-            );
-            break;
-          case LanePattern.CoinLine:
-            this.attachCurvedLineStates(
-              this.spawnCoinLine(itemSpawnZ ?? z, lane),
-              curvedState,
-              4,
-            );
-            break;
-          case LanePattern.Booster:
-            this.attachCurvedState(
-              this.spawnBooster(
-                itemSpawnZ ?? z,
-                lane,
-                itemSpawnX,
-                spawnRules.boosterTypes.filter((type) => type !== "nitro"),
-              ),
-              curvedState,
-            );
-            break;
-          case LanePattern.Nitro:
-            this.attachCurvedState(
-              this.spawnNitroBooster(itemSpawnZ ?? z, lane, itemSpawnX),
-              curvedState,
-            );
-            break;
-          case LanePattern.Shield:
-            this.attachCurvedState(
-              this.spawnShieldBooster(itemSpawnZ ?? z, lane, itemSpawnX),
-              curvedState,
-            );
-            break;
-          case LanePattern.Magnet:
-            this.attachCurvedState(
-              this.spawnMagnetBooster(itemSpawnZ ?? z, lane, itemSpawnX),
-              curvedState,
-            );
-            break;
-          case LanePattern.BulletItem:
-            this.attachCurvedState(
-              this.spawnBulletItem(itemSpawnZ ?? z, lane, itemSpawnX),
-              curvedState,
-            );
-            break;
-          case LanePattern.MovingObstacle:
-            this.obstacleManager
-              .spawnMovingObstacle(lane, itemSpawnZ ?? z, 1, 0)
-              ?.setCurvedItemState(curvedState);
-            break;
-          case LanePattern.EnemyCar:
-            this.obstacleManager
-              .spawnEnemyCar(lane, itemSpawnZ ?? z)
-              ?.setCurvedItemState(curvedState);
-            break;
-        }
-      });
+        });
     });
 
     return segment.pattern.length * segmentRowLength;
-  }
+}
 
   private attachCurvedState(
     item: BaseItem | null | undefined,
@@ -744,28 +676,30 @@ export class InteractiveItemsManager {
     rowLength: number,
     curve?: RoadSegmentSurfaceCurve,
   ): RoadRouteAttachment | undefined {
-    const laneCount = useLevelStore().currentGameplay.laneCount;
-    const coverage = (segment.elevatedSections ?? []).map((section) => {
-      const rowStart = Math.max(0, Math.min(section.rowStart, section.rowEnd));
-      const rowEnd = Math.min(
-        segment.pattern.length,
-        Math.max(section.rowStart, section.rowEnd),
-      );
+    // const laneCount = useLevelStore().currentGameplay.laneCount;
+    // const coverage = (segment.elevatedSections ?? []).map((section) => {
+    //   const rowStart = Math.max(0, Math.min(section.rowStart, section.rowEnd));
+    //   const rowEnd = Math.min(
+    //     segment.pattern.length,
+    //     Math.max(section.rowStart, section.rowEnd),
+    //   );
 
-      return {
-        lanes: this.resolveElevatedLanes(section, isReversed, laneCount),
-        rowStart,
-        rowEnd,
-      };
-    });
+    //   return {
+    //     lanes: this.resolveElevatedLanes(section, isReversed, laneCount),
+    //     rowStart,
+    //     rowEnd,
+    //   };
+    // });
 
-    return RoadManager.getInstance().spawnSegmentSurface(
-      baseZ,
-      rowLength,
-      segment.pattern.length,
-      coverage,
-      curve,
-    );
+    // return RoadManager.getInstance().spawnSegmentSurface(
+    //   baseZ,
+    //   rowLength,
+    //   segment.pattern.length,
+    //   coverage,
+    //   curve,
+    // );
+
+    return undefined;  // 👈 Не создаём игровые сегменты
   }
 
   private resolveElevatedLanes(

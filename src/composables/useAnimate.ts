@@ -72,7 +72,10 @@ export function GameLoop(
     if (lastTime === 0) {
       lastTime = time;
       stats.begin();
-      composer.render();
+      // 👇 Рендерим только если не на паузе
+      if (gameState.currentState !== GameStates.Pause) {
+        composer.render();
+      }
       stats.end();
       return;
     }
@@ -83,7 +86,12 @@ export function GameLoop(
     stats.begin();
 
     const currentState = gameState.currentState;
-    if (currentState === GameStates.Pause) return;
+
+    // ===== НА ПАУЗЕ НЕ РЕНДЕРИМ =====
+    if (currentState === GameStates.Pause) {
+      stats.end();
+      return;  // 👈 Выходим без рендеринга
+    }
 
     if (
       currentState === GameStates.Play ||
@@ -212,6 +220,7 @@ export function GameLoop(
       game.updateCity(deltaTime, currentSpeed);
     }
 
+    // 👇 Рендерим только если игра не на паузе (хотя мы уже вышли на паузе)
     composer.render();
     stats.end();
   }
