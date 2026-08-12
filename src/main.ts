@@ -10,10 +10,7 @@ import { resolveAutoLanguage } from "./helpers/i18n";
 import { Platform } from "./sdk";
 import { loadAtlas } from "./assets/textures/TextureAtlas";
 
-// что выбрал пользователь
 const savedLang = localStorage.getItem("lang") || "auto";
-
-// итоговый язык
 let initialLang = savedLang === "auto" ? resolveAutoLanguage() : savedLang;
 
 let threeScene: THREE.Scene | null = null;
@@ -40,74 +37,17 @@ async function init() {
 
     if (savedLang === "auto") {
       initialLang = platform.getLocale();
-      if (initialLang !== "ru" && initialLang !== "en") initialLang = "en"; // fallback на для неподдерживаемых языков
+      if (initialLang !== "ru" && initialLang !== "en") initialLang = "en";
     }
 
-    // const playerIsAuthorized = await platform.isPlayerAuthorized();
-
-    // // пишем в лидерборд очки
-    // if (playerIsAuthorized) {
-    //   const score = await platform.getPlayerStatByKey("highScore");
-    //   console.log("подтянули очки", score);
-    //   // if (score) {
-    //   // }
-    //   await platform.setLeaderboardScore("debugLeaderboard1", score);
-    //   console.log("перезаписали очки");
-    // } else {
-    //   console.log("ты не авторизован, нельзя тебе в лидерборд");
-    // }
-
-    // запрос 10 записей топа лидерборда и 3 записей вокруг игрока
-    // const leaderboard = await platform.getLeaderboardEntries(
-    //   "debugLeaderboard1",
-    //   10,
-    //   true,
-    //   3,
-    // );
-    // console.log(
-    //   "leaderboard = " +
-    //     (leaderboard === null ? "null" : JSON.stringify(leaderboard)),
-    // );
-
-    // сохранение пользовательских данных (сюда можно только числовые)
-    // await platform.setPlayerStats({ mileage: 1234, score: 6789 });
-
-    // let playerStats = await platform.getPlayerStats(["mileage", "score"]);
-    // console.log(
-    //   "playerStats (выбранные ключи) = " +
-    //     (playerStats === null ? "null" : JSON.stringify(playerStats)),
-    // );
-
-    // playerStats = await platform.getPlayerStats(null);
-    // console.log(
-    //   "playerStats (все ключи) = " +
-    //     (playerStats === null ? "null" : JSON.stringify(playerStats)),
-    // );
-
-    // const playerData = await platform.getPlayerData();
-    // console.log(
-    //   "playerData = " +
-    //     (playerData === null ? "null" : JSON.stringify(playerData)),
-    // );
-
-    // const shopCatalog = await platform.getShopCatalog();
-    // console.log(
-    //   "shopCatalog = " +
-    //     (shopCatalog === null ? "null" : JSON.stringify(shopCatalog)),
-    // );
-
-    // дозавершаем зависшие покупки (обязательно делаем это при старте игры!)
     platform.consumePrevPurchases((purchase) => {
       console.log(
         "дозавершаем покупку, purchase = " +
           (purchase ? JSON.stringify(purchase) : "null"),
       );
-      // дозавершаем покупку, purchase = {"productID":"bulletPack1","purchaseToken":"0a240251-a16e-4b5a-8d73-d8bbf318bf2b"}
-      // здесь совершаем начисление товара purchase.productID игроку
     });
 
-    // показываем платформе, что игра готова к геймплею
-    platform.gameReady(); // правильно это запускать после загрузки и инициализации ассетов, но в игре мало ассетов, поэтому разница непринципиальна
+    platform.gameReady();
   }
 
   i18next.init({

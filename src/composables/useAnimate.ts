@@ -2,12 +2,10 @@
 import * as THREE from "three";
 import Stats from "three/examples/jsm/libs/stats.module.js";
 import { EffectComposer } from "three/examples/jsm/postprocessing/EffectComposer.js";
-// composables
 import { useGameState } from "@/store/gameState";
 import { usePlayerStore } from "@/store/playerStore";
 import { useProgressStore } from "@/store/progressStore";
 import { useGame } from "./useGame";
-// managers
 import { CameraSystem } from "@/game/camera/CameraSystem";
 import { DebugColliderVisualizer } from "@/helpers/debug/DebugColliderVisualizer";
 import { UpdateMode } from "@/game/core/UpdateMode";
@@ -22,7 +20,6 @@ import type { BaseItem } from "@/game/interactive/items/BaseItem";
 export function GameLoop(
   game: ReturnType<typeof useGame>,
   composer: EffectComposer,
-  // motionBlur: AfterimagePass,
   debugCollider?: DebugColliderVisualizer,
   setRGBShiftAmount?: any,
 ) {
@@ -30,12 +27,6 @@ export function GameLoop(
   const playerStore = usePlayerStore();
   const progressStore = useProgressStore();
 
-  let currentShiftAmount = 0;
-  const maxShift = 0.008; // максимум при полном нитро
-  const lerpSpeed = 500; // скорость изменения
-
-  // ----------------------------
-  // показываем / скрываем FPS-панель через Ctrl+Q
   const stats = new Stats();
   document.body.appendChild(stats.dom);
   let isDevPanelVisible = false;
@@ -53,7 +44,6 @@ export function GameLoop(
     }
   }
 
-  // --- Вспомогательные функции (без изменений) ---
   function updateDestruction(
     deltaTime: number,
     speed: number,
@@ -63,19 +53,17 @@ export function GameLoop(
     game.updateInteractiveItems(deltaTime, speed, UpdateMode.Destruction);
   }
 
-  // --- Основной цикл анимации ---
   let lastTime = 0;
   let rafId: number | null = null;
 
   function animate(time: number) {
     rafId = requestAnimationFrame(animate);
+
     if (lastTime === 0) {
       lastTime = time;
       stats.begin();
-      // 👇 Рендерим только если не на паузе
-      if (gameState.currentState !== GameStates.Pause) {
-        composer.render();
-      }
+      // 👇 ВОЗВРАЩАЕМ РЕНДЕР
+      if (composer) composer.render();
       stats.end();
       return;
     }
@@ -86,11 +74,9 @@ export function GameLoop(
     stats.begin();
 
     const currentState = gameState.currentState;
-
-    // ===== НА ПАУЗЕ НЕ РЕНДЕРИМ =====
     if (currentState === GameStates.Pause) {
       stats.end();
-      return;  // 👈 Выходим без рендеринга
+      return;
     }
 
     if (
@@ -150,17 +136,12 @@ export function GameLoop(
 
         BulletSystem.getInstance().update(deltaTime);
 
-        // обрабатываем коллизии машинки с игровыми предметами
         let obstacleCollision = game.checkObstaclesCollision(performance.now());
 
-        // если произошло столкновение с любым препятствием -> обрабатываем его
         if (obstacleCollision != null) {
-          // обработка Jump
           if (obstacleCollision.impactSubject instanceof Jump) {
             game.handleJumpCollision(deltaTime);
-            // обработка BaseObstacle
           } else if (obstacleCollision.impactSubject instanceof BaseObstacle) {
-            // handleBaseObstacleCollision возвращает флаг уничтожения машины
             if (
               game.handleBaseObstacleCollision(obstacleCollision, currentSpeed)
             )
@@ -180,7 +161,6 @@ export function GameLoop(
             game.removeItem(impactSubject);
             gameState.endGame();
           } else if (itemCollision.impactSubject instanceof CoinItem) {
-            // обработка Coin
             game.handleCoinCollision(itemCollision);
             game.removeItem(itemCollision.impactSubject as BaseItem);
           } else if (itemCollision.impactSubject instanceof BoosterItem) {
@@ -214,14 +194,13 @@ export function GameLoop(
 
       game.updateEffects();
     } else {
-      // Фоновые состояния: двигаем только дорогу и город
       const currentSpeed = playerStore.baseSpeed;
       game.updateRoad(deltaTime, currentSpeed);
       game.updateCity(deltaTime, currentSpeed);
     }
 
-    // 👇 Рендерим только если игра не на паузе (хотя мы уже вышли на паузе)
-    composer.render();
+    // 👇 ВОЗВРАЩАЕМ РЕНДЕР
+    if (composer) composer.render();
     stats.end();
   }
 

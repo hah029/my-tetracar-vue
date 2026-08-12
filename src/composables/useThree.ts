@@ -33,26 +33,22 @@ let fxaaPass: ShaderPass;
 let rgbShiftPass: ShaderPass;
 
 export function useThree(container: Ref<HTMLElement | null>) {
-  // Принудительный рендер одного кадра
   function forceRender() {
     if (composer && scene && camera) composer.render();
   }
 
-  // Применение всех графических настроек (эффекты, тени, освещение, пиксель-рейтинг)
   function applyGraphicsSettings() {
     if (!renderer || !container.value) return;
 
     const graphics = useGraphicsStore();
 
-    // 1. Пиксельное соотношение
     renderer.setPixelRatio(graphics.getPixelRatio());
 
-    // 2. Тени
     const shadowEnabled = graphics.shadowEnabled;
     renderer.shadowMap.enabled = shadowEnabled;
 
     if (shadowEnabled) {
-      const quality = graphics.shadowQuality; // 'low' | 'medium' | 'high'
+      const quality = graphics.shadowQuality;
       if (quality === "high") {
         renderer.shadowMap.type = THREE.PCFSoftShadowMap;
       } else if (quality === "medium") {
@@ -62,7 +58,6 @@ export function useThree(container: Ref<HTMLElement | null>) {
       }
     }
 
-    // 3. Синхронизация castShadow у источников света
     if (scene.userData.lights) {
       for (const key of Object.keys(scene.userData.lights)) {
         const light = scene.userData.lights[key];
@@ -72,17 +67,13 @@ export function useThree(container: Ref<HTMLElement | null>) {
       }
     }
 
-    // 4. Постобработка (включение/выключение проходов)
     const vfxOn = graphics.vfxEnabled;
     bloomPass.enabled = vfxOn && graphics.bloomEnabled;
     fxaaPass.enabled = vfxOn && graphics.fxaaEnabled;
     rgbShiftPass.enabled = vfxOn && graphics.rgbShiftEnabled;
     afterimagePass.enabled = vfxOn && graphics.afterimageEnabled;
 
-    // 5. Настройки визуала текущего уровня
     applyLevelVisualSettings();
-
-    // 6. Принудительная перерисовка
     forceRender();
   }
 
@@ -127,10 +118,8 @@ export function useThree(container: Ref<HTMLElement | null>) {
   function init() {
     if (!container.value) return;
 
-    // ---- Scene ----
     scene = new THREE.Scene();
 
-    // ---- Camera ----
     const aspect = container.value.clientWidth / container.value.clientHeight;
     camera = new THREE.PerspectiveCamera(
       useCameraStore().config.fov.min,
@@ -139,7 +128,6 @@ export function useThree(container: Ref<HTMLElement | null>) {
       10000000,
     );
 
-    // Отладочные оси
     if (useGameState().isDebug) {
       const axesHelper = new THREE.AxesHelper(
         useEnvironmentStore().config.axesSize,
@@ -147,7 +135,6 @@ export function useThree(container: Ref<HTMLElement | null>) {
       scene.add(axesHelper);
     }
 
-    // ---- Renderer ----
     renderer = new THREE.WebGLRenderer({
       antialias: false,
       alpha: false,
@@ -158,11 +145,9 @@ export function useThree(container: Ref<HTMLElement | null>) {
     renderer.toneMapping = THREE.ACESFilmicToneMapping;
     renderer.toneMappingExposure =
       useEnvironmentStore().currentRender.toneMappingExposure;
-    // Начальные значения (перезапишутся в applyGraphicsSettings)
     renderer.shadowMap.enabled = false;
     renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 
-    // ---- Постобработка ----
     bloomPass = new UnrealBloomPass(
       new THREE.Vector2(
         container.value.clientWidth,
@@ -181,9 +166,8 @@ export function useThree(container: Ref<HTMLElement | null>) {
       1 / container.value.clientHeight,
     );
 
-    // ---- RGBShiftPass ----
     rgbShiftPass = new ShaderPass(RGBShiftShader);
-    rgbShiftPass.uniforms.amount.value = 0; // начальная сила сдвига (маленькая)
+    rgbShiftPass.uniforms.amount.value = 0;
 
     const outputPass = new OutputPass();
 
@@ -195,13 +179,11 @@ export function useThree(container: Ref<HTMLElement | null>) {
     composer.addPass(rgbShiftPass);
     composer.addPass(outputPass);
 
-    // Применить начальные настройки из стора
     applyGraphicsSettings();
 
     container.value.appendChild(renderer.domElement);
     window.addEventListener("resize", onWindowResize);
 
-    // Наблюдаем за группой настроек
     watch(
       () => [
         useGraphicsStore().vfxEnabled,
@@ -237,11 +219,9 @@ export function useThree(container: Ref<HTMLElement | null>) {
     renderer.setSize(width, height);
     composer.setSize(width, height);
 
-    // Обновляем разрешение для FXAA
     if (fxaaPass) {
       fxaaPass.material.uniforms.resolution!.value.set(1 / width, 1 / height);
     }
-    // Для Bloom тоже нужно обновить размер
     if (bloomPass) {
       bloomPass.resolution.set(width, height);
     }
@@ -253,7 +233,6 @@ export function useThree(container: Ref<HTMLElement | null>) {
     });
   }
 
-  // ---- Cleanup ----
   function cleanup() {
     if (resizeFrameId) cancelAnimationFrame(resizeFrameId);
     window.removeEventListener("resize", onWindowResize);
@@ -264,7 +243,6 @@ export function useThree(container: Ref<HTMLElement | null>) {
   onMounted(init);
   onUnmounted(cleanup);
 
-  // ---- Геттеры ----
   function getScene(): THREE.Scene {
     return scene;
   }
