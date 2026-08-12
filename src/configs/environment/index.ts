@@ -1,4 +1,3 @@
-import textureUrl from "@/assets/textures/road_tile.svg";
 import { MODELS } from "@/assets/models";
 import { atlas } from "@/assets/textures/TextureAtlas";
 import { ATLAS_SPRITES } from "@/assets/textures/atlasSprites";
@@ -32,7 +31,8 @@ export default {
     yPosition: 0.0,
     gap: 0,
     edgeOffset: 0.3,
-    textureUrl,
+    atlas,
+    atlasSprite: ATLAS_SPRITES.roadTile,
   },
 
   // Дополнительные параметры для неоновой дороги

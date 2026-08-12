@@ -54,16 +54,18 @@ export class AtlasSprite {
 	}
 
 	applyToMaterial(material: THREE.Material): void {
-		if (material instanceof THREE.MeshStandardMaterial || 
-		    material instanceof THREE.MeshBasicMaterial) {
-			if (material.map) {
-				material.map = this.texture;
-				material.map.repeat.set(this.uvRect.w, this.uvRect.h);
-				material.map.offset.set(this.uvRect.u, this.uvRect.v);
-				material.map.needsUpdate = true;
-			}
-		}
-	}
+        if (material instanceof THREE.MeshStandardMaterial || 
+            material instanceof THREE.MeshBasicMaterial) {
+            if (material.map) {
+                if (material.map !== this.texture) {
+                    material.map = this.texture;
+                    material.map.repeat.set(this.uvRect.w, this.uvRect.h);
+                    material.map.offset.set(this.uvRect.u, this.uvRect.v);
+                    material.map.needsUpdate = true;
+                };
+            };
+        };
+    };
 }
 
 export class TextureAtlas {
@@ -108,6 +110,18 @@ export class TextureAtlas {
 
 		return this.isLoading;
 	}
+
+    private static sharedTexture: THREE.Texture | null = null;
+
+    getSharedTexture(): THREE.Texture | null {
+        if (TextureAtlas.sharedTexture) {
+            return TextureAtlas.sharedTexture;
+        }
+        if (!this.atlasTexture) return null;
+        TextureAtlas.sharedTexture = this.atlasTexture;
+        this.atlasTexture.needsUpdate = true;
+        return TextureAtlas.sharedTexture;
+    }
 
 	getSprite(filename: AtlasSpriteName): AtlasSprite | undefined {
 		return this.sprites.get(filename);

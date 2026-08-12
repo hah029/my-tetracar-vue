@@ -2,6 +2,7 @@ import * as THREE from "three";
 import { atlas } from "@/assets/textures/TextureAtlas";
 import type { AtlasSpriteName } from "@/assets/textures/atlasSprites";
 import { usePlayerStore } from "@/store/playerStore";
+import { MaterialPool } from "@/helpers/MaterialPool";
 
 export type CarVisualEffect = "nitro" | "shield" | "damage" | "default";
 
@@ -47,17 +48,20 @@ export class CarVisualState {
     });
   }
 
-  private createAtlasTexture(spriteName: AtlasSpriteName): THREE.Texture | null {
-    const atlasTexture = atlas.getAtlasTexture();
-    const sprite = atlas.getSprite(spriteName);
-    if (!atlasTexture || !sprite) return null;
+    private createAtlasTexture(spriteName: AtlasSpriteName): THREE.Texture | null {
+        const sprite = atlas.getSprite(spriteName);
+        if (!sprite) return null;
 
-    const texture = atlasTexture.clone();
-    texture.repeat.set(sprite.uvRect.w, sprite.uvRect.h);
-    texture.offset.set(sprite.uvRect.u, sprite.uvRect.v);
-    texture.needsUpdate = true;
-    return texture;
-  }
+        // Используем MaterialPool вместо клонирования текстуры
+        const material = MaterialPool.getMaterial({
+            type: 'atlas',
+            key: `car_${spriteName}`,
+            atlasSprite: spriteName,
+            transparent: true,
+        });
+
+        return material.map || null;
+    }
 
   startBlink(duration: number = this.playerStore.DEFAULT_BLINK_DURATION) {
     this.isBlinking = true;

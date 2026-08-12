@@ -4,6 +4,8 @@ import { atlas } from "@/assets/textures/TextureAtlas";
 import { ATLAS_SPRITES } from "@/assets/textures/atlasSprites";
 import { applyCubeSpriteUV } from "@/helpers/applyAtlasUV";
 import type { RoadSideObjectsConfig } from "./types";
+import { MaterialPool } from "@/helpers/MaterialPool";
+
 // /game/road/SideObjectsInstanced.ts
 // import { loadCubeModel } from "@/game/cube/loadCube";
 
@@ -68,13 +70,23 @@ export class SideObjectsInstanced {
     atlasTexture.colorSpace = THREE.SRGBColorSpace;
 
     // MATERIAL
-    const material = new THREE.MeshStandardMaterial({
-      map: atlasTexture,
-      color: this.config.color,
-      emissive: this.config.emissive ?? 0x000000,
-      emissiveIntensity: this.config.emissiveIntensity ?? 0,
-      transparent: (this.config.opacity ?? 1) < 1,
-      opacity: this.config.opacity ?? 1,
+    // const material = new THREE.MeshStandardMaterial({
+    //   map: atlasTexture,
+    //   color: this.config.color,
+    //   emissive: this.config.emissive ?? 0x000000,
+    //   emissiveIntensity: this.config.emissiveIntensity ?? 0,
+    //   transparent: (this.config.opacity ?? 1) < 1,
+    //   opacity: this.config.opacity ?? 1,
+    // });
+    const material = MaterialPool.getMaterial({
+        type: 'atlas',
+        key: `side_object_${this.config.color}`,
+        atlasSprite: ATLAS_SPRITES.cube.base,
+        color: this.config.color,
+        emissive: this.config.emissive ?? 0x000000,
+        emissiveIntensity: this.config.emissiveIntensity ?? 0,
+        transparent: (this.config.opacity ?? 1) < 1,
+        opacity: this.config.opacity ?? 1,
     });
 
     if (this.disposed) {

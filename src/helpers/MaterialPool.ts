@@ -59,37 +59,47 @@ class MaterialPoolClass {
 
   private createMaterial(config: MaterialConfig): THREE.Material {
     const material = new THREE.MeshStandardMaterial({
-      color: config.color ?? 0xffffff,
-      emissive: config.emissive ?? 0x000000,
-      emissiveIntensity: config.emissiveIntensity ?? 1,
-      transparent: config.transparent ?? false,
-      opacity: config.opacity ?? 1,
-      side: config.side ?? THREE.FrontSide,
+        color: config.color ?? 0xffffff,
+        emissive: config.emissive ?? 0x000000,
+        emissiveIntensity: config.emissiveIntensity ?? 1,
+        transparent: config.transparent ?? false,
+        opacity: config.opacity ?? 1,
+        side: config.side ?? THREE.FrontSide,
     });
 
-    // Настройка текстуры
     if (config.type === "standardWithMap" && config.textureUrl) {
-      const texture = loadTexture(config.textureUrl, config.textureOptions);
-      material.map = texture;
+        const texture = loadTexture(config.textureUrl, config.textureOptions);
+        material.map = texture;
     }
 
     if (config.type === "atlas" && config.atlasSprite) {
-      const atlasTexture = atlas.getAtlasTexture();
-      const sprite = atlas.getSprite(config.atlasSprite);
-
-      if (atlasTexture) {
-        material.map = atlasTexture.clone();
-        material.map.needsUpdate = true;
-
-        if (sprite) {
-          material.map.repeat.set(sprite.uvRect.w, sprite.uvRect.h);
-          material.map.offset.set(sprite.uvRect.u, sprite.uvRect.v);
+        const atlasTexture = atlas.getSharedTexture();
+        const sprite = atlas.getSprite(config.atlasSprite);
+    
+        if (atlasTexture && sprite) {
+            // Создаём новую текстуру с общим image
+            const texture = new THREE.Texture();
+            texture.image = atlasTexture.image;  // 👈 ОБЩИЙ image
+            texture.colorSpace = atlasTexture.colorSpace;
+            texture.flipY = atlasTexture.flipY;
+            texture.magFilter = atlasTexture.magFilter;
+            texture.minFilter = atlasTexture.minFilter;
+            texture.generateMipmaps = atlasTexture.generateMipmaps;
+            texture.wrapS = atlasTexture.wrapS;
+            texture.wrapT = atlasTexture.wrapT;
+            
+            // 👇 УНИКАЛЬНЫЕ НАСТРОЙКИ
+            texture.repeat.set(sprite.uvRect.w, sprite.uvRect.h);
+            texture.offset.set(sprite.uvRect.u, sprite.uvRect.v);
+            texture.needsUpdate = true;
+            
+            material.map = texture;
         }
-      }
     }
 
     return material;
-  }
+}
+
 
   // ========== НОВЫЕ МЕТОДЫ ДЛЯ МОНЕТ И БУСТЕРОВ ==========
 

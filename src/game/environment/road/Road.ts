@@ -2,6 +2,8 @@ import * as THREE from "three";
 import type { RoadConfig } from "./types";
 import { loadTexture } from "@/helpers/loaders";
 import { useEnvironmentStore } from "@/store/environmentStore";
+import type { AtlasSpriteName } from "@/assets/textures/atlasSprites";
+import { MaterialPool } from "@/helpers/MaterialPool";
 
 export class Road extends THREE.Mesh {
   public readonly lanes: number[];
@@ -22,36 +24,56 @@ export class Road extends THREE.Mesh {
     const geometry = new THREE.PlaneGeometry(width, tmpConfig.length!);
     let material: THREE.Material;
 
-    if (tmpConfig.textureUrl) {
-      const tileSize = 2;
-
-      // const texture = loadTexture(tmpConfig.textureUrl!);
-      // // Настраиваем повторение
-      // texture.wrapS = THREE.RepeatWrapping;
-      // texture.wrapT = THREE.RepeatWrapping;
-      // texture.repeat.set(width / tileSize, tmpConfig.length! / tileSize);
-
-      const texture = loadTexture(tmpConfig.textureUrl!, {
-        wrapS: THREE.RepeatWrapping,
-        wrapT: THREE.RepeatWrapping,
-        repeat: { x: width / tileSize, y: tmpConfig.length! / tileSize },
-      });
-
-      material = new THREE.MeshStandardMaterial({
-        map: texture,
-        transparent: true,
-        emissive: tmpConfig.emissive ?? 0xffffff,
-        emissiveIntensity: tmpConfig.emissiveIntensity ?? 1,
-        opacity: tmpConfig.opacity ?? 0.45,
-      });
-    } else {
-      material = new THREE.MeshStandardMaterial({
-        color: tmpConfig.color ?? 0xffffff,
-        emissive: tmpConfig.emissive ?? tmpConfig.color ?? 0xffffff,
-        emissiveIntensity: tmpConfig.emissiveIntensity ?? 0.8,
-        transparent: true,
-        opacity: tmpConfig.opacity ?? 0.2,
-      });
+    if (tmpConfig.atlas && tmpConfig.atlasSprite) {
+        const sprite = tmpConfig.atlas.getSprite(tmpConfig.atlasSprite as AtlasSpriteName);
+        const atlasTexture = tmpConfig.atlas.getAtlasTexture();
+        
+        if (sprite && atlasTexture) {
+            // 👇 КЛОНИРУЕМ ТЕКСТУРУ ДЛЯ НАСТРОЙКИ
+            const texture = atlasTexture.clone();
+            
+            // 👇 НАСТРАИВАЕМ UV ДЛЯ ОТОБРАЖЕНИЯ ТОЛЬКО SPRITE ROAD_TILE
+            // uvRect — это {u, v, w, h} где:
+            // u, v — позиция спрайта в атласе (в долях от 0 до 1)
+            // w, h — размер спрайта в атласе (в долях от 0 до 1)
+            const { u, v, w, h } = sprite.uvRect;
+            
+            // Показываем только область спрайта
+            texture.repeat.set(w, h);
+            texture.offset.set(u, v);
+            
+            // 👇 ПОВТОРЯЕМ ПО ДОРОГЕ
+            const tileSize = 2;
+            const tilesX = width / tileSize;
+            const tilesY = tmpConfig.length! / tileSize;
+            
+            // Умножаем repeat на количество тайлов
+            texture.repeat.set(
+                w * tilesX,
+                h * tilesY
+            );
+            
+            texture.wrapS = THREE.RepeatWrapping;
+            texture.wrapT = THREE.RepeatWrapping;
+            texture.needsUpdate = true;
+            
+            material = new THREE.MeshStandardMaterial({
+                map: texture,
+                transparent: true,
+                emissive: tmpConfig.emissive ?? 0xffffff,
+                emissiveIntensity: tmpConfig.emissiveIntensity ?? 1,
+                opacity: tmpConfig.opacity ?? 0.45,
+            });
+        } else {
+            // Fallback
+            material = new THREE.MeshStandardMaterial({
+                color: tmpConfig.color ?? 0xffffff,
+                emissive: tmpConfig.emissive ?? tmpConfig.color ?? 0xffffff,
+                emissiveIntensity: tmpConfig.emissiveIntensity ?? 0.8,
+                transparent: true,
+                opacity: tmpConfig.opacity ?? 0.2,
+            });
+        }
     }
 
     super(geometry, material);
@@ -63,34 +85,29 @@ export class Road extends THREE.Mesh {
     this.position.y = tmpConfig.yPosition!;
     this.castShadow = false;
     this.receiveShadow = true;
-    console.log(this);
   }
 
-  // получаем позицию полосы по индексу
   public getLanePosition(index: number): number {
     if (index < 0 || index >= this.lanes.length) {
       throw new Error(
         `Lane index ${index} out of range (0-${this.lanes.length - 1})`,
       );
     }
-
     const lane = this.lanes[index];
-    if (lane === undefined)
+    if (lane === undefined) {
       throw new Error(`Lane at index ${index} is undefined`);
+    }
     return lane;
   }
 
-  // получаем количество полос
   public getLanesCount(): number {
     return this.lanes.length;
   }
 
-  // получаем все позиции полос
   public getLanePositions(): number[] {
     return [...this.lanes];
   }
 
-  // получаем позиции границ дороги
   public getEdgePositions(): { left: number; right: number } {
     return useEnvironmentStore().getEdgePositions(this.lanes);
   }

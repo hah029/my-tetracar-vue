@@ -1,3 +1,5 @@
+import type { TextureAtlas } from "@/assets/textures/TextureAtlas";
+
 // Общие типы и интерфейсы
 export interface RoadLineConfig {
   x: number;
@@ -32,6 +34,8 @@ export interface RoadConfig {
   gap?: number;
   edgeOffset?: number;
   textureUrl?: string;
+  atlas?: TextureAtlas;
+  atlasSprite?: string;
   sideObjects?: RoadSideObjectsConfig;
   elevatedSections?: RoadElevatedSectionConfig[];
   segmentSurfaces?: boolean;
