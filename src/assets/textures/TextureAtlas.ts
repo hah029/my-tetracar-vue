@@ -1,8 +1,7 @@
 import * as THREE from "three";
-import {
-	REQUIRED_ATLAS_SPRITES,
-	type AtlasSpriteName,
-} from "@/assets/textures/atlasSprites";
+import atlasJsonUrl from "./atlas/tetrocar_atlas.json?url";
+import atlasPngUrl from "./atlas/tetrocar_atlas.png";
+import { REQUIRED_ATLAS_SPRITES, type AtlasSpriteName } from "@/assets/textures/atlasSprites";
 
 interface TexturePackerFrame {
 	filename: string;
@@ -11,7 +10,7 @@ interface TexturePackerFrame {
 	trimmed: boolean;
 	spriteSourceSize: { x: number; y: number; w: number; h: number };
 	sourceSize: { w: number; h: number };
-}
+};
 
 interface TexturePackerMeta {
 	app: string;
@@ -20,12 +19,12 @@ interface TexturePackerMeta {
 	format: string;
 	size: { w: number; h: number };
 	scale: string;
-}
+};
 
 interface TexturePackerData {
 	frames: TexturePackerFrame[];
 	meta: TexturePackerMeta;
-}
+};
 
 export class AtlasSprite {
 	public texture: THREE.Texture;
@@ -51,22 +50,19 @@ export class AtlasSprite {
 
 		this.width = frame.sourceSize.w;
 		this.height = frame.sourceSize.h;
-	}
+	};
 
 	applyToMaterial(material: THREE.Material): void {
         if (material instanceof THREE.MeshStandardMaterial || 
             material instanceof THREE.MeshBasicMaterial) {
             if (material.map) {
-                if (material.map !== this.texture) {
-                    material.map = this.texture;
-                    material.map.repeat.set(this.uvRect.w, this.uvRect.h);
-                    material.map.offset.set(this.uvRect.u, this.uvRect.v);
-                    material.map.needsUpdate = true;
-                };
+                material.map.repeat.set(this.uvRect.w, this.uvRect.h);
+                material.map.offset.set(this.uvRect.u, this.uvRect.v);
+                material.map.needsUpdate = true;
             };
         };
     };
-}
+};
 
 export class TextureAtlas {
 	private data: TexturePackerData | null = null;
@@ -150,7 +146,9 @@ export class TextureAtlas {
 			);
 		}
 	}
-}
+};
+
+export const atlas = new TextureAtlas(atlasJsonUrl, atlasPngUrl);
 
 export function applyAtlasUV(
 	geometry: THREE.BufferGeometry,
@@ -171,13 +169,8 @@ export function applyAtlasUV(
 
 	uv.needsUpdate = true;
 	return cloned;
-}
-
-import atlasJsonUrl from "./atlas/tetrocar_atlas_test.json?url";
-import atlasPngUrl from "./atlas/tetrocar_atlas_test.png";
-
-export const atlas = new TextureAtlas(atlasJsonUrl, atlasPngUrl);
+};
 
 export async function loadAtlas() {
 	await atlas.load();
-}
+};

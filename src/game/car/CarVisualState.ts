@@ -60,7 +60,9 @@ export class CarVisualState {
             transparent: true,
         });
 
-        return material.map || null;
+        // Приводим к MeshStandardMaterial
+        const meshMaterial = material as THREE.MeshStandardMaterial;
+        return meshMaterial.map || null;
     }
 
   startBlink(duration: number = this.playerStore.DEFAULT_BLINK_DURATION) {

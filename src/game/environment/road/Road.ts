@@ -3,7 +3,6 @@ import type { RoadConfig } from "./types";
 import { loadTexture } from "@/helpers/loaders";
 import { useEnvironmentStore } from "@/store/environmentStore";
 import type { AtlasSpriteName } from "@/assets/textures/atlasSprites";
-import { MaterialPool } from "@/helpers/MaterialPool";
 
 export class Road extends THREE.Mesh {
   public readonly lanes: number[];
@@ -22,58 +21,57 @@ export class Road extends THREE.Mesh {
 
     const width = useEnvironmentStore().calculateRoadWidth(tmpConfig.lanes);
     const geometry = new THREE.PlaneGeometry(width, tmpConfig.length!);
-    let material: THREE.Material;
+    
+    let material: THREE.Material = new THREE.MeshStandardMaterial({
+      color: tmpConfig.color ?? 0xffffff,
+      emissive: tmpConfig.emissive ?? tmpConfig.color ?? 0xffffff,
+      emissiveIntensity: tmpConfig.emissiveIntensity ?? 0.8,
+      transparent: true,
+      opacity: tmpConfig.opacity ?? 0.2,
+    });
 
     if (tmpConfig.atlas && tmpConfig.atlasSprite) {
-        const sprite = tmpConfig.atlas.getSprite(tmpConfig.atlasSprite as AtlasSpriteName);
-        const atlasTexture = tmpConfig.atlas.getAtlasTexture();
+      const sprite = tmpConfig.atlas.getSprite(tmpConfig.atlasSprite as AtlasSpriteName);
+      const atlasTexture = tmpConfig.atlas.getAtlasTexture();
+      
+      if (sprite && atlasTexture) {
+        // Вырезаем спрайт из атласа через canvas
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d');
         
-        if (sprite && atlasTexture) {
-            // 👇 КЛОНИРУЕМ ТЕКСТУРУ ДЛЯ НАСТРОЙКИ
-            const texture = atlasTexture.clone();
-            
-            // 👇 НАСТРАИВАЕМ UV ДЛЯ ОТОБРАЖЕНИЯ ТОЛЬКО SPRITE ROAD_TILE
-            // uvRect — это {u, v, w, h} где:
-            // u, v — позиция спрайта в атласе (в долях от 0 до 1)
-            // w, h — размер спрайта в атласе (в долях от 0 до 1)
-            const { u, v, w, h } = sprite.uvRect;
-            
-            // Показываем только область спрайта
-            texture.repeat.set(w, h);
-            texture.offset.set(u, v);
-            
-            // 👇 ПОВТОРЯЕМ ПО ДОРОГЕ
-            const tileSize = 2;
-            const tilesX = width / tileSize;
-            const tilesY = tmpConfig.length! / tileSize;
-            
-            // Умножаем repeat на количество тайлов
-            texture.repeat.set(
-                w * tilesX,
-                h * tilesY
-            );
-            
-            texture.wrapS = THREE.RepeatWrapping;
-            texture.wrapT = THREE.RepeatWrapping;
-            texture.needsUpdate = true;
-            
-            material = new THREE.MeshStandardMaterial({
-                map: texture,
-                transparent: true,
-                emissive: tmpConfig.emissive ?? 0xffffff,
-                emissiveIntensity: tmpConfig.emissiveIntensity ?? 1,
-                opacity: tmpConfig.opacity ?? 0.45,
-            });
-        } else {
-            // Fallback
-            material = new THREE.MeshStandardMaterial({
-                color: tmpConfig.color ?? 0xffffff,
-                emissive: tmpConfig.emissive ?? tmpConfig.color ?? 0xffffff,
-                emissiveIntensity: tmpConfig.emissiveIntensity ?? 0.8,
-                transparent: true,
-                opacity: tmpConfig.opacity ?? 0.2,
-            });
+        if (ctx) {
+          const img = atlasTexture.image as HTMLImageElement;
+          const frame = sprite.frame.frame;
+          
+          canvas.width = frame.w;
+          canvas.height = frame.h;
+          
+          ctx.drawImage(
+            img,
+            frame.x, frame.y, frame.w, frame.h,
+            0, 0, frame.w, frame.h
+          );
+          
+          const texture = new THREE.CanvasTexture(canvas);
+          texture.wrapS = THREE.RepeatWrapping;
+          texture.wrapT = THREE.RepeatWrapping;
+          
+          const tileSize = 2;
+          texture.repeat.set(
+            width / tileSize,
+            tmpConfig.length! / tileSize
+          );
+          texture.needsUpdate = true;
+          
+          material = new THREE.MeshStandardMaterial({
+            map: texture,
+            transparent: true,
+            emissive: tmpConfig.emissive ?? 0xffffff,
+            emissiveIntensity: tmpConfig.emissiveIntensity ?? 1,
+            opacity: tmpConfig.opacity ?? 0.45,
+          });
         }
+      }
     }
 
     super(geometry, material);

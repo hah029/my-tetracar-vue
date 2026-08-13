@@ -1,4 +1,3 @@
-import { TEXTURES } from "@/assets/textures";
 import { ATLAS_SPRITES } from "@/assets/textures/atlasSprites";
 import { MODELS } from "@/assets/models";
 import type { GeometryConfig, MaterialConfig } from "@/game/cube/types";
@@ -67,12 +66,14 @@ export default {
   defaultBlinkDuration: 1,
   defaultBlinkSpeed: 10,
 
-  // материалы машины
+  // 👇 ИСПРАВЛЕНО: используем атлас вместо TEXTURES
+  // материалы машины — теперь через атлас
   carMaterialConfig: {
-    textureUrl: TEXTURES.cube.base,
+    atlas: null as any, // будет заменён при инициализации
+    atlasSprite: ATLAS_SPRITES.cube.base,
   } as MaterialConfig,
 
-  // маппинг текстур на состояния
+  // маппинг текстур на состояния (уже использует атлас)
   carMaterialConfigExtra: {
     default: ATLAS_SPRITES.cube.base,
     nitro: ATLAS_SPRITES.cube.nitro,
@@ -110,7 +111,7 @@ export default {
     xzScaling,
   ],
 
-  // генератор кубов машины — принимает вычисленные COLS, ROWS, HEIGHT, GLB_SCALES
+  // генератор кубов машины
   getCarCubesConfig: (
     cols: [number, number, number],
     rows: [number, number, number, number],
