@@ -185,7 +185,7 @@ export class InteractiveItemsManager {
       spawned++;
     }
 
-    console.log(`📊 World filled: spawned ${spawned} segments, total items: ${this.items.length}`);
+    // console.log(`📊 World filled: spawned ${spawned} segments, total items: ${this.items.length}`);
   }
 
 public spawnSegment(dt: number, speed: number, baseZ: number) {

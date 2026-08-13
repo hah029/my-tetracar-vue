@@ -378,25 +378,25 @@ export class Car extends THREE.Group {
 
     this.physics.reset();
 
-    console.log(
-      "[DEBUG Car.reset] before build, isShieldEnabled=%s, armor=%s",
-      usePlayerStore().isShieldEnabled,
-      usePlayerStore().armor,
-    );
+    // console.log(
+    //   "[DEBUG Car.reset] before build, isShieldEnabled=%s, armor=%s",
+    //   usePlayerStore().isShieldEnabled,
+    //   usePlayerStore().armor,
+    // );
 
     // Перестраиваем машину
     this.build(useGLB).then(() => {
-      console.log("[DEBUG Car.reset] build completed");
+    //   console.log("[DEBUG Car.reset] build completed");
       if (useGameState().isDebug) this.collider.enableDebug(this.scene);
       // Восстанавливаем визуальные эффекты после перестройки
       const player = usePlayerStore();
-      console.log(
-        "[DEBUG Car.reset] after build, isShieldEnabled=%s, armor=%s",
-        player.isShieldEnabled,
-        player.armor,
-      );
+    //   console.log(
+    //     "[DEBUG Car.reset] after build, isShieldEnabled=%s, armor=%s",
+    //     player.isShieldEnabled,
+    //     player.armor,
+    //   );
       if (player.isShieldEnabled && player.armor > 0) {
-        console.log("[DEBUG Car.reset] calling enableShield");
+        // console.log("[DEBUG Car.reset] calling enableShield");
         this.enableShield();
       }
     });

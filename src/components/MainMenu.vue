@@ -79,14 +79,14 @@
     );
 
     onMounted(async () => {
-        console.log("🟢 MainMenu.onMounted: calling restoreProgress");
+        // console.log("🟢 MainMenu.onMounted: calling restoreProgress");
         setTimeout(() => {
             isMainMenuEnabled.value = true;
         }, 400);
 
         try {
             await progressStore.restoreProgress();
-            console.log("🟢 MainMenu.onMounted: restoreProgress completed");
+            // console.log("🟢 MainMenu.onMounted: restoreProgress completed");
         } catch (err) {
             console.log("🔴 MainMenu.onMounted: restoreProgress error", err);
         }

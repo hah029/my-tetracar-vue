@@ -287,7 +287,6 @@
 
     // Инициализация
     const initDebug = (): void => {
-        console.log('🔍 DebugPanel: Looking for __THREE_DEBUG__...');
         const threeDebug = (window as any).__THREE_DEBUG__;
         console.log('🔍 DebugPanel: threeDebug =', threeDebug);
         
@@ -321,7 +320,6 @@
 
     // Lifecycle hooks
     onMounted(() => {
-        console.log('🟢 DebugPanel component mounted');
         window.addEventListener('keydown', handleKeydown);
         initDebug();
         

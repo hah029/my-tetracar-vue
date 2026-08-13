@@ -7,15 +7,15 @@ export class Platform {
   private static instance: IGamePlatform | null = null;
 
   static getInstance(): IGamePlatform {
-    console.log(
-      "🔵 Platform.getInstance() called, typeof YaGames =",
-      typeof YaGames,
-    );
+    // console.log(
+    //   "🔵 Platform.getInstance() called, typeof YaGames =",
+    //   typeof YaGames,
+    // );
     if (Platform.instance !== null) {
-      console.log(
-        "🔵 Platform.getInstance() returning cached instance:",
-        Platform.instance.constructor.name,
-      );
+    //   console.log(
+    //     "🔵 Platform.getInstance() returning cached instance:",
+    //     Platform.instance.constructor.name,
+    //   );
       return Platform.instance;
     }
 
@@ -23,14 +23,14 @@ export class Platform {
 
     // Определяем платформу по наличию глобальных объектов
     if (typeof YaGames !== "undefined") {
-      console.log(
-        "🔵 Platform.getInstance() YaGames FOUND, creating YandexPlatform",
-      );
+    //   console.log(
+    //     "🔵 Platform.getInstance() YaGames FOUND, creating YandexPlatform",
+    //   );
       instance = new YandexPlatform();
     } else {
-      console.log(
-        "🔵 Platform.getInstance() YaGames NOT FOUND, will use LocalStoragePlatform",
-      );
+    //   console.log(
+    //     "🔵 Platform.getInstance() YaGames NOT FOUND, will use LocalStoragePlatform",
+    //   );
     }
 
     // Здесь будут условия для VK, CrazyGames и других
@@ -43,17 +43,17 @@ export class Platform {
     //     instance = new LocalStoragePlatform();
     // };
     if (instance === null) {
-      console.log("🔵 Platform.getInstance() creating LocalStoragePlatform");
+    //   console.log("🔵 Platform.getInstance() creating LocalStoragePlatform");
       instance = new LocalStoragePlatform();
     }
 
     // console.log("Platform not supported!");
 
     Platform.instance = instance;
-    console.log(
-      "🔵 Platform.getInstance() returning new instance:",
-      instance.constructor.name,
-    );
+    // console.log(
+    //   "🔵 Platform.getInstance() returning new instance:",
+    //   instance.constructor.name,
+    // );
     return instance;
   }
 }
