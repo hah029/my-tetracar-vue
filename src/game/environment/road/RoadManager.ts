@@ -10,12 +10,12 @@ import { RoadEdge } from "./edges";
 import { SideObjectsInstanced } from "./SideObjectsInstanced";
 import { RoadElevatedSection } from "./RoadElevatedSection";
 import {
-  RoadSegmentSurface,
-  type RoadSegmentSurfaceCoverage,
-  type RoadSegmentSurfaceCurve,
-  type RoadSegmentSurfaceInterval,
-  type RoadCurveMotion,
-  type RoadRouteAttachment,
+    RoadSegmentSurface,
+    type RoadSegmentSurfaceCoverage,
+    type RoadSegmentSurfaceCurve,
+    type RoadSegmentSurfaceInterval,
+    type RoadCurveMotion,
+    type RoadRouteAttachment,
 } from "./RoadSegmentSurface";
 import { useCommonStore } from "@/store/commonStore";
 import { useEnvironmentStore } from "@/store/environmentStore";
@@ -24,69 +24,68 @@ import { CarManager } from "@/game/car";
 const IDLE_SURFACE_DISABLE_PADDING = 6;
 
 export class RoadManager {
-  private static instance: RoadManager | null = null;
-  private road: Road | null = null;
-  private roadLines: RoadLine[] = [];
-  private roadLanes: RoadLane[] = [];
-  private speedLines: SpeedLine[] = [];
-  private edges: THREE.Mesh[] = [];
-  private elevatedSections: RoadElevatedSection[] = [];
-  private segmentSurfaces: RoadSegmentSurface[] = [];
-  private activeRoute:
-    | { motion: RoadCurveMotion; tailDistance: number }
-    | null = null;
-  private idleSegmentSurface: RoadSegmentSurface | null = null;
-  private leftSideObjects: SideObjectsInstanced | null = null;
-  private rightSideObjects: SideObjectsInstanced | null = null;
-  private carManager = CarManager.getInstance();
+    private static instance: RoadManager | null = null;
+    private road: Road | null = null;
+    private roadLines: RoadLine[] = [];
+    private roadLanes: RoadLane[] = [];
+    private speedLines: SpeedLine[] = [];
+    private edges: THREE.Mesh[] = [];
+    private elevatedSections: RoadElevatedSection[] = [];
+    private segmentSurfaces: RoadSegmentSurface[] = [];
+    private activeRoute:
+        | { motion: RoadCurveMotion; tailDistance: number }
+        | null = null;
+    private idleSegmentSurface: RoadSegmentSurface | null = null;
+    private leftSideObjects: SideObjectsInstanced | null = null;
+    private rightSideObjects: SideObjectsInstanced | null = null;
+    private carManager = CarManager.getInstance();
+    private config!: RoadConfig;
+    private scene: THREE.Scene | null = null;
 
-  private config!: RoadConfig;
-  private scene: THREE.Scene | null = null;
+    public initialize(config: RoadConfig, scene: THREE.Scene) {
+        this.config = { ...useEnvironmentStore().neonRoadConfig, ...config };
+        this.scene = scene;
+    };
 
-  public initialize(config: RoadConfig, scene: THREE.Scene) {
-    this.config = { ...useEnvironmentStore().neonRoadConfig, ...config };
-    this.scene = scene;
-  }
+    public static isInitialized(): boolean {
+        return RoadManager.instance !== null;
+    };
 
-  public static isInitialized(): boolean {
-    return RoadManager.instance !== null;
-  }
+    public static getInstance(): RoadManager {
+        if (!RoadManager.instance) {
+        RoadManager.instance = new RoadManager();
+        }
+        return RoadManager.instance;
+    };
 
-  public static getInstance(): RoadManager {
-    if (!RoadManager.instance) {
-      RoadManager.instance = new RoadManager();
-    }
-    return RoadManager.instance;
-  }
+    public hasActiveRouteTransform(): boolean {
+        return this.activeRoute !== null && !this.activeRoute.motion.completed;
+    };
 
-  public hasActiveRouteTransform(): boolean {
-    return this.activeRoute !== null && !this.activeRoute.motion.completed;
-  }
+    public createRoad(): void {
+        if (!this.scene) return;
 
-  public createRoad(): void {
-    if (!this.scene) return;
+        this.clear();
+        this.createStandardRoad();
+    };
 
-    this.clear();
-    this.createStandardRoad();
-  }
+    private createStandardRoad(): void {
+        this.road = new Road(this.config);
+        if (!this.scene) return;
 
-  private createStandardRoad(): void {
-    this.road = new Road(this.config);
-    if (!this.scene) return;
-
-    if (!this.config.segmentSurfaces) {
-      this.scene.add(this.road);
-    }
-    this.addEdges();
-    if (!this.config.segmentSurfaces) {
-      this.addRoadLines();
-      this.addRoadLanes();
-    } else {
-      this.addIdleSegmentSurface();
-    }
-    this.addElevatedSections();
-    this.addSideObjects();
-  }
+        if (!this.config.segmentSurfaces) {
+        this.scene.add(this.road);
+        }
+        this.addEdges();
+        if (!this.config.segmentSurfaces) {
+        this.addRoadLines();
+        this.addRoadLanes();
+        } else {
+        this.addIdleSegmentSurface();
+        }
+        this.addElevatedSections();
+        this.addSideObjects();
+    };
 
 //   private addIdleSegmentSurface(): void {
 //     if (!this.road || !this.scene) return;
@@ -130,7 +129,7 @@ export class RoadManager {
 //     // this.idleSegmentSurface.setLoopOcclusionProvider(() =>
 //     //   this.getGameplayRoadIntervals(),
 //     // );
-//   }
+//   };
 
     private addIdleSegmentSurface(): void {
         if (!this.road || !this.scene) return;
@@ -165,504 +164,505 @@ export class RoadManager {
         // Сохраняем ссылку для возможного удаления
         this.idleSegmentSurface = null;
         // =======================================
-    }
-
-  public spawnSegmentSurface(
-    baseZ: number,
-    rowLength: number,
-    rowCount: number,
-    coverage: RoadSegmentSurfaceCoverage[] = [],
-    curve?: RoadSegmentSurfaceCurve,
-  ): RoadRouteAttachment | undefined {
-    const MAX_ROWS_PER_SEGMENT = 30;  // 👈 Максимум 30 рядов на сегмент
-    if (rowCount > MAX_ROWS_PER_SEGMENT) {
-        rowCount = MAX_ROWS_PER_SEGMENT;
-    }
-    if (!this.road || !this.scene || !this.config.segmentSurfaces) return;
-
-    const lanes = this.road.getLanePositions();
-    const laneWidth = this.road.width / lanes.length;
-
-    // let motion: RoadCurveMotion | undefined;
-    let routeAttachment: RoadRouteAttachment | undefined;
-
-    if (this.activeRoute) {
-        this.activeRoute = null;
     };
 
-    // if (curve) {
-    //   motion = {
-    //     direction: curve.direction,
-    //     pivotX: curve.pivotX,
-    //     pivotZ: baseZ,
-    //     // До прохождения ближнего конца мимо игрока дуга движется как обычный
-    //     // сегмент с нулевым углом. Ранний старт на rotateStartZ разрывает стык
-    //     // с предыдущей прямой почти сразу после спавна.
-    //     turnStartZ: curve.rotateEndZ,
-    //     radius: curve.radius,
-    //     totalAngleRad: curve.totalAngleRad,
-    //     angleRad: 0,
-    //     phase: "approach",
-    //     completed: false,
-    //   };
-    //   this.activeRoute = { motion, tailDistance: 0 };
-    //   routeAttachment = { motion, startDistance: 0 };
-    // } else if (this.activeRoute && !this.activeRoute.motion.completed) {
-    //   routeAttachment = {
-    //     motion: this.activeRoute.motion,
-    //     startDistance: this.activeRoute.tailDistance,
-    //   };
-    //   this.activeRoute.tailDistance += rowCount * rowLength;
-    // }
+    public spawnSegmentSurface(
+        baseZ: number,
+        rowLength: number,
+        rowCount: number,
+        coverage: RoadSegmentSurfaceCoverage[] = [],
+        curve?: RoadSegmentSurfaceCurve,
+    ): RoadRouteAttachment | undefined {
+        const MAX_ROWS_PER_SEGMENT = 30;  // 👈 Максимум 30 рядов на сегмент
+        if (rowCount > MAX_ROWS_PER_SEGMENT) {
+            rowCount = MAX_ROWS_PER_SEGMENT;
+        }
+        if (!this.road || !this.scene || !this.config.segmentSurfaces) return;
 
-    this.segmentSurfaces.push(
-      new RoadSegmentSurface(
-        this.scene,
-        this.config,
-        lanes,
-        laneWidth,
-        baseZ,
-        rowLength,
-        rowCount,
-        coverage,
-        // { curve, motion, routeAttachment: curve ? undefined : routeAttachment },
-      ),
-    );
+        const lanes = this.road.getLanePositions();
+        const laneWidth = this.road.width / lanes.length;
 
-    return routeAttachment;
-  }
+        // let motion: RoadCurveMotion | undefined;
+        let routeAttachment: RoadRouteAttachment | undefined;
 
-  private addElevatedSections(): void {
-    if (!this.road || !this.scene) return;
+        if (this.activeRoute) {
+            this.activeRoute = null;
+        };
 
-    const sections = this.config.elevatedSections ?? [];
-    if (sections.length === 0) return;
+        // if (curve) {
+        //   motion = {
+        //     direction: curve.direction,
+        //     pivotX: curve.pivotX,
+        //     pivotZ: baseZ,
+        //     // До прохождения ближнего конца мимо игрока дуга движется как обычный
+        //     // сегмент с нулевым углом. Ранний старт на rotateStartZ разрывает стык
+        //     // с предыдущей прямой почти сразу после спавна.
+        //     turnStartZ: curve.rotateEndZ,
+        //     radius: curve.radius,
+        //     totalAngleRad: curve.totalAngleRad,
+        //     angleRad: 0,
+        //     phase: "approach",
+        //     completed: false,
+        //   };
+        //   this.activeRoute = { motion, tailDistance: 0 };
+        //   routeAttachment = { motion, startDistance: 0 };
+        // } else if (this.activeRoute && !this.activeRoute.motion.completed) {
+        //   routeAttachment = {
+        //     motion: this.activeRoute.motion,
+        //     startDistance: this.activeRoute.tailDistance,
+        //   };
+        //   this.activeRoute.tailDistance += rowCount * rowLength;
+        // }
 
-    const lanes = this.road.getLanePositions();
-    const laneWidth = this.road.width / lanes.length;
-
-    for (const sectionConfig of sections) {
-      this.elevatedSections.push(
-        new RoadElevatedSection(
-          this.scene,
-          sectionConfig,
-          this.config,
-          lanes,
-          laneWidth,
+        this.segmentSurfaces.push(
+        new RoadSegmentSurface(
+            this.scene,
+            this.config,
+            lanes,
+            laneWidth,
+            baseZ,
+            rowLength,
+            rowCount,
+            coverage,
+            // { curve, motion, routeAttachment: curve ? undefined : routeAttachment },
         ),
-      );
-    }
-  }
+        );
 
-  public spawnElevatedSection(sectionConfig: RoadElevatedSectionConfig): void {
-    if (!this.road || !this.scene) return;
+        return routeAttachment;
+    };
 
-    const lanes = this.road.getLanePositions();
-    const laneWidth = this.road.width / lanes.length;
-    this.elevatedSections.push(
-      new RoadElevatedSection(
-        this.scene,
-        { ...sectionConfig, loop: false },
-        this.config,
-        lanes,
-        laneWidth,
-      ),
-    );
-  }
+    private addElevatedSections(): void {
+        if (!this.road || !this.scene) return;
 
-  private addSideObjects(): void {
-    if (!this.road) return;
-    const sideObjects = this.config.sideObjects;
+        const sections = this.config.elevatedSections ?? [];
+        if (sections.length === 0) return;
 
-    if (!sideObjects?.enabled) return;
+        const lanes = this.road.getLanePositions();
+        const laneWidth = this.road.width / lanes.length;
 
-    const { left, right } = this.road.getEdgePositions();
+        for (const sectionConfig of sections) {
+        this.elevatedSections.push(
+            new RoadElevatedSection(
+            this.scene,
+            sectionConfig,
+            this.config,
+            lanes,
+            laneWidth,
+            ),
+        );
+        }
+    };
 
-    const offset = sideObjects.offset;
+    public spawnElevatedSection(sectionConfig: RoadElevatedSectionConfig): void {
+        if (!this.road || !this.scene) return;
 
-    const leftX = left - offset;
-    const rightX = right + offset;
+        const lanes = this.road.getLanePositions();
+        const laneWidth = this.road.width / lanes.length;
+        this.elevatedSections.push(
+        new RoadElevatedSection(
+            this.scene,
+            { ...sectionConfig, loop: false },
+            this.config,
+            lanes,
+            laneWidth,
+        ),
+        );
+    };
 
-    const startZ = useCommonStore().config.itemsRemovingZpos;
-    const endZ = this.config.length;
+    private addSideObjects(): void {
+        if (!this.road) return;
+        const sideObjects = this.config.sideObjects;
 
-    this.leftSideObjects = new SideObjectsInstanced(
-      this.scene!,
-      leftX,
-      startZ,
-      endZ,
-      {
-        ...sideObjects,
-        spacing: sideObjects.spacing * useCommonStore().config.xzScaling,
-      },
-    );
-    this.leftSideObjects.setOcclusionProvider(() =>
-      this.getCurvedRoadIntervals(),
-    );
+        if (!sideObjects?.enabled) return;
 
-    this.rightSideObjects = new SideObjectsInstanced(
-      this.scene!,
-      rightX,
-      startZ,
-      endZ,
-      {
-        ...sideObjects,
-        spacing: sideObjects.spacing * useCommonStore().config.xzScaling,
-      },
-    );
-    this.rightSideObjects.setOcclusionProvider(() =>
-      this.getCurvedRoadIntervals(),
-    );
-  }
+        const { left, right } = this.road.getEdgePositions();
 
-  private clearSideObjects(): void {
-    this.leftSideObjects?.dispose();
-    this.rightSideObjects?.dispose();
+        const offset = sideObjects.offset;
 
-    this.leftSideObjects = null;
-    this.rightSideObjects = null;
-  }
+        const leftX = left - offset;
+        const rightX = right + offset;
 
-  private addEdges(): void {
-    if (!this.road) return;
+        const startZ = useCommonStore().config.itemsRemovingZpos;
+        const endZ = this.config.length;
 
-    const { left, right } = this.road.getEdgePositions();
-    const environmentStore = useEnvironmentStore();
-    const edgeConfig = environmentStore.currentRoad.edges;
-    const color = environmentStore.colorToNumber(edgeConfig.color);
+        this.leftSideObjects = new SideObjectsInstanced(
+        this.scene!,
+        leftX,
+        startZ,
+        endZ,
+        {
+            ...sideObjects,
+            spacing: sideObjects.spacing * useCommonStore().config.xzScaling,
+        },
+        );
+        this.leftSideObjects.setOcclusionProvider(() =>
+        this.getCurvedRoadIntervals(),
+        );
 
-    const leftEdge = new RoadEdge(
-      left,
-      edgeConfig.height,
-      this.config.length,
-      color,
-      edgeConfig.opacity,
-    );
-    this.scene?.add(leftEdge);
-    this.edges.push(leftEdge);
+        this.rightSideObjects = new SideObjectsInstanced(
+        this.scene!,
+        rightX,
+        startZ,
+        endZ,
+        {
+            ...sideObjects,
+            spacing: sideObjects.spacing * useCommonStore().config.xzScaling,
+        },
+        );
+        this.rightSideObjects.setOcclusionProvider(() =>
+        this.getCurvedRoadIntervals(),
+        );
+    };
 
-    const rightEdge = new RoadEdge(
-      right,
-      edgeConfig.height,
-      this.config.length,
-      color,
-      edgeConfig.opacity,
-    );
-    this.scene?.add(rightEdge);
-    this.edges.push(rightEdge);
-  }
+    private clearSideObjects(): void {
+        this.leftSideObjects?.dispose();
+        this.rightSideObjects?.dispose();
 
-  private addRoadLines(): void {
-    if (!this.road) return;
+        this.leftSideObjects = null;
+        this.rightSideObjects = null;
+    };
 
-    const { length } = this.config;
-    if (!length) {
-      throw new Error();
-    }
-    const lanes = this.road.getLanePositions();
-    const lineColor = this.config.laneColor ?? this.config.emissive ?? 0x888888;
+    private addEdges(): void {
+        if (!this.road) return;
 
-    for (let i = 0; i < lanes.length - 1; i++) {
-      const prev_ = lanes[i];
-      const next_ = lanes[i + 1];
-      if (prev_ == undefined || next_ == undefined) continue;
-      const x = (prev_ + next_) / 2;
+        const { left, right } = this.road.getEdgePositions();
+        const environmentStore = useEnvironmentStore();
+        const edgeConfig = environmentStore.currentRoad.edges;
+        const color = environmentStore.colorToNumber(edgeConfig.color);
 
-      const line = new RoadLine({
-        x,
-        z: -length / 2,
-        length,
-        color: lineColor,
-        emissive: lineColor,
-      });
-      this.roadLines.push(line);
-      this.scene?.add(line);
-    }
-  }
-  private addRoadLanes(): void {
-    if (!this.road) return;
+        const leftEdge = new RoadEdge(
+        left,
+        edgeConfig.height,
+        this.config.length,
+        color,
+        edgeConfig.opacity,
+        );
+        this.scene?.add(leftEdge);
+        this.edges.push(leftEdge);
 
-    const { length } = this.config;
-    if (!length) {
-      throw new Error();
-    }
-    const lanes = this.road.lanes;
+        const rightEdge = new RoadEdge(
+        right,
+        edgeConfig.height,
+        this.config.length,
+        color,
+        edgeConfig.opacity,
+        );
+        this.scene?.add(rightEdge);
+        this.edges.push(rightEdge);
+    };
 
-    const width = this.road.width / lanes.length;
-    const laneColor = this.config.laneColor ?? this.config.emissive ?? 0x66ccff;
+    private addRoadLines(): void {
+        if (!this.road) return;
 
-    console.log("lanes", lanes);
+        const { length } = this.config;
+        if (!length) {
+        throw new Error();
+        }
+        const lanes = this.road.getLanePositions();
+        const lineColor = this.config.laneColor ?? this.config.emissive ?? 0x888888;
 
-    for (let i = 0; i < lanes.length; i++) {
-      const laneX = lanes[i];
+        for (let i = 0; i < lanes.length - 1; i++) {
+        const prev_ = lanes[i];
+        const next_ = lanes[i + 1];
+        if (prev_ == undefined || next_ == undefined) continue;
+        const x = (prev_ + next_) / 2;
 
-      if (laneX == undefined) continue;
-      const lane = new RoadLane({
-        x: laneX,
-        z: -length / 2,
-        length,
-        width,
-        color: laneColor,
-      });
-      this.roadLanes.push(lane);
-      this.scene?.add(lane);
-    }
-  }
+        const line = new RoadLine({
+            x,
+            z: -length / 2,
+            length,
+            color: lineColor,
+            emissive: lineColor,
+        });
+        this.roadLines.push(line);
+        this.scene?.add(line);
+        }
+    };
 
-  public update(deltaTime: number, speed: number): void {
-    // if (this.activeRoute && !this.activeRoute.motion.completed) {
-    //   const motion = this.activeRoute.motion;
-    //   let remainingTravel = deltaTime * speed;
-    //   if (motion.phase === "approach") {
-    //     const approachDistance = Math.max(
-    //       0,
-    //       motion.turnStartZ - motion.pivotZ,
-    //     );
-    //     const approachTravel = Math.min(remainingTravel, approachDistance);
-    //     motion.pivotZ += approachTravel;
-    //     remainingTravel -= approachTravel;
-    //     if (motion.pivotZ >= motion.turnStartZ) {
-    //       motion.pivotZ = motion.turnStartZ;
-    //       motion.phase = "turning";
-    //     }
-    //   }
+    private addRoadLanes(): void {
+        if (!this.road) return;
 
-    //   if (motion.phase === "turning" && remainingTravel > 0) {
-    //     motion.angleRad -= remainingTravel / motion.radius;
-    //     if (motion.angleRad <= -motion.totalAngleRad) {
-    //       motion.angleRad = -motion.totalAngleRad;
-    //       motion.phase = "completed";
-    //       motion.completed = true;
-    //       this.activeRoute = null;
-    //     }
-    //   }
-    // }
+        const { length } = this.config;
+        if (!length) {
+        throw new Error();
+        }
+        const lanes = this.road.lanes;
 
-    this.activeRoute = null;
+        const width = this.road.width / lanes.length;
+        const laneColor = this.config.laneColor ?? this.config.emissive ?? 0x66ccff;
 
-    this.leftSideObjects?.update(deltaTime, speed);
-    this.rightSideObjects?.update(deltaTime, speed);
+        console.log("lanes", lanes);
 
-    // for (let i = this.segmentSurfaces.length - 1; i >= 0; i--) {
-    //   const surface = this.segmentSurfaces[i];
-    //   if (!surface) continue;
-    //   if (surface.update(deltaTime, speed)) {
-    //     surface.dispose();
-    //     this.segmentSurfaces.splice(i, 1);
-    //   }
-    // }
+        for (let i = 0; i < lanes.length; i++) {
+        const laneX = lanes[i];
 
-    for (let i = this.elevatedSections.length - 1; i >= 0; i--) {
-      const section = this.elevatedSections[i];
-      if (!section) continue;
-      if (section.update(deltaTime, speed)) {
-        section.dispose();
-        this.elevatedSections.splice(i, 1);
-      }
-    }
-    // if (this.shouldDisableIdleSegmentSurface()) {
-    //   this.clearIdleSegmentSurface();
-    // } else {
-    //   this.idleSegmentSurface?.update(deltaTime, speed);
-    // }
+        if (laneX == undefined) continue;
+        const lane = new RoadLane({
+            x: laneX,
+            z: -length / 2,
+            length,
+            width,
+            color: laneColor,
+        });
+        this.roadLanes.push(lane);
+        this.scene?.add(lane);
+        }
+    };
 
-    // if (this.idleSegmentSurface) {
-    //     // Ничего не делаем — дорога статична
-    // }
+    public update(deltaTime: number, speed: number): void {
+        // if (this.activeRoute && !this.activeRoute.motion.completed) {
+        //   const motion = this.activeRoute.motion;
+        //   let remainingTravel = deltaTime * speed;
+        //   if (motion.phase === "approach") {
+        //     const approachDistance = Math.max(
+        //       0,
+        //       motion.turnStartZ - motion.pivotZ,
+        //     );
+        //     const approachTravel = Math.min(remainingTravel, approachDistance);
+        //     motion.pivotZ += approachTravel;
+        //     remainingTravel -= approachTravel;
+        //     if (motion.pivotZ >= motion.turnStartZ) {
+        //       motion.pivotZ = motion.turnStartZ;
+        //       motion.phase = "turning";
+        //     }
+        //   }
 
-    this.updateCurrentLane(this.carManager.getCar().getCurrentLane());
-  }
+        //   if (motion.phase === "turning" && remainingTravel > 0) {
+        //     motion.angleRad -= remainingTravel / motion.radius;
+        //     if (motion.angleRad <= -motion.totalAngleRad) {
+        //       motion.angleRad = -motion.totalAngleRad;
+        //       motion.phase = "completed";
+        //       motion.completed = true;
+        //       this.activeRoute = null;
+        //     }
+        //   }
+        // }
 
-  private updateCurrentLane(currentLane: number) {
-    for (let i = 0; i < this.roadLanes.length; i++) {
-      if (i == currentLane) {
-        this.roadLanes[i].visible = true;
-      } else {
-        this.roadLanes[i].visible = false;
-      }
-    }
-  }
+        this.activeRoute = null;
 
-  public clear(): void {
-    // Удаляем большую дорогу, если она есть
-    if (this.scene) {
-        const bigRoad = this.scene.getObjectByName("BigRoad");
-        if (bigRoad) {
-            this.scene.remove(bigRoad);
-            if (bigRoad instanceof THREE.Mesh) {
-                bigRoad.geometry.dispose();
-                if (Array.isArray(bigRoad.material)) {
-                    bigRoad.material.forEach(m => m.dispose());
-                } else {
-                    bigRoad.material.dispose();
+        this.leftSideObjects?.update(deltaTime, speed);
+        this.rightSideObjects?.update(deltaTime, speed);
+
+        // for (let i = this.segmentSurfaces.length - 1; i >= 0; i--) {
+        //   const surface = this.segmentSurfaces[i];
+        //   if (!surface) continue;
+        //   if (surface.update(deltaTime, speed)) {
+        //     surface.dispose();
+        //     this.segmentSurfaces.splice(i, 1);
+        //   }
+        // }
+
+        for (let i = this.elevatedSections.length - 1; i >= 0; i--) {
+        const section = this.elevatedSections[i];
+        if (!section) continue;
+        if (section.update(deltaTime, speed)) {
+            section.dispose();
+            this.elevatedSections.splice(i, 1);
+        }
+        }
+        // if (this.shouldDisableIdleSegmentSurface()) {
+        //   this.clearIdleSegmentSurface();
+        // } else {
+        //   this.idleSegmentSurface?.update(deltaTime, speed);
+        // }
+
+        // if (this.idleSegmentSurface) {
+        //     // Ничего не делаем — дорога статична
+        // }
+
+        this.updateCurrentLane(this.carManager.getCar().getCurrentLane());
+    };
+
+    private updateCurrentLane(currentLane: number) {
+        for (let i = 0; i < this.roadLanes.length; i++) {
+        if (i == currentLane) {
+            this.roadLanes[i].visible = true;
+        } else {
+            this.roadLanes[i].visible = false;
+        }
+        }
+    };
+
+    public clear(): void {
+        // Удаляем большую дорогу, если она есть
+        if (this.scene) {
+            const bigRoad = this.scene.getObjectByName("BigRoad");
+            if (bigRoad) {
+                this.scene.remove(bigRoad);
+                if (bigRoad instanceof THREE.Mesh) {
+                    bigRoad.geometry.dispose();
+                    if (Array.isArray(bigRoad.material)) {
+                        bigRoad.material.forEach(m => m.dispose());
+                    } else {
+                        bigRoad.material.dispose();
+                    }
                 }
             }
         }
-    }
 
-    if (this.road) {
-      this.scene?.remove(this.road);
-      this.road = null;
-    }
-    this.roadLines.forEach((line) => this.scene?.remove(line));
-    this.roadLines = [];
-    this.roadLanes.forEach((line) => this.scene?.remove(line));
-    this.roadLanes = [];
-    this.edges.forEach((edge) => this.scene?.remove(edge));
-    this.edges = [];
-    this.elevatedSections.forEach((section) => section.dispose());
-    this.elevatedSections = [];
-    this.segmentSurfaces.forEach((surface) => surface.dispose());
-    this.segmentSurfaces = [];
-    this.activeRoute = null;
-    this.clearIdleSegmentSurface();
+        if (this.road) {
+        this.scene?.remove(this.road);
+        this.road = null;
+        }
+        this.roadLines.forEach((line) => this.scene?.remove(line));
+        this.roadLines = [];
+        this.roadLanes.forEach((line) => this.scene?.remove(line));
+        this.roadLanes = [];
+        this.edges.forEach((edge) => this.scene?.remove(edge));
+        this.edges = [];
+        this.elevatedSections.forEach((section) => section.dispose());
+        this.elevatedSections = [];
+        this.segmentSurfaces.forEach((surface) => surface.dispose());
+        this.segmentSurfaces = [];
+        this.activeRoute = null;
+        this.clearIdleSegmentSurface();
 
-    this.clearSideObjects();
-  }
-
-  private clearIdleSegmentSurface(): void {
-    this.idleSegmentSurface?.dispose();
-    this.idleSegmentSurface = null;
-  }
-
-  private shouldDisableIdleSegmentSurface(): boolean {
-    if (!this.idleSegmentSurface || this.segmentSurfaces.length === 0) {
-      return false;
-    }
-
-    const visibleFrontZ =
-      useCommonStore().config.itemsRemovingZpos + IDLE_SURFACE_DISABLE_PADDING;
-
-    if (this.segmentSurfaces.some((surface) => surface.isCurved())) {
-      return true;
-    }
-
-    return this.segmentSurfaces.some(
-      (surface) => surface.getFrontEdgeZ() >= visibleFrontZ,
-    );
-  }
-
-  private getGameplayRoadIntervals(): RoadSegmentSurfaceInterval[] {
-    return [
-      ...this.segmentSurfaces.flatMap((surface) =>
-        surface.getSurfaceIntervals(),
-      ),
-      ...this.elevatedSections.flatMap((section) =>
-        section.getSurfaceIntervals(),
-      ),
-    ];
-  }
-
-  private getCurvedRoadIntervals(): { back: number; front: number }[] {
-    return this.segmentSurfaces
-      .map((surface) => surface.getSideObjectOcclusionInterval())
-      .filter((interval): interval is { back: number; front: number } =>
-        interval !== null,
-      );
-  }
-
-  public dispose(): void {
-    this.clear();
-    this.scene = null;
-  }
-
-  public setRoadColor(color: number, emissive?: number): void {
-    if (this.road) {
-      const material = this.road.material as THREE.MeshStandardMaterial;
-      material.color.setHex(color);
-      if (emissive) {
-        material.emissive.setHex(emissive);
-      }
-    }
-  }
-
-  public setOpacity(opacity: number): void {
-    if (this.road) {
-      (this.road.material as THREE.MeshStandardMaterial).opacity = opacity;
-    }
-  }
-
-  public getConfig(): Readonly<RoadConfig> {
-    return { ...this.config };
-  }
-
-  public getLanes(): number[] {
-    return this.road ? this.road.getLanePositions() : this.config.lanes;
-  }
-
-  public getLanesCount(): number {
-    return this.road ? this.road.getLanesCount() : this.config.lanes.length;
-  }
-
-  public getLanePosition(index: number): number {
-    if (this.road) {
-      return this.road.getLanePosition(index);
-    }
-    const lane = this.config.lanes[index];
-    return lane ? lane : 0;
-  }
-
-  public getSurfaceHeightAt(lane: number, z: number = 0): number {
-    let height = 0;
-
-    for (const section of this.elevatedSections) {
-      const candidate = section.getHeightAt(lane, z);
-      if (candidate === 0) continue;
-      if (height === 0 || Math.abs(candidate) > Math.abs(height)) {
-        height = candidate;
-      }
-    }
-
-    return height;
-  }
-
-  public updateConfig(config: Partial<RoadConfig>): void {
-    this.config = { ...this.config, ...config };
-    this.createRoad();
-  }
-
-  public getRoad(): Road | null {
-    return this.road;
-  }
-
-  public getStats(): RoadStats {
-    const lanes = this.getLanes();
-    return {
-      hasRoad: this.road !== null,
-      lanesCount: lanes.length,
-      linesCount: this.roadLines.length,
-      speedLinesCount: this.speedLines.length,
-      edgesCount: this.edges.length,
-      // sideObjectsCount:
-      //   this.leftSideObjects.length + this.rightSideObjects.length,
-      lanePositions: lanes,
+        this.clearSideObjects();
     };
-  }
 
-  public getEdges(): THREE.Mesh[] {
-    return this.edges;
-  }
+    private clearIdleSegmentSurface(): void {
+        this.idleSegmentSurface?.dispose();
+        this.idleSegmentSurface = null;
+    };
 
-  public reset(): void {
-    this.clear();
-    this.createRoad();
-  }
+    private shouldDisableIdleSegmentSurface(): boolean {
+        if (!this.idleSegmentSurface || this.segmentSurfaces.length === 0) {
+        return false;
+        }
 
-  public getClosestLaneIndex(xPos: number): number {
-    const lanes = this.road!.lanes;
+        const visibleFrontZ =
+        useCommonStore().config.itemsRemovingZpos + IDLE_SURFACE_DISABLE_PADDING;
 
-    let closest = 0;
-    let minDist = Infinity;
+        if (this.segmentSurfaces.some((surface) => surface.isCurved())) {
+        return true;
+        }
 
-    for (let i = 0; i < lanes.length; i++) {
-      const dist = Math.abs(xPos - lanes[i]!);
+        return this.segmentSurfaces.some(
+        (surface) => surface.getFrontEdgeZ() >= visibleFrontZ,
+        );
+    };
 
-      if (dist < minDist) {
-        minDist = dist;
-        closest = i;
-      }
-    }
+    private getGameplayRoadIntervals(): RoadSegmentSurfaceInterval[] {
+        return [
+        ...this.segmentSurfaces.flatMap((surface) =>
+            surface.getSurfaceIntervals(),
+        ),
+        ...this.elevatedSections.flatMap((section) =>
+            section.getSurfaceIntervals(),
+        ),
+        ];
+    };
 
-    return closest;
-  }
+    private getCurvedRoadIntervals(): { back: number; front: number }[] {
+        return this.segmentSurfaces
+        .map((surface) => surface.getSideObjectOcclusionInterval())
+        .filter((interval): interval is { back: number; front: number } =>
+            interval !== null,
+        );
+    };
+
+    public dispose(): void {
+        this.clear();
+        this.scene = null;
+    };
+
+    public setRoadColor(color: number, emissive?: number): void {
+        if (this.road) {
+        const material = this.road.material as THREE.MeshStandardMaterial;
+        material.color.setHex(color);
+        if (emissive) {
+            material.emissive.setHex(emissive);
+        }
+        }
+    };
+
+    public setOpacity(opacity: number): void {
+        if (this.road) {
+        (this.road.material as THREE.MeshStandardMaterial).opacity = opacity;
+        }
+    };
+
+    public getConfig(): Readonly<RoadConfig> {
+        return { ...this.config };
+    };
+
+    public getLanes(): number[] {
+        return this.road ? this.road.getLanePositions() : this.config.lanes;
+    };
+
+    public getLanesCount(): number {
+        return this.road ? this.road.getLanesCount() : this.config.lanes.length;
+    };
+
+    public getLanePosition(index: number): number {
+        if (this.road) {
+        return this.road.getLanePosition(index);
+        }
+        const lane = this.config.lanes[index];
+        return lane ? lane : 0;
+    };
+
+    public getSurfaceHeightAt(lane: number, z: number = 0): number {
+        let height = 0;
+
+        for (const section of this.elevatedSections) {
+        const candidate = section.getHeightAt(lane, z);
+        if (candidate === 0) continue;
+        if (height === 0 || Math.abs(candidate) > Math.abs(height)) {
+            height = candidate;
+        }
+        }
+
+        return height;
+    };
+
+    public updateConfig(config: Partial<RoadConfig>): void {
+        this.config = { ...this.config, ...config };
+        this.createRoad();
+    };
+
+    public getRoad(): Road | null {
+        return this.road;
+    };
+
+    public getStats(): RoadStats {
+        const lanes = this.getLanes();
+        return {
+        hasRoad: this.road !== null,
+        lanesCount: lanes.length,
+        linesCount: this.roadLines.length,
+        speedLinesCount: this.speedLines.length,
+        edgesCount: this.edges.length,
+        // sideObjectsCount:
+        //   this.leftSideObjects.length + this.rightSideObjects.length,
+        lanePositions: lanes,
+        };
+    };
+
+    public getEdges(): THREE.Mesh[] {
+        return this.edges;
+    };
+
+    public reset(): void {
+        this.clear();
+        this.createRoad();
+    };
+
+    public getClosestLaneIndex(xPos: number): number {
+        const lanes = this.road!.lanes;
+
+        let closest = 0;
+        let minDist = Infinity;
+
+        for (let i = 0; i < lanes.length; i++) {
+        const dist = Math.abs(xPos - lanes[i]!);
+
+        if (dist < minDist) {
+            minDist = dist;
+            closest = i;
+        }
+        }
+
+        return closest;
+    };
 }

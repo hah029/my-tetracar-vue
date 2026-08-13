@@ -85,39 +85,42 @@ export class CubeObstacle extends BaseObstacle {
     useGLB: boolean,
     materialConfig?: MaterialConfig,
     formDetailConfig?: GeometryConfig[],
-  ) {
-    const mergedVisual = await this.buildMergedAtlasVisual(
-      formConfig,
-      useGLB,
-      materialConfig,
-    );
-
-    if (mergedVisual) {
-      this.visualMesh = mergedVisual;
-      this.add(mergedVisual);
-      return;
+) {
+    // 👇 СОЗДАЁМ МАТЕРИАЛ ЧЕРЕЗ MaterialPool ЕСЛИ ЕСТЬ АТЛАС
+    let sharedMaterial: THREE.Material | null = null;
+    if (materialConfig?.atlas && materialConfig?.atlasSprite) {
+        sharedMaterial = MaterialPool.getMaterial({
+            type: 'atlas',
+            key: `obstacle_${materialConfig.atlasSprite}`,
+            atlasSprite: materialConfig.atlasSprite,
+            color: materialConfig.color ?? 0xffffff,
+            emissive: materialConfig.emissive ?? 0x000000,
+            emissiveIntensity: materialConfig.emissiveIntensity ?? 1,
+            transparent: true,
+        });
     }
 
     const group = new THREE.Group();
 
     for (let i = 0; i < formConfig.length; i++) {
-      const config = formConfig[i];
-      if (!config) continue;
+        const config = formConfig[i];
+        if (!config) continue;
 
-      const mesh = await CubeBuilder.build({
-        index: i,
-        geomConfig: config,
-        useGLB,
-        useTexture: true,
-        materialConfig,
-      });
+        const mesh = await CubeBuilder.build({
+            index: i,
+            geomConfig: config,
+            useGLB: true,
+            useTexture: true,
+            existingMaterial: sharedMaterial ?? undefined,
+            materialConfig,
+        });
 
-      group.add(mesh);
+        group.add(mesh);
     }
 
     this.visualMesh = group;
     this.add(group);
-  }
+}
 
   private async buildMergedAtlasVisual(
     formConfig: GeometryConfig[],
