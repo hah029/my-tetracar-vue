@@ -167,8 +167,6 @@ export function GameLoop(
             const booster = itemCollision.impactSubject as BaseItem;
             if (game.handleBoosterCollision(itemCollision)) {
               game.removeItem(booster);
-            } else {
-              booster.userData.pickupRejected = true;
             }
           }
         }

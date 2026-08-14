@@ -6,4 +6,7 @@ export const basePhysics = {
   removalHeight: 20,
   explosionForce: 25,
   explosionUpward: 20,
+  rejectedPickupForce: 40,
+  rejectedPickupUpward: 20,
+  rejectedPickupSideFactor: 0.65,
 };

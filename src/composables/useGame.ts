@@ -496,7 +496,7 @@ export function useGame() {
     if (collision.impactSubject instanceof BulletItem) {
       if (playerStore.ammo >= playerStore.maxAmmo) {
         playerStore.addNewMsg("maxAmmo");
-        playerStore.rejectPickup("ammo");
+        collision.impactSubject.rejectFromCar(carPos);
         CameraSystem.triggerPickupRejectedShake();
         return false;
       }
@@ -529,7 +529,7 @@ export function useGame() {
     if (collision.impactSubject instanceof ShieldItem) {
       if (playerStore.armor >= playerStore.maxArmor) {
         playerStore.addNewMsg("maxArmor");
-        playerStore.rejectPickup("armor");
+        collision.impactSubject.rejectFromCar(carPos);
         CameraSystem.triggerPickupRejectedShake();
         return false;
       }

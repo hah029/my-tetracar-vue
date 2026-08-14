@@ -62,17 +62,7 @@
             <div class="bottom_subpanel">
                 <template v-for="(group, groupIndex) in boosterGroups" :key="group.key">
                     <div class="booster_group" :class="`booster_group--${group.key}`">
-                        <div v-for="booster in group.items" :key="booster.key" class="booster_item" :class="{
-                            booster_item_rejected:
-                                playerStore.rejectedPickupType ===
-                                (booster.key === 'bullet' ? 'ammo' : booster.key),
-                            booster_item_rejected_ammo:
-                                playerStore.rejectedPickupType === 'ammo' &&
-                                booster.key === 'bullet',
-                            booster_item_rejected_armor:
-                                playerStore.rejectedPickupType === 'armor' &&
-                                booster.key === 'armor',
-                        }">
+                        <div v-for="booster in group.items" :key="booster.key" class="booster_item">
                             <div class="booster_value" :class="booster.textColorClass">{{ booster.displayValue }}</div>
                             <div class="boosters_image_container">
                                 <img v-if="booster.isActive" class="icon with_shadow" :src="booster.activeIcon" />
@@ -537,32 +527,6 @@ $booster-icon-size: 1.875rem;
     align-items: center;
     gap: clamp(0.35rem, 1.4vmin, 0.625rem);
     min-width: 0;
-}
-
-.booster_item_rejected {
-    animation: boosterRejectedPulse 0.42s ease-out;
-}
-
-.booster_item_rejected_ammo {
-    --rejected-pulse-color: rgba(255, 84, 61, 0.9);
-}
-
-.booster_item_rejected_armor {
-    --rejected-pulse-color: rgba(184, 235, 255, 0.95);
-}
-
-@keyframes boosterRejectedPulse {
-
-    0%,
-    100% {
-        transform: scale(1);
-        filter: drop-shadow(0 0 0 var(--rejected-pulse-color));
-    }
-
-    45% {
-        transform: scale(1.1);
-        filter: drop-shadow(0 0 1.2rem var(--rejected-pulse-color));
-    }
 }
 
 .booster_value {

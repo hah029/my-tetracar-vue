@@ -126,6 +126,35 @@ export class BaseItem extends THREE.Group {
     this.userData.curvedItemState = state;
   }
 
+  /** Отталкивает не поместившийся в запас бустер от машины. */
+  public rejectFromCar(carPosition: THREE.Vector3): void {
+    const physics = useCommonStore().getBasePhysics();
+    const direction = this.position.clone().sub(carPosition);
+
+    direction.y = 0;
+    if (direction.lengthSq() < 0.001) {
+      direction.set(Math.random() < 0.5 ? -1 : 1, 0, -0.5);
+    }
+    direction.x +=
+      (Math.random() * 2 - 1) * physics.rejectedPickupSideFactor;
+    direction.normalize();
+
+    this.userData.pickupRejected = true;
+    this.userData.status = "flying";
+    this.userData.followSurface = false;
+    delete this.userData.curvedItemState;
+
+    this.userData.velocity.copy(
+      direction.multiplyScalar(physics.rejectedPickupForce),
+    );
+    this.userData.velocity.y = physics.rejectedPickupUpward;
+    this.userData.rotationSpeed.set(
+      (Math.random() - 0.5) * physics.cubeRotationSpeed,
+      (Math.random() - 0.5) * physics.cubeRotationSpeed,
+      (Math.random() - 0.5) * physics.cubeRotationSpeed,
+    );
+  }
+
   private updateCurvedItem(
     deltaTime: number,
     speed: number,
