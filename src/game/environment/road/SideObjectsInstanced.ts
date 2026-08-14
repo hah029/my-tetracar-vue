@@ -2,6 +2,7 @@ import * as THREE from "three";
 import { useCommonStore } from "@/store/commonStore";
 import { atlas } from "@/assets/textures/TextureAtlas";
 import { ATLAS_SPRITES } from "@/assets/textures/atlasSprites";
+import { applyCubeSpriteUV } from "@/helpers/applyAtlasUV";
 import type { RoadSideObjectsConfig } from "./types";
 
 type SideObjectOcclusionInterval = {
@@ -55,33 +56,18 @@ export class SideObjectsInstanced {
     
     const geometry = new THREE.BoxGeometry(1, 1, 1);
     
-    // 👇 ПРИМЕНЯЕМ UV
     if (sprite) {
-        const uv = geometry.attributes.uv;
-        if (uv) {
-            for (let i = 0; i < uv.count; i++) {
-                const u = uv.getX(i);
-                const v = uv.getY(i);
-                uv.setXY(
-                    i,
-                    sprite.uvRect.u + u * sprite.uvRect.w,
-                    sprite.uvRect.v + v * sprite.uvRect.h,
-                );
-            }
-            uv.needsUpdate = true;
-        }
+        // `cube_base` contains separate subregions for the top and side faces.
+        // A generic sprite mapping would stretch the whole 64×64 sprite over
+        // every face of the box.
+        applyCubeSpriteUV(geometry, sprite);
     }
     
-    // 👇 СОЗДАЁМ МАТЕРИАЛ ВРУЧНУЮ С ПОЛНЫМ АТЛАСОМ
     let material: THREE.Material;
     
     if (sprite && atlasTexture) {
-        const texture = atlasTexture.clone();  // 👈 Клонируем полный атлас
-        texture.colorSpace = THREE.SRGBColorSpace;
-        texture.needsUpdate = true;
-        
         material = new THREE.MeshStandardMaterial({
-            map: texture,
+            map: atlasTexture,
             color: this.config.color,
             emissive: this.config.emissive ?? 0x000000,
             emissiveIntensity: this.config.emissiveIntensity ?? 0,

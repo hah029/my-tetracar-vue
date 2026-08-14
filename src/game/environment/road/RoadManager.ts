@@ -62,6 +62,10 @@ export class RoadManager {
         return this.activeRoute !== null && !this.activeRoute.motion.completed;
     };
 
+    private isSegmentedMode(): boolean {
+        return this.config.roadMode === "segmented";
+    }
+
     public createRoad(): void {
         if (!this.scene) return;
 
@@ -73,77 +77,51 @@ export class RoadManager {
         this.road = new Road(this.config);
         if (!this.scene) return;
 
-        if (!this.config.segmentSurfaces) {
-        this.scene.add(this.road);
-        }
         this.addEdges();
-        if (!this.config.segmentSurfaces) {
+        if (this.isSegmentedMode()) {
+        this.addIdleSegmentSurface();
+        } else {
+        this.addStaticRoadSurface();
         this.addRoadLines();
         this.addRoadLanes();
-        } else {
-        this.addIdleSegmentSurface();
         }
         this.addElevatedSections();
         this.addSideObjects();
     };
 
-//   private addIdleSegmentSurface(): void {
-//     if (!this.road || !this.scene) return;
-
-//     const lanes = this.road.getLanePositions();
-//     const laneWidth = this.road.width / lanes.length;
-
-//     const roadLength = this.config.length;
-//     const rowLength = Math.max(1, useCommonStore().config.segmentRowMinLength / 2);
-//     let rowCount = Math.ceil(roadLength / rowLength);
-
-//     // const rowLength = Math.max(
-//     //   2,
-//     //   useCommonStore().config.segmentRowMinLength / 4,
-//     // );
-//     // let rowCount = Math.ceil(this.config.length / rowLength);
-
-//     // ===== ОГРАНИЧЕНИЕ КОЛИЧЕСТВА РЯДОВ =====
-//     const MAX_ROWS = 100;  // 👈 Было 400, стало 40
-//     if (rowCount > MAX_ROWS) {
-//         rowCount = MAX_ROWS;
-//         console.log(`⚠️ Road idle rows ограничен до ${MAX_ROWS}`);
-//     }
-
-//     const startZ = -roadLength;  // 👈 Начинаем с -200, чтобы дорога была видна от начала
-
-//     this.idleSegmentSurface = new RoadSegmentSurface(
-//       this.scene,
-//       this.config,
-//       lanes,
-//       laneWidth,
-//       startZ,
-//     //   0,
-//       rowLength,
-//       rowCount,
-//       [],
-//       { loop: true },
-//     );
-
-//     // ===== ДОРОГА СТАТИЧНАЯ — ОТКЛЮЧАЕМ ОБНОВЛЕНИЕ =====
-//     // this.idleSegmentSurface.setLoopOcclusionProvider(() =>
-//     //   this.getGameplayRoadIntervals(),
-//     // );
-//   };
-
     private addIdleSegmentSurface(): void {
         if (!this.road || !this.scene) return;
 
-        // ===== СОЗДАЁМ ОДНУ БОЛЬШУЮ ДОРОГУ =====
+        const lanes = this.road.getLanePositions();
+        const laneWidth = this.road.width / lanes.length;
+        const rowLength = Math.max(
+            2,
+            useCommonStore().config.segmentRowMinLength / 4,
+        );
+        const rowCount = Math.min(40, Math.ceil(this.config.length / rowLength));
+
+        this.idleSegmentSurface = new RoadSegmentSurface(
+            this.scene,
+            this.config,
+            lanes,
+            laneWidth,
+            0,
+            rowLength,
+            rowCount,
+            [],
+            { loop: true },
+        );
+        this.idleSegmentSurface.setLoopOcclusionProvider(() =>
+            this.getGameplayRoadIntervals(),
+        );
+    };
+
+    private addStaticRoadSurface(): void {
+        if (!this.road || !this.scene) return;
+
         const roadMesh = this.road;
-        
-        // Длина дороги (увеличиваем, чтобы покрыть весь экран)
-        const length = 800;
-        
-        // Создаём новую геометрию с нужной длиной
+        const length = this.config.length;
         const geometry = new THREE.PlaneGeometry(roadMesh.width, length);
-        
-        // Клонируем материал правильно
         let material: THREE.Material;
         if (Array.isArray(roadMesh.material)) {
             material = roadMesh.material[0].clone();
@@ -151,19 +129,13 @@ export class RoadManager {
             material = roadMesh.material.clone();
         }
         
-        // Создаём большой меш дороги
         const bigRoad = new THREE.Mesh(geometry, material);
         bigRoad.rotation.x = -Math.PI / 2;
-        bigRoad.position.set(0, 0.01, -100);
+        bigRoad.position.set(0, 0.01, -length / 8);
         bigRoad.receiveShadow = true;
         bigRoad.name = "BigRoad";
         
-        // Добавляем в сцену
         this.scene.add(bigRoad);
-        
-        // Сохраняем ссылку для возможного удаления
-        this.idleSegmentSurface = null;
-        // =======================================
     };
 
     public spawnSegmentSurface(
@@ -173,46 +145,39 @@ export class RoadManager {
         coverage: RoadSegmentSurfaceCoverage[] = [],
         curve?: RoadSegmentSurfaceCurve,
     ): RoadRouteAttachment | undefined {
-        const MAX_ROWS_PER_SEGMENT = 30;  // 👈 Максимум 30 рядов на сегмент
-        if (rowCount > MAX_ROWS_PER_SEGMENT) {
-            rowCount = MAX_ROWS_PER_SEGMENT;
+        const MAX_ROWS_PER_CURVED_SEGMENT = 30;
+        if (curve && rowCount > MAX_ROWS_PER_CURVED_SEGMENT) {
+            rowCount = MAX_ROWS_PER_CURVED_SEGMENT;
         }
-        if (!this.road || !this.scene || !this.config.segmentSurfaces) return;
+        if (!this.road || !this.scene || !this.isSegmentedMode()) return;
 
         const lanes = this.road.getLanePositions();
         const laneWidth = this.road.width / lanes.length;
 
-        // let motion: RoadCurveMotion | undefined;
+        let motion: RoadCurveMotion | undefined;
         let routeAttachment: RoadRouteAttachment | undefined;
 
-        if (this.activeRoute) {
-            this.activeRoute = null;
-        };
-
-        // if (curve) {
-        //   motion = {
-        //     direction: curve.direction,
-        //     pivotX: curve.pivotX,
-        //     pivotZ: baseZ,
-        //     // До прохождения ближнего конца мимо игрока дуга движется как обычный
-        //     // сегмент с нулевым углом. Ранний старт на rotateStartZ разрывает стык
-        //     // с предыдущей прямой почти сразу после спавна.
-        //     turnStartZ: curve.rotateEndZ,
-        //     radius: curve.radius,
-        //     totalAngleRad: curve.totalAngleRad,
-        //     angleRad: 0,
-        //     phase: "approach",
-        //     completed: false,
-        //   };
-        //   this.activeRoute = { motion, tailDistance: 0 };
-        //   routeAttachment = { motion, startDistance: 0 };
-        // } else if (this.activeRoute && !this.activeRoute.motion.completed) {
-        //   routeAttachment = {
-        //     motion: this.activeRoute.motion,
-        //     startDistance: this.activeRoute.tailDistance,
-        //   };
-        //   this.activeRoute.tailDistance += rowCount * rowLength;
-        // }
+        if (curve && this.config.enableCurvedSegments) {
+            motion = {
+                direction: curve.direction,
+                pivotX: curve.pivotX,
+                pivotZ: baseZ,
+                turnStartZ: curve.rotateEndZ,
+                radius: curve.radius,
+                totalAngleRad: curve.totalAngleRad,
+                angleRad: 0,
+                phase: "approach",
+                completed: false,
+            };
+            this.activeRoute = { motion, tailDistance: 0 };
+            routeAttachment = { motion, startDistance: 0 };
+        } else if (this.activeRoute && !this.activeRoute.motion.completed) {
+            routeAttachment = {
+                motion: this.activeRoute.motion,
+                startDistance: this.activeRoute.tailDistance,
+            };
+            this.activeRoute.tailDistance += rowCount * rowLength;
+        }
 
         this.segmentSurfaces.push(
         new RoadSegmentSurface(
@@ -224,7 +189,11 @@ export class RoadManager {
             rowLength,
             rowCount,
             coverage,
-            // { curve, motion, routeAttachment: curve ? undefined : routeAttachment },
+            {
+                curve: curve && this.config.enableCurvedSegments ? curve : undefined,
+                motion,
+                routeAttachment: curve ? undefined : routeAttachment,
+            },
         ),
         );
 
@@ -233,6 +202,7 @@ export class RoadManager {
 
     private addElevatedSections(): void {
         if (!this.road || !this.scene) return;
+        if (!this.isSegmentedMode() || !this.config.enableElevatedSegments) return;
 
         const sections = this.config.elevatedSections ?? [];
         if (sections.length === 0) return;
@@ -255,6 +225,7 @@ export class RoadManager {
 
     public spawnElevatedSection(sectionConfig: RoadElevatedSectionConfig): void {
         if (!this.road || !this.scene) return;
+        if (!this.isSegmentedMode() || !this.config.enableElevatedSegments) return;
 
         const lanes = this.road.getLanePositions();
         const laneWidth = this.road.width / lanes.length;
@@ -410,47 +381,44 @@ export class RoadManager {
     };
 
     public update(deltaTime: number, speed: number): void {
-        // if (this.activeRoute && !this.activeRoute.motion.completed) {
-        //   const motion = this.activeRoute.motion;
-        //   let remainingTravel = deltaTime * speed;
-        //   if (motion.phase === "approach") {
-        //     const approachDistance = Math.max(
-        //       0,
-        //       motion.turnStartZ - motion.pivotZ,
-        //     );
-        //     const approachTravel = Math.min(remainingTravel, approachDistance);
-        //     motion.pivotZ += approachTravel;
-        //     remainingTravel -= approachTravel;
-        //     if (motion.pivotZ >= motion.turnStartZ) {
-        //       motion.pivotZ = motion.turnStartZ;
-        //       motion.phase = "turning";
-        //     }
-        //   }
+        if (this.isSegmentedMode() && this.activeRoute && !this.activeRoute.motion.completed) {
+          const motion = this.activeRoute.motion;
+          let remainingTravel = deltaTime * speed;
+          if (motion.phase === "approach") {
+            const approachDistance = Math.max(0, motion.turnStartZ - motion.pivotZ);
+            const approachTravel = Math.min(remainingTravel, approachDistance);
+            motion.pivotZ += approachTravel;
+            remainingTravel -= approachTravel;
+            if (motion.pivotZ >= motion.turnStartZ) {
+              motion.pivotZ = motion.turnStartZ;
+              motion.phase = "turning";
+            }
+          }
 
-        //   if (motion.phase === "turning" && remainingTravel > 0) {
-        //     motion.angleRad -= remainingTravel / motion.radius;
-        //     if (motion.angleRad <= -motion.totalAngleRad) {
-        //       motion.angleRad = -motion.totalAngleRad;
-        //       motion.phase = "completed";
-        //       motion.completed = true;
-        //       this.activeRoute = null;
-        //     }
-        //   }
-        // }
-
-        this.activeRoute = null;
+          if (motion.phase === "turning" && remainingTravel > 0) {
+            motion.angleRad -= remainingTravel / motion.radius;
+            if (motion.angleRad <= -motion.totalAngleRad) {
+              motion.angleRad = -motion.totalAngleRad;
+              motion.phase = "completed";
+              motion.completed = true;
+              this.activeRoute = null;
+            }
+          }
+        }
 
         this.leftSideObjects?.update(deltaTime, speed);
         this.rightSideObjects?.update(deltaTime, speed);
 
-        // for (let i = this.segmentSurfaces.length - 1; i >= 0; i--) {
-        //   const surface = this.segmentSurfaces[i];
-        //   if (!surface) continue;
-        //   if (surface.update(deltaTime, speed)) {
-        //     surface.dispose();
-        //     this.segmentSurfaces.splice(i, 1);
-        //   }
-        // }
+        if (this.isSegmentedMode()) {
+          for (let i = this.segmentSurfaces.length - 1; i >= 0; i--) {
+            const surface = this.segmentSurfaces[i];
+            if (!surface) continue;
+            if (surface.update(deltaTime, speed)) {
+              surface.dispose();
+              this.segmentSurfaces.splice(i, 1);
+            }
+          }
+        }
 
         for (let i = this.elevatedSections.length - 1; i >= 0; i--) {
         const section = this.elevatedSections[i];
@@ -460,15 +428,13 @@ export class RoadManager {
             this.elevatedSections.splice(i, 1);
         }
         }
-        // if (this.shouldDisableIdleSegmentSurface()) {
-        //   this.clearIdleSegmentSurface();
-        // } else {
-        //   this.idleSegmentSurface?.update(deltaTime, speed);
-        // }
-
-        // if (this.idleSegmentSurface) {
-        //     // Ничего не делаем — дорога статична
-        // }
+        if (this.isSegmentedMode()) {
+          if (this.shouldDisableIdleSegmentSurface()) {
+            this.clearIdleSegmentSurface();
+          } else {
+            this.idleSegmentSurface?.update(deltaTime, speed);
+          }
+        }
 
         this.updateCurrentLane(this.carManager.getCar().getCurrentLane());
     };

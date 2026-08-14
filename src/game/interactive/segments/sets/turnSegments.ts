@@ -2,7 +2,7 @@ import type { Segment } from "../Segment";
 import { LanePattern as L } from "../../types/LanePattern";
 import { SegmentTypes as T } from "../../types/SegmentType";
 
-const TURN_ROW_COUNT = 120;
+const TURN_ROW_COUNT = 100;
 const TURN_CURVE_START = 1;
 const TURN_CURVE_END = TURN_ROW_COUNT;
 const CENTER_LANE = 2;
@@ -48,35 +48,33 @@ function makeTurnPattern(direction: "left" | "right"): L[][] {
   });
 }
 
-export const TURN_SEGMENTS: Segment[] = [];
-
-// export const TURN_SEGMENTS: Segment[] = [
-//   {
-//     id: "longLeftTurn",
-//     type: T.Scenario,
-//     weight: 4,
-//     canReversed: false,
-//     difficulty: 2,
-//     curve: {
-//       direction: "left",
-//       totalAngleDeg: 45,
-//       rowStart: TURN_CURVE_START,
-//       rowEnd: TURN_CURVE_END,
-//     },
-//     pattern: makeTurnPattern("left"),
-//   },
-//   {
-//     id: "longRightTurn",
-//     type: T.Scenario,
-//     weight: 4,
-//     canReversed: false,
-//     difficulty: 2,
-//     curve: {
-//       direction: "right",
-//       totalAngleDeg: 45,
-//       rowStart: TURN_CURVE_START,
-//       rowEnd: TURN_CURVE_END,
-//     },
-//     pattern: makeTurnPattern("right"),
-//   },
-// ];
+export const TURN_SEGMENTS: Segment[] = [
+  {
+    id: "longLeftTurn",
+    type: T.Scenario,
+    weight: 4,
+    canReversed: false,
+    difficulty: 2,
+    curve: {
+      direction: "left",
+      totalAngleDeg: 90,
+      rowStart: TURN_CURVE_START,
+      rowEnd: TURN_CURVE_END,
+    },
+    pattern: makeTurnPattern("left"),
+  },
+  {
+    id: "longRightTurn",
+    type: T.Scenario,
+    weight: 4,
+    canReversed: false,
+    difficulty: 2,
+    curve: {
+      direction: "right",
+      totalAngleDeg: 90,
+      rowStart: TURN_CURVE_START,
+      rowEnd: TURN_CURVE_END,
+    },
+    pattern: makeTurnPattern("right"),
+  },
+];

@@ -75,7 +75,9 @@ export const useEnvironmentStore = defineStore("environmentStore", () => {
       emissiveIntensity: road.emissiveIntensity,
       opacity: road.opacity,
       sideObjects,
-      segmentSurfaces: road.segmentSurfaces,
+      roadMode: road.roadMode ?? "static",
+      enableElevatedSegments: road.enableElevatedSegments ?? false,
+      enableCurvedSegments: road.enableCurvedSegments ?? false,
       elevatedSections: road.elevatedSections?.map((section) => ({
         ...section,
         color: section.color ? colorToNumber(section.color) : undefined,

@@ -53,7 +53,11 @@ const nightCity = {
       laneColor: "#FFFFFF",
       length: 800,
     //   length: 200,
-      segmentSurfaces: true,
+      // Runtime-сегменты можно включать для профилирования отдельно от поворотов
+      // и вертикальных участков.
+      roadMode: "static",
+      enableElevatedSegments: false,
+      enableCurvedSegments: false,
       edges: {
         color: "#00ffff",
         height: 10,

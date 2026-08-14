@@ -254,9 +254,15 @@ export interface RoadEnvironmentConfig {
   elevatedSections?: RoadElevatedSectionConfig[];
 
   /**
-   * Рисовать дорожное полотно как часть runtime-сегментов вместо общей плоскости.
+   * Режим дорожного полотна. По умолчанию используется неподвижная плоскость.
    */
-  segmentSurfaces?: boolean;
+  roadMode?: "static" | "segmented";
+
+  /** Включает подъёмы/спуски в runtime-сегментах. */
+  enableElevatedSegments?: boolean;
+
+  /** Включает поворотные runtime-сегменты. */
+  enableCurvedSegments?: boolean;
 }
 
 export interface RoadElevatedSectionConfig {

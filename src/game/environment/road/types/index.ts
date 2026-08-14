@@ -1,5 +1,8 @@
 import type { TextureAtlas } from "@/assets/textures/TextureAtlas";
 
+/** Rendering strategy for the main road surface. */
+export type RoadMode = "static" | "segmented";
+
 // Общие типы и интерфейсы
 export interface RoadLineConfig {
   x: number;
@@ -38,7 +41,15 @@ export interface RoadConfig {
   atlasSprite?: string;
   sideObjects?: RoadSideObjectsConfig;
   elevatedSections?: RoadElevatedSectionConfig[];
-  segmentSurfaces?: boolean;
+  /**
+   * `static` keeps one large immovable surface. `segmented` creates and moves
+   * runtime road sections together with gameplay segments.
+   */
+  roadMode?: RoadMode;
+  /** Enables raised/lowered runtime sections. Requires `roadMode: "segmented"`. */
+  enableElevatedSegments?: boolean;
+  /** Enables curved runtime sections. Requires `roadMode: "segmented"`. */
+  enableCurvedSegments?: boolean;
 }
 
 export interface RoadElevatedSectionConfig {
