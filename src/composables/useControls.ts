@@ -117,7 +117,7 @@ export function useControls(game: ReturnType<typeof useGame>) {
     }
   }
 
-  function handleTouchControl(action: "left" | "right" | "fire") {
+  function handleTouchControl(action: "left" | "right" | "up" | "down" | "fire") {
     handleGameGesture(action === "fire" ? "tap" : action);
   }
 

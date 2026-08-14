@@ -48,7 +48,8 @@
         "keyStats": {
             "progress": "прогресс",
             "maxProgress": "макс.",
-            "speed": "скорость"
+            "speed": "скорость",
+            "mass": "масса"
         },
         "notificationsList": {
             "armorEquipped": "броня установлена!",
@@ -101,6 +102,25 @@
             },
             "energons": {
                 "label": "энергоны"
+            }
+        }
+    },
+    "levelMenu": {
+        "soon": "скоро",
+        "levelSelect": {
+            "label": "Уровень",
+            "variants": {
+                "night_city": "ночной город",
+                "misty_hills": "туманные холмы",
+                "storm_ocean": "штормовой океан",
+                "volcanic_island": "вулканический остров"
+            }
+        },
+        "difficultySelect": {
+            "label": "Режим",
+            "variants": {
+                "normal": "обычный",
+                "hard": "сложный"
             }
         }
     },

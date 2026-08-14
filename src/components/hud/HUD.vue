@@ -76,7 +76,8 @@
             </div>
         </div>
 
-        <button class="mobile_fire_button" aria-label="Выстрел" @pointerdown.stop.prevent="shoot">
+        <button class="mobile_fire_button" :class="{ 'mobile_fire_button--ready': hasAmmo }" aria-label="Выстрел"
+            :disabled="!hasAmmo" @pointerdown.stop.prevent="shoot">
             <img class="mobile_fire_button__icon" src="@/assets/images/hud/cube_bullet.svg" alt="" />
         </button>
 
@@ -127,6 +128,8 @@ const hasLightBackground = computed(() =>
 );
 
 function shoot() {
+    if (!hasAmmo.value) return;
+
     game?.controls?.handleTouchControl?.('fire');
 }
 
@@ -137,6 +140,7 @@ const score = computed(() => Math.floor(progressStore.score));
 const currentMultiplier = computed(() => progressStore.currentMultiplier);
 const currentSpeed = computed(() => (playerStore.getCurrentSpeed() * 100).toFixed(1));
 const currentMass = computed(() => playerStore.mass.toFixed(1));
+const hasAmmo = computed(() => playerStore.ammo > 0);
 const massColorClass = computed(() => {
     if (playerStore.massRatio >= 1.55) return 'color_red_light';
     if (playerStore.massRatio >= 1.25) return 'color_yellow_light';
@@ -278,9 +282,9 @@ $booster-icon-size: 1.875rem;
 .mobile_fire_button {
     position: absolute;
     z-index: 1;
-    right: clamp(1.6rem, 5vmin, 3.2rem);
-    bottom: calc(var(--hud-bottom-panel-height) + clamp(1.6rem, 4.5vmin, 3.2rem));
-    width: clamp(4.4rem, 12.65vmin, 6.3rem);
+    right: clamp(2rem, 5vmin, 3.2rem);
+    bottom: calc(clamp(2rem, 4.5vmin, 3.2rem));
+    width: clamp(7.0rem, 12.65vmin, 8.0rem);
     aspect-ratio: 1;
     display: grid;
     place-items: center;
@@ -292,15 +296,44 @@ $booster-icon-size: 1.875rem;
     touch-action: none;
     -webkit-tap-highlight-color: transparent;
 
-    &:active {
+    &:not(:disabled):active {
         transform: scale(0.93);
         background: rgba(116, 22, 16, 0.8);
     }
+
+    &:disabled {
+        border-color: rgba(119, 125, 135, 0.45);
+        background: rgba(20, 23, 28, 0.52);
+        box-shadow: none;
+        cursor: default;
+        opacity: 0.42;
+    }
+}
+
+.mobile_fire_button--ready {
+    animation: mobile-fire-pulse 1.8s ease-in-out infinite;
 }
 
 .mobile_fire_button__icon {
     width: 52%;
     filter: drop-shadow(0 0 0.5rem rgba(255, 98, 70, 0.85));
+}
+
+.mobile_fire_button:disabled .mobile_fire_button__icon {
+    filter: none;
+}
+
+@keyframes mobile-fire-pulse {
+    0%,
+    100% {
+        border-color: rgba(255, 102, 82, 0.72);
+        box-shadow: inset 0 0 0.75rem rgba(255, 80, 55, 0.26), 0 0 0.55rem rgba(255, 80, 55, 0.22);
+    }
+
+    50% {
+        border-color: rgba(255, 182, 116, 1);
+        box-shadow: inset 0 0 1.2rem rgba(255, 112, 65, 0.58), 0 0 1.45rem rgba(255, 92, 54, 0.62);
+    }
 }
 
 @media (hover: hover) and (pointer: fine) {

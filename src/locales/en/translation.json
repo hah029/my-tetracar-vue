@@ -48,7 +48,8 @@
         "keyStats": {
             "progress": "progress",
             "maxProgress": "max",
-            "speed": "speed"
+            "speed": "speed",
+            "mass": "mass"
         },
         "notificationsList": {
             "armorEquipped": "armor equipped!",
@@ -101,6 +102,25 @@
             },
             "energons": {
                 "label": "energons"
+            }
+        }
+    },
+    "levelMenu": {
+        "soon": "soon",
+        "levelSelect": {
+            "label": "Level",
+            "variants": {
+                "night_city": "Night city",
+                "misty_hills": "Misty hills",
+                "storm_ocean": "Storm ocean",
+                "volcanic_island": "Volcanic island"
+            }
+        },
+        "difficultySelect": {
+            "label": "Difficulty",
+            "variants": {
+                "normal": "Normal",
+                "hard": "Hard"
             }
         }
     },

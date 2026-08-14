@@ -5,7 +5,7 @@ const mistyHills = {
   name: "Misty Hills",
   description:
     "Soft daylight route with layered hills, lighter bloom and calmer scenery.",
-  enabled: true,
+  enabled: false,
   to_show: true,
   difficultyIds: ["normal", "hard"],
 

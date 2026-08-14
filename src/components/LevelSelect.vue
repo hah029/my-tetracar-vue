@@ -14,10 +14,10 @@
                                 borderColor: level.environment.road.laneColor,
                             }" />
                             <span class="option_text">
-                                <span class="option_name">{{ level.name }}</span>
-                                <span class="option_meta">{{ level.environment.scenery.scenerySets.join(" / ") }}</span>
+                                <span class="option_name">{{ $t(`levelMenu.levelSelect.variants.${level.id}`) }}</span>
+                                <!-- <span class="option_meta">{{ level.environment.scenery.scenerySets.join(" / ") }}</span> -->
                             </span>
-                            <span v-if="!level.enabled" class="option_status">скоро</span>
+                            <span v-if="!level.enabled" class="option_status">{{ $t("levelMenu.soon") }}</span>
                         </button>
                     </div>
                 </div>
@@ -28,7 +28,8 @@
                         <button v-for="difficulty in levelStore.availableDifficulties" :key="difficulty.id"
                             class="option_btn" :class="{ active: levelStore.currentDifficultyId === difficulty.id }"
                             @click="selectDifficulty(difficulty.id)">
-                            <span class="option_name">{{ difficulty.name }}</span>
+                            <span class="option_name">{{ $t(`levelMenu.difficultySelect.variants.${difficulty.id}`)
+                            }}</span>
                         </button>
                     </div>
                 </div>
@@ -150,7 +151,7 @@ function startRace() {
 }
 
 .option_btn {
-    min-height: 4.8rem;
+    min-height: 4.0rem;
     padding: 0.85rem 1rem;
     border: 1px solid rgba(215, 251, 255, 0.28);
     background: rgba(2, 7, 16, 0.56);
@@ -188,6 +189,7 @@ function startRace() {
     display: block;
     overflow-wrap: anywhere;
     align-items: center;
+    text-transform: capitalize;
 }
 
 .option_status {
@@ -200,9 +202,9 @@ function startRace() {
 }
 
 .option_swatch {
-    flex: 0 0 2.2rem;
-    width: 2.2rem;
-    height: 2.2rem;
+    flex: 0 0 1.6rem;
+    width: 1.6rem;
+    height: 1.6rem;
     border: 2px solid rgba(215, 251, 255, 0.75);
     box-shadow: inset 0 0 16px rgba(255, 255, 255, 0.18);
 }
@@ -250,7 +252,7 @@ function startRace() {
     }
 
     .option_btn {
-        min-height: 4.5rem;
+        min-height: 4.0rem;
     }
 
     .actions {

@@ -210,10 +210,7 @@ export class MagnetSystem {
           ? "#ff7a2a"
           : "#00eaff";
 
-    if (
-      !this.magnetField ||
-      this.magnetField.userData.radius !== radius
-    ) {
+    if (!this.magnetField || this.magnetField.userData.radius !== radius) {
       this.removeMagnetField();
       this.magnetField = this.createMagnetField(color, radius);
       this.scene.add(this.magnetField);
@@ -253,7 +250,7 @@ export class MagnetSystem {
       uniforms: {
         time: { value: 0 },
         color: { value: new THREE.Color(color) },
-        opacity: { value: 0.18 },
+        opacity: { value: 0.8 },
       },
       vertexShader: magnetLineVertex,
       fragmentShader: magnetLineFragment,
@@ -358,10 +355,7 @@ export class MagnetSystem {
       "position",
       new THREE.Float32BufferAttribute(positions, 3),
     );
-    geometry.setAttribute(
-      "uv",
-      new THREE.Float32BufferAttribute(uvs, 2),
-    );
+    geometry.setAttribute("uv", new THREE.Float32BufferAttribute(uvs, 2));
     geometry.setIndex(indices);
     geometry.computeVertexNormals();
 
