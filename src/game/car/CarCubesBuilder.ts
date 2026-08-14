@@ -43,6 +43,7 @@ export class CarCubesBuilder {
           useTexture: !!playerStore.CAR_MATERIAL_CONFIG.textureUrl,
           materialConfig,
         });
+        this.makeMaterialsUnique(cube);
         cubes.push(cube);
         if (onCubeCreated) onCubeCreated(cube);
       } catch (error) {
@@ -54,11 +55,27 @@ export class CarCubesBuilder {
           useTexture: !!playerStore.CAR_MATERIAL_CONFIG.textureUrl,
           materialConfig,
         });
+        this.makeMaterialsUnique(fallbackCube);
         cubes.push(fallbackCube);
         if (onCubeCreated) onCubeCreated(fallbackCube);
       }
     }
 
     return cubes;
+  }
+
+  /**
+   * Состояние эффектов меняет карту и эмиссию материала каждого кубика
+   * отдельно. Материал из MaterialPool общий, поэтому для машины оставляем
+   * общими только текстуры, а сам материал делаем уникальным для mesh.
+   */
+  private makeMaterialsUnique(cube: THREE.Object3D): void {
+    cube.traverse((child) => {
+      if (!(child instanceof THREE.Mesh)) return;
+
+      child.material = Array.isArray(child.material)
+        ? child.material.map((material) => material.clone())
+        : child.material.clone();
+    });
   }
 }
