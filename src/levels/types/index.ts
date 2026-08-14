@@ -8,6 +8,18 @@ export interface LevelConfig {
   name: string;
   description?: string;
 
+  /** Доступен ли уровень для выбора и запуска в текущем релизе. */
+  enabled: boolean;
+
+  /** Показывать ли карточку уровня на экране выбора. */
+  to_show: boolean;
+
+  /**
+   * Идентификаторы сложностей, доступных для этого визуального уровня.
+   * Если не указано, доступны все глобально опубликованные сложности.
+   */
+  difficultyIds?: readonly string[];
+
   visual: VisualConfig;
   environment: EnvironmentConfig;
   interactive: InteractiveConfig;

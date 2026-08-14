@@ -346,6 +346,15 @@ class CameraSystemClass {
     this.triggerImpactShake(shake.strength, shake.duration);
   }
 
+  public triggerPickupRejectedShake() {
+    const shake = useCameraStore().config.event_shake.pickup_rejected;
+
+    this.impactTimer = 0;
+    this.impactDuration = shake.duration;
+    this.impactAmplitude = shake.amplitude;
+    this.impactSeed = Math.random() * Math.PI * 2;
+  }
+
   public triggerLandingShake() {
     const cfg = useCameraStore().config.event_shake.landing;
     this.triggerImpactShake(cfg.strength, cfg.duration);

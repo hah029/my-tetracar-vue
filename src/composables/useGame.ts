@@ -490,13 +490,15 @@ export function useGame() {
     }
   }
 
-  function handleBoosterCollision(collision: CollisionResult) {
+  function handleBoosterCollision(collision: CollisionResult): boolean {
     const carPos = car.value.mesh.position;
 
     if (collision.impactSubject instanceof BulletItem) {
       if (playerStore.ammo >= playerStore.maxAmmo) {
         playerStore.addNewMsg("maxAmmo");
-        return;
+        playerStore.rejectPickup("ammo");
+        CameraSystem.triggerPickupRejectedShake();
+        return false;
       }
 
       playerStore.addAmmo();
@@ -505,7 +507,7 @@ export function useGame() {
 
       soundManager.play("sfx_add_patron");
       spawnFlash("bullet", carPos);
-      return;
+      return true;
     }
 
     if (collision.impactSubject instanceof NitroItem) {
@@ -521,13 +523,15 @@ export function useGame() {
       spawnFlash("nitro", carPos);
       CameraSystem.triggerNitroShake(corrupted);
 
-      return;
+      return true;
     }
 
     if (collision.impactSubject instanceof ShieldItem) {
       if (playerStore.armor >= playerStore.maxArmor) {
         playerStore.addNewMsg("maxArmor");
-        return;
+        playerStore.rejectPickup("armor");
+        CameraSystem.triggerPickupRejectedShake();
+        return false;
       }
 
       const corrupted =
@@ -548,7 +552,7 @@ export function useGame() {
 
       soundManager.play("sfx_add_armor");
       spawnFlash("shield", carPos);
-      return;
+      return true;
     }
 
     if (collision.impactSubject instanceof MagnetItem) {
@@ -573,8 +577,10 @@ export function useGame() {
       );
       playerStore.makeEventHappened("addMagnet");
       spawnFlash("magnet", carPos);
-      return;
+      return true;
     }
+
+    return false;
   }
 
   function removeItem(item: BaseItem) {

@@ -1,32 +1,6 @@
 import type { DifficultyConfig } from "@/levels/types";
 
 export const DIFFICULTIES = {
-  easy: {
-    id: "easy",
-    name: "Easy",
-    description: "Lower speed, fewer obstacles and more forgiving pickups.",
-    allowCoins: true,
-    allowPositiveBoosts: true,
-    allowNegativeBoosts: false,
-    gameplay: {
-      laneCount: 4,
-      startSpeed: 0.04,
-      maxSpeed: 0.75,
-      speedIncreaseRate: 0.000003,
-      coinSpawnChance: 0.8,
-      boostSpawnChance: 0.2,
-      positiveBoostChance: 1,
-      negativeBoostChance: 0,
-      corruptedBoostChance: 0,
-      corruptedBoostWeights: {
-        nitro: { heavyNitro: 1 },
-        shield: { blindShield: 1 },
-        magnet: { lethalMagnet: 1, repulseMagnet: 1 },
-      },
-      obstacleSpawnChance: 0.45,
-      targetDistance: 800,
-    },
-  },
   normal: {
     id: "normal",
     name: "Normal",
@@ -47,7 +21,7 @@ export const DIFFICULTIES = {
       corruptedBoostWeights: {
         nitro: { heavyNitro: 1 },
         shield: { blindShield: 1 },
-        magnet: { lethalMagnet: 1, repulseMagnet: 1 },
+        magnet: { lethalMagnet: 0, repulseMagnet: 1 },
       },
       obstacleSpawnChance: 1,
       targetDistance: 1000,
@@ -73,7 +47,7 @@ export const DIFFICULTIES = {
       corruptedBoostWeights: {
         nitro: { heavyNitro: 1 },
         shield: { blindShield: 1 },
-        magnet: { lethalMagnet: 1, repulseMagnet: 1 },
+        magnet: { lethalMagnet: 0, repulseMagnet: 1 },
       },
       obstacleSpawnChance: 0.85,
       targetDistance: 1200,

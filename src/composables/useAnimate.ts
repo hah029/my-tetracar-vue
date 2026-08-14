@@ -164,8 +164,12 @@ export function GameLoop(
             game.handleCoinCollision(itemCollision);
             game.removeItem(itemCollision.impactSubject as BaseItem);
           } else if (itemCollision.impactSubject instanceof BoosterItem) {
-            game.handleBoosterCollision(itemCollision);
-            game.removeItem(itemCollision.impactSubject as BaseItem);
+            const booster = itemCollision.impactSubject as BaseItem;
+            if (game.handleBoosterCollision(itemCollision)) {
+              game.removeItem(booster);
+            } else {
+              booster.userData.pickupRejected = true;
+            }
           }
         }
 

@@ -5,6 +5,9 @@ const volcanicIsland = {
   name: "Volcanic Island",
   description:
     "Red-hot island route with lava glow, smoky fog and sharp volcanic silhouettes.",
+  enabled: false,
+  to_show: true,
+  difficultyIds: ["normal", "hard"],
 
   visual: {
     camera: {

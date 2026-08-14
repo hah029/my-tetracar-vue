@@ -139,6 +139,8 @@ export const usePlayerStore = defineStore("playerStore", () => {
   const notificationMsg = ref("");
   const eventType = ref("");
   const eventCounter = ref(0);
+  const rejectedPickupType = ref<"ammo" | "armor" | null>(null);
+  let rejectedPickupResetTimer: ReturnType<typeof setTimeout> | undefined;
 
   function applyGameplayConfig(gameplay: GameplayConfig) {
     startSpeed.value = gameplay.startSpeed;
@@ -396,6 +398,16 @@ export const usePlayerStore = defineStore("playerStore", () => {
     notificationMsg.value = msg_;
   }
 
+  function rejectPickup(type: "ammo" | "armor") {
+    if (rejectedPickupResetTimer) clearTimeout(rejectedPickupResetTimer);
+
+    rejectedPickupType.value = type;
+    rejectedPickupResetTimer = setTimeout(() => {
+      rejectedPickupType.value = null;
+      rejectedPickupResetTimer = undefined;
+    }, 320);
+  }
+
   function getColliderOptions() {
     return {
       colliderShrinkX: config.value.collider.shrinkX,
@@ -475,6 +487,7 @@ export const usePlayerStore = defineStore("playerStore", () => {
     notificationMsg,
     eventType,
     eventCounter,
+    rejectedPickupType,
     isMagnetEnabled,
     magnetTimer,
     magnetRadius,
@@ -523,6 +536,7 @@ export const usePlayerStore = defineStore("playerStore", () => {
     canShoot,
     makeEventHappened,
     addNewMsg,
+    rejectPickup,
     getDefaultCarConfig,
     renderInstance,
   };

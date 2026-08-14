@@ -19,8 +19,18 @@ export const useLevelStore = defineStore("levelStore", () => {
   const currentLevelId = ref<LevelId>(DEFAULT_LEVEL_ID);
   const currentDifficultyId = ref<DifficultyId>(DEFAULT_DIFFICULTY_ID);
 
-  const levels = LEVEL_LIST;
+  const levels = computed(() => LEVEL_LIST.filter((level) => level.to_show));
   const difficulties = DIFFICULTY_LIST;
+
+  const availableDifficulties = computed(() => {
+    const difficultyIds = currentLevel.value.difficultyIds;
+
+    if (!difficultyIds) return DIFFICULTY_LIST;
+
+    return DIFFICULTY_LIST.filter((difficulty) =>
+      difficultyIds.includes(difficulty.id),
+    );
+  });
 
   const currentLevel = computed(() => LEVELS[currentLevelId.value]);
   const currentDifficulty = computed(
@@ -35,10 +45,25 @@ export const useLevelStore = defineStore("levelStore", () => {
   );
 
   function selectLevel(id: LevelId) {
+    if (!LEVELS[id].enabled) return;
+
     currentLevelId.value = id;
+
+    if (
+      !availableDifficulties.value.some(
+        (difficulty) => difficulty.id === currentDifficultyId.value,
+      )
+    ) {
+      const [firstDifficulty] = availableDifficulties.value;
+      if (firstDifficulty) currentDifficultyId.value = firstDifficulty.id;
+    }
   }
 
   function selectDifficulty(id: DifficultyId) {
+    if (!availableDifficulties.value.some((difficulty) => difficulty.id === id)) {
+      return;
+    }
+
     currentDifficultyId.value = id;
   }
 
@@ -54,6 +79,7 @@ export const useLevelStore = defineStore("levelStore", () => {
   return {
     levels,
     difficulties,
+    availableDifficulties,
     currentLevelId,
     currentDifficultyId,
     currentLevel,

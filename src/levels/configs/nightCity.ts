@@ -5,6 +5,9 @@ const nightCity = {
   name: "Night City",
   description:
     "Baseline neon route with dense city scenery and balanced visibility.",
+  enabled: true,
+  to_show: true,
+  difficultyIds: ["normal", "hard"],
 
   visual: {
     camera: {
