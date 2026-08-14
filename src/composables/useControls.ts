@@ -1,6 +1,6 @@
 // src/composables/useControls.ts
 
-import { onMounted, onUnmounted, ref } from "vue";
+import { onMounted, onUnmounted } from "vue";
 import { useGameState } from "@/store/gameState";
 import { usePlayerStore } from "@/store/playerStore";
 import { CarManager } from "@/game/car";
@@ -13,20 +13,11 @@ export function useControls(game: ReturnType<typeof useGame>) {
   const gameStore = useGameState();
   const playerStore = usePlayerStore();
 
-  const touchZoneRef = ref<HTMLElement | null>(null);
-
   const processedKeys = new Set<string>();
 
   const INPUT_DT = 1000 / 60;
   const MOVE_REPEAT_INTERVAL = 90;
 
-  const TAP_DISTANCE = 20;
-  const TAP_DURATION = 250;
-  const SWIPE_THRESHOLD = 40;
-
-  let startX = 0;
-  let startY = 0;
-  let startTime = 0;
   let lastMoveRepeatTime = 0;
 
   enum controlKeys {
@@ -126,68 +117,8 @@ export function useControls(game: ReturnType<typeof useGame>) {
     }
   }
 
-  function registerTouchZone(element: HTMLElement | null) {
-    cleanup();
-
-    touchZoneRef.value = element;
-
-    if (!element) return;
-
-    element.style.touchAction = "none";
-
-    const onTouchStart = (e: TouchEvent) => {
-      const touch = e.touches[0];
-
-      startX = touch.clientX;
-      startY = touch.clientY;
-      startTime = Date.now();
-    };
-
-    const onTouchEnd = (e: TouchEvent) => {
-      const touch = e.changedTouches[0];
-
-      const deltaX = touch.clientX - startX;
-      const deltaY = touch.clientY - startY;
-
-      const absX = Math.abs(deltaX);
-      const absY = Math.abs(deltaY);
-
-      const duration = Date.now() - startTime;
-
-      if (
-        absX < TAP_DISTANCE &&
-        absY < TAP_DISTANCE &&
-        duration < TAP_DURATION
-      ) {
-        handleGameGesture("tap");
-        return;
-      }
-
-      if (absX > absY) {
-        if (deltaX > SWIPE_THRESHOLD) {
-          handleGameGesture("right");
-        } else if (deltaX < -SWIPE_THRESHOLD) {
-          handleGameGesture("left");
-        }
-      } else {
-        if (deltaY < -SWIPE_THRESHOLD) {
-          handleGameGesture("up");
-        } else if (deltaY > SWIPE_THRESHOLD) {
-          handleGameGesture("down");
-        }
-      }
-    };
-
-    element.addEventListener("touchstart", onTouchStart, {
-      passive: true,
-    });
-
-    element.addEventListener("touchend", onTouchEnd, {
-      passive: true,
-    });
-
-    (element as any)._touchStartHandler = onTouchStart;
-    (element as any)._touchEndHandler = onTouchEnd;
+  function handleTouchControl(action: "left" | "right" | "fire") {
+    handleGameGesture(action === "fire" ? "tap" : action);
   }
 
   function handleKeyDown(e: KeyboardEvent) {
@@ -285,22 +216,6 @@ export function useControls(game: ReturnType<typeof useGame>) {
     }
   }
 
-  function cleanup() {
-    if (touchZoneRef.value && (touchZoneRef.value as any)._touchStartHandler) {
-      touchZoneRef.value.removeEventListener(
-        "touchstart",
-        (touchZoneRef.value as any)._touchStartHandler,
-      );
-    }
-
-    if (touchZoneRef.value && (touchZoneRef.value as any)._touchEndHandler) {
-      touchZoneRef.value.removeEventListener(
-        "touchend",
-        (touchZoneRef.value as any)._touchEndHandler,
-      );
-    }
-  }
-
   onMounted(() => {
     window.addEventListener("keydown", handleKeyDown);
     window.addEventListener("keyup", handleKeyUp);
@@ -312,11 +227,9 @@ export function useControls(game: ReturnType<typeof useGame>) {
 
     processedKeys.clear();
 
-    cleanup();
   });
 
   return {
-    registerTouchZone,
-    cleanup,
+    handleTouchControl,
   };
 }
