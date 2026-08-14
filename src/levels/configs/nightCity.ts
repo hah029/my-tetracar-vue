@@ -27,9 +27,9 @@ const nightCity = {
       fogNear: 0.01,
       fogFar: 200,
       toneMappingExposure: 0.9,
-      bloomStrength: 0.3,
-      bloomRadius: 0.5,
-      bloomThreshold: 1.2,
+      bloomStrength: 0.1,
+      bloomRadius: 0.8,
+      bloomThreshold: 0.5,
     },
 
     lighting: {
@@ -55,7 +55,7 @@ const nightCity = {
       opacity: 0.25,
       laneColor: "#FFFFFF",
       length: 800,
-    //   length: 200,
+      //   length: 200,
       // Runtime-сегменты можно включать для профилирования отдельно от поворотов
       // и вертикальных участков.
       roadMode: "static",

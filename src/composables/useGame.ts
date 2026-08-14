@@ -24,7 +24,10 @@ import type { CarRef } from "@/game/car";
 import { CameraSystem } from "@/game/camera/CameraSystem";
 import { useGameState } from "@/store/gameState";
 import { GameStates } from "@/game/core/GameState";
-import { setupLights } from "@/game/light/setupLight";
+import {
+  setupLights,
+  updateDirectionalLightShadow,
+} from "@/game/light/setupLight";
 import { BaseObstacle } from "@/game/interactive/obstacle/BaseObstacle";
 import { Golden } from "@/game/interactive/items/coin/Golden";
 import { Energon } from "@/game/interactive/items/coin/Energon";
@@ -150,6 +153,7 @@ export function useGame() {
 
     const realCar = carManager.getCar();
     realCar.update(dt);
+    if (sceneRef) updateDirectionalLightShadow(sceneRef, realCar.position);
 
     car.value.mesh = realCar;
     car.value.isDestroyed = realCar.isDestroyed();

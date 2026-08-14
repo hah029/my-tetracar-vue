@@ -43,7 +43,7 @@ export default {
   bulletDefaultMaterial: {
     color: 0xff0000,
     emissive: 0xff0000,
-    emissiveIntensity: 10,
+    emissiveIntensity: 20,
   },
   bulletGeometry: [1, 1, 1] as [number, number, number],
 
