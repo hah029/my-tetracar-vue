@@ -76,6 +76,10 @@
             </div>
         </div>
 
+        <button class="mobile_fire_button" aria-label="Выстрел" @pointerdown.stop.prevent="shoot">
+            <img class="mobile_fire_button__icon" src="@/assets/images/hud/cube_bullet.svg" alt="" />
+        </button>
+
         <!-- FX-эффекты -->
         <HudEffects />
     </div>
@@ -83,7 +87,7 @@
 
 
 <script setup lang="ts">
-import { computed } from 'vue';
+import { computed, inject } from 'vue';
 import { useGameState } from '@/store/gameState';
 import { usePlayerStore } from '@/store/playerStore';
 import { useProgressStore } from '@/store/progressStore';
@@ -95,6 +99,7 @@ import HudNotifications from './panels/HudNotifications.vue';
 import HudEffects from './panels/HudEffects.vue';
 
 const gameStore = useGameState();
+const game = inject<any>('game');
 const playerStore = usePlayerStore();
 const progressStore = useProgressStore();
 const metaStore = useMetaStore();
@@ -120,6 +125,10 @@ function getColorLuminance(hexColor: string): number {
 const hasLightBackground = computed(() =>
     getColorLuminance(environmentStore.currentRender.backgroundColor) > 0.45
 );
+
+function shoot() {
+    game?.controls?.handleTouchControl?.('fire');
+}
 
 // Валюты
 const goldens = computed(() => metaStore.goldens);
@@ -264,6 +273,40 @@ $booster-icon-size: 1.875rem;
     --hud-timed-bg: rgba(255, 255, 255, 0.42);
     --hud-timed-border: rgba(33, 62, 80, 0.18);
     --hud-timed-shadow: inset 0 0 1.2rem rgba(20, 42, 56, 0.05);
+}
+
+.mobile_fire_button {
+    position: absolute;
+    z-index: 1;
+    right: clamp(1.6rem, 5vmin, 3.2rem);
+    bottom: calc(var(--hud-bottom-panel-height) + clamp(1.6rem, 4.5vmin, 3.2rem));
+    width: clamp(4.4rem, 12.65vmin, 6.3rem);
+    aspect-ratio: 1;
+    display: grid;
+    place-items: center;
+    border: 2px solid rgba(255, 102, 82, 0.9);
+    border-radius: 50%;
+    background: rgba(48, 8, 8, 0.62);
+    box-shadow: inset 0 0 1rem rgba(255, 80, 55, 0.35), 0 0 1rem rgba(255, 80, 55, 0.35);
+    pointer-events: auto;
+    touch-action: none;
+    -webkit-tap-highlight-color: transparent;
+
+    &:active {
+        transform: scale(0.93);
+        background: rgba(116, 22, 16, 0.8);
+    }
+}
+
+.mobile_fire_button__icon {
+    width: 52%;
+    filter: drop-shadow(0 0 0.5rem rgba(255, 98, 70, 0.85));
+}
+
+@media (hover: hover) and (pointer: fine) {
+    .mobile_fire_button {
+        display: none;
+    }
 }
 
 .font_adaptation {

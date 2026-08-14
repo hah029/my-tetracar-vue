@@ -34,11 +34,11 @@
                 </div>
             </div>
 
-            <div class="actions">
-                <button class="menu_btn action_btn" @click="goBack">назад</button>
-                <button class="menu_btn action_btn primary" @click="startRace">старт</button>
-            </div>
         </section>
+        <div class="actions">
+            <button class="menu_btn btn_correction" @click="goBack">назад</button>
+            <button class="menu_btn btn_correction primary" @click="startRace">старт</button>
+        </div>
     </div>
 </template>
 
@@ -71,6 +71,13 @@ function startRace() {
 
 <style lang="scss" scoped>
 @use "@/styles/menu.scss";
+@use "@/styles/typography" as *;
+@use "@/styles/colors" as *;
+
+.btn_correction {
+    @include text-button-size-s;
+    color: $color-yellow-super-light;
+}
 
 .level_select {
     justify-content: center;
@@ -218,7 +225,7 @@ function startRace() {
     display: flex;
     justify-content: center;
     gap: 2rem;
-    margin-top: 0.5rem;
+    margin: 1rem;
 }
 
 .action_btn {

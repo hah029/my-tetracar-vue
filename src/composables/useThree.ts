@@ -41,8 +41,17 @@ export function useThree(container: Ref<HTMLElement | null>) {
     if (!renderer || !container.value) return;
 
     const graphics = useGraphicsStore();
+    const pixelRatio = graphics.getPixelRatio();
 
-    renderer.setPixelRatio(graphics.getPixelRatio());
+    renderer.setPixelRatio(pixelRatio);
+
+    // Эффекты рисуются в собственные render targets. Их плотность должна
+    // совпадать с canvas, иначе итоговый кадр растягивается и выглядит мягким.
+    composer.setPixelRatio(pixelRatio);
+    fxaaPass.material.uniforms.resolution!.value.set(
+      1 / (container.value.clientWidth * pixelRatio),
+      1 / (container.value.clientHeight * pixelRatio),
+    );
 
     const shadowEnabled = graphics.shadowEnabled;
     renderer.shadowMap.enabled = shadowEnabled;
@@ -220,10 +229,11 @@ export function useThree(container: Ref<HTMLElement | null>) {
     composer.setSize(width, height);
 
     if (fxaaPass) {
-      fxaaPass.material.uniforms.resolution!.value.set(1 / width, 1 / height);
-    }
-    if (bloomPass) {
-      bloomPass.resolution.set(width, height);
+      const pixelRatio = renderer.getPixelRatio();
+      fxaaPass.material.uniforms.resolution!.value.set(
+        1 / (width * pixelRatio),
+        1 / (height * pixelRatio),
+      );
     }
 
     if (resizeFrameId) cancelAnimationFrame(resizeFrameId);
