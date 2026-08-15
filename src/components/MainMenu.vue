@@ -17,6 +17,12 @@
                     <img src="@/assets/images/daily_gifts_icon.svg" alt="" />
                     <span v-if="dailyGiftStore.status.canClaim" class="meta_navigation__marker">!</span>
                 </button>
+                <button class="menu_btn meta_navigation__button"
+                    :class="{ 'meta_navigation__button--available': fortuneWheelStore.spins > 0 }"
+                    :aria-label="t('mainMenu.fortuneWheel')" :title="t('mainMenu.fortuneWheel')" @click="goToFortuneWheel">
+                    <img src="@/assets/images/loot_circle.svg" alt="" />
+                    <span v-if="fortuneWheelStore.spins > 0" class="meta_navigation__marker">{{ fortuneWheelStore.spins }}</span>
+                </button>
             </aside>
         </Transition>
 
@@ -31,6 +37,9 @@
 
         <!-- DAILY GIFT -->
         <DailyGiftRoot v-if="gameStore.activeOverlay === 'dailyGift'" />
+
+        <!-- FORTUNE WHEEL -->
+        <FortuneWheelRoot v-if="gameStore.activeOverlay === 'fortuneWheel'" />
     </div>
 </template>
 
@@ -44,11 +53,14 @@ import SettingsRoot from "./settings/SettingsRoot.vue";
 import LeaderBoardsRoot from "./leaderboards/LeaderBoardsRoot.vue";
 import ShopRoot from "./shop/ShopRoot.vue";
 import { useDailyGiftStore } from "@/store/dailyGiftStore";
+import { useFortuneWheelStore } from "@/store/fortuneWheelStore";
 import DailyGiftRoot from "./daily-gift/DailyGiftRoot.vue";
+import FortuneWheelRoot from "./fortune-wheel/FortuneWheelRoot.vue";
 import { useTranslation } from "i18next-vue";
 import { SoundManager } from "@/game/sound/SoundManager";
 
 const dailyGiftStore = useDailyGiftStore();
+const fortuneWheelStore = useFortuneWheelStore();
 const foo = createNewText();
 const gameStore = useGameState();
 const isMainMenuEnabled = ref(false);
@@ -81,6 +93,12 @@ function goToDailyGift() {
     setTimeout(() => gameStore.openDailyGift(), 300);
 }
 
+function goToFortuneWheel() {
+    soundManager.playCue("uiSelect");
+    isMainMenuEnabled.value = false;
+    setTimeout(() => gameStore.openFortuneWheel(), 300);
+}
+
 function goToSettings() {
     soundManager.playCue("uiSelect");
     isMainMenuEnabled.value = false;
@@ -100,7 +118,7 @@ function goToLeaderBoards() {
 watch(
     () => gameStore.activeOverlay,
     (newState) => {
-        if (["settings", "leaderBoards", "shop", "dailyGift"].includes(newState as string)) {
+        if (["settings", "leaderBoards", "shop", "dailyGift", "fortuneWheel"].includes(newState as string)) {
             isMainMenuEnabled.value = false;
         } else {
             isMainMenuEnabled.value = true;
@@ -170,6 +188,9 @@ onMounted(async () => {
     position: fixed;
     left: max(8.5rem, 50% - 15rem);
     bottom: 27.111vh;
+    display: flex;
+    flex-direction: column;
+    gap: 0.9rem;
 }
 
 .meta_navigation__button {

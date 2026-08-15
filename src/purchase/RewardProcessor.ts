@@ -4,6 +4,7 @@ import { UpgradeService } from "./services/UpgradeService";
 import { EffectService } from "./services/EffectService";
 import { WalletService } from "./services/WalletService";
 import { usePlayerStore } from "@/store/playerStore";
+import { useMetaStore } from "@/store/metaStore";
 
 import type { RewardDefinition } from "./types";
 
@@ -33,6 +34,9 @@ export class RewardProcessor {
 
       case "armor":
         return this.applyArmor(reward);
+
+      case "fortune_spin":
+        return this.applyFortuneSpin(reward);
     }
   }
 
@@ -75,5 +79,9 @@ export class RewardProcessor {
     const player = usePlayerStore();
     for (let i = 0; i < (Number(reward.effect?.amount) || 0); i++) player.addArmor();
     if (player.armor > 0) player.enableShield();
+  }
+
+  private static applyFortuneSpin(reward: RewardDefinition) {
+    useMetaStore().addFortuneSpins(Number(reward.effect?.amount) || 0);
   }
 }

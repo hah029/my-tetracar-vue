@@ -9,6 +9,7 @@
         "startGame": "старт",
         "shop": "магазин",
         "dailyGift": "ежедневный бонус",
+        "fortuneWheel": "колесо фортуны",
         "settings": "настройки",
         "leaderboards": "рекорды"
     },
@@ -246,6 +247,16 @@
         "armor": "броня",
         "skin": "скин",
         "reward": "награда"
+    },
+    "fortuneWheel": {
+        "title": "колесо фортуны",
+        "spins": "крутки: {{count}}",
+        "spin": "крутить",
+        "spinning": "крутим…",
+        "spinUnit": "крутка",
+        "won": "вы выиграли",
+        "continue": "дальше",
+        "error": "не удалось выдать приз. попробуйте позже."
     },
     "currency": {
         "golden": "голд",

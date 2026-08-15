@@ -9,6 +9,7 @@
         "startGame": "play",
         "shop": "shop",
         "dailyGift": "daily bonus",
+        "fortuneWheel": "fortune wheel",
         "settings": "settings",
         "leaderboards": "leaderboards"
     },
@@ -246,6 +247,16 @@
         "armor": "armor",
         "skin": "skin",
         "reward": "reward"
+    },
+    "fortuneWheel": {
+        "title": "fortune wheel",
+        "spins": "spins: {{count}}",
+        "spin": "spin",
+        "spinning": "spinning…",
+        "spinUnit": "spin",
+        "won": "you won",
+        "continue": "continue",
+        "error": "could not grant the reward. please try again later."
     },
     "currency": {
         "golden": "golden",

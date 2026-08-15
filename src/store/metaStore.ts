@@ -22,6 +22,7 @@ export const useMetaStore = defineStore("metaStore", () => {
   // Валюта
   const goldens = ref(0);
   const energons = ref(0);
+  const fortuneSpins = ref(0);
 
   // Скины
   const ownedSkins = ref<string[]>([]);
@@ -84,6 +85,16 @@ export const useMetaStore = defineStore("metaStore", () => {
 
   function getBalance(currency: "golden" | "energon"): number {
     return currency === "golden" ? goldens.value : energons.value;
+  }
+
+  function addFortuneSpins(amount: number) {
+    fortuneSpins.value += Math.max(0, Math.floor(amount));
+  }
+
+  function consumeFortuneSpin(): boolean {
+    if (fortuneSpins.value < 1) return false;
+    fortuneSpins.value -= 1;
+    return true;
   }
 
   // ===== СКИНЫ =====
@@ -215,6 +226,7 @@ export const useMetaStore = defineStore("metaStore", () => {
       upgrades: JSON.stringify(upgrades.value),
       permanentFeatures: JSON.stringify(permanentFeatures.value),
       activeTimedEffects: JSON.stringify(activeTimedEffects.value),
+      fortuneSpins: fortuneSpins.value,
     });
   }
 
@@ -279,6 +291,11 @@ export const useMetaStore = defineStore("metaStore", () => {
         }
       }
 
+      const spins = data?.fortuneSpins;
+      if (spins != null) {
+        fortuneSpins.value = Math.max(0, Math.floor(Number(spins) || 0));
+      }
+
       // Очищаем истёкшие эффекты после загрузки
       cleanupExpiredEffects();
     } catch (err) {
@@ -290,6 +307,7 @@ export const useMetaStore = defineStore("metaStore", () => {
     // state
     goldens,
     energons,
+    fortuneSpins,
     ownedSkins,
     activeSkin,
     upgrades,
@@ -309,6 +327,8 @@ export const useMetaStore = defineStore("metaStore", () => {
     spendGolden,
     spendEnergon,
     getBalance,
+    addFortuneSpins,
+    consumeFortuneSpin,
 
     // скины
     unlockSkin,
