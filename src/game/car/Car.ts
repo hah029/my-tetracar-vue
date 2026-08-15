@@ -344,19 +344,10 @@ export class Car extends THREE.Group {
       this.collider.disableDebug(this.scene);
     }
 
-    // Очищаем все кубики
-    this.cubes.forEach((cube) => this.scene.remove(cube));
+    // Удаляем только кубы корпуса. В группе машины также живут камера и
+    // эффекты CarManager (нитро/щит), их сбрасывать нельзя.
+    this.cubes.forEach((cube) => this.remove(cube));
     this.cubes = [];
-
-    // Очищаем группу
-    while (this.children.length > 0) {
-      if (this.children[0]) {
-        this.remove(this.children[0]);
-      }
-    }
-
-    // Возвращаем камеру
-    this.add(cameraTarget);
 
     // Сбрасываем состояние
     this.currentLane = this.config.startLane;

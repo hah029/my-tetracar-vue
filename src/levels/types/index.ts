@@ -523,6 +523,7 @@ export interface PlayerVisualConfig {
   defaultBlinkSpeed?: number;
   emissiveColors?: Partial<Record<PlayerVisualEffect, string>>;
   nitroTrail?: NitroTrailVisualConfig;
+  shield?: ShieldVisualConfig;
 }
 
 export type PlayerVisualEffect = "default" | "nitro" | "shield" | "damage";
@@ -534,6 +535,18 @@ export interface NitroTrailVisualConfig {
   offsetX: number;
   offsetY: number;
   offsetZ: number;
+  timeScale: number;
+}
+
+export interface ShieldVisualConfig {
+  color: string;
+  radius: number;
+  offsetY: number;
+  offsetZ: number;
+  scaleX: number;
+  scaleY: number;
+  scaleZ: number;
+  opacity: number;
   timeScale: number;
 }
 

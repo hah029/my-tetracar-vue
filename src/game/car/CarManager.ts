@@ -9,6 +9,8 @@ import { watch, type WatchStopHandle } from "vue";
 
 import nitroFragmentShader from "@/game/shaders/nitro/fragment.glsl";
 import nitroVertexShader from "@/game/shaders/nitro/vertex.glsl";
+import shieldFragmentShader from "@/game/shaders/shield/fragment.glsl";
+import shieldVertexShader from "@/game/shaders/shield/vertex.glsl";
 
 export class CarManager {
   private static instance: CarManager | null = null;
@@ -17,6 +19,8 @@ export class CarManager {
   private nitroLeft: THREE.Mesh | null = null;
   private nitroRight: THREE.Mesh | null = null;
   private nitroMaterial: THREE.ShaderMaterial | null = null;
+  private shieldMesh: THREE.Mesh | null = null;
+  private shieldMaterial: THREE.ShaderMaterial | null = null;
   private stopPlayerVisualWatcher: WatchStopHandle | null = null;
 
   private constructor() {}
@@ -53,6 +57,7 @@ export class CarManager {
 
     this.car = new Car(this.scene, config);
     this.createNitroEffect();
+    this.createShieldEffect();
 
     return this.car;
   }
@@ -123,46 +128,51 @@ export class CarManager {
     if (!this.car) return;
 
     this.createNitroEffect();
+    this.createShieldEffect();
     this.car.applyVisualConfig();
   }
 
-  // private createShieldEffect(): void {
-  //   if (!this.car) return;
+  private createShieldEffect(): void {
+    if (!this.car) return;
 
-  //   const meshes = this.car.getShieldSourceMeshes();
-  //   const group = new THREE.Group();
+    this.disposeShieldEffect();
 
-  //   this.shieldMaterial = new THREE.ShaderMaterial({
-  //     uniforms: {
-  //       time: { value: 0 },
-  //       color: { value: new THREE.Color("#ff0000") },
-  //     },
+    const shield = usePlayerStore().getShieldConfig();
+    this.shieldMaterial = new THREE.ShaderMaterial({
+      uniforms: {
+        time: { value: 0 },
+        color: { value: new THREE.Color(shield.color) },
+        opacity: { value: shield.opacity },
+      },
+      vertexShader: shieldVertexShader,
+      fragmentShader: shieldFragmentShader,
+      transparent: true,
+      depthWrite: false,
+      side: THREE.DoubleSide,
+      blending: THREE.AdditiveBlending,
+      toneMapped: false,
+    });
 
-  //     vertexShader: shieldVertexShader,
-  //     fragmentShader: shieldFragmentShader,
-  //     transparent: true,
-  //     depthWrite: false,
-  //     wireframe: true,
-  //     blending: THREE.AdditiveBlending,
-  //   });
+    this.shieldMesh = new THREE.Mesh(
+      new THREE.SphereGeometry(shield.radius, 40, 24),
+      this.shieldMaterial,
+    );
+    this.shieldMesh.position.set(0, shield.offsetY, shield.offsetZ);
+    this.shieldMesh.scale.set(shield.scaleX, shield.scaleY, shield.scaleZ);
+    this.shieldMesh.visible = false;
+    this.shieldMesh.renderOrder = 1;
 
-  //   // this.shieldMesh = new THREE.Mesh(geometry, this.shieldMaterial);
-  //   meshes.forEach((mesh) => {
-  //     const clone = new THREE.Mesh(mesh.geometry, this.shieldMaterial!);
+    this.car.add(this.shieldMesh);
+  }
 
-  //     clone.position.copy(mesh.position);
-  //     clone.rotation.copy(mesh.rotation);
-  //     clone.scale.copy(mesh.scale);
+  private disposeShieldEffect(): void {
+    if (this.car && this.shieldMesh) this.car.remove(this.shieldMesh);
 
-  //     group.add(clone);
-  //   });
-
-  //   group.scale.setScalar(1.1);
-  //   group.visible = true;
-
-  //   this.shieldMesh = group as any;
-  //   this.car.add(group);
-  // }
+    this.shieldMesh?.geometry.dispose();
+    this.shieldMaterial?.dispose();
+    this.shieldMesh = null;
+    this.shieldMaterial = null;
+  }
 
   public update(dt: number): void {
     if (!this.car) return;
@@ -173,6 +183,13 @@ export class CarManager {
     if (this.nitroMaterial) {
       this.nitroMaterial.uniforms.time.value +=
         dt * usePlayerStore().getNitroTrailConfig().timeScale;
+    }
+    if (this.shieldMaterial) {
+      this.shieldMaterial.uniforms.time.value +=
+        dt * usePlayerStore().getShieldConfig().timeScale;
+    }
+    if (this.shieldMesh) {
+      this.shieldMesh.visible = usePlayerStore().isShieldEnabled;
     }
   }
 
@@ -211,6 +228,7 @@ export class CarManager {
     }
 
     this.disposeNitroEffect();
+    this.disposeShieldEffect();
 
     this.car = null;
   }
@@ -262,13 +280,11 @@ export class CarManager {
 
   public enableShield(): void {
     this.car?.enableShield();
-
-    // if (this.shieldMesh) this.shieldMesh.visible = true;
+    if (this.shieldMesh) this.shieldMesh.visible = true;
   }
 
   public disableShield(): void {
     this.car?.disableShield();
-
-    // if (this.shieldMesh) this.shieldMesh.visible = false;
+    if (this.shieldMesh) this.shieldMesh.visible = false;
   }
 }

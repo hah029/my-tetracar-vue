@@ -6,7 +6,11 @@ import { useMetaStore } from "@/store/metaStore";
 import { useCommonStore } from "@/store/commonStore";
 import { useLevelStore } from "@/store/levelStore";
 import playerConfig from "@/configs/player";
-import type { GameplayConfig, NitroTrailVisualConfig } from "@/levels/types";
+import type {
+  GameplayConfig,
+  NitroTrailVisualConfig,
+  ShieldVisualConfig,
+} from "@/levels/types";
 
 const DEFAULT_NITRO_TRAIL: NitroTrailVisualConfig = {
   color: "#66ff66",
@@ -16,6 +20,18 @@ const DEFAULT_NITRO_TRAIL: NitroTrailVisualConfig = {
   offsetY: 0.25,
   offsetZ: 2,
   timeScale: 4,
+};
+
+const DEFAULT_SHIELD: ShieldVisualConfig = {
+  color: "#55dfff",
+  radius: 3,
+  offsetY: 0.55,
+  offsetZ: -3,
+  scaleX: 1.15,
+  scaleY: 0.9,
+  scaleZ: 0.9,
+  opacity: 0.1,
+  timeScale: 1.8,
 };
 
 export type MagnetMode = "pull" | "lethalPull" | "repulse";
@@ -73,6 +89,10 @@ export const usePlayerStore = defineStore("playerStore", () => {
     ...DEFAULT_NITRO_TRAIL,
     ...currentPlayerVisual.value?.nitroTrail,
   }));
+  const shieldConfig = computed(() => ({
+    ...DEFAULT_SHIELD,
+    ...currentPlayerVisual.value?.shield,
+  }));
 
   const startSpeed = ref(config.value.baseSpeed);
   const speed = ref(config.value.baseSpeed);
@@ -123,7 +143,9 @@ export const usePlayerStore = defineStore("playerStore", () => {
   const temporaryMass = computed(
     () => extraTemporaryMass.value + corruptedNitroMass.value,
   );
-  const mass = computed(() => bodyMass.value + cargoMass.value + temporaryMass.value);
+  const mass = computed(
+    () => bodyMass.value + cargoMass.value + temporaryMass.value,
+  );
   const maxMass = computed(
     () => bodyMass.value * (1 + config.value.mass.maxExtraMassRatio),
   );
@@ -183,9 +205,10 @@ export const usePlayerStore = defineStore("playerStore", () => {
     isNitroEnabled.value = true;
     nitroTimer.value = config.value.nitro.baseTimer;
     corruptedNitroEnabled.value = corrupted;
-    corruptedNitroMass.value = corrupted && isMassEnabled.value
-      ? getClampedTemporaryMass(config.value.mass.corruptedNitroMass)
-      : 0;
+    corruptedNitroMass.value =
+      corrupted && isMassEnabled.value
+        ? getClampedTemporaryMass(config.value.mass.corruptedNitroMass)
+        : 0;
     nitroMultiplierTarget.value = config.value.nitro.multiplier;
     if (renderInstance.value != null) {
       renderInstance.value.setAfterImagePassAmount(
@@ -255,10 +278,7 @@ export const usePlayerStore = defineStore("playerStore", () => {
   }
 
   function triggerShieldBlindness(duration = 900) {
-    shieldBlindnessTimer.value = Math.max(
-      shieldBlindnessTimer.value,
-      duration,
-    );
+    shieldBlindnessTimer.value = Math.max(shieldBlindnessTimer.value, duration);
   }
 
   function updateStatusEffects(delta: number) {
@@ -426,6 +446,10 @@ export const usePlayerStore = defineStore("playerStore", () => {
     return nitroTrailConfig.value;
   }
 
+  function getShieldConfig(): ShieldVisualConfig {
+    return shieldConfig.value;
+  }
+
   function getDefaultCarConfig() {
     return {
       startLane: 2,
@@ -516,6 +540,7 @@ export const usePlayerStore = defineStore("playerStore", () => {
     getCurrentAcceleration,
     setAccelerationType,
     getNitroTrailConfig,
+    getShieldConfig,
     addAmmo,
     consumeAmmo,
     addArmor,

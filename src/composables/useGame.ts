@@ -151,8 +151,8 @@ export function useGame() {
   function updatePlayer(dt: number) {
     if (!carManager || !roadManager) return;
 
+    carManager.update(dt);
     const realCar = carManager.getCar();
-    realCar.update(dt);
     if (sceneRef) updateDirectionalLightShadow(sceneRef, realCar.position);
 
     car.value.mesh = realCar;
