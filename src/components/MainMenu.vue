@@ -14,7 +14,7 @@
                 <button class="menu_btn meta_navigation__button"
                     :class="{ 'meta_navigation__button--available': dailyGiftStore.status.canClaim }"
                     :aria-label="t('mainMenu.dailyGift')" :title="t('mainMenu.dailyGift')" @click="goToDailyGift">
-                    <img src="@/assets/images/hud/btn_daily_gift.svg" alt="" />
+                    <img src="@/assets/images/daily_gifts_icon.svg" alt="" />
                     <span v-if="dailyGiftStore.status.canClaim" class="meta_navigation__marker">!</span>
                 </button>
             </aside>
