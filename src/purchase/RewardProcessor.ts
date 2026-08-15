@@ -3,56 +3,77 @@ import { InventoryService } from "./services/InventoryService";
 import { UpgradeService } from "./services/UpgradeService";
 import { EffectService } from "./services/EffectService";
 import { WalletService } from "./services/WalletService";
+import { usePlayerStore } from "@/store/playerStore";
 
-import type { Product } from "./types";
+import type { RewardDefinition } from "./types";
 
 export class RewardProcessor {
-  static async apply(product: Product) {
-    switch (product.type) {
+  static async apply(reward: RewardDefinition) {
+    switch (reward.type) {
       case "cosmetic":
-        return this.applyCosmetic(product);
+        return this.applyCosmetic(reward);
 
       case "upgrade":
-        return this.applyUpgrade(product);
+        return this.applyUpgrade(reward);
 
       case "consumable":
-        return this.applyConsumable(product);
+        return this.applyConsumable(reward);
 
       case "timed_feature":
-        return this.applyTimedFeature(product);
+        return this.applyTimedFeature(reward);
 
       case "permanent_feature":
-        return this.applyPermanentFeature(product);
+        return this.applyPermanentFeature(reward);
 
       case "currency":
-        return this.applyCurrency(product);
+        return this.applyCurrency(reward);
+
+      case "ammo":
+        return this.applyAmmo(reward);
+
+      case "armor":
+        return this.applyArmor(reward);
     }
   }
 
-  private static applyCosmetic(product: Product) {
-    InventoryService.unlockSkin(product.effect.skinId);
+  static async applyAll(rewards: readonly RewardDefinition[]) {
+    for (const reward of rewards) await this.apply(reward);
   }
 
-  private static applyUpgrade(product: Product) {
-    UpgradeService.applyUpgrade(product.effect);
+  private static applyCosmetic(reward: RewardDefinition) {
+    InventoryService.unlockSkin(reward.effect.skinId);
   }
 
-  private static applyConsumable(product: Product) {
-    UpgradeService.applyConsumable(product.effect);
+  private static applyUpgrade(reward: RewardDefinition) {
+    UpgradeService.applyUpgrade(reward.effect);
   }
 
-  private static applyTimedFeature(product: Product) {
-    EffectService.activateTimedEffect(product.effect);
+  private static applyConsumable(reward: RewardDefinition) {
+    UpgradeService.applyConsumable(reward.effect);
   }
 
-  private static applyPermanentFeature(product: Product) {
-    EffectService.unlockFeature(product.effect.feature);
+  private static applyTimedFeature(reward: RewardDefinition) {
+    EffectService.activateTimedEffect(reward.effect);
   }
 
-  private static applyCurrency(product: Product) {
-    // Например, покупка пачки голденов или энергонов
-    if (product.effect?.currency && product.effect?.amount) {
-      WalletService.addCurrency(product.effect.currency, product.effect.amount);
+  private static applyPermanentFeature(reward: RewardDefinition) {
+    EffectService.unlockFeature(reward.effect.feature);
+  }
+
+  private static applyCurrency(reward: RewardDefinition) {
+    if (reward.effect?.currency && reward.effect?.amount) {
+      WalletService.addCurrency(reward.effect.currency, reward.effect.amount);
     }
+  }
+
+  private static applyAmmo(reward: RewardDefinition) {
+    const player = usePlayerStore();
+    for (let i = 0; i < (Number(reward.effect?.amount) || 0); i++) player.addAmmo();
+  }
+
+  private static applyArmor(reward: RewardDefinition) {
+    const player = usePlayerStore();
+    for (let i = 0; i < (Number(reward.effect?.amount) || 0); i++) player.addArmor();
+    if (player.armor > 0) player.enableShield();
   }
 }

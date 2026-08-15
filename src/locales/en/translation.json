@@ -8,6 +8,7 @@
         "goBack": "back",
         "startGame": "play",
         "shop": "shop",
+        "dailyGift": "daily bonus",
         "settings": "settings",
         "leaderboards": "leaderboards"
     },
@@ -230,6 +231,21 @@
             "buy": "buy"
         },
         "noItems": "пусто"
+    },
+    "dailyGift": {
+        "title": "daily bonus",
+        "cycle": "cycle {{cycle}}",
+        "day": "day {{day}}",
+        "claim": "claim",
+        "claiming": "claiming…",
+        "claimed": "today's reward has already been claimed",
+        "claimError": "could not save the reward. please try again.",
+        "today": "today",
+        "done": "claimed",
+        "ammo": "ammo",
+        "armor": "armor",
+        "skin": "skin",
+        "reward": "reward"
     },
     "currency": {
         "golden": "golden",

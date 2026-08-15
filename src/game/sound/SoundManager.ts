@@ -13,7 +13,7 @@ export class SoundManager {
   private currentMusicName: string | null = null;
   private musicTimeout: number | null = null;
 
-  private musicSet = new Set(MUSICS.keys);
+  private musicSet = new Set(Object.keys(MUSICS));
 
   public static getInstance(): SoundManager {
     if (!SoundManager.instance) {
@@ -32,6 +32,18 @@ export class SoundManager {
     Object.entries(SFX).forEach(([k, v]) => {
       this.load(k, v, this.sounds, 0.6);
     });
+
+    // Браузеры создают AudioContext в состоянии suspended, если он создан до
+    // первого действия игрока. Разблокируем его на первом возможном жесте.
+    const unlockAudio = () => void this.resume();
+    window.addEventListener("pointerdown", unlockAudio, {
+      once: true,
+      capture: true,
+    });
+    window.addEventListener("keydown", unlockAudio, {
+      once: true,
+      capture: true,
+    });
   }
 
   private load(
@@ -41,10 +53,15 @@ export class SoundManager {
     defaultVolume = 0.4,
   ) {
     const sound = new THREE.Audio(this.listener);
-    this.loader.load(path, (buffer) => {
-      sound.setBuffer(buffer);
-      sound.setVolume(defaultVolume);
-    });
+    this.loader.load(
+      path,
+      (buffer) => {
+        sound.setBuffer(buffer);
+        sound.setVolume(defaultVolume);
+      },
+      undefined,
+      (error) => console.error(`Failed to load audio "${name}"`, error),
+    );
     storage[name] = sound;
   }
 
@@ -64,6 +81,7 @@ export class SoundManager {
   play(name: string) {
     const audioStore = useAudioStore();
     if (!audioStore.masterEnabled) return;
+    void this.resume();
 
     const sound = this.sounds[name];
     if (!sound || !sound.buffer) return;
@@ -73,12 +91,14 @@ export class SoundManager {
     if (isMusic && !audioStore.musicEnabled) return;
     if (!isMusic && !audioStore.sfxEnabled) return;
 
+    if (isMusic) {
+      this.stopCurrentMusic();
+    }
     if (sound.isPlaying) sound.stop();
     sound.play();
 
     // Для музыки обновляем текущую
     if (isMusic) {
-      this.stopCurrentMusic();
       this.currentMusic = sound;
       this.currentMusicName = name;
     }
@@ -88,6 +108,7 @@ export class SoundManager {
   playOneShot(name: string, volume: number = 0.6) {
     const audioStore = useAudioStore();
     if (!audioStore.masterEnabled || !audioStore.sfxEnabled) return;
+    void this.resume();
 
     const originalSound = this.sounds[name];
     if (!originalSound?.buffer) return;
@@ -109,6 +130,7 @@ export class SoundManager {
   playMusic(name: string, loop: boolean = false) {
     const audioStore = useAudioStore();
     if (!audioStore.masterEnabled || !audioStore.musicEnabled) return;
+    void this.resume();
 
     const sound = this.sounds[name];
     if (!sound?.buffer) return;
@@ -131,6 +153,7 @@ export class SoundManager {
   playMusicSequence(intro: string, loop: string) {
     const audioStore = useAudioStore();
     if (!audioStore.masterEnabled || !audioStore.musicEnabled) return;
+    void this.resume();
 
     const introSound = this.sounds[intro];
     const loopSound = this.sounds[loop];
@@ -178,10 +201,10 @@ export class SoundManager {
     this.stopCurrentMusic();
   }
 
-  resume() {
+  async resume() {
     const context = this.listener.context;
     if (context.state === "suspended") {
-      context.resume();
+      await context.resume();
     }
   }
 

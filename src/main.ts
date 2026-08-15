@@ -9,6 +9,9 @@ import { locales } from "./locales";
 import { resolveAutoLanguage } from "./helpers/i18n";
 import { Platform } from "./sdk";
 import { loadAtlas } from "./assets/textures/TextureAtlas";
+import { useProgressStore } from "./store/progressStore";
+import { useDailyGiftStore } from "./store/dailyGiftStore";
+import { useAudioStore } from "./store/audioStore";
 
 const savedLang = localStorage.getItem("lang") || "auto";
 let initialLang = savedLang === "auto" ? resolveAutoLanguage() : savedLang;
@@ -60,8 +63,14 @@ async function init() {
   });
 
   const app = createApp(App);
-  app.use(createPinia());
+  const pinia = createPinia();
+  app.use(pinia);
   app.use(I18NextVue, { i18next });
+
+  await useAudioStore(pinia).ready;
+  await useProgressStore(pinia).restoreProgress();
+  await useDailyGiftStore(pinia).restore();
+
   app.mount("#app");
 
 //   const p = document.getElementsByClassName("team_logo_group");

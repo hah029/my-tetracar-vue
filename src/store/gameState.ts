@@ -13,6 +13,7 @@ type UIOverlay =
   | null
   | "settings"
   | "shop"
+  | "dailyGift"
   | "quitConfirm"
   | "leaderBoards"
   | "trainingScreen";
@@ -238,6 +239,10 @@ export const useGameState = defineStore("gameState", () => {
     activeOverlay.value = "shop";
   }
 
+  function openDailyGift() {
+    activeOverlay.value = "dailyGift";
+  }
+
   function openSettings(section: SettingsSection = null) {
     activeOverlay.value = "settings";
     settingsSection.value = section || "main"; // если секция не указана — открываем главное меню
@@ -309,6 +314,7 @@ export const useGameState = defineStore("gameState", () => {
     openSettings,
     setSettingsSection,
     openShop,
+    openDailyGift,
     openLeaderBoards,
     openQuitGameWindow,
     confirmQuit,
