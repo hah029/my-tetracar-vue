@@ -38,6 +38,7 @@ import { ShieldItem } from "@/game/interactive/items/booster/ShieldItem";
 import { MagnetItem } from "@/game/interactive/items/booster/MagnetItem";
 import { MagnetSystem } from "@/game/magnet/MagnetSystem";
 import { useEnvironmentStore } from "@/store/environmentStore";
+import { useObjectivesStore } from "@/store/objectivesStore";
 
 export function useGame() {
   const playerStore = usePlayerStore();
@@ -438,6 +439,7 @@ export function useGame() {
   function handleJumpCollision(deltaTime: number) {
     jumpPlayer(deltaTime);
     progressStore.calcScore("jump", 1);
+    useObjectivesStore().track("jump_performed");
   }
 
   function handleBaseObstacleCollision(
@@ -462,6 +464,7 @@ export function useGame() {
         soundManager.playCue("shieldBreak");
       }
       progressStore.calcScore("reduceShield", 1);
+      useObjectivesStore().track("obstacle_destroyed");
       return false;
     }
 
@@ -488,6 +491,7 @@ export function useGame() {
         ? playerStore.goldenNitroMultiplier
         : 1;
       progressStore.addGolden(coins);
+      useObjectivesStore().track("golden_collected", coins);
       soundManager.playCue("goldenPickup");
       spawnFlash("golden", carPos, 4);
       return;
@@ -498,6 +502,7 @@ export function useGame() {
         ? playerStore.energonNitroMultiplier
         : 1;
       progressStore.addEnergon(coins);
+      useObjectivesStore().track("energon_collected", coins);
       playerStore.makeEventHappened("addEnergon");
 
       soundManager.playCue("energonPickup");
@@ -519,6 +524,7 @@ export function useGame() {
       }
 
       playerStore.addAmmo();
+      useObjectivesStore().track("booster_collected");
       playerStore.addNewMsg("ammoRefilled");
       playerStore.makeEventHappened("addBullet");
 
@@ -533,6 +539,7 @@ export function useGame() {
       CarManager.getInstance().enableNitro();
 
       playerStore.enableNitro(corrupted);
+      useObjectivesStore().track("booster_collected");
       soundManager.startCueLoop("nitroActive");
       playerStore.addNewMsg(corrupted ? "heavyNitroActivated" : "nitroActivated");
       playerStore.makeEventHappened("addNitro");
@@ -559,6 +566,7 @@ export function useGame() {
 
       playerStore.addArmor();
       playerStore.enableShield(corrupted);
+      useObjectivesStore().track("booster_collected");
 
       if (!wasShieldEnabled) {
         CarManager.getInstance().enableShield();
@@ -587,6 +595,7 @@ export function useGame() {
         collision.impactSubject.userData.magnetTypes!,
         magnetMode,
       );
+      useObjectivesStore().track("booster_collected");
       soundManager.startCueLoop("magnetActive");
       playerStore.addNewMsg(
         magnetMode === "lethalPull"

@@ -8,6 +8,7 @@ import { useLevelStore } from "@/store/levelStore";
 import { GameStates } from "@/game/core/GameState";
 import { SoundManager } from "@/game/sound/SoundManager";
 import { Platform } from "@/sdk";
+import { useObjectivesStore } from "@/store/objectivesStore";
 
 type UIOverlay =
   | null
@@ -15,6 +16,7 @@ type UIOverlay =
   | "shop"
   | "dailyGift"
   | "fortuneWheel"
+  | "objectives"
   | "quitConfirm"
   | "leaderBoards"
   | "trainingScreen";
@@ -28,6 +30,8 @@ export type SettingsSection =
   | "controls"
   | "about";
 
+export type ObjectivesSection = "daily" | "achievements";
+
 export const useGameState = defineStore("gameState", () => {
   // ===== STATE =====
   const currentState = ref<GameStates>(GameStates.Preloader);
@@ -38,6 +42,7 @@ export const useGameState = defineStore("gameState", () => {
   const previousState = ref<GameStates>(GameStates.Preloader); // Запоминаем предыдущее состояние
   
   const settingsSection = ref<SettingsSection>(null);
+  const objectivesSection = ref<ObjectivesSection>("daily");
 
   const playerStore = usePlayerStore();
   const platform = Platform.getInstance();
@@ -119,9 +124,11 @@ export const useGameState = defineStore("gameState", () => {
       case GameStates.Play:
         sound.playMusic(levelStore.currentMusic.gameTrack, true);
         platform.gameStart();
+        useObjectivesStore().track("game_started");
         break;
 
       case GameStates.Gameover:
+        useObjectivesStore().track("game_finished");
         // Асинхронное сохранение прогресса перед переходом
         progress
           .saveProgress()
@@ -251,6 +258,11 @@ export const useGameState = defineStore("gameState", () => {
     activeOverlay.value = "fortuneWheel";
   }
 
+  function openObjectives(section: ObjectivesSection = "daily") {
+    objectivesSection.value = section;
+    activeOverlay.value = "objectives";
+  }
+
   function openSettings(section: SettingsSection = null) {
     activeOverlay.value = "settings";
     settingsSection.value = section || "main"; // если секция не указана — открываем главное меню
@@ -304,6 +316,7 @@ export const useGameState = defineStore("gameState", () => {
     isFirstGame,
     activeOverlay,
     settingsSection,
+    objectivesSection,
 
     // FSM
     setState,
@@ -324,6 +337,7 @@ export const useGameState = defineStore("gameState", () => {
     openShop,
     openDailyGift,
     openFortuneWheel,
+    openObjectives,
     openLeaderBoards,
     openQuitGameWindow,
     confirmQuit,

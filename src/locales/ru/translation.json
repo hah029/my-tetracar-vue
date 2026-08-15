@@ -10,6 +10,8 @@
         "shop": "магазин",
         "dailyGift": "ежедневный бонус",
         "fortuneWheel": "колесо фортуны",
+        "dailyTasks": "ежедневные задания",
+        "achievements": "достижения",
         "settings": "настройки",
         "leaderboards": "рекорды"
     },
@@ -257,6 +259,25 @@
         "won": "вы выиграли",
         "continue": "дальше",
         "error": "не удалось выдать приз. попробуйте позже."
+    },
+    "objectives": {
+        "title": "задания",
+        "daily": "на сегодня",
+        "achievements": "достижения",
+        "claim": "забрать",
+        "claiming": "получаем…",
+        "claimed": "получено",
+        "error": "не удалось сохранить награду. попробуйте ещё раз.",
+        "items": {
+            "daily_collect_goldens": { "title": "сборщик голдов", "description": "соберите 20 голдов" },
+            "daily_drive_distance": { "title": "в путь", "description": "проедьте 150 кубов" },
+            "daily_destroy_obstacles": { "title": "расчистка пути", "description": "уничтожьте 5 препятствий" },
+            "achievement_first_drive": { "title": "первый заезд", "description": "завершите 1 заезд" },
+            "achievement_golden_collector": { "title": "золотая коллекция", "description": "соберите 100 голдов" },
+            "achievement_long_road": { "title": "дальняя дорога", "description": "проедьте 1 000 кубов" },
+            "achievement_stunt_driver": { "title": "каскадёр", "description": "совершите 25 прыжков" },
+            "achievement_demolition": { "title": "разрушитель", "description": "уничтожьте 50 препятствий" }
+        }
     },
     "currency": {
         "golden": "голд",

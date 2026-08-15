@@ -11,6 +11,7 @@ import { Platform } from "./sdk";
 import { loadAtlas } from "./assets/textures/TextureAtlas";
 import { useProgressStore } from "./store/progressStore";
 import { useDailyGiftStore } from "./store/dailyGiftStore";
+import { useObjectivesStore } from "./store/objectivesStore";
 import { useAudioStore } from "./store/audioStore";
 
 const savedLang = localStorage.getItem("lang") || "auto";
@@ -70,6 +71,7 @@ async function init() {
   await useAudioStore(pinia).ready;
   await useProgressStore(pinia).restoreProgress();
   await useDailyGiftStore(pinia).restore();
+  await useObjectivesStore(pinia).restore();
 
   app.mount("#app");
 

@@ -10,6 +10,8 @@
         "shop": "shop",
         "dailyGift": "daily bonus",
         "fortuneWheel": "fortune wheel",
+        "dailyTasks": "daily tasks",
+        "achievements": "achievements",
         "settings": "settings",
         "leaderboards": "leaderboards"
     },
@@ -257,6 +259,25 @@
         "won": "you won",
         "continue": "continue",
         "error": "could not grant the reward. please try again later."
+    },
+    "objectives": {
+        "title": "objectives",
+        "daily": "today",
+        "achievements": "achievements",
+        "claim": "claim",
+        "claiming": "claiming…",
+        "claimed": "claimed",
+        "error": "could not save the reward. please try again.",
+        "items": {
+            "daily_collect_goldens": { "title": "golden collector", "description": "collect 20 goldens" },
+            "daily_drive_distance": { "title": "on the road", "description": "travel 150 cubes" },
+            "daily_destroy_obstacles": { "title": "clear the road", "description": "destroy 5 obstacles" },
+            "achievement_first_drive": { "title": "first drive", "description": "finish 1 drive" },
+            "achievement_golden_collector": { "title": "golden collection", "description": "collect 100 goldens" },
+            "achievement_long_road": { "title": "long road", "description": "travel 1,000 cubes" },
+            "achievement_stunt_driver": { "title": "stunt driver", "description": "perform 25 jumps" },
+            "achievement_demolition": { "title": "demolition", "description": "destroy 50 obstacles" }
+        }
     },
     "currency": {
         "golden": "golden",

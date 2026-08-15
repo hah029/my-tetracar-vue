@@ -23,6 +23,18 @@
                     <img src="@/assets/images/loot_circle.svg" alt="" />
                     <span v-if="fortuneWheelStore.spins > 0" class="meta_navigation__marker">{{ fortuneWheelStore.spins }}</span>
                 </button>
+                <button class="menu_btn meta_navigation__button"
+                    :class="{ 'meta_navigation__button--available': objectivesStore.hasClaimableDaily }"
+                    :aria-label="t('mainMenu.dailyTasks')" :title="t('mainMenu.dailyTasks')" @click="goToDailyTasks">
+                    <img src="@/assets/images/tasks_icon.svg" alt="" />
+                    <span v-if="objectivesStore.hasClaimableDaily" class="meta_navigation__marker">!</span>
+                </button>
+                <button class="menu_btn meta_navigation__button"
+                    :class="{ 'meta_navigation__button--available': objectivesStore.hasClaimableAchievement }"
+                    :aria-label="t('mainMenu.achievements')" :title="t('mainMenu.achievements')" @click="goToAchievements">
+                    <img src="@/assets/images/achievements_icon.svg" alt="" />
+                    <span v-if="objectivesStore.hasClaimableAchievement" class="meta_navigation__marker">!</span>
+                </button>
             </aside>
         </Transition>
 
@@ -40,6 +52,9 @@
 
         <!-- FORTUNE WHEEL -->
         <FortuneWheelRoot v-if="gameStore.activeOverlay === 'fortuneWheel'" />
+
+        <!-- DAILY TASKS AND ACHIEVEMENTS -->
+        <ObjectivesRoot v-if="gameStore.activeOverlay === 'objectives'" />
     </div>
 </template>
 
@@ -54,13 +69,16 @@ import LeaderBoardsRoot from "./leaderboards/LeaderBoardsRoot.vue";
 import ShopRoot from "./shop/ShopRoot.vue";
 import { useDailyGiftStore } from "@/store/dailyGiftStore";
 import { useFortuneWheelStore } from "@/store/fortuneWheelStore";
+import { useObjectivesStore } from "@/store/objectivesStore";
 import DailyGiftRoot from "./daily-gift/DailyGiftRoot.vue";
 import FortuneWheelRoot from "./fortune-wheel/FortuneWheelRoot.vue";
+import ObjectivesRoot from "./objectives/ObjectivesRoot.vue";
 import { useTranslation } from "i18next-vue";
 import { SoundManager } from "@/game/sound/SoundManager";
 
 const dailyGiftStore = useDailyGiftStore();
 const fortuneWheelStore = useFortuneWheelStore();
+const objectivesStore = useObjectivesStore();
 const foo = createNewText();
 const gameStore = useGameState();
 const isMainMenuEnabled = ref(false);
@@ -99,6 +117,18 @@ function goToFortuneWheel() {
     setTimeout(() => gameStore.openFortuneWheel(), 300);
 }
 
+function goToDailyTasks() {
+    soundManager.playCue("uiSelect");
+    isMainMenuEnabled.value = false;
+    setTimeout(() => gameStore.openObjectives("daily"), 300);
+}
+
+function goToAchievements() {
+    soundManager.playCue("uiSelect");
+    isMainMenuEnabled.value = false;
+    setTimeout(() => gameStore.openObjectives("achievements"), 300);
+}
+
 function goToSettings() {
     soundManager.playCue("uiSelect");
     isMainMenuEnabled.value = false;
@@ -118,7 +148,7 @@ function goToLeaderBoards() {
 watch(
     () => gameStore.activeOverlay,
     (newState) => {
-        if (["settings", "leaderBoards", "shop", "dailyGift", "fortuneWheel"].includes(newState as string)) {
+        if (["settings", "leaderBoards", "shop", "dailyGift", "fortuneWheel", "objectives"].includes(newState as string)) {
             isMainMenuEnabled.value = false;
         } else {
             isMainMenuEnabled.value = true;

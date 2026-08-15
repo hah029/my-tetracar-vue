@@ -6,6 +6,7 @@ import { SoundManager } from "@/game/sound/SoundManager";
 import { Platform } from "@/sdk/Platform";
 import progressConfig from "@/configs/progress";
 import { fill } from "three/src/extras/TextureUtils.js";
+import { useObjectivesStore } from "@/store/objectivesStore";
 
 export const useProgressStore = defineStore("progressStore", () => {
   const platform = Platform.getInstance();
@@ -141,6 +142,7 @@ export const useProgressStore = defineStore("progressStore", () => {
     const newCubes = currentCubes - lastReportedCubes;
     if (newCubes > 0) {
       calcScore("distance", newCubes);
+      useObjectivesStore().track("distance_travelled", newCubes);
       lastReportedCubes = currentCubes;
     }
   }
@@ -187,6 +189,11 @@ export const useProgressStore = defineStore("progressStore", () => {
       await metaStore.saveProgress();
     } catch (error) {
       console.error("Failed to save meta progress:", error);
+    }
+    try {
+      await useObjectivesStore().persist();
+    } catch (error) {
+      console.error("Failed to save objectives progress:", error);
     }
     try {
       await saveHighScore();
