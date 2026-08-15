@@ -95,6 +95,7 @@ import { useProgressStore } from '@/store/progressStore';
 import { useMetaStore } from '@/store/metaStore';
 import { useEnvironmentStore } from '@/store/environmentStore';
 import { createNewText } from '@/helpers/functions';
+import { SoundManager } from '@/game/sound/SoundManager';
 import TouchZone from './panels/TouchZone.vue';
 import HudNotifications from './panels/HudNotifications.vue';
 import HudEffects from './panels/HudEffects.vue';
@@ -220,6 +221,7 @@ const boosterGroups = computed(() => [
 
 // Пауза
 function goToPause() {
+    SoundManager.getInstance().playCue('uiSelect');
     gameStore.pauseGame();
 }
 </script>

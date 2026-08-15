@@ -70,6 +70,7 @@ import { usePlayerStore } from "../store/playerStore";
 import { useProgressStore } from "@/store/progressStore";
 import { GameStates } from "@/game/core/GameState";
 import { createNewText } from '@/helpers/functions';
+import { SoundManager } from "@/game/sound/SoundManager";
 
 // подключаем store
 const gameState = useGameState();
@@ -95,11 +96,13 @@ const menuButtons = computed(() => [
 ]);
 
 function restartGame() {
+    SoundManager.getInstance().playCue("uiSelect");
     playerStore.resetPlayerAchievements();
     gameState.setState(GameStates.Countdown);
 };
 
 function goToMainMenu() {
+    SoundManager.getInstance().playCue("uiSelect");
     playerStore.resetPlayerAchievements();
     gameState.setState(GameStates.Menu);
 };

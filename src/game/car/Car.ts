@@ -11,6 +11,7 @@ import { CarPhysics } from "./CarPhysics.js";
 import { FlashEffectManager } from "../effects/FlashEffectManager.js";
 import { useCommonStore } from "@/store/commonStore.js";
 import { CameraSystem } from "@/game/camera/CameraSystem.js";
+import { SoundManager } from "@/game/sound/SoundManager";
 
 export class Car extends THREE.Group {
   private static readonly LANE_HEIGHT_BLOCK_EPSILON = 0.35;
@@ -85,28 +86,29 @@ export class Car extends THREE.Group {
     this.currentLane = Math.max(0, Math.min(lane, maxLane));
   }
 
-  public moveLeft(): void {
-    this.tryMoveToLane(this.currentLane - 1);
+  public moveLeft(): boolean {
+    return this.tryMoveToLane(this.currentLane - 1);
   }
 
-  public moveRight(): void {
-    this.tryMoveToLane(this.currentLane + 1);
+  public moveRight(): boolean {
+    return this.tryMoveToLane(this.currentLane + 1);
   }
 
-  private tryMoveToLane(targetLane: number): void {
-    if (this.state.isDestroyed || this.offRoadVelocity) return;
+  private tryMoveToLane(targetLane: number): boolean {
+    if (this.state.isDestroyed || this.offRoadVelocity) return false;
 
     const roadManager = RoadManager.getInstance();
     const maxLane = roadManager.getLanesCount() - 1;
 
     if (targetLane < 0 || targetLane > maxLane) {
       this.handleOutOfRoadMove(targetLane < 0 ? -1 : 1);
-      return;
+      return false;
     }
 
-    if (!this.canMoveToLane(targetLane)) return;
+    if (!this.canMoveToLane(targetLane)) return false;
 
     this.currentLane = targetLane;
+    return true;
   }
 
   private canMoveToLane(targetLane: number): boolean {
@@ -154,6 +156,7 @@ export class Car extends THREE.Group {
       -Car.OFF_ROAD_FORWARD_SPEED,
     );
     this.offRoadGameOverTimer = Car.OFF_ROAD_GAMEOVER_DELAY;
+    SoundManager.getInstance().playCue("offRoadFall");
     this.rotation.z -= direction * 0.25;
     this.collider.disableDebug(this.scene);
   }
@@ -161,18 +164,21 @@ export class Car extends THREE.Group {
   private startEdgeBump(direction: -1 | 1): void {
     this.edgeBumpDirection = direction;
     this.edgeBumpTimer = Car.EDGE_BUMP_DURATION;
+    SoundManager.getInstance().playCue("edgeBump");
     CameraSystem.triggerImpactShake(0.28, 0.16);
   }
 
   // Прыжок
-  public jump(): void {
+  public jump(): boolean {
     if (
       !this.state.isDestroyed &&
       !this.state.isJumping &&
       !this.offRoadVelocity
     ) {
       this.physics.startJump(this.position.y);
+      return true;
     }
+    return false;
   }
 
   public startShieldCooldown(duration: number) {
@@ -220,8 +226,10 @@ export class Car extends THREE.Group {
     // Обновляем прыжок
     const jumpResult = this.physics.updateJump(this.position.y, dt, groundY);
 
-    if (jumpResult.hasLanded)
+    if (jumpResult.hasLanded) {
       FlashEffectManager.getInstance().spawnLandingWave(this.position);
+      SoundManager.getInstance().playCue("forcedLanding");
+    }
 
     this.position.y = jumpResult.newY;
     this.state.isJumping = jumpResult.isJumping;

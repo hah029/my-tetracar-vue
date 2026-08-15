@@ -49,23 +49,29 @@ import { useLevelStore } from "@/store/levelStore";
 import { GameStates } from "@/game/core/GameState";
 import type { DifficultyId } from "@/levels/difficulties";
 import type { LevelId } from "@/levels";
+import { SoundManager } from "@/game/sound/SoundManager";
 
 const gameStore = useGameState();
 const levelStore = useLevelStore();
+const soundManager = SoundManager.getInstance();
 
 function selectLevel(id: string) {
+    soundManager.playCue("uiSelect");
     levelStore.selectLevel(id as LevelId);
 }
 
 function selectDifficulty(id: string) {
+    soundManager.playCue("uiSelect");
     levelStore.selectDifficulty(id as DifficultyId);
 }
 
 function goBack() {
+    soundManager.playCue("uiSelect");
     gameStore.setState(GameStates.Menu);
 }
 
 function startRace() {
+    soundManager.playCue("uiSelect");
     gameStore.confirmLevelSelection();
 }
 </script>

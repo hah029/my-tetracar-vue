@@ -7,6 +7,7 @@ import sound_1 from "./sfx/1.m4a";
 import sound_2 from "./sfx/2.m4a";
 import sound_3 from "./sfx/3.m4a";
 import sound_start from "./sfx/start.m4a";
+import sound_btn_select from "./sfx/btn_select.m4a";
 import sound_add_golden from "./sfx/add_golden.m4a";
 import sound_add_energon from "./sfx/add_energon.m4a";
 import sound_add_patron from "./sfx/add_patron.m4a";
@@ -27,10 +28,11 @@ export const MUSICS: AudioConfig = {
 };
 
 export const SFX: AudioConfig = {
-  sfx_sound_1: sound_1,
-  sfx_sound_2: sound_2,
-  sfx_sound_3: sound_3,
+  sfx_countdown_1: sound_1,
+  sfx_countdown_2: sound_2,
+  sfx_countdown_3: sound_3,
   sfx_start: sound_start,
+  sfx_ui_select: sound_btn_select,
   sfx_add_golden: sound_add_golden,
   sfx_add_energon: sound_add_energon,
   sfx_add_patron: sound_add_patron,

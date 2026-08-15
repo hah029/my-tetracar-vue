@@ -5,6 +5,7 @@ import { ObstacleManager } from "../interactive/obstacle";
 import { useProgressStore } from "@/store/progressStore";
 import { useCommonStore } from "@/store/commonStore";
 import { FlashEffectManager } from "../effects/FlashEffectManager";
+import { SoundManager } from "../sound/SoundManager";
 
 export class BulletSystem {
   private static instance: BulletSystem | null = null;
@@ -66,6 +67,7 @@ export class BulletSystem {
         if (this.bulletBox.intersectsBox(this.obstacleBox)) {
           obstacle.destroy(bullet.position.clone(), true); // а то компилятор ругался
           progressStore.calcScore("bulletHit", 1);
+          SoundManager.getInstance().playCue("bulletHit");
 
           this.scene.remove(bullet);
           this.bullets.splice(i, 1);

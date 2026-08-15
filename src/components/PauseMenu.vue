@@ -51,6 +51,7 @@ import SettingsRoot from "./settings/SettingsRoot.vue";
 import { GameStates } from "@/game/core/GameState";
 import { createNewText } from '@/helpers/functions';
 import { useProgressStore } from "@/store/progressStore";
+import { SoundManager } from "@/game/sound/SoundManager";
 
 const gameStore = useGameState();
 const foo = createNewText();
@@ -62,6 +63,7 @@ const isConfirmButtonsShown = ref(false);
 const isWarningShown = ref(false);
 const progressStore = useProgressStore();
 const { deviceType } = useDevice();
+const soundManager = SoundManager.getInstance();
 
 // кнопки меню "Пауза"
 const menuButtonsPause = computed(() => [
@@ -105,6 +107,7 @@ function showHideAllPauseElements(type_, isQuitGame = false) {
 
 // продолжаем игру
 function resumeGame() {
+    soundManager.playCue("uiSelect");
     showHideAllPauseElements(false);
     setTimeout(() => {
         gameStore.setState(GameStates.Play);
@@ -113,6 +116,7 @@ function resumeGame() {
 
 // показываем диалоговое окно с подтверждением выхода из игры
 function showQuitConfirmMenu() {
+    soundManager.playCue("uiSelect");
     isButtonsShown.value = false;
     setTimeout(() => {
         gameStore.activeOverlay = 'quitConfirm';
@@ -127,6 +131,7 @@ function showQuitConfirmMenu() {
 
 // скрываем диалоговое окно с подтверждением выхода из игры
 function hideQuitConfirmMenu() {
+    soundManager.playCue("uiSelect");
     isWarningShown.value = false;
     setTimeout(() => {
         isConfirmButtonsShown.value = false;
@@ -138,6 +143,7 @@ function hideQuitConfirmMenu() {
 
 // переходим в главное меню
 function goToMainMenu() {
+    soundManager.playCue("uiSelect");
     showHideAllPauseElements(false, true);
     setTimeout(() => {
         // возвращаем назад старое значение рекорда, если игрок не доиграл до конца (заблаговременно вышел)
@@ -151,6 +157,7 @@ function goToMainMenu() {
 
 // переходим в настройки
 function goToSettings() {
+    soundManager.playCue("uiSelect");
     isButtonsShown.value = false;
     isSettingsPreparing.value = true;
     setTimeout(() => {

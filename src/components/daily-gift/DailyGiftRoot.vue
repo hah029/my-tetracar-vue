@@ -51,6 +51,7 @@ import { DAILY_GIFT_CYCLE_LENGTH, getDailyGiftRewards } from "@/configs/dailyGif
 import { useDailyGiftStore } from "@/store/dailyGiftStore";
 import { useGameState } from "@/store/gameState";
 import type { RewardDefinition } from "@/purchase/types";
+import { SoundManager } from "@/game/sound/SoundManager";
 
 const { t } = useTranslation();
 const dailyGift = useDailyGiftStore();
@@ -235,7 +236,8 @@ function updateFocusedDay() {
 }
 
 async function claim() {
-  await dailyGift.claim();
+  const claimed = await dailyGift.claim();
+  SoundManager.getInstance().playCue(claimed ? "goldenPickup" : "actionRejected");
 }
 
 onMounted(async () => {

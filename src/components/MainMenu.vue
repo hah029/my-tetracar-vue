@@ -46,12 +46,14 @@ import ShopRoot from "./shop/ShopRoot.vue";
 import { useDailyGiftStore } from "@/store/dailyGiftStore";
 import DailyGiftRoot from "./daily-gift/DailyGiftRoot.vue";
 import { useTranslation } from "i18next-vue";
+import { SoundManager } from "@/game/sound/SoundManager";
 
 const dailyGiftStore = useDailyGiftStore();
 const foo = createNewText();
 const gameStore = useGameState();
 const isMainMenuEnabled = ref(false);
 const { t } = useTranslation();
+const soundManager = SoundManager.getInstance();
 
 const menuButtons = computed(() => [
     { id: 1, text: foo.makeText("mainMenu.startGame"), action: startGame },
@@ -61,10 +63,12 @@ const menuButtons = computed(() => [
 ]);
 
 function startGame() {
+    soundManager.playCue("uiSelect");
     gameStore.setState(GameStates.LevelSelect);
 }
 
 function goToShop() {
+    soundManager.playCue("uiSelect");
     isMainMenuEnabled.value = false;
     setTimeout(() => {
         gameStore.openShop();
@@ -72,11 +76,13 @@ function goToShop() {
 }
 
 function goToDailyGift() {
+    soundManager.playCue("uiSelect");
     isMainMenuEnabled.value = false;
     setTimeout(() => gameStore.openDailyGift(), 300);
 }
 
 function goToSettings() {
+    soundManager.playCue("uiSelect");
     isMainMenuEnabled.value = false;
     setTimeout(() => {
         gameStore.openSettings('main');
@@ -84,6 +90,7 @@ function goToSettings() {
 }
 
 function goToLeaderBoards() {
+    soundManager.playCue("uiSelect");
     isMainMenuEnabled.value = false;
     setTimeout(() => {
         gameStore.openLeaderBoards();

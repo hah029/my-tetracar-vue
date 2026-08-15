@@ -265,6 +265,7 @@
     import { usePlayerStore } from "@/store/playerStore";
 
     import type { Product as PurchaseProduct } from "@/purchase/types/Product";
+    import { SoundManager } from "@/game/sound/SoundManager";
     import meta from "@/configs/meta";
 
     const gameState = useGameState();
@@ -426,28 +427,33 @@
         return foo.makeText(`currency.${_c}`)
     }
 
-    function handleBuyClick(product: any) {
+    async function handleBuyClick(product: any) {
 
         const status = getProductStatus(product);
 
         if (status !== "available") {
+            SoundManager.getInstance().playCue("actionRejected");
             return;
         }
 
         if (!product.type) {
+            SoundManager.getInstance().playCue("uiSelect");
             alert(`Item ${product.id} bought!`);
             return;
         }
 
-        shopStore.buyItem(product as PurchaseProduct);
+        const bought = await shopStore.buyItem(product as PurchaseProduct);
+        SoundManager.getInstance().playCue(bought ? "goldenPickup" : "actionRejected");
     }
 
     function handleApplyClick(product: PurchaseProduct) {
 
         console.log("Apply click for", product);
         if (product.type !== "cosmetic") {
+            SoundManager.getInstance().playCue("actionRejected");
             return;
         }
+        SoundManager.getInstance().playCue("uiSelect");
         metaStore.setActiveSkin(product.effect.skinId);
     }
 

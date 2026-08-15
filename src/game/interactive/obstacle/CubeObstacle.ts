@@ -464,6 +464,9 @@ export class CubeObstacle extends BaseObstacle {
   ) {
     const ud = object.userData as any;
 
+    // Фрагменты и дропы создаются при разрушении вне исходного obstacle.
+    // Эта метка нужна для гарантированной очистки сцены при reset игры.
+    ud.isDestructionFragment = true;
     ud.status = "flying";
 
     const velocity = new THREE.Vector3(

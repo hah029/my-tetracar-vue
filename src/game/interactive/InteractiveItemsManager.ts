@@ -27,6 +27,7 @@ import { ShieldItem } from "./items/booster/ShieldItem";
 import { MagnetItem } from "./items/booster/MagnetItem";
 import type { CorruptedBoostVariant } from "@/levels/types";
 import { RoadManager } from "@/game/environment/road";
+import { SoundManager } from "@/game/sound/SoundManager";
 import type {
   Segment,
   SegmentCurve,
@@ -156,6 +157,8 @@ export class InteractiveItemsManager {
       if (playerStore.nitroTimer <= 0) {
         CarManager.getInstance().disableNitro();
         playerStore.disableNitro();
+        SoundManager.getInstance().stopCueLoop("nitroActive");
+        SoundManager.getInstance().playCue("nitroEnd");
         this.nitroEnabledTimer = 0;
       }
     }
@@ -167,6 +170,8 @@ export class InteractiveItemsManager {
 
       if (playerStore.magnetTimer <= 0) {
         playerStore.disableMagnet();
+        SoundManager.getInstance().stopCueLoop("magnetActive");
+        SoundManager.getInstance().playCue("magnetEnd");
         this.magnetEnabledTimer = 0;
       }
     }

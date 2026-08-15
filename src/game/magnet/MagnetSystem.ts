@@ -2,6 +2,7 @@ import * as THREE from "three";
 import { Car } from "@/game/car/Car";
 import { BaseItem } from "@/game/interactive/items/BaseItem";
 import { usePlayerStore } from "@/store/playerStore";
+import { SoundManager } from "@/game/sound/SoundManager";
 
 import magnetLineVertex from "@/game/shaders/magnet/line/vertex.glsl";
 import magnetLineFragment from "@/game/shaders/magnet/line/fragment.glsl";
@@ -12,6 +13,7 @@ export class MagnetSystem {
   private magnetField: THREE.Group | null = null;
   private readonly fieldLineCount = 24;
   private readonly markersPerFieldLine = 1;
+  private lastPullSoundAt = 0;
 
   public static getInstance(): MagnetSystem {
     if (!MagnetSystem.instance) {
@@ -115,6 +117,10 @@ export class MagnetSystem {
 
       if (item.userData.magnetLine == undefined) {
         item.userData.status = "magnetized";
+        if (now - this.lastPullSoundAt > 120) {
+          SoundManager.getInstance().playCueOneShot("magnetPull");
+          this.lastPullSoundAt = now;
+        }
         if (playerStore.magnetMode === "lethalPull") {
           item.markAsLethalMagnetObstacle();
         }

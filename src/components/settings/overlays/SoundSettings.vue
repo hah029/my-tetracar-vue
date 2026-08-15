@@ -57,7 +57,7 @@
     function updateVolume() {
         soundManager.setMasterVolume(volume.value);
         audioStore.setVolume(volume.value);
-        soundManager.play("sfx_jump");
+        soundManager.playCue("jumpStart");
     };
 
     watch(

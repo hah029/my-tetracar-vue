@@ -51,6 +51,7 @@
     import { createNewText, deleteTextLines } from '@/helpers/functions';
     import { useGameState } from "@/store/gameState";
     import { useDevice } from '@/composables/useDevice';
+    import { SoundManager } from "@/game/sound/SoundManager";
 
     enum SettingsView {
         Main,
@@ -73,6 +74,7 @@
     const isBackButtonClicked = ref(false);
     const isSettingsPreparing = ref(true);
     const { deviceType } = useDevice();
+    const soundManager = SoundManager.getInstance();
 
     // ===== TEXT =====
     const foo_1 = createNewText();
@@ -86,29 +88,34 @@
         {
             id: 1,
             text: foo_1.makeText("settings.menuList.graphics"),
-            action: () => currentView.value = SettingsView.Graphics,
+            action: () => openSubMenu(SettingsView.Graphics),
         },
         {
             id: 2,
             text: foo_1.makeText("settings.menuList.sounds"),
-            action: () => currentView.value = SettingsView.Sound,
+            action: () => openSubMenu(SettingsView.Sound),
         },
         {
             id: 3,
             text: foo_1.makeText("settings.menuList.lang"),
-            action: () => currentView.value = SettingsView.Language,
+            action: () => openSubMenu(SettingsView.Language),
         },
         {
             id: 4,
             text: foo_1.makeText("settings.menuList.controls"),
-            action: () => currentView.value = SettingsView.Controls,
+            action: () => openSubMenu(SettingsView.Controls),
         },
         {
             id: 5,
             text: foo_1.makeText("settings.menuList.about"),
-            action: () => currentView.value = SettingsView.About,
+            action: () => openSubMenu(SettingsView.About),
         },
     ]);
+
+    function openSubMenu(view: SettingsView) {
+        soundManager.playCue("uiSelect");
+        currentView.value = view;
+    }
 
     // ===== TITLE =====
     const dynamicTitleName = computed(() => {
@@ -128,6 +135,7 @@
 
     // ===== BACK =====
     function backButtonClick() {
+        soundManager.playCue("uiSelect");
         if (isInSubMenu.value) {
             isBackButtonClicked.value = true;
             setTimeout(() => {

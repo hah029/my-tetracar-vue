@@ -44,7 +44,7 @@ export const useProgressStore = defineStore("progressStore", () => {
       if (!isNewRecord.value) {
         isNewRecord.value = true;
         playerStore.addNewMsg("newRecord");
-        soundManager.play("sfx_new_record");
+        soundManager.playCue("newRecord");
       }
       highScore.value = score.value;
     }

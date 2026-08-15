@@ -219,6 +219,9 @@ export const useGameState = defineStore("gameState", () => {
   }
 
   function endGame() {
+    const sound = SoundManager.getInstance();
+    sound.stopCueLoop("nitroActive");
+    sound.stopCueLoop("magnetActive");
     playerStore.resetPlayerAchievements();
     setState(GameStates.Gameover);
   }

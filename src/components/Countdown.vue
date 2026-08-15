@@ -67,14 +67,17 @@
         // сама функция-цикл работы таймера
         const playNext = () => {
             if (count.value === 0) {
-                soundManager.playOneShot("sfx_start");
+                soundManager.playCueOneShot("countdownGo");
                 setTimeout(() => {
                     gameStore.setState(GameStates.Play);
                 }, 650);
                 return;
             };
             
-            soundManager.playOneShot(`sfx_${count.value}`);
+            const countdownCue =
+                count.value === 3 ? "countdownThree" :
+                count.value === 2 ? "countdownTwo" : "countdownOne";
+            soundManager.playCueOneShot(countdownCue);
             
             setTimeout(() => {
                 count.value--;

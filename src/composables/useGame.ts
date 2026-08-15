@@ -215,22 +215,25 @@ export function useGame() {
 
   function movePlayerLeft(dt: number) {
     if (useGameState().currentState != GameStates.Play) return;
-    carManager.getCar().moveLeft();
-    soundManager.play("sfx_moving");
+    const moved = carManager.moveLeft();
+    soundManager.playCue(moved ? "laneChange" : "actionRejected");
     updatePlayer(dt);
   }
 
   function movePlayerRight(dt: number) {
     if (useGameState().currentState != GameStates.Play) return;
-    carManager.getCar().moveRight();
-    soundManager.play("sfx_moving");
+    const moved = carManager.moveRight();
+    soundManager.playCue(moved ? "laneChange" : "actionRejected");
     updatePlayer(dt);
   }
 
   function jumpPlayer(dt: number) {
     if (useGameState().currentState != GameStates.Play) return;
-    carManager.getCar().jump();
-    car.value.isJumping = true;
+    const jumped = carManager.getCar().jump();
+    if (jumped) {
+      car.value.isJumping = true;
+      soundManager.playCue("jumpStart");
+    }
     updatePlayer(dt);
   }
 
@@ -358,7 +361,12 @@ export function useGame() {
       sceneRef.traverse((obj) => {
         const ud = obj.userData;
 
-        if (ud.isObstacle || ud.isJump || ud.isInteractiveItem) {
+        if (
+          ud.isObstacle ||
+          ud.isJump ||
+          ud.isInteractiveItem ||
+          ud.isDestructionFragment
+        ) {
           const root = findRootTaggedObject(obj);
           toRemove.add(root);
         }
@@ -382,6 +390,8 @@ export function useGame() {
 
     playerStore.disableNitro();
     playerStore.disableMagnet();
+    soundManager.stopCueLoop("nitroActive");
+    soundManager.stopCueLoop("magnetActive");
     playerStore.resetGameData();
 
     // reset progress
@@ -415,19 +425,19 @@ export function useGame() {
 
     if (!playerStore.canShoot()) {
       playerStore.addNewMsg("outOfAmmo");
+      soundManager.playCue("outOfAmmo");
       return;
     }
 
     bulletSystem.spawnBullet(carManager.getCar());
     playerStore.consumeAmmo();
-    soundManager.play("sfx_shot");
+    soundManager.playCue("shot");
     CameraSystem.triggerShotShake();
   }
 
   function handleJumpCollision(deltaTime: number) {
     jumpPlayer(deltaTime);
     progressStore.calcScore("jump", 1);
-    soundManager.play("sfx_jump");
   }
 
   function handleBaseObstacleCollision(
@@ -445,9 +455,11 @@ export function useGame() {
       }
 
       playerStore.reduceShield();
+      soundManager.playCue("shieldHit");
       if (playerStore.armor == 0) {
         CarManager.getInstance().disableShield();
         playerStore.disableShield();
+        soundManager.playCue("shieldBreak");
       }
       progressStore.calcScore("reduceShield", 1);
       return false;
@@ -460,7 +472,7 @@ export function useGame() {
       [collision.impactSubject as BaseObstacle],
       false,
     );
-    soundManager.play("sfx_destroy_bot");
+    soundManager.playCue("obstacleDestroy");
     const strength = Math.min(currentSpeed / playerStore.maxSpeed, 1);
     CameraSystem.triggerImpactShake(strength);
 
@@ -476,7 +488,7 @@ export function useGame() {
         ? playerStore.goldenNitroMultiplier
         : 1;
       progressStore.addGolden(coins);
-      soundManager.play("sfx_add_golden");
+      soundManager.playCue("goldenPickup");
       spawnFlash("golden", carPos, 4);
       return;
     }
@@ -488,7 +500,7 @@ export function useGame() {
       progressStore.addEnergon(coins);
       playerStore.makeEventHappened("addEnergon");
 
-      soundManager.play("sfx_add_energon");
+      soundManager.playCue("energonPickup");
       spawnFlash("energon", carPos);
       return;
     }
@@ -500,6 +512,7 @@ export function useGame() {
     if (collision.impactSubject instanceof BulletItem) {
       if (playerStore.ammo >= playerStore.maxAmmo) {
         playerStore.addNewMsg("maxAmmo");
+        soundManager.playCue("actionRejected");
         collision.impactSubject.rejectFromCar(carPos);
         CameraSystem.triggerPickupRejectedShake();
         return false;
@@ -509,7 +522,7 @@ export function useGame() {
       playerStore.addNewMsg("ammoRefilled");
       playerStore.makeEventHappened("addBullet");
 
-      soundManager.play("sfx_add_patron");
+      soundManager.playCue("ammoPickup");
       spawnFlash("bullet", carPos);
       return true;
     }
@@ -520,10 +533,11 @@ export function useGame() {
       CarManager.getInstance().enableNitro();
 
       playerStore.enableNitro(corrupted);
+      soundManager.startCueLoop("nitroActive");
       playerStore.addNewMsg(corrupted ? "heavyNitroActivated" : "nitroActivated");
       playerStore.makeEventHappened("addNitro");
 
-      soundManager.play("sfx_add_nitro");
+      soundManager.playCue("nitroPickup");
       spawnFlash("nitro", carPos);
       CameraSystem.triggerNitroShake(corrupted);
 
@@ -533,6 +547,7 @@ export function useGame() {
     if (collision.impactSubject instanceof ShieldItem) {
       if (playerStore.armor >= playerStore.maxArmor) {
         playerStore.addNewMsg("maxArmor");
+        soundManager.playCue("actionRejected");
         collision.impactSubject.rejectFromCar(carPos);
         CameraSystem.triggerPickupRejectedShake();
         return false;
@@ -554,7 +569,7 @@ export function useGame() {
       );
       playerStore.makeEventHappened("addArmor");
 
-      soundManager.play("sfx_add_armor");
+      soundManager.playCue("shieldPickup");
       spawnFlash("shield", carPos);
       return true;
     }
@@ -572,6 +587,7 @@ export function useGame() {
         collision.impactSubject.userData.magnetTypes!,
         magnetMode,
       );
+      soundManager.startCueLoop("magnetActive");
       playerStore.addNewMsg(
         magnetMode === "lethalPull"
           ? "unstableMagnetActivated"
@@ -580,6 +596,7 @@ export function useGame() {
             : "magnetActivated",
       );
       playerStore.makeEventHappened("addMagnet");
+      soundManager.playCue("magnetPickup");
       spawnFlash("magnet", carPos);
       return true;
     }

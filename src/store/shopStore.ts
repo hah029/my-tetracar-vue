@@ -153,10 +153,12 @@ export const useShopStore = defineStore("shopStore", () => {
 
   // ===== PURCHASE =====
   async function buyItem(product: PurchaseProduct) {
+    let success = false;
     try {
       const result = await purchaseService.purchase(product);
 
       if (result.success) {
+        success = true;
         notificationType.value = "success";
         notificationMessage.value = "shop.product.purchaseSuccess";
       } else {
@@ -184,6 +186,8 @@ export const useShopStore = defineStore("shopStore", () => {
       notificationMessage.value = "";
       notificationType.value = "";
     }, 3000);
+
+    return success;
   }
 
   // ===== UI ACTIONS =====

@@ -193,12 +193,12 @@ export class CarManager {
     }
   }
 
-  public moveLeft(): void {
-    this.car?.moveLeft();
+  public moveLeft(): boolean {
+    return this.car?.moveLeft() ?? false;
   }
 
-  public moveRight(): void {
-    this.car?.moveRight();
+  public moveRight(): boolean {
+    return this.car?.moveRight() ?? false;
   }
 
   public jump(): void {
