@@ -118,6 +118,25 @@ export class CubeObstacle extends BaseObstacle {
         group.add(mesh);
     }
 
+    // `CubeBuilder.build` асинхронен: столкновение может уничтожить объект,
+    // пока его модель ещё загружается. Не добавляем поздно собранную модель
+    // обратно в уже разрушенное препятствие.
+    if (this.isDestroyed) {
+      group.traverse((child) => {
+        const mesh = child as THREE.Mesh;
+        if (mesh.geometry && !mesh.userData.sharedObstacleResources) {
+          mesh.geometry.dispose();
+        }
+        if (mesh.userData.sharedObstacleResources) return;
+        if (Array.isArray(mesh.material)) {
+          mesh.material.forEach((material) => material.dispose());
+        } else {
+          mesh.material?.dispose?.();
+        }
+      });
+      return;
+    }
+
     this.visualMesh = group;
     this.add(group);
 }
@@ -265,7 +284,7 @@ export class CubeObstacle extends BaseObstacle {
 
   public update(dt: number, speed: number): boolean {
     if (this.isDestroyed) {
-      return false;
+      return true;
     }
 
     const curvedState = this.userData.curvedItemState as

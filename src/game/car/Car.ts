@@ -1,4 +1,5 @@
 import * as THREE from "three";
+import { RunTelemetry } from "@/telemetry";
 import { cameraTarget } from "@/game/camera/cameraTarget.js";
 import { RoadManager } from "@/game/environment/road";
 import { type CarState, type CarConfig } from "./types";
@@ -229,6 +230,7 @@ export class Car extends THREE.Group {
     if (jumpResult.hasLanded) {
       FlashEffectManager.getInstance().spawnLandingWave(this.position);
       SoundManager.getInstance().playCue("forcedLanding");
+      RunTelemetry.recordForcedLanding();
     }
 
     this.position.y = jumpResult.newY;
@@ -262,7 +264,7 @@ export class Car extends THREE.Group {
     this.offRoadGameOverTimer -= dt;
     if (this.offRoadGameOverTimer <= 0 && !this.state.isDestroyed) {
       this.state.isDestroyed = true;
-      useGameState().endGame();
+      useGameState().endGame("off_road");
     }
   }
 
@@ -354,8 +356,7 @@ export class Car extends THREE.Group {
 
     // Удаляем только кубы корпуса. В группе машины также живут камера и
     // эффекты CarManager (нитро/щит), их сбрасывать нельзя.
-    this.cubes.forEach((cube) => this.remove(cube));
-    this.cubes = [];
+    this.clearCubes();
 
     // Сбрасываем состояние
     this.currentLane = this.config.startLane;
@@ -401,11 +402,13 @@ export class Car extends THREE.Group {
     });
   }
 
-  private clearCubes(): void {
+  /** Кубы после взрыва становятся прямыми детьми scene. */
+  public clearCubes(): void {
     this.cubes.forEach((cube) => {
-      this.remove(cube);
+      cube.parent?.remove(cube);
     });
     this.cubes = [];
+    this.state.cubes = [];
   }
 
   public applyVisualConfig(): void {

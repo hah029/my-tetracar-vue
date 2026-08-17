@@ -191,13 +191,31 @@ export class MagnetSystem {
   }
 
   public removeRepulseBeam(item: BaseItem) {
-    const line = item.userData.repulseLine as THREE.Mesh | undefined;
+    this.removeItemBeam(item, "repulseLine");
+  }
+
+  /** Удаляет все визуальные следы магнита, привязанные к предмету. */
+  public removeItemEffects(item: BaseItem): void {
+    this.removeItemBeam(item, "magnetLine");
+    this.removeItemBeam(item, "repulseLine");
+  }
+
+  /** Очищает поле магнита при reset/dispose, без ожидания следующего тика. */
+  public clear(): void {
+    this.removeMagnetField();
+  }
+
+  private removeItemBeam(
+    item: BaseItem,
+    lineKey: "magnetLine" | "repulseLine",
+  ): void {
+    const line = item.userData[lineKey] as THREE.Mesh | undefined;
     if (!line) return;
 
     this.scene.remove(line);
     line.geometry.dispose();
     (line.material as THREE.Material).dispose();
-    item.userData.repulseLine = undefined;
+    item.userData[lineKey] = undefined;
   }
 
   private updateMagnetField(car: Car, enabled: boolean, now: number) {

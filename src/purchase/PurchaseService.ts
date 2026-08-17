@@ -8,6 +8,7 @@ import metaConfig from "@/configs/meta";
 
 import type { Product, PurchaseTransaction } from "./types";
 import { useProgressStore } from "@/store/progressStore";
+import { Telemetry } from "@/telemetry";
 
 export class PurchaseService {
   private platform = Platform.getInstance();
@@ -21,10 +22,20 @@ export class PurchaseService {
    * Главная точка покупки
    */
   async purchase(product: Product) {
+    Telemetry.emit({
+      type: "economy.purchase_started",
+      productId: product.id,
+      currency: product.price.currency,
+    });
     try {
       // 0. Проверка: не куплен ли уже товар
       const checkResult = this.checkProductAvailability(product);
       if (!checkResult.available) {
+        Telemetry.emit({
+          type: "economy.purchase_failed",
+          productId: product.id,
+          reason: checkResult.reason ?? "unavailable",
+        });
         return {
           success: false,
           error: new Error(checkResult.reason),
@@ -59,11 +70,18 @@ export class PurchaseService {
       const meta = useMetaStore();
       await meta.saveProgress();
 
+      Telemetry.emit({ type: "economy.purchase_completed", productId: product.id });
+
       return {
         success: true,
       };
     } catch (err) {
       console.error("[PurchaseService] purchase error:", err);
+      Telemetry.emit({
+        type: "economy.purchase_failed",
+        productId: product.id,
+        reason: err instanceof Error ? err.message : "unknown_error",
+      });
 
       return {
         success: false,

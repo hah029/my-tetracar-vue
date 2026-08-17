@@ -13,6 +13,18 @@ import { useProgressStore } from "./store/progressStore";
 import { useDailyGiftStore } from "./store/dailyGiftStore";
 import { useObjectivesStore } from "./store/objectivesStore";
 import { useAudioStore } from "./store/audioStore";
+import { useGameState } from "./store/gameState";
+import {
+  AnalyticsReporter,
+  AdCoordinator,
+  ConsoleAnalyticsAdapter,
+  DevFileAnalyticsAdapter,
+  installTelemetryDebugLogger,
+  installObjectivesSubscriber,
+  SessionStatsCollector,
+  Telemetry,
+  type TelemetryPlatform,
+} from "./telemetry";
 
 const savedLang = localStorage.getItem("lang") || "auto";
 let initialLang = savedLang === "auto" ? resolveAutoLanguage() : savedLang;
@@ -35,6 +47,8 @@ export function registerThreeDebug(
 
 async function init() {
   const platform = Platform.getInstance();
+  const telemetryPlatform: TelemetryPlatform =
+    typeof YaGames !== "undefined" ? "yandex" : "local";
 
   if (platform !== null) {
     await platform.init();
@@ -44,6 +58,15 @@ async function init() {
       if (initialLang !== "ru" && initialLang !== "en") initialLang = "en";
     }
 
+    const playerId = await platform.getPlayerId().catch(() => null);
+    Telemetry.initialize({
+      platform: telemetryPlatform,
+      locale: initialLang,
+      identity:
+        typeof playerId === "string" && playerId.length > 0
+          ? { kind: "platform", id: playerId }
+          : undefined,
+    });
     platform.consumePrevPurchases((purchase) => {
       console.log(
         "дозавершаем покупку, purchase = " +
@@ -68,10 +91,43 @@ async function init() {
   app.use(pinia);
   app.use(I18NextVue, { i18next });
 
+  const analyticsReporter = new AnalyticsReporter(
+    import.meta.env.DEV
+      ? [new ConsoleAnalyticsAdapter(), new DevFileAnalyticsAdapter()]
+      : [new ConsoleAnalyticsAdapter()],
+  );
+  installTelemetryDebugLogger();
+  installObjectivesSubscriber();
+  const sessionStatsCollector = new SessionStatsCollector();
+  analyticsReporter.attachSessionStats(sessionStatsCollector);
+  AdCoordinator.getInstance();
+  Telemetry.emit({ type: "app.opened", launchType: "cold" });
+
+  const gameState = useGameState(pinia);
+  let isPageHidden = false;
+  const suspendForPageHidden = () => {
+    if (isPageHidden) return;
+    isPageHidden = true;
+    Telemetry.emit({ type: "app.backgrounded", visibilityState: "hidden" });
+    if (gameState.currentState === "play") gameState.pauseForPageHidden();
+  };
+
+  document.addEventListener("visibilitychange", () => {
+    if (document.visibilityState === "hidden") {
+      suspendForPageHidden();
+    } else {
+      isPageHidden = false;
+      Telemetry.emit({ type: "app.foregrounded", visibilityState: document.visibilityState });
+    }
+  });
+  window.addEventListener("pagehide", suspendForPageHidden);
+
   await useAudioStore(pinia).ready;
   await useProgressStore(pinia).restoreProgress();
   await useDailyGiftStore(pinia).restore();
   await useObjectivesStore(pinia).restore();
+  Telemetry.recoverAbandonedRun();
+  Telemetry.emit({ type: "app.ready" });
 
   app.mount("#app");
 

@@ -142,7 +142,6 @@ export const useProgressStore = defineStore("progressStore", () => {
     const newCubes = currentCubes - lastReportedCubes;
     if (newCubes > 0) {
       calcScore("distance", newCubes);
-      useObjectivesStore().track("distance_travelled", newCubes);
       lastReportedCubes = currentCubes;
     }
   }

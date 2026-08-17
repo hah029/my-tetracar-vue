@@ -110,7 +110,7 @@ function resumeGame() {
     soundManager.playCue("uiSelect");
     showHideAllPauseElements(false);
     setTimeout(() => {
-        gameStore.setState(GameStates.Play);
+        gameStore.setState(GameStates.Play, "resume_button");
     }, 400);
 };
 
@@ -148,7 +148,7 @@ function goToMainMenu() {
     setTimeout(() => {
         // возвращаем назад старое значение рекорда, если игрок не доиграл до конца (заблаговременно вышел)
         progressStore.restoreProgress();
-        gameStore.setState(GameStates.Menu);
+        gameStore.setState(GameStates.Menu, "quit_confirmed");
     }, 400);
     setTimeout(() => {
         gameStore.activeOverlay = null;

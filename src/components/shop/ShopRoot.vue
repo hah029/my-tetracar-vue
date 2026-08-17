@@ -1,6 +1,5 @@
 <template>
-    <div :class="setContainerPos()">
-    <!-- <div class="container" :class="setContainerPos()"> -->
+    <div class="container shop_root">
         <div class="shop_container">
 
             <!-- HEADER -->
@@ -609,19 +608,6 @@
         }, 500);
     }
 
-    function setContainerPos() {
-
-        if (gameState.currentState === "menu") {
-            return "container_pos_main_menu";
-        }
-
-        if (gameState.currentState === "pause") {
-            return "container_pos_pause";
-        }
-
-        return "";
-    }
-
     function setHeaderSize() {
 
         if (gameState.currentState === "pause") {
@@ -672,6 +658,10 @@
     //     background-color: rgba(0, 0, 0, 0.72);
     //     backdrop-filter: blur(2px);
     // }
+
+    .shop_root {
+        min-height: 0;
+    }
 
     .shop_container {
         width: min(86rem, 100%);

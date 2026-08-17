@@ -69,7 +69,7 @@
             if (count.value === 0) {
                 soundManager.playCueOneShot("countdownGo");
                 setTimeout(() => {
-                    gameStore.setState(GameStates.Play);
+                    gameStore.setState(GameStates.Play, "countdown_finished");
                 }, 650);
                 return;
             };

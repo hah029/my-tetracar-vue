@@ -1,5 +1,5 @@
 import type { LeaderboardDescription, LeaderboardEntry, LeaderboardEntriesData } from "ysdk";
-import type { IGamePlatform } from "../IGamePlatform";
+import type { IGamePlatform, PlatformAdCallbacks } from "../IGamePlatform";
 const DEFAULT_AVATAR = [
     '/src/assets/images/avatars/awatar_anonymous_1.jpg',
     '/src/assets/images/avatars/awatar_anonymous_2.jpg',
@@ -68,6 +68,7 @@ interface ILeaderboardEntries {
 
 export class LocalStoragePlatform implements IGamePlatform {
   private storage: Storage | null = null;
+  private stickyBanner: HTMLDivElement | null = null;
 
   private readonly PLAYER_KEY = "dev_player";
   private readonly LEADERBOARD_KEY = "dev_leaderboards";
@@ -128,29 +129,88 @@ export class LocalStoragePlatform implements IGamePlatform {
   // ------------------------------------------------------------------
   // Реклама (имитация)
   // ------------------------------------------------------------------
-  async showFullscreenAd(
-    callbackObject: any,
-    openCallbackMethod?: Function,
-    closeCallbackMethod?: Function,
-  ): Promise<void> {
-    console.log("DEV Fullscreen Ad");
-    openCallbackMethod?.(callbackObject);
-    setTimeout(() => {
-      closeCallbackMethod?.(callbackObject);
-    }, 1000);
+  showFullscreenAd(callbacks: PlatformAdCallbacks): void {
+    this.showMockAd("interstitial", callbacks);
   }
 
-  async showRewardedVideoAd(
-    callbackObject: any,
-    openCallbackMethod?: Function,
-    rewardCallbackMethod?: Function,
-    closeCallbackMethod?: Function,
-  ): Promise<void> {
-    console.log("DEV Rewarded Ad");
-    openCallbackMethod?.(callbackObject);
-    setTimeout(() => {
-      rewardCallbackMethod?.(callbackObject);
-    }, 1500);
+  showRewardedVideoAd(callbacks: PlatformAdCallbacks): void {
+    this.showMockAd("rewarded", callbacks);
+  }
+
+  showStickyBannerAd(): void {
+    if (this.stickyBanner || typeof document === "undefined" || !document.body) return;
+
+    const banner = document.createElement("div");
+    banner.setAttribute("data-testid", "local-sticky-banner-mock");
+    banner.style.cssText = [
+      "position:fixed", "left:50%", "bottom:12px", "z-index:99998",
+      "transform:translateX(-50%)", "width:min(640px,calc(100% - 24px))",
+      "padding:12px 16px", "border:1px solid #ffd84d", "border-radius:10px",
+      "background:#18223c", "box-shadow:0 10px 30px rgba(0,0,0,.45)",
+      "font:600 14px system-ui,sans-serif", "color:#fff", "text-align:center",
+    ].join(";");
+    banner.textContent = "DEV MOCK: Sticky banner";
+    document.body.append(banner);
+    this.stickyBanner = banner;
+  }
+
+  hideStickyBannerAd(): void {
+    this.stickyBanner?.remove();
+    this.stickyBanner = null;
+  }
+
+  getStickyBannerAdStatus(): "shown" | "hidden" | "unknown" {
+    return this.stickyBanner?.isConnected ? "shown" : "hidden";
+  }
+
+  private showMockAd(
+    format: "interstitial" | "rewarded",
+    callbacks: PlatformAdCallbacks,
+  ): void {
+    if (typeof document === "undefined" || !document.body) {
+      callbacks.onError?.(new Error("dev_mock_document_unavailable"));
+      return;
+    }
+
+    const overlay = document.createElement("div");
+    overlay.setAttribute("data-testid", "local-ad-mock");
+    overlay.style.cssText = [
+      "position:fixed", "inset:0", "z-index:99999", "display:grid",
+      "place-items:center", "padding:24px", "background:rgba(5,8,17,.9)",
+      "font-family:system-ui,sans-serif", "color:#fff", "text-align:center",
+    ].join(";");
+
+    const panel = document.createElement("div");
+    panel.style.cssText = "width:min(420px,100%);padding:32px;border:2px solid #ffd84d;border-radius:16px;background:#18223c;box-shadow:0 18px 60px rgba(0,0,0,.55)";
+    const title = format === "rewarded" ? "Rewarded реклама" : "Полноэкранная реклама";
+    panel.innerHTML = `<strong style="display:block;font-size:24px;margin-bottom:12px">DEV MOCK: ${title}</strong><p style="margin:0 0 24px">Проверьте обработку callback-ов без внешнего SDK.</p>`;
+
+    let completed = false;
+    const finish = (action: "close" | "error" | "reward") => {
+      if (completed) return;
+      completed = true;
+      overlay.remove();
+      if (action === "error") callbacks.onError?.(new Error("dev_mock_ad_error"));
+      else {
+        if (action === "reward") callbacks.onRewarded?.();
+        callbacks.onClose?.();
+      }
+    };
+    const addButton = (label: string, action: "close" | "error" | "reward") => {
+      const button = document.createElement("button");
+      button.type = "button";
+      button.textContent = label;
+      button.style.cssText = "margin:6px;padding:10px 16px;border:0;border-radius:8px;background:#ffd84d;color:#18223c;font-weight:700;cursor:pointer";
+      button.addEventListener("click", () => finish(action));
+      panel.append(button);
+    };
+
+    if (format === "rewarded") addButton("Получить награду и закрыть", "reward");
+    else addButton("Закрыть рекламу", "close");
+    addButton("Симулировать ошибку", "error");
+    overlay.append(panel);
+    document.body.append(overlay);
+    callbacks.onOpen?.();
   }
 
   // ------------------------------------------------------------------

@@ -255,6 +255,13 @@ export class SoundManager {
     }
   }
 
+  async suspend() {
+    const context = this.listener.context;
+    if (context.state === "running") {
+      await context.suspend();
+    }
+  }
+
   setMaster(enabled: boolean) {
     useAudioStore().masterEnabled = enabled;
     if (!enabled) {

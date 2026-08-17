@@ -1,21 +1,25 @@
 import type { Product } from "ysdk";
 
+export type PlatformAdCallbacks = {
+  onOpen?: () => void;
+  onClose?: () => void;
+  onRewarded?: () => void;
+  onError?: (error: unknown) => void;
+};
+
 export interface IGamePlatform {
   init(): Promise<void>;
 
   // #region - работа с рекламой
-  showFullscreenAd(
-    object: any,
-    openCallbackMethod: Function,
-    closeCallback: Function,
-  ): void;
+  showFullscreenAd(callbacks: PlatformAdCallbacks): void;
 
-  showRewardedVideoAd(
-    object: any,
-    openCallbackMethod: Function,
-    rewardCallback: Function,
-    closeCallback: Function,
-  ): void;
+  showRewardedVideoAd(callbacks: PlatformAdCallbacks): void;
+
+  showStickyBannerAd(): void;
+
+  hideStickyBannerAd(): void;
+
+  getStickyBannerAdStatus(): "shown" | "hidden" | "unknown";
   // #endregion
 
   // #region - работа с Player

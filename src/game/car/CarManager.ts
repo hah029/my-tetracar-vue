@@ -220,6 +220,8 @@ export class CarManager {
   public destroyCar(): void {
     if (!this.car) return;
 
+    this.car.clearCubes();
+
     if (this.scene) {
       this.scene.remove(this.car);
 

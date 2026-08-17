@@ -71,6 +71,7 @@ import { useProgressStore } from "@/store/progressStore";
 import { GameStates } from "@/game/core/GameState";
 import { createNewText } from '@/helpers/functions';
 import { SoundManager } from "@/game/sound/SoundManager";
+import { Telemetry } from "@/telemetry";
 
 // подключаем store
 const gameState = useGameState();
@@ -97,14 +98,15 @@ const menuButtons = computed(() => [
 
 function restartGame() {
     SoundManager.getInstance().playCue("uiSelect");
+    Telemetry.emit({ type: "ui.action", name: "restart_clicked", screen: "gameover" });
     playerStore.resetPlayerAchievements();
-    gameState.setState(GameStates.Countdown);
+    gameState.setState(GameStates.Countdown, "restart_button");
 };
 
 function goToMainMenu() {
     SoundManager.getInstance().playCue("uiSelect");
     playerStore.resetPlayerAchievements();
-    gameState.setState(GameStates.Menu);
+    gameState.setState(GameStates.Menu, "menu_button");
 };
 
 onMounted(() => {

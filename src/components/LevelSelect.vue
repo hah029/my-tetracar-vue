@@ -67,7 +67,7 @@ function selectDifficulty(id: string) {
 
 function goBack() {
     soundManager.playCue("uiSelect");
-    gameStore.setState(GameStates.Menu);
+    gameStore.setState(GameStates.Menu, "menu_button");
 }
 
 function startRace() {

@@ -16,6 +16,7 @@ import { BaseObstacle } from "@/game/interactive/obstacle/BaseObstacle";
 import { CoinItem } from "@/game/interactive/items/coin/CoinItem";
 import { BoosterItem } from "@/game/interactive/items/booster/BoosterItem";
 import type { BaseItem } from "@/game/interactive/items/BaseItem";
+import { RunTelemetry } from "@/telemetry";
 
 export function GameLoop(
   game: ReturnType<typeof useGame>,
@@ -90,7 +91,11 @@ export function GameLoop(
         } catch {}
       }
 
-      const isGameOver = game.car.value.isDestroyed;
+      // Gameover — терминальное состояние забега. Даже если конкретный путь
+      // завершения ещё не выставил флаг у машины, нельзя продолжать дистанцию,
+      // score и gameplay-telemetry в следующих кадрах.
+      const isGameOver =
+        currentState === GameStates.Gameover || game.car.value.isDestroyed;
       let currentSpeed = playerStore.getCurrentSpeed();
 
       if (!isGameOver) {
@@ -145,7 +150,7 @@ export function GameLoop(
             if (
               game.handleBaseObstacleCollision(obstacleCollision, currentSpeed)
             )
-              gameState.endGame();
+              gameState.endGame("obstacle_collision");
           }
         }
 
@@ -159,7 +164,7 @@ export function GameLoop(
             const impactSubject = itemCollision.impactSubject as BaseItem;
             game.destroyCar(impactSubject.position.clone());
             game.removeItem(impactSubject);
-            gameState.endGame();
+            gameState.endGame("lethal_magnet");
           } else if (itemCollision.impactSubject instanceof CoinItem) {
             game.handleCoinCollision(itemCollision);
             game.removeItem(itemCollision.impactSubject as BaseItem);
@@ -191,6 +196,9 @@ export function GameLoop(
         game.updateEffects();
         usePlayerStore().updateNitro(deltaTime);
         usePlayerStore().updateStatusEffects(deltaTime);
+        if (playerStore.isShieldEnabled) {
+          RunTelemetry.recordShieldActiveTime(deltaTime);
+        }
         debugCollider?.update();
       }
 

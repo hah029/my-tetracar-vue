@@ -43,7 +43,7 @@ export class MovingObstacle extends CubeObstacle {
   }
 
   public update(dt: number, speed: number): boolean {
-    if (this.isDestroyed) return false;
+    if (this.isDestroyed) return true;
     if (this.userData.curvedItemState) {
       return super.update(dt, speed);
     }

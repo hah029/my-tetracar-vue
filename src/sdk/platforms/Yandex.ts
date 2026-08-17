@@ -5,7 +5,7 @@ import type {
   Product,
   Serializable,
 } from "ysdk";
-import type { IGamePlatform } from "../IGamePlatform";
+import type { IGamePlatform, PlatformAdCallbacks } from "../IGamePlatform";
 
 type Stats = Record<string | number, number>;
 type PlayerData = Serializable | undefined;
@@ -99,58 +99,72 @@ export class YandexPlatform implements IGamePlatform {
   // Ads
   // ------------------------------------------------------------------
 
-  showFullscreenAd(
-    callbackObject: any,
-    openCallbackMethod?: Function,
-    closeCallbackMethod?: Function,
-  ): void {
+  showFullscreenAd(callbacks: PlatformAdCallbacks): void {
     this.ensureSDK().adv.showFullscreenAdv({
       callbacks: {
         onOpen: () => {
           console.log("Fullscreen Ad opened");
-          openCallbackMethod?.(callbackObject);
+          callbacks.onOpen?.();
         },
 
         onClose: () => {
           console.log("Fullscreen Ad closed");
-          closeCallbackMethod?.(callbackObject);
+          callbacks.onClose?.();
         },
 
         onError: (err) => {
           console.error("Fullscreen Ad error:", err);
-          closeCallbackMethod?.(callbackObject);
+          callbacks.onError?.(err);
         },
       },
     });
   }
 
-  showRewardedVideoAd(
-    callbackObject: any,
-    openCallbackMethod?: Function,
-    rewardCallbackMethod?: Function,
-    closeCallbackMethod?: Function,
-  ): void {
+  showRewardedVideoAd(callbacks: PlatformAdCallbacks): void {
     this.ensureSDK().adv.showRewardedVideo({
       callbacks: {
         onOpen: () => {
           console.log("Rewarded Ad opened");
-          openCallbackMethod?.(callbackObject);
+          callbacks.onOpen?.();
         },
 
         onRewarded: () => {
-          rewardCallbackMethod?.(callbackObject);
+          callbacks.onRewarded?.();
         },
 
         onClose: () => {
           console.log("Rewarded Ad closed");
+          callbacks.onClose?.();
         },
 
         onError: (err) => {
           console.error("Rewarded Ad error:", err);
-          closeCallbackMethod?.(callbackObject);
+          callbacks.onError?.(err);
         },
       },
     });
+  }
+
+  showStickyBannerAd(): void {
+    const adv = this.ensureSDK().adv as unknown as {
+      show_banner_adv: () => void;
+    };
+    adv.show_banner_adv();
+  }
+
+  hideStickyBannerAd(): void {
+    const adv = this.ensureSDK().adv as unknown as {
+      hide_banner_adv: () => void;
+    };
+    adv.hide_banner_adv();
+  }
+
+  getStickyBannerAdStatus(): "shown" | "hidden" | "unknown" {
+    const adv = this.ensureSDK().adv as unknown as {
+      get_banner_adv_status: () => unknown;
+    };
+    const status = adv.get_banner_adv_status();
+    return status === "shown" || status === "hidden" ? status : "unknown";
   }
 
   // ------------------------------------------------------------------

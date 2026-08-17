@@ -25,6 +25,10 @@ import { BoosterItem } from "./items/booster/BoosterItem";
 import { NitroItem } from "./items/booster/NitroItem";
 import { ShieldItem } from "./items/booster/ShieldItem";
 import { MagnetItem } from "./items/booster/MagnetItem";
+import { BulletItem } from "./items/booster/BulletItem";
+import { Golden } from "./items/coin/Golden";
+import { Energon } from "./items/coin/Energon";
+import { RunTelemetry, type ItemType as TelemetryItemType } from "@/telemetry";
 import type { CorruptedBoostVariant } from "@/levels/types";
 import { RoadManager } from "@/game/environment/road";
 import { SoundManager } from "@/game/sound/SoundManager";
@@ -861,10 +865,10 @@ export class InteractiveItemsManager {
 
   public reset() {
     this.obstacleManager.reset();
+    this.magnetSystem.clear();
 
     this.items.forEach((item) => {
-      if (item.userData.magnetLine) this.scene.remove(item.userData.magnetLine);
-      this.magnetSystem.removeRepulseBeam(item);
+      this.magnetSystem.removeItemEffects(item);
       item.disposeCorruptedBoostMaterials();
 
       this.scene.remove(item);
@@ -883,6 +887,8 @@ export class InteractiveItemsManager {
     this.applyCorruptedBoostRoll(item, source);
     this.items.push(item);
     this.scene.add(item);
+    const telemetryType = this.getTelemetryItemType(item);
+    if (telemetryType) RunTelemetry.recordItemSpawned(telemetryType);
   }
 
   private applyCorruptedBoostRoll(item: BaseItem, source: ItemSpawnSource) {
@@ -965,16 +971,19 @@ export class InteractiveItemsManager {
     return colorByVariant[variant] ?? 0xff2a7a;
   }
 
-  public removeItem(item: BaseItem) {
+  public removeItem(item: BaseItem, reason: "expired" | "other" = "other") {
     const index = this.items.indexOf(item);
     if (index !== -1) {
       this.items.splice(index, 1);
     }
 
-    const line = item.userData.magnetLine;
-    if (line) this.scene.remove(line);
-    this.magnetSystem.removeRepulseBeam(item);
+    this.magnetSystem.removeItemEffects(item);
     item.disposeCorruptedBoostMaterials();
+
+    if (reason === "expired" && !item.userData.pickupRejected) {
+      const telemetryType = this.getTelemetryItemType(item);
+      if (telemetryType) RunTelemetry.recordItemExpiredUncollected(telemetryType);
+    }
 
     this.scene.remove(item);
   }
@@ -983,8 +992,18 @@ export class InteractiveItemsManager {
     for (let i = items.length - 1; i >= 0; i--) {
       const item = items[i];
       if (item.update(deltaTime, speed)) {
-        this.removeItem(item);
+        this.removeItem(item, "expired");
       }
     }
+  }
+
+  private getTelemetryItemType(item: BaseItem): TelemetryItemType | null {
+    if (item instanceof Golden) return "golden";
+    if (item instanceof Energon) return "energon";
+    if (item instanceof BulletItem) return "ammo";
+    if (item instanceof ShieldItem) return "armor";
+    if (item instanceof NitroItem) return "nitro";
+    if (item instanceof MagnetItem) return "magnet";
+    return null;
   }
 }

@@ -94,7 +94,7 @@ const menuButtons = computed(() => [
 
 function startGame() {
     soundManager.playCue("uiSelect");
-    gameStore.setState(GameStates.LevelSelect);
+    gameStore.startGame();
 }
 
 function goToShop() {

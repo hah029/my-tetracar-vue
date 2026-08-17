@@ -31,7 +31,7 @@
             <!-- CONTENT -->
             <TransitionGroup name="buttons_group_showing" tag="div" class="leaderboard_table">
                 <div v-for="(record, index) in leaderBoard" v-if="currentView !== LeaderboardsView.null"
-                    :key="record.player.uniqueId ?? record.rank"
+                    :key="getLeaderboardPlayerId(record.player) ?? record.rank"
                     class="leaderboard_row_first" :class="setPlayerRowStyle(record.player)"
                     :style="{ animationDelay: `${index * switchingDelay}s` }"
                 >
@@ -154,15 +154,28 @@
     };
 
     // подсвечиваем текст в строке с текущим игроком
-    function setPlayerRowStyle(player_) {
-        if (player_.uniqueId === currentPlayerId.value) {
+    function getLeaderboardPlayerId(player: LeaderBoardRecord["player"]): string | null {
+        // В контракте приложения используется uniqueId, но Yandex SDK
+        // возвращает uniqueID. Поддерживаем оба варианта на границе UI.
+        const rawPlayer = player as LeaderBoardRecord["player"] & { uniqueID?: unknown };
+        if (typeof rawPlayer.uniqueId === "string") return rawPlayer.uniqueId;
+        return typeof rawPlayer.uniqueID === "string" ? rawPlayer.uniqueID : null;
+    };
+
+    function isCurrentPlayer(player: LeaderBoardRecord["player"]): boolean {
+        const playerId = getLeaderboardPlayerId(player);
+        return playerId !== null && playerId === currentPlayerId.value;
+    };
+
+    function setPlayerRowStyle(player: LeaderBoardRecord["player"]) {
+        if (isCurrentPlayer(player)) {
             return 'row_text_markered';
         };
     };
 
     // меняем цвет рамки в строке с текущим игроком
-    function setPlayerCornerStyle(player_) {
-        if (player_.uniqueId === currentPlayerId.value) {
+    function setPlayerCornerStyle(player: LeaderBoardRecord["player"]) {
+        if (isCurrentPlayer(player)) {
             return 'img_container_markered';
         };
     };
@@ -196,7 +209,9 @@
         try {
             const [myBoard, commonBoard, playerId] = await Promise.all([
                 platform.getLeaderboardEntries("debugLeaderboard1", 5, true, 1),
-                platform.getLeaderboardEntries("debugLeaderboard1", 5, false, 1),
+                // includeUser гарантирует, что активный игрок попадёт и в top
+                // board, даже если его результат не входит в top-5.
+                platform.getLeaderboardEntries("debugLeaderboard1", 5, true, 1),
                 platform.getPlayerId(),
             ]);
 
