@@ -6,7 +6,7 @@
         <div class="top_panel">
             <div class="buttons_left_group">
                 <div class="pause_btn_container" @click="goToPause()">
-                    <img class="icon is_clickable" src="@/assets/images/hud/btn_pause.svg" />
+                    <img class="icon is_clickable" src="@/assets/images/cube_buttons/btn_pause.svg" />
                 </div>
             </div>
 
