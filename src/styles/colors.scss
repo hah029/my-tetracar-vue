@@ -11,6 +11,8 @@ $color-gray: rgba(255, 255, 255, 0.5);
 $color-ultramarine: #CED2FF;
 $color-orange: #F49B00;
 $color-pink: #F79CFF;
+$color-green-light: #9CE083;
+$color-black: #000000;
 
 .color_yellow { color: $color-yellow; }
 .color_yellow_light { color: $color-yellow-light; }
@@ -24,4 +26,6 @@ $color-pink: #F79CFF;
 .color_ultramarine { color: $color-ultramarine; }
 .color_orange { color: $color-orange; }
 .color_pink { color: $color-pink; }
+.color_green-light { color: $color-green-light; }
+.color-black { color: $color-black; }
 // #endregion

@@ -8,59 +8,45 @@
             </button>
         </TransitionGroup>
 
-        <!-- META MECHANICS -->
-        <Transition name="buttons_group_showing">
-            <aside v-if="isMainMenuEnabled" class="busines_controls_group">
-                <div class="btn_container" @click="test()">
+        <!-- BUSINESS MECHANICS -->
+        <TransitionGroup name="business_tab_showing" tag="div" class="busines_tab_group">
+            <div v-if="isMainMenuEnabled" :key="'fortune-wheel'" class="btn_container" :style="{ animationDelay: '0s' }">
+                <div class="icon_container" @click="goToFortuneWheel">
                     <img class="icon icon_wheel" src="@/assets/images/cube_buttons/btn_desktop_lucky_spin_wheel.svg" />
+                    <div v-if="fortuneWheelStore.spins > 0" class="btn_marker">{{ fortuneWheelStore.spins }}</div>
                 </div>
-                <div class="btn_container" @click="test()">
+                <div class="btn_hint hint_pink">Колесо фортуны</div>
+            </div>
+            <div v-if="isMainMenuEnabled" :key="'daily-gift'" class="btn_container" :style="{ animationDelay: '0.1s' }">
+                <div class="icon_container" @click="goToDailyGift">
                     <img class="icon icon_daily" src="@/assets/images/cube_buttons/btn_desktop_daily_bonus.svg" />
                 </div>
-                <div class="btn_container" @click="test()">
+                <div class="btn_hint hint_yellow">Награда дня</div>
+            </div>
+            <div v-if="isMainMenuEnabled" :key="'daily-tasks'" class="btn_container" :style="{ animationDelay: '0.2s' }">
+                <div class="icon_container" @click="goToDailyTasks">
                     <img class="icon icon_quests" src="@/assets/images/cube_buttons/btn_desktop_quests.svg" />
+                    <div v-if="objectivesStore.hasClaimableDaily" class="btn_marker">{{ reachedQuests }}</div>
                 </div>
-                <div class="btn_container" @click="test()">
+                <div class="btn_hint hint_blue">Задания</div>
+            </div>
+            <div v-if="isMainMenuEnabled" :key="'achievements'" class="btn_container" :style="{ animationDelay: '0.3s' }">
+                <div class="icon_container" @click="goToAchievements">
                     <img class="icon icon_achievement" src="@/assets/images/cube_buttons/btn_desktop_achievements.svg" />
+                    <div v-if="objectivesStore.hasClaimableAchievement" class="btn_marker">{{ reachedAchievements }}</div>
                 </div>
+                <div class="btn_hint hint_green">Достижения</div>
+            </div>
+        </TransitionGroup>
 
-
-
-                <!-- <button class="menu_btn meta_navigation__button"
-                    :class="{ 'meta_navigation__button--available': dailyGiftStore.status.canClaim }"
-                    :aria-label="t('mainMenu.dailyGift')" :title="t('mainMenu.dailyGift')" @click="goToDailyGift">
-                    <img src="@/assets/images/daily_gifts_icon.svg" alt="" />
-                    <span v-if="dailyGiftStore.status.canClaim" class="meta_navigation__marker">!</span>
-                </button>
-                <button class="menu_btn meta_navigation__button"
-                    :class="{ 'meta_navigation__button--available': fortuneWheelStore.spins > 0 }"
-                    :aria-label="t('mainMenu.fortuneWheel')" :title="t('mainMenu.fortuneWheel')" @click="goToFortuneWheel">
-                    <img src="@/assets/images/loot_circle.svg" alt="" />
-                    <span v-if="fortuneWheelStore.spins > 0" class="meta_navigation__marker">{{ fortuneWheelStore.spins }}</span>
-                </button>
-                <button class="menu_btn meta_navigation__button"
-                    :class="{ 'meta_navigation__button--available': objectivesStore.hasClaimableDaily }"
-                    :aria-label="t('mainMenu.dailyTasks')" :title="t('mainMenu.dailyTasks')" @click="goToDailyTasks">
-                    <img src="@/assets/images/tasks_icon.svg" alt="" />
-                    <span v-if="objectivesStore.hasClaimableDaily" class="meta_navigation__marker">!</span>
-                </button>
-                <button class="menu_btn meta_navigation__button"
-                    :class="{ 'meta_navigation__button--available': objectivesStore.hasClaimableAchievement }"
-                    :aria-label="t('mainMenu.achievements')" :title="t('mainMenu.achievements')" @click="goToAchievements">
-                    <img src="@/assets/images/achievements_icon.svg" alt="" />
-                    <span v-if="objectivesStore.hasClaimableAchievement" class="meta_navigation__marker">!</span>
-                </button> -->
-            </aside>
-        </Transition>
+        <!-- SHOP -->
+        <ShopRoot v-if="gameStore.activeOverlay === 'shop'" />
 
         <!-- SETTINGS -->
         <SettingsRoot v-if="gameStore.activeOverlay === 'settings'" />
 
         <!-- LEADERBOARDS -->
         <LeaderBoardsRoot v-if="gameStore.activeOverlay === 'leaderBoards'" />
-
-        <!-- SHOP -->
-        <ShopRoot v-if="gameStore.activeOverlay === 'shop'" />
 
         <!-- DAILY GIFT -->
         <DailyGiftRoot v-if="gameStore.activeOverlay === 'dailyGift'" />
@@ -76,20 +62,21 @@
 
 <script setup lang="ts">
     import { watch, ref, computed, onMounted } from "vue";
-    import { useGameState } from "@/store/gameState";
-    import { GameStates } from "@/game/core/GameState";
     import { createNewText } from "@/helpers/functions";
-    import SettingsRoot from "./settings/SettingsRoot.vue";
-    import LeaderBoardsRoot from "./leaderboards/LeaderBoardsRoot.vue";
-    import ShopRoot from "./shop/ShopRoot.vue";
+    import { SoundManager } from "@/game/sound/SoundManager";
+    
+    import { useGameState } from "@/store/gameState";
     import { useDailyGiftStore } from "@/store/dailyGiftStore";
     import { useFortuneWheelStore } from "@/store/fortuneWheelStore";
     import { useObjectivesStore } from "@/store/objectivesStore";
-    import DailyGiftRoot from "./daily-gift/DailyGiftRoot.vue";
-    import FortuneWheelRoot from "./fortune-wheel/FortuneWheelRoot.vue";
-    import ObjectivesRoot from "./objectives/ObjectivesRoot.vue";
-    import { useTranslation } from "i18next-vue";
-    import { SoundManager } from "@/game/sound/SoundManager";
+
+    import ShopRoot from "./shop/ShopRoot.vue";
+    import SettingsRoot from "./settings/SettingsRoot.vue";
+    import LeaderBoardsRoot from "./leaderboards/LeaderBoardsRoot.vue";
+
+    import FortuneWheelRoot from "@/components/business/FortuneWheelRoot.vue";
+    import DailyGiftRoot from "@/components/business/DailyGiftRoot.vue";
+    import ObjectivesRoot from "@/components/business/ObjectivesRoot.vue"
 
     const dailyGiftStore = useDailyGiftStore();
     const fortuneWheelStore = useFortuneWheelStore();
@@ -97,7 +84,6 @@
     const foo = createNewText();
     const gameStore = useGameState();
     const isMainMenuEnabled = ref(false);
-    const { t } = useTranslation();
     const soundManager = SoundManager.getInstance();
 
     const menuButtons = computed(() => [
@@ -107,62 +93,76 @@
         { id: 4, text: foo.makeText("mainMenu.leaderboards"), action: goToLeaderBoards },
     ]);
 
-    function startGame() {
-        soundManager.playCue("uiSelect");
-        gameStore.startGame();
-    }
+    // расчет количества выполненных заданий, которые можно забрать
+    const reachedQuests = computed(() => {
+        return objectivesStore.dailyObjectives.filter((objective) =>
+            objectivesStore.isClaimable(objective, true)
+        ).length;
+    });
 
-    function goToShop() {
-        soundManager.playCue("uiSelect");
-        isMainMenuEnabled.value = false;
-        setTimeout(() => {
-            gameStore.openShop();
-        }, 300);
-    }
+    // расчет количества полученных достижений, которые можно забрать
+    const reachedAchievements = computed(() => {
+        return objectivesStore.achievements.filter((objective) =>
+            objectivesStore.isClaimable(objective, false)
+        ).length;
+    });
 
-    function goToDailyGift() {
-        soundManager.playCue("uiSelect");
-        isMainMenuEnabled.value = false;
-        setTimeout(() => gameStore.openDailyGift(), 300);
-    }
+    // #region - действия по кнопкам главного меню 
+        function startGame() {
+            soundManager.playCue("uiSelect");
+            gameStore.startGame();
+        };
 
-    function goToFortuneWheel() {
-        soundManager.playCue("uiSelect");
-        isMainMenuEnabled.value = false;
-        setTimeout(() => gameStore.openFortuneWheel(), 300);
-    }
+        function goToShop() {
+            soundManager.playCue("uiSelect");
+            isMainMenuEnabled.value = false;
+            setTimeout(() => {
+                gameStore.openShop();
+            }, 300);
+        };
 
-    function goToDailyTasks() {
-        soundManager.playCue("uiSelect");
-        isMainMenuEnabled.value = false;
-        setTimeout(() => gameStore.openObjectives("daily"), 300);
-    }
+        function goToSettings() {
+            soundManager.playCue("uiSelect");
+            isMainMenuEnabled.value = false;
+            setTimeout(() => {
+                gameStore.openSettings('main');
+            }, 300);
+        };
 
-    function goToAchievements() {
-        soundManager.playCue("uiSelect");
-        isMainMenuEnabled.value = false;
-        setTimeout(() => gameStore.openObjectives("achievements"), 300);
-    }
+        function goToLeaderBoards() {
+            soundManager.playCue("uiSelect");
+            isMainMenuEnabled.value = false;
+            setTimeout(() => {
+                gameStore.openLeaderBoards();
+            }, 300);
+        };
+    // #endregion
 
-    function goToSettings() {
-        soundManager.playCue("uiSelect");
-        isMainMenuEnabled.value = false;
-        setTimeout(() => {
-            gameStore.openSettings('main');
-        }, 300);
-    }
+    // #region - действия по кнопкам бизнес-панели (в левой части экрана)
+        function goToFortuneWheel() {
+            soundManager.playCue("uiSelect");
+            isMainMenuEnabled.value = false;
+            setTimeout(() => gameStore.openFortuneWheel(), 300);
+        };
 
-    function goToLeaderBoards() {
-        soundManager.playCue("uiSelect");
-        isMainMenuEnabled.value = false;
-        setTimeout(() => {
-            gameStore.openLeaderBoards();
-        }, 300);
-    }
+        function goToDailyGift() {
+            soundManager.playCue("uiSelect");
+            isMainMenuEnabled.value = false;
+            setTimeout(() => gameStore.openDailyGift(), 300);
+        };
 
-    function test() {
-        alert("Тест");
-    };
+        function goToDailyTasks() {
+            soundManager.playCue("uiSelect");
+            isMainMenuEnabled.value = false;
+            setTimeout(() => gameStore.openObjectives("daily"), 300);
+        };
+
+        function goToAchievements() {
+            soundManager.playCue("uiSelect");
+            isMainMenuEnabled.value = false;
+            setTimeout(() => gameStore.openObjectives("achievements"), 300);
+        };
+    // #endregion
 
     watch(
         () => gameStore.activeOverlay,
@@ -171,19 +171,18 @@
                 isMainMenuEnabled.value = false;
             } else {
                 isMainMenuEnabled.value = true;
-            }
+            };
         },
     );
 
     onMounted(async () => {
-        // console.log("🟢 MainMenu.onMounted: calling restoreProgress");
         setTimeout(() => {
             isMainMenuEnabled.value = true;
         }, 400);
 
         if (dailyGiftStore.isReady && dailyGiftStore.status.canClaim) {
             setTimeout(() => gameStore.openDailyGift(), 450);
-        }
+        };
     });
 </script>
 
@@ -194,144 +193,142 @@
     @use "@/styles/typography" as *;
     @use "@/styles/colors" as *;
 
-    .group_correction {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: flex-start;
-        position: fixed;
+    // #region - элементы главного меню
+        .group_correction {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-start;
+            position: fixed;
 
-        // #region - bottom and gap
-        bottom: 11.111vh;
-        gap: 5.56vh;
-
-        @media (min-width: $breakpoint-mobile) and (orientation: landscape) and (hover: none) and (pointer: coarse) {
+            // #region - bottom and gap
             bottom: 11.111vh;
             gap: 5.56vh;
+
+            @media (min-width: $breakpoint-mobile) and (orientation: landscape) and (hover: none) and (pointer: coarse) {
+                bottom: 11.111vh;
+                gap: 5.56vh;
+            }
+
+            // позже расчитать:
+            // @media (min-width: $breakpoint-tablet) and (orientation: landscape) and (hover: none) and (pointer: coarse) { 
+            //     bottom: 9.722vw;
+            //     gap: 1.736vw; 
+            // }  
+            @media (min-width: $breakpoint-laptop) and (orientation: landscape) {
+                bottom: 9.722vw;
+                gap: 1.736vw;
+            }
+
+            @media (min-width: $breakpoint-desktop) and (orientation: landscape) {
+                bottom: 10.677vw;
+                gap: 1.667vw;
+            }
+
+            // #endregion
         }
 
-        // позже расчитать:
-        // @media (min-width: $breakpoint-tablet) and (orientation: landscape) and (hover: none) and (pointer: coarse) { 
-        //     bottom: 9.722vw;
-        //     gap: 1.736vw; 
-        // }  
-        @media (min-width: $breakpoint-laptop) and (orientation: landscape) {
-            bottom: 9.722vw;
-            gap: 1.736vw;
+        .btn_correction {
+            @include text-button-size-m;
+            color: $color-yellow-super-light;
+        }
+    // #endregion
+
+    // #region - элементы бизнес-панели (в левой части экрана)
+        .busines_tab_group {
+            position: absolute;
+            left: 40px;
+            bottom: 250px;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
         }
 
-        @media (min-width: $breakpoint-desktop) and (orientation: landscape) {
-            bottom: 10.677vw;
-            gap: 1.667vw;
+        .btn_container {
+            display: flex;
+            gap: 12px;
+            justify-content: flex-start;
+            align-items: center;
         }
 
-        // #endregion
-    }
+        .icon_container {
+            position: relative;
+            width: 68px;
+            cursor: pointer;
+            pointer-events: auto;
 
-    .btn_correction {
-        @include text-button-size-m;
-        color: $color-yellow-super-light;
-    }
-
-    .busines_controls_group {
-        position: absolute;
-        left: 40px;
-        bottom: 256px;
-        display: flex;
-        flex-direction: column;
-        gap: 6px;
-    }
-
-    .btn_container {
-        width: 68px;
-        cursor: pointer;
-        pointer-events: auto;
-        transition: all 0.1s ease-in-out;
-
-        &:hover .icon {
-            transition: all 0.1s ease-in-out;
-            transform: translateY(-2px);
+            &:hover .btn_marker {
+                transition: all 0.2s cubic-bezier(0.25, 0.1, 0.25, 1);
+                transform: translateX(5px);
+            }
+            &:hover +.btn_hint {
+                opacity: 1;
+                transition: all 0.65s cubic-bezier(0,.29,.25,1);
+                transform: translateX(16px);
+            }
+            &:hover .icon {
+                transition: all 0.2s cubic-bezier(0.25, 0.1, 0.25, 1);
+                transform: translateX(5px);
+            }
+            &:hover .icon_wheel {
+                filter: drop-shadow(0 0 30px rgba(137, 35, 146, 1));
+            }
+            &:hover .icon_daily {
+                filter: drop-shadow(0 0 30px rgba(151, 145, 11, 1));
+            }
+            &:hover .icon_quests {
+                filter: drop-shadow(0 0 30px rgba(73, 114, 153, 1));
+            }
+            &:hover .icon_achievement {
+                filter: drop-shadow(0 0 30px rgba(76, 147, 62, 1));
+            }
         }
-        &:hover .icon_wheel {
-            filter: drop-shadow(0 0 30px rgba(137, 35, 146, 1));
+
+        .icon {
+            width: 100%;
+            transition: all 0.2s cubic-bezier(0.25, 0.1, 0.25, 1);
         }
-        &:hover .icon_daily {
-            filter: drop-shadow(0 0 30px rgba(151, 145, 11, 1));
+
+        .btn_marker {
+            position: absolute;
+            top: 0;
+            right: -10px;
+            width: 18px;
+            height: 18px;
+            background-color: $color-yellow;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            @include text-info-size-xs;
+            line-height: 1;
+            font-weight: 600;
+            color: $color-black;
+            transition: all 0.2s cubic-bezier(0.25, 0.1, 0.25, 1);
         }
-        &:hover .icon_quests {
-            filter: drop-shadow(0 0 30px rgba(73, 114, 153, 1));
+
+        .btn_hint {
+            opacity: 0;
+            @include text-info-size-s;
+            text-transform: uppercase;
         }
-        &:hover .icon_achievement {
-            filter: drop-shadow(0 0 30px rgba(76, 147, 62, 1));
+
+        .hint_pink {
+            color: $color-pink;
         }
-    }
 
-    .icon {
-        width: 100%;
-    }
+        .hint_yellow {
+            color: $color-yellow-super-light;
+            margin-top: -5px;
+        }
 
-    // .is_clickable {
-    //     cursor: pointer;
-    //     pointer-events: auto;
-    //     transition: all 0.1s ease-in-out;
-    // }
+        .hint_blue {
+            color: $color-blue;
+            margin-top: -12px;
+        }
 
-    // .meta_navigation {
-    //     position: fixed;
-    //     left: max(8.5rem, 50% - 15rem);
-    //     bottom: 27.111vh;
-    //     display: flex;
-    //     flex-direction: column;
-    //     gap: 0.9rem;
-    // }
-
-    // .meta_navigation__button {
-    //     position: relative;
-    //     display: grid;
-    //     place-items: center;
-    //     padding: 0;
-    //     color: $color-blue-light;
-    // }
-
-    // .meta_navigation__button img {
-    //     width: clamp(3.5rem, 5vw, 4.5rem);
-    //     height: auto;
-    //     transition: transform 160ms ease-out;
-    // }
-
-    // .meta_navigation__button:hover img {
-    //     transform: scale(1.08);
-    // }
-
-    // .meta_navigation__button--available img {
-    //     filter: drop-shadow(0 0 0.75rem rgba(255, 217, 92, 0.72));
-    // }
-
-    // .meta_navigation__marker {
-    //     position: absolute;
-    //     top: -0.25rem;
-    //     right: -0.15rem;
-    //     display: grid;
-    //     place-items: center;
-    //     width: 1.15rem;
-    //     height: 1.15rem;
-    //     border-radius: 50%;
-    //     background: $color-yellow;
-    //     color: #1c1c1c;
-    //     font-family: $font-secondary;
-    //     font-size: 0.8rem;
-    //     font-weight: 700;
-    // }
-
-    // @media (min-width: $breakpoint-laptop) and (orientation: landscape) {
-    //     .meta_navigation {
-    //         bottom: 9.722vw;
-    //     }
-    // }
-
-    // @media (min-width: $breakpoint-desktop) and (orientation: landscape) {
-    //     .meta_navigation {
-    //         bottom: 10.677vw;
-    //     }
-    // }
+        .hint_green {
+            color: $color-green-light;
+            margin-top: -16px;
+        }
+    // #endregion
 </style>

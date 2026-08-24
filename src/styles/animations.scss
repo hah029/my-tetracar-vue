@@ -160,6 +160,39 @@
     }
 // #endregion
 
+// #region - блок анимаций кнопок бизнес-панели (в левой части экрана)
+    .business_tab_showing-enter-active {
+        animation: businessSlideIn 0.5s cubic-bezier(0.25, 0.1, 0.25, 1) backwards;
+    }
+
+    @keyframes businessSlideIn {
+        0% {
+            opacity: 0;
+            transform: translateX(-50px);
+        }
+        100% {
+            opacity: 1;
+            transform: translateX(0);
+        }
+    }
+
+    // Для исчезновения
+    .business_tab_showing-leave-active {
+        animation: businessSlideOut 0.5s cubic-bezier(0.25, 0.1, 0.25, 1) forwards;
+    }
+
+    @keyframes businessSlideOut {
+        0% {
+            opacity: 1;
+            transform: translateX(0);
+        }
+        100% {
+            opacity: 0;
+            transform: translateX(-50px);
+        }
+    }
+// #endregion
+
 // #region - блок анимаций кнопок раздела "Настройки"
     .header_footer_block_anim-enter-active {
         animation: slideIn 0.5s cubic-bezier(0.25, 0.1, 0.25, 1) backwards;

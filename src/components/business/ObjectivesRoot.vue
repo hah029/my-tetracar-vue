@@ -27,7 +27,8 @@
           <div class="objective-card__reward">
             <span>{{ rewardLabel(objective) }}</span>
             <button v-if="objectives.isClaimable(objective, isDaily)" class="menu_btn objective-card__claim"
-              :disabled="objectives.isClaiming !== null" @click="claim(objective)">{{ objectives.isClaiming === objective.id ? t("objectives.claiming") : t("objectives.claim") }}</button>
+              :disabled="objectives.isClaiming !== null" @click="claim(objective)">{{ objectives.isClaiming === objective.id ? t("objectives.claiming") : t("objectives.claim") }}
+            </button>
             <span v-else-if="objectives.isClaimed(objective, isDaily)" class="objective-card__check" :aria-label="t('objectives.claimed')">✓</span>
           </div>
         </article>
