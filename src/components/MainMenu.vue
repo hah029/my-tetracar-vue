@@ -10,33 +10,42 @@
 
         <!-- BUSINESS MECHANICS -->
         <TransitionGroup name="business_tab_showing" tag="div" class="busines_tab_group">
+            
             <div v-if="isMainMenuEnabled" :key="'fortune-wheel'" class="btn_container" :style="{ animationDelay: '0s' }">
-                <div class="icon_container" @click="goToFortuneWheel">
+                <div class="icon_container" :class="{ 'icon_container--pulse': hasFortuneReward && showFortuneReminder }" @click="goToFortuneWheel">
                     <img class="icon icon_wheel" src="@/assets/images/cube_buttons/btn_desktop_lucky_spin_wheel.svg" />
                     <div v-if="fortuneWheelStore.spins > 0" class="btn_marker">{{ fortuneWheelStore.spins }}</div>
                 </div>
+                <div v-if="hasFortuneReward && showFortuneReminder" class="btn_reminder hint_yellow">Крути колесо!</div>
                 <div class="btn_hint hint_pink">Колесо фортуны</div>
             </div>
+
             <div v-if="isMainMenuEnabled" :key="'daily-gift'" class="btn_container" :style="{ animationDelay: '0.1s' }">
-                <div class="icon_container" @click="goToDailyGift">
+                <div class="icon_container" :class="{ 'icon_container--pulse': hasDailyReward && showDailyReminder }" @click="goToDailyGift">
                     <img class="icon icon_daily" src="@/assets/images/cube_buttons/btn_desktop_daily_bonus.svg" />
                 </div>
-                <div class="btn_hint hint_yellow">Награда дня</div>
+                <div v-if="hasDailyReward && showDailyReminder" class="btn_reminder hint_yellow">Забери награду!</div>
+                <div class="btn_hint hint_yellow_light">Награда дня</div>
             </div>
+
             <div v-if="isMainMenuEnabled" :key="'daily-tasks'" class="btn_container" :style="{ animationDelay: '0.2s' }">
-                <div class="icon_container" @click="goToDailyTasks">
+                <div class="icon_container" :class="{ 'icon_container--pulse': hasQuestsReward && showQuestsReminder }" @click="goToDailyTasks">
                     <img class="icon icon_quests" src="@/assets/images/cube_buttons/btn_desktop_quests.svg" />
                     <div v-if="objectivesStore.hasClaimableDaily" class="btn_marker">{{ reachedQuests }}</div>
                 </div>
+                <div v-if="hasQuestsReward && showQuestsReminder" class="btn_reminder hint_yellow">Забери награду!</div>
                 <div class="btn_hint hint_blue">Задания</div>
             </div>
+
             <div v-if="isMainMenuEnabled" :key="'achievements'" class="btn_container" :style="{ animationDelay: '0.3s' }">
-                <div class="icon_container" @click="goToAchievements">
+                <div class="icon_container" :class="{ 'icon_container--pulse': hasAchievementsReward && showAchievementsReminder }" @click="goToAchievements">
                     <img class="icon icon_achievement" src="@/assets/images/cube_buttons/btn_desktop_achievements.svg" />
                     <div v-if="objectivesStore.hasClaimableAchievement" class="btn_marker">{{ reachedAchievements }}</div>
                 </div>
+                <div v-if="hasAchievementsReward && showAchievementsReminder" class="btn_reminder hint_yellow">Новое достижение!</div>
                 <div class="btn_hint hint_green">Достижения</div>
             </div>
+
         </TransitionGroup>
 
         <!-- SHOP -->
@@ -61,7 +70,7 @@
 
 
 <script setup lang="ts">
-    import { watch, ref, computed, onMounted } from "vue";
+    import { watch, ref, computed, onMounted, onUnmounted } from "vue";
     import { createNewText } from "@/helpers/functions";
     import { SoundManager } from "@/game/sound/SoundManager";
     
@@ -85,6 +94,31 @@
     const gameStore = useGameState();
     const isMainMenuEnabled = ref(false);
     const soundManager = SoundManager.getInstance();
+
+    // переменные для напоминаний
+    const showFortuneReminder = ref(false);
+    const showDailyReminder = ref(false);
+    const showQuestsReminder = ref(false);
+    const showAchievementsReminder = ref(false);
+
+    const fortuneTimer = ref<ReturnType<typeof setTimeout> | null>(null);
+    const dailyTimer = ref<ReturnType<typeof setTimeout> | null>(null);
+    const questsTimer = ref<ReturnType<typeof setTimeout> | null>(null);
+    const achievementsTimer = ref<ReturnType<typeof setTimeout> | null>(null);
+
+    const fortuneInterval = ref<ReturnType<typeof setInterval> | null>(null);
+    const dailyInterval = ref<ReturnType<typeof setInterval> | null>(null);
+    const questsInterval = ref<ReturnType<typeof setInterval> | null>(null);
+    const achievementsInterval = ref<ReturnType<typeof setInterval> | null>(null);
+
+    const REMINDER_DURATION = 2500; // сколько показывается подсказка
+    const REMINDER_INTERVAL = 8000; // интервал между напоминаниями (для каждого независимо)
+
+    // --- проверки для каждой кнопки ---
+    const hasFortuneReward = computed(() => fortuneWheelStore.spins > 0);
+    const hasDailyReward = computed(() => false); // у награды дня нет маркера
+    const hasQuestsReward = computed(() => objectivesStore.hasClaimableDaily);
+    const hasAchievementsReward = computed(() => objectivesStore.hasClaimableAchievement);
 
     const menuButtons = computed(() => [
         { id: 1, text: foo.makeText("mainMenu.startGame"), action: startGame },
@@ -164,6 +198,104 @@
         };
     // #endregion
 
+    // #region - периодические напоминания о наградах
+        // --- Функции триггера для каждой кнопки ---
+        function triggerFortuneReminder() {
+            if (!hasFortuneReward.value || !isMainMenuEnabled.value) return;
+            showFortuneReminder.value = true;
+            if (fortuneTimer.value) clearTimeout(fortuneTimer.value);
+            fortuneTimer.value = setTimeout(() => {
+                showFortuneReminder.value = false;
+            }, REMINDER_DURATION);
+        }
+
+        function triggerDailyReminder() {
+            if (!hasDailyReward.value || !isMainMenuEnabled.value) return;
+            showDailyReminder.value = true;
+            if (dailyTimer.value) clearTimeout(dailyTimer.value);
+            dailyTimer.value = setTimeout(() => {
+                showDailyReminder.value = false;
+            }, REMINDER_DURATION);
+        }
+
+        function triggerQuestsReminder() {
+            if (!hasQuestsReward.value || !isMainMenuEnabled.value) return;
+            showQuestsReminder.value = true;
+            if (questsTimer.value) clearTimeout(questsTimer.value);
+            questsTimer.value = setTimeout(() => {
+                showQuestsReminder.value = false;
+            }, REMINDER_DURATION);
+        }
+
+        function triggerAchievementsReminder() {
+            if (!hasAchievementsReward.value || !isMainMenuEnabled.value) return;
+            showAchievementsReminder.value = true;
+            if (achievementsTimer.value) clearTimeout(achievementsTimer.value);
+            achievementsTimer.value = setTimeout(() => {
+                showAchievementsReminder.value = false;
+            }, REMINDER_DURATION);
+        }
+
+        // --- Запуск интервалов для каждой кнопки ---
+        function startFortuneLoop() {
+            if (fortuneInterval.value) clearInterval(fortuneInterval.value);
+            setTimeout(() => triggerFortuneReminder(), 1000);
+            fortuneInterval.value = setInterval(triggerFortuneReminder, REMINDER_INTERVAL);
+        }
+
+        function startDailyLoop() {
+            if (dailyInterval.value) clearInterval(dailyInterval.value);
+            setTimeout(() => triggerDailyReminder(), 2000);
+            dailyInterval.value = setInterval(triggerDailyReminder, REMINDER_INTERVAL);
+        }
+
+        function startQuestsLoop() {
+            if (questsInterval.value) clearInterval(questsInterval.value);
+            setTimeout(() => triggerQuestsReminder(), 3000);
+            questsInterval.value = setInterval(triggerQuestsReminder, REMINDER_INTERVAL);
+        }
+
+        function startAchievementsLoop() {
+            if (achievementsInterval.value) clearInterval(achievementsInterval.value);
+            setTimeout(() => triggerAchievementsReminder(), 4000);
+            achievementsInterval.value = setInterval(triggerAchievementsReminder, REMINDER_INTERVAL);
+        }
+
+        // --- Остановка всех циклов ---
+        function stopAllReminderLoops() {
+            const intervals = [fortuneInterval, dailyInterval, questsInterval, achievementsInterval];
+            const timers = [fortuneTimer, dailyTimer, questsTimer, achievementsTimer];
+            
+            intervals.forEach((interval) => {
+                if (interval.value) {
+                    clearInterval(interval.value);
+                    interval.value = null;
+                }
+            });
+            timers.forEach((timer) => {
+                if (timer.value) {
+                    clearTimeout(timer.value);
+                    timer.value = null;
+                }
+            });
+            
+            showFortuneReminder.value = false;
+            showDailyReminder.value = false;
+            showQuestsReminder.value = false;
+            showAchievementsReminder.value = false;
+        }
+
+        // --- Запуск всех активных циклов ---
+        function startAllReminderLoops() {
+            stopAllReminderLoops();
+            
+            if (hasFortuneReward.value && isMainMenuEnabled.value) startFortuneLoop();
+            if (hasDailyReward.value && isMainMenuEnabled.value) startDailyLoop();
+            if (hasQuestsReward.value && isMainMenuEnabled.value) startQuestsLoop();
+            if (hasAchievementsReward.value && isMainMenuEnabled.value) startAchievementsLoop();
+        }
+    // #endregion
+
     watch(
         () => gameStore.activeOverlay,
         (newState) => {
@@ -175,6 +307,25 @@
         },
     );
 
+    // следим за появлением наград и запускаем / останавливаем цикл
+    watch(
+        [
+            () => hasFortuneReward.value,
+            () => hasDailyReward.value,
+            () => hasQuestsReward.value,
+            () => hasAchievementsReward.value,
+            () => isMainMenuEnabled.value
+        ],
+        () => {
+            if (isMainMenuEnabled.value) {
+                startAllReminderLoops();
+            } else {
+                stopAllReminderLoops();
+            }
+        },
+        { immediate: true }
+    );
+
     onMounted(async () => {
         setTimeout(() => {
             isMainMenuEnabled.value = true;
@@ -183,6 +334,10 @@
         if (dailyGiftStore.isReady && dailyGiftStore.status.canClaim) {
             setTimeout(() => gameStore.openDailyGift(), 450);
         };
+    });
+
+    onUnmounted(() => {
+        stopAllReminderLoops();
     });
 </script>
 
@@ -256,6 +411,11 @@
             width: 68px;
             cursor: pointer;
             pointer-events: auto;
+            transition: all 0.2s cubic-bezier(0.25, 0.1, 0.25, 1);
+
+            &--pulse {
+                animation: rewardPulse 1.2s ease-in-out infinite;
+            }
 
             &:hover .btn_marker {
                 transition: all 0.2s cubic-bezier(0.25, 0.1, 0.25, 1);
@@ -317,6 +477,11 @@
         }
 
         .hint_yellow {
+            color: $color-yellow;
+            margin-top: -5px;
+        }
+
+        .hint_yellow_light {
             color: $color-yellow-super-light;
             margin-top: -5px;
         }
@@ -329,6 +494,45 @@
         .hint_green {
             color: $color-green-light;
             margin-top: -16px;
+        }
+
+        @keyframes rewardPulse {
+            0%, 100% {
+                transform: scale(1);
+                filter: drop-shadow(0 0 0 rgba(255, 215, 0, 0));
+            }
+            50% {
+                transform: scale(1.08);
+                filter: drop-shadow(0 0 20px rgba(255, 215, 0, 0.6));
+            }
+        }
+
+        .btn_reminder {
+            opacity: 0;
+            @include text-info-size-s;
+            text-transform: uppercase;
+            white-space: nowrap;
+            animation: reminderSlideIn 2.5s ease-out forwards;
+            margin-left: 16px;
+        }
+
+        @keyframes reminderSlideIn {
+            0% {
+                opacity: 0;
+                transform: translateX(-10px);
+            }
+            15% {
+                opacity: 1;
+                transform: translateX(0);
+            }
+            85% {
+                opacity: 1;
+                transform: translateX(0);
+            }
+            100% {
+                opacity: 0;
+                transform: translateX(-10px);
+            }
         }
     // #endregion
 </style>
