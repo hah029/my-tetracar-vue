@@ -5,15 +5,25 @@
         "pressAnyButtonMob": "коснись, чтобы начать"
     },
     "mainMenu": {
-        "goBack": "назад",
         "startGame": "старт",
         "shop": "магазин",
-        "dailyGift": "ежедневный бонус",
-        "fortuneWheel": "колесо фортуны",
-        "dailyTasks": "ежедневные задания",
-        "achievements": "достижения",
         "settings": "настройки",
-        "leaderboards": "рекорды"
+        "leaderboards": "рекорды",
+        "goBack": "назад"
+    },
+    "businessMenu": {
+        "namesList": {
+            "luckySpin": "колесо фортуны",
+            "dailyBonus": "награда дня",
+            "quests": "задания",
+            "achievements": "достижения"
+        },
+        "remindersList": {
+            "luckySpin": "крути колесо!",
+            "dailyBonus": "забери награду!",
+            "quests": "забери награду!",
+            "achievements": "новое достижение!"
+        }
     },
     "trainingScreen": {
         "earn": {

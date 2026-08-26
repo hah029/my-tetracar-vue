@@ -12,38 +12,38 @@
         <TransitionGroup name="business_tab_showing" tag="div" class="busines_tab_group">
             
             <div v-if="isMainMenuEnabled" :key="'fortune-wheel'" class="btn_container" :style="{ animationDelay: '0s' }">
-                <div class="icon_container" :class="{ 'icon_container--pulse': hasFortuneReward && showFortuneReminder }" @click="goToFortuneWheel">
+                <div class="icon_container" :class="{ 'icon_container--pulse': hasFortuneReward && showFortuneReminder }" @click="businessButtons[0].action">
                     <img class="icon icon_wheel" src="@/assets/images/cube_buttons/btn_desktop_lucky_spin_wheel.svg" />
                     <div v-if="fortuneWheelStore.spins > 0" class="btn_marker">{{ fortuneWheelStore.spins }}</div>
                 </div>
-                <div v-if="hasFortuneReward && showFortuneReminder" class="btn_reminder hint_yellow">Крути колесо!</div>
-                <div class="btn_hint hint_pink">Колесо фортуны</div>
+                <div v-if="hasFortuneReward && showFortuneReminder" class="btn_reminder hint_yellow">{{ businessButtons[0].reminder }}</div>
+                <div class="btn_hint hint_pink">{{ businessButtons[0].text }}</div>
             </div>
 
             <div v-if="isMainMenuEnabled" :key="'daily-gift'" class="btn_container" :style="{ animationDelay: '0.1s' }">
-                <div class="icon_container" :class="{ 'icon_container--pulse': hasDailyReward && showDailyReminder }" @click="goToDailyGift">
+                <div class="icon_container" :class="{ 'icon_container--pulse': hasDailyReward && showDailyReminder }" @click="businessButtons[1].action">
                     <img class="icon icon_daily" src="@/assets/images/cube_buttons/btn_desktop_daily_bonus.svg" />
                 </div>
-                <div v-if="hasDailyReward && showDailyReminder" class="btn_reminder hint_yellow">Забери награду!</div>
-                <div class="btn_hint hint_yellow_light">Награда дня</div>
+                <div v-if="hasDailyReward && showDailyReminder" class="btn_reminder hint_yellow">{{ businessButtons[1].reminder }}</div>
+                <div class="btn_hint hint_yellow_light">{{ businessButtons[1].text }}</div>
             </div>
 
             <div v-if="isMainMenuEnabled" :key="'daily-tasks'" class="btn_container" :style="{ animationDelay: '0.2s' }">
-                <div class="icon_container" :class="{ 'icon_container--pulse': hasQuestsReward && showQuestsReminder }" @click="goToDailyTasks">
+                <div class="icon_container" :class="{ 'icon_container--pulse': hasQuestsReward && showQuestsReminder }" @click="businessButtons[2].action">
                     <img class="icon icon_quests" src="@/assets/images/cube_buttons/btn_desktop_quests.svg" />
                     <div v-if="objectivesStore.hasClaimableDaily" class="btn_marker">{{ reachedQuests }}</div>
                 </div>
-                <div v-if="hasQuestsReward && showQuestsReminder" class="btn_reminder hint_yellow">Забери награду!</div>
-                <div class="btn_hint hint_blue">Задания</div>
+                <div v-if="hasQuestsReward && showQuestsReminder" class="btn_reminder hint_yellow">{{ businessButtons[2].reminder }}</div>
+                <div class="btn_hint hint_blue">{{ businessButtons[2].text }}</div>
             </div>
 
             <div v-if="isMainMenuEnabled" :key="'achievements'" class="btn_container" :style="{ animationDelay: '0.3s' }">
-                <div class="icon_container" :class="{ 'icon_container--pulse': hasAchievementsReward && showAchievementsReminder }" @click="goToAchievements">
+                <div class="icon_container" :class="{ 'icon_container--pulse': hasAchievementsReward && showAchievementsReminder }" @click="businessButtons[3].action">
                     <img class="icon icon_achievement" src="@/assets/images/cube_buttons/btn_desktop_achievements.svg" />
                     <div v-if="objectivesStore.hasClaimableAchievement" class="btn_marker">{{ reachedAchievements }}</div>
                 </div>
-                <div v-if="hasAchievementsReward && showAchievementsReminder" class="btn_reminder hint_yellow">Новое достижение!</div>
-                <div class="btn_hint hint_green">Достижения</div>
+                <div v-if="hasAchievementsReward && showAchievementsReminder" class="btn_reminder hint_yellow">{{ businessButtons[3].reminder }}</div>
+                <div class="btn_hint hint_green">{{ businessButtons[3].text }}</div>
             </div>
 
         </TransitionGroup>
@@ -125,6 +125,29 @@
         { id: 2, text: foo.makeText("mainMenu.shop"), action: goToShop },
         { id: 3, text: foo.makeText("mainMenu.settings"), action: goToSettings },
         { id: 4, text: foo.makeText("mainMenu.leaderboards"), action: goToLeaderBoards },
+    ]);
+
+    const businessButtons = computed(() => [
+        { id: 1, 
+            text: foo.makeText("businessMenu.namesList.luckySpin", 'empty'), 
+            reminder: foo.makeText("businessMenu.remindersList.luckySpin", 'empty'), 
+            action: goToFortuneWheel 
+        },
+        { id: 2, 
+            text: foo.makeText("businessMenu.namesList.dailyBonus", 'empty'), 
+            reminder: foo.makeText("businessMenu.remindersList.dailyBonus", 'empty'), 
+            action: goToDailyGift 
+        },
+        { id: 3, 
+            text: foo.makeText("businessMenu.namesList.quests", 'empty'), 
+            reminder: foo.makeText("businessMenu.remindersList.quests", 'empty'), 
+            action: goToDailyTasks 
+        },
+        { id: 4, 
+            text: foo.makeText("businessMenu.namesList.achievements", 'empty'), 
+            reminder: foo.makeText("businessMenu.remindersList.achievements", 'empty'), 
+            action: goToAchievements 
+        },
     ]);
 
     // расчет количества выполненных заданий, которые можно забрать

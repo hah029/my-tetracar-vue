@@ -5,15 +5,25 @@
         "pressAnyButtonMob": "tap to start"
     },
     "mainMenu": {
-        "goBack": "back",
         "startGame": "play",
         "shop": "shop",
-        "dailyGift": "daily bonus",
-        "fortuneWheel": "fortune wheel",
-        "dailyTasks": "daily tasks",
-        "achievements": "achievements",
         "settings": "settings",
-        "leaderboards": "leaderboards"
+        "leaderboards": "leaderboards",
+        "goBack": "back"
+    },
+    "businessMenu": {
+        "namesList": {
+            "luckySpin": "lucky spin",
+            "dailyBonus": "daily bonus",
+            "quests": "quests",
+            "achievements": "achievements"
+        },
+        "remindersList": {
+            "luckySpin": "spin the wheel!",
+            "dailyBonus": "claim your reward!",
+            "quests": "claim your reward!",
+            "achievements": "new achievement!"
+        }
     },
     "trainingScreen": {
         "earn": {
