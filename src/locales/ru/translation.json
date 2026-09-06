@@ -262,7 +262,11 @@
     },
     "fortuneWheel": {
         "preset": "набор",
-        "presets": { "standard": "стандартный", "supplies": "снабжение" },
+        "presets": {
+            "standard": "стандартный",
+            "supplies": "снабжение",
+            "daily": "ежедневный"
+        },
         "title": "колесо фортуны",
         "spins": "крутки: {{count}}",
         "spin": "крутить",
@@ -281,14 +285,38 @@
         "claimed": "получено",
         "error": "не удалось сохранить награду. попробуйте ещё раз.",
         "items": {
-            "daily_collect_goldens": { "title": "сборщик голдов", "description": "соберите {{target}} голдов" },
-            "daily_drive_distance": { "title": "в путь", "description": "проедьте {{target}} кубов" },
-            "daily_destroy_obstacles": { "title": "расчистка пути", "description": "уничтожьте {{target}} препятствий" },
-            "achievement_first_drive": { "title": "первый заезд", "description": "завершите 1 заезд" },
-            "achievement_golden_collector": { "title": "золотая коллекция", "description": "уровень {{level}}: соберите {{target}} голдов" },
-            "achievement_long_road": { "title": "дальняя дорога", "description": "уровень {{level}}: проедьте {{target}} кубов" },
-            "achievement_stunt_driver": { "title": "каскадёр", "description": "уровень {{level}}: совершите {{target}} прыжков" },
-            "achievement_demolition": { "title": "разрушитель", "description": "уровень {{level}}: уничтожьте {{target}} препятствий" }
+            "daily_collect_goldens": {
+                "title": "сборщик голдов",
+                "description": "соберите {{target}} голдов"
+            },
+            "daily_drive_distance": {
+                "title": "в путь",
+                "description": "проедьте {{target}} кубов"
+            },
+            "daily_destroy_obstacles": {
+                "title": "расчистка пути",
+                "description": "уничтожьте {{target}} препятствий"
+            },
+            "achievement_first_drive": {
+                "title": "первый заезд",
+                "description": "завершите 1 заезд"
+            },
+            "achievement_golden_collector": {
+                "title": "золотая коллекция",
+                "description": "уровень {{level}}: соберите {{target}} голдов"
+            },
+            "achievement_long_road": {
+                "title": "дальняя дорога",
+                "description": "уровень {{level}}: проедьте {{target}} кубов"
+            },
+            "achievement_stunt_driver": {
+                "title": "каскадёр",
+                "description": "уровень {{level}}: совершите {{target}} прыжков"
+            },
+            "achievement_demolition": {
+                "title": "разрушитель",
+                "description": "уровень {{level}}: уничтожьте {{target}} препятствий"
+            }
         }
     },
     "currency": {

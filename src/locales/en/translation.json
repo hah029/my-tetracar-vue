@@ -262,7 +262,11 @@
     },
     "fortuneWheel": {
         "preset": "preset",
-        "presets": { "standard": "standard", "supplies": "supplies" },
+        "presets": {
+            "standard": "standard",
+            "supplies": "supplies",
+            "daily": "daily"
+        },
         "title": "fortune wheel",
         "spins": "spins: {{count}}",
         "spin": "spin",
@@ -281,14 +285,38 @@
         "claimed": "claimed",
         "error": "could not save the reward. please try again.",
         "items": {
-            "daily_collect_goldens": { "title": "golden collector", "description": "collect {{target}} goldens" },
-            "daily_drive_distance": { "title": "on the road", "description": "travel {{target}} cubes" },
-            "daily_destroy_obstacles": { "title": "clear the road", "description": "destroy {{target}} obstacles" },
-            "achievement_first_drive": { "title": "first drive", "description": "finish 1 drive" },
-            "achievement_golden_collector": { "title": "golden collection", "description": "level {{level}}: collect {{target}} goldens" },
-            "achievement_long_road": { "title": "long road", "description": "level {{level}}: travel {{target}} cubes" },
-            "achievement_stunt_driver": { "title": "stunt driver", "description": "level {{level}}: perform {{target}} jumps" },
-            "achievement_demolition": { "title": "demolition", "description": "level {{level}}: destroy {{target}} obstacles" }
+            "daily_collect_goldens": {
+                "title": "golden collector",
+                "description": "collect {{target}} goldens"
+            },
+            "daily_drive_distance": {
+                "title": "on the road",
+                "description": "travel {{target}} cubes"
+            },
+            "daily_destroy_obstacles": {
+                "title": "clear the road",
+                "description": "destroy {{target}} obstacles"
+            },
+            "achievement_first_drive": {
+                "title": "first drive",
+                "description": "finish 1 drive"
+            },
+            "achievement_golden_collector": {
+                "title": "golden collection",
+                "description": "level {{level}}: collect {{target}} goldens"
+            },
+            "achievement_long_road": {
+                "title": "long road",
+                "description": "level {{level}}: travel {{target}} cubes"
+            },
+            "achievement_stunt_driver": {
+                "title": "stunt driver",
+                "description": "level {{level}}: perform {{target}} jumps"
+            },
+            "achievement_demolition": {
+                "title": "demolition",
+                "description": "level {{level}}: destroy {{target}} obstacles"
+            }
         }
     },
     "currency": {
