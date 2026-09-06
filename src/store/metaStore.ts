@@ -3,6 +3,8 @@ import { defineStore } from "pinia";
 import { ref, computed } from "vue";
 import { Platform } from "@/sdk/Platform";
 
+import { DEFAULT_FORTUNE_WHEEL_PRESET, isFortuneWheelPresetId, type FortuneWheelPresetId } from "@/configs/fortuneWheel";
+
 import meta from "@/configs/meta";
 import { useCommonStore } from "@/store/commonStore";
 
@@ -22,7 +24,7 @@ export const useMetaStore = defineStore("metaStore", () => {
   // Валюта
   const goldens = ref(0);
   const energons = ref(0);
-  const fortuneSpins = ref(0);
+  const fortuneSpins = ref<Partial<Record<FortuneWheelPresetId, number>>>({});
 
   // Скины
   const ownedSkins = ref<string[]>([]);
@@ -87,13 +89,19 @@ export const useMetaStore = defineStore("metaStore", () => {
     return currency === "golden" ? goldens.value : energons.value;
   }
 
-  function addFortuneSpins(amount: number) {
-    fortuneSpins.value += Math.max(0, Math.floor(amount));
+  function getFortuneSpins(presetId: FortuneWheelPresetId): number {
+    return fortuneSpins.value[presetId] ?? 0;
   }
 
-  function consumeFortuneSpin(): boolean {
-    if (fortuneSpins.value < 1) return false;
-    fortuneSpins.value -= 1;
+  function addFortuneSpins(presetId: FortuneWheelPresetId, amount: number) {
+    if (!isFortuneWheelPresetId(presetId)) throw new Error(`Unknown wheel preset: ${presetId}`);
+    if (!Number.isFinite(amount) || amount <= 0) return;
+    fortuneSpins.value[presetId] = getFortuneSpins(presetId) + Math.floor(amount);
+  }
+
+  function consumeFortuneSpin(presetId: FortuneWheelPresetId): boolean {
+    if (!isFortuneWheelPresetId(presetId) || getFortuneSpins(presetId) < 1) return false;
+    fortuneSpins.value[presetId] = getFortuneSpins(presetId) - 1;
     return true;
   }
 
@@ -226,7 +234,7 @@ export const useMetaStore = defineStore("metaStore", () => {
       upgrades: JSON.stringify(upgrades.value),
       permanentFeatures: JSON.stringify(permanentFeatures.value),
       activeTimedEffects: JSON.stringify(activeTimedEffects.value),
-      fortuneSpins: fortuneSpins.value,
+      fortuneSpins: JSON.stringify(fortuneSpins.value),
     });
   }
 
@@ -293,7 +301,21 @@ export const useMetaStore = defineStore("metaStore", () => {
 
       const spins = data?.fortuneSpins;
       if (spins != null) {
-        fortuneSpins.value = Math.max(0, Math.floor(Number(spins) || 0));
+        try {
+          const parsed = typeof spins === "string" ? JSON.parse(spins) : spins;
+          const balances = typeof parsed === "number"
+            ? { [DEFAULT_FORTUNE_WHEEL_PRESET]: parsed }
+            : parsed;
+          if (balances && typeof balances === "object" && !Array.isArray(balances)) {
+            fortuneSpins.value = Object.fromEntries(
+              Object.entries(balances).filter(([id, amount]) =>
+                isFortuneWheelPresetId(id) && typeof amount === "number" && Number.isFinite(amount),
+              ).map(([id, amount]) => [id, Math.max(0, Math.floor(amount as number))]),
+            );
+          }
+        } catch {
+          // Keep defaults if saved balances are malformed.
+        }
       }
 
       // Очищаем истёкшие эффекты после загрузки
@@ -327,6 +349,7 @@ export const useMetaStore = defineStore("metaStore", () => {
     spendGolden,
     spendEnergon,
     getBalance,
+    getFortuneSpins,
     addFortuneSpins,
     consumeFortuneSpin,
 

@@ -261,6 +261,8 @@
         "reward": "награда"
     },
     "fortuneWheel": {
+        "preset": "набор",
+        "presets": { "standard": "стандартный", "supplies": "снабжение" },
         "title": "колесо фортуны",
         "spins": "крутки: {{count}}",
         "spin": "крутить",

@@ -99,7 +99,7 @@ export const DAILY_OBJECTIVE_TEMPLATES: readonly DailyObjectiveTemplate[] = [
     id: "daily_drive_distance",
     event: "distance_travelled",
     targetsByDay: [750, 1_000, 1_250, 1_500, 2_000, 2_500, 3_000],
-    reward: [{ type: "fortune_spin", effect: { amount: 1 } }],
+    reward: [{ type: "fortune_spin", effect: { presetId: "standard", amount: 1 } }],
   },
   {
     id: "daily_destroy_obstacles",
@@ -135,7 +135,7 @@ export const ACHIEVEMENTS: readonly CounterAchievementDefinition[] = [
     event: "golden_collected",
     levels: [1_000, 10_000, 100_000, 1_000_000, 10_000_000].map((target) => ({
       target,
-      reward: [{ type: "fortune_spin", effect: { amount: 1 } }],
+      reward: [{ type: "fortune_spin", effect: { presetId: "standard", amount: 1 } }],
     })),
   },
   {

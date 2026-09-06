@@ -14,7 +14,7 @@
             <div v-if="isMainMenuEnabled" :key="'fortune-wheel'" class="btn_container" :style="{ animationDelay: '0s' }">
                 <div class="icon_container" :class="{ 'icon_container--pulse': hasFortuneReward && showFortuneReminder }" @click="businessButtons[0].action">
                     <img class="icon icon_wheel" src="@/assets/images/cube_buttons/btn_desktop_lucky_spin_wheel.svg" />
-                    <div v-if="fortuneWheelStore.spins > 0" class="btn_marker">{{ fortuneWheelStore.spins }}</div>
+                    <div v-if="fortuneWheelStore.totalSpins > 0" class="btn_marker">{{ fortuneWheelStore.totalSpins }}</div>
                 </div>
                 <div v-if="hasFortuneReward && showFortuneReminder" class="btn_reminder hint_yellow">{{ businessButtons[0].reminder }}</div>
                 <div class="btn_hint hint_pink">{{ businessButtons[0].text }}</div>
@@ -115,7 +115,7 @@
     const REMINDER_INTERVAL = 8000; // интервал между напоминаниями (для каждого независимо)
 
     // --- проверки для каждой кнопки ---
-    const hasFortuneReward = computed(() => fortuneWheelStore.spins > 0);
+    const hasFortuneReward = computed(() => fortuneWheelStore.totalSpins > 0);
     const hasDailyReward = computed(() => false); // у награды дня нет маркера
     const hasQuestsReward = computed(() => objectivesStore.hasClaimableDaily);
     const hasAchievementsReward = computed(() => objectivesStore.hasClaimableAchievement);

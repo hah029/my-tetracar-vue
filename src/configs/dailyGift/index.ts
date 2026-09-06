@@ -30,7 +30,7 @@ export const DAILY_GIFT_REWARDS: DailyGiftDayConfig[] = [
   },
   {
     day: DAILY_GIFT_CYCLE_LENGTH * 0 + 4,
-    rewards: [{ type: "fortune_spin", effect: { amount: 1 } }],
+    rewards: [{ type: "fortune_spin", effect: { presetId: "standard", amount: 1 } }],
   },
   {
     day: DAILY_GIFT_CYCLE_LENGTH * 0 + 5,
@@ -79,7 +79,7 @@ export const DAILY_GIFT_REWARDS: DailyGiftDayConfig[] = [
   },
   {
     day: DAILY_GIFT_CYCLE_LENGTH * 1 + 4,
-    rewards: [{ type: "fortune_spin", effect: { amount: 1 } }],
+    rewards: [{ type: "fortune_spin", effect: { presetId: "standard", amount: 1 } }],
   },
   {
     day: DAILY_GIFT_CYCLE_LENGTH * 1 + 5,
@@ -132,7 +132,7 @@ export const DAILY_GIFT_REWARDS: DailyGiftDayConfig[] = [
   },
   {
     day: DAILY_GIFT_CYCLE_LENGTH * 2 + 4,
-    rewards: [{ type: "fortune_spin", effect: { amount: 1 } }],
+    rewards: [{ type: "fortune_spin", effect: { presetId: "standard", amount: 1 } }],
   },
   {
     day: DAILY_GIFT_CYCLE_LENGTH * 2 + 5,
@@ -188,7 +188,7 @@ export const DAILY_GIFT_REWARDS: DailyGiftDayConfig[] = [
   },
   {
     day: DAILY_GIFT_CYCLE_LENGTH * 3 + 4,
-    rewards: [{ type: "fortune_spin", effect: { amount: 1 } }],
+    rewards: [{ type: "fortune_spin", effect: { presetId: "standard", amount: 1 } }],
   },
   {
     day: DAILY_GIFT_CYCLE_LENGTH * 3 + 5,

@@ -3,7 +3,7 @@ import { defineStore } from "pinia";
 import { useMetaStore } from "@/store/metaStore";
 import { useProgressStore } from "@/store/progressStore";
 import { RewardProcessor } from "@/purchase/RewardProcessor";
-import { FORTUNE_WHEEL_SECTORS, type FortuneWheelSector } from "@/configs/fortuneWheel";
+import { FORTUNE_WHEEL_PRESETS, DEFAULT_FORTUNE_WHEEL_PRESET, isFortuneWheelPresetId, type FortuneWheelPresetId, type FortuneWheelSector } from "@/configs/fortuneWheel";
 
 export const useFortuneWheelStore = defineStore("fortuneWheelStore", () => {
   const isDevelopment = import.meta.env.DEV;
@@ -13,33 +13,48 @@ export const useFortuneWheelStore = defineStore("fortuneWheelStore", () => {
   const pendingSector = ref<FortuneWheelSector | null>(null);
   const wonSector = ref<FortuneWheelSector | null>(null);
   const error = ref<string | null>(null);
-  const spins = computed(() => meta.fortuneSpins);
+  const selectedPresetId = ref<FortuneWheelPresetId>(DEFAULT_FORTUNE_WHEEL_PRESET);
+  const presets = Object.values(FORTUNE_WHEEL_PRESETS);
+  const selectedPreset = computed(() => FORTUNE_WHEEL_PRESETS[selectedPresetId.value]);
+  const sectors = computed<FortuneWheelSector[]>(() => selectedPreset.value.sectors);
+  const spins = computed(() => meta.getFortuneSpins(selectedPresetId.value));
+  const totalSpins = computed(() => presets.reduce((sum, preset) => sum + meta.getFortuneSpins(preset.id), 0));
+
+  function selectPreset(presetId: FortuneWheelPresetId) {
+    if (isSpinning.value || !isFortuneWheelPresetId(presetId)) return false;
+    selectedPresetId.value = presetId;
+    clearWonSector();
+    return true;
+  }
+
   const canSpin = computed(() => (isDevelopment || spins.value > 0) && !isSpinning.value);
 
   function pickSector(): FortuneWheelSector {
-    const totalWeight = FORTUNE_WHEEL_SECTORS.reduce((sum, sector) => sum + sector.weight, 0);
+    const totalWeight = sectors.value.reduce((sum, sector) => sum + sector.weight, 0);
     let roll = Math.random() * totalWeight;
-    for (const sector of FORTUNE_WHEEL_SECTORS) {
+    for (const sector of sectors.value) {
       roll -= sector.weight;
       if (roll <= 0) return sector;
     }
-    return FORTUNE_WHEEL_SECTORS[0]!;
+    return sectors.value[0]!;
   }
 
   async function beginSpin(): Promise<FortuneWheelSector | null> {
     if (!canSpin.value) return null;
+    const presetId = selectedPresetId.value;
     const sector = pickSector();
     error.value = null;
     wonSector.value = null;
     const shouldConsumeSpin = spins.value > 0;
-    if (shouldConsumeSpin && !meta.consumeFortuneSpin()) return null;
+    if (shouldConsumeSpin && !meta.consumeFortuneSpin(presetId)) return null;
+    isSpinning.value = true;
     try {
       if (shouldConsumeSpin) await meta.saveProgress();
       pendingSector.value = sector;
-      isSpinning.value = true;
       return sector;
     } catch (err) {
-      if (shouldConsumeSpin) meta.addFortuneSpins(1);
+      if (shouldConsumeSpin) meta.addFortuneSpins(presetId, 1);
+      isSpinning.value = false;
       error.value = "spin_failed";
       console.error("[FortuneWheelStore] could not save spin:", err);
       return null;
@@ -49,6 +64,7 @@ export const useFortuneWheelStore = defineStore("fortuneWheelStore", () => {
   async function completeSpin() {
     const sector = pendingSector.value;
     if (!sector) return false;
+    pendingSector.value = null;
     try {
       await RewardProcessor.applyAll(sector.rewards);
       await progress.saveProgress();
@@ -69,5 +85,5 @@ export const useFortuneWheelStore = defineStore("fortuneWheelStore", () => {
     error.value = null;
   }
 
-  return { spins, isSpinning, wonSector, error, canSpin, beginSpin, completeSpin, clearWonSector };
+  return { presets, selectedPresetId, selectedPreset, sectors, selectPreset, totalSpins, spins, isSpinning, wonSector, error, canSpin, beginSpin, completeSpin, clearWonSector };
 });

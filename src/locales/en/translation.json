@@ -261,6 +261,8 @@
         "reward": "reward"
     },
     "fortuneWheel": {
+        "preset": "preset",
+        "presets": { "standard": "standard", "supplies": "supplies" },
         "title": "fortune wheel",
         "spins": "spins: {{count}}",
         "spin": "spin",

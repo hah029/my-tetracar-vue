@@ -45,6 +45,7 @@
 </template>
 
 <script setup lang="ts">
+import { FORTUNE_WHEEL_PRESETS } from "@/configs/fortuneWheel";
 import { computed, nextTick, onMounted, onUnmounted, ref, watch } from "vue";
 import { useTranslation } from "i18next-vue";
 import { DAILY_GIFT_CYCLE_LENGTH, getDailyGiftRewards } from "@/configs/dailyGift";
@@ -104,6 +105,7 @@ function getRewardLabel(reward: RewardDefinition): string {
     case "currency": return `${amount} ${t(`currency.${reward.effect.currency}`)}`;
     case "ammo": return `${amount} ${t("dailyGift.ammo")}`;
     case "armor": return `${amount} ${t("dailyGift.armor")}`;
+    case "fortune_spin": return `${amount} ${t("fortuneWheel.spinUnit")} (${t(FORTUNE_WHEEL_PRESETS[reward.effect.presetId].nameKey)})`;
     case "cosmetic": return t("dailyGift.skin");
     default: return t("dailyGift.reward");
   }

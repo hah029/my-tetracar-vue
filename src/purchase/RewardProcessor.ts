@@ -85,6 +85,6 @@ export class RewardProcessor {
   }
 
   private static applyFortuneSpin(reward: RewardDefinition) {
-    useMetaStore().addFortuneSpins(Number(reward.effect?.amount) || 0);
+    useMetaStore().addFortuneSpins(reward.effect.presetId, Number(reward.effect.amount) || 0);
   }
 }

@@ -6,6 +6,14 @@
         </div>
 
         <section class="fortune_wheel__content">
+            <label class="fortune_wheel__preset">
+                {{ t("fortuneWheel.preset") }}
+                <select :value="wheel.selectedPresetId" :disabled="wheel.isSpinning" @change="selectPreset">
+                    <option v-for="preset in wheel.presets" :key="preset.id" :value="preset.id">
+                        {{ t(preset.nameKey) }} ({{ meta.getFortuneSpins(preset.id) }})
+                    </option>
+                </select>
+            </label>
             <p class="fortune_wheel__spins">{{ t("fortuneWheel.spins", { count: wheel.spins }) }}</p>
 
             <div class="wheel-stage">
@@ -38,8 +46,9 @@
 <script setup lang="ts">
     import { computed, onUnmounted, ref } from "vue";
     import { useTranslation } from "i18next-vue";
-    import { FORTUNE_WHEEL_SECTORS, type FortuneWheelSector } from "@/configs/fortuneWheel";
+    import { FORTUNE_WHEEL_PRESETS, type FortuneWheelPresetId, type FortuneWheelSector } from "@/configs/fortuneWheel";
     import { useFortuneWheelStore } from "@/store/fortuneWheelStore";
+    import { useMetaStore } from "@/store/metaStore";
     import { useGameState } from "@/store/gameState";
     import type { RewardDefinition } from "@/purchase/types";
     import { SoundManager } from "@/game/sound/SoundManager";
@@ -47,18 +56,23 @@
     const { t } = useTranslation();
     const wheel = useFortuneWheelStore();
     const gameState = useGameState();
-    const sectors = FORTUNE_WHEEL_SECTORS;
-    const sectorAngle = 360 / sectors.length;
+    const meta = useMetaStore();
+    const sectors = computed(() => wheel.sectors);
+    const sectorAngle = computed(() => 360 / sectors.value.length);
+
+    function selectPreset(event: Event) {
+        wheel.selectPreset((event.target as HTMLSelectElement).value as FortuneWheelPresetId);
+    }
     const rotation = ref(0);
     let spinTimer: ReturnType<typeof setTimeout> | null = null;
 
     const wheelStyle = computed(() => ({
         transform: `rotate(${rotation.value}deg)`,
-        background: `conic-gradient(from -90deg, ${sectors.map((sector, index) => `${sector.color} ${index * sectorAngle}deg ${(index + 1) * sectorAngle}deg`).join(", ")})`,
+        background: `conic-gradient(${sectors.value.map((sector, index) => `${sector.color} ${index * sectorAngle.value}deg ${(index + 1) * sectorAngle.value}deg`).join(", ")})`,
     }));
 
     function getLabelStyle(index: number) {
-        const angle = (index + 0.5) * sectorAngle;
+        const angle = (index + 0.5) * sectorAngle.value;
         return { transform: `rotate(${angle}deg) translateY(-8.6rem) rotate(${-angle}deg)` };
     };
 
@@ -68,7 +82,7 @@
             case "currency": return `${amount} ${t(`currency.${reward.effect.currency}`)}`;
             case "ammo": return `${amount} ${t("dailyGift.ammo")}`;
             case "armor": return `${amount} ${t("dailyGift.armor")}`;
-            case "fortune_spin": return `${amount} ${t("fortuneWheel.spinUnit")}`;
+            case "fortune_spin": return `${amount} ${t("fortuneWheel.spinUnit")} (${t(FORTUNE_WHEEL_PRESETS[reward.effect.presetId].nameKey)})`;
             default: return t("dailyGift.reward");
         };
     };
@@ -85,8 +99,8 @@
         };
 
         SoundManager.getInstance().playCue("uiSelect");
-        const selectedIndex = sectors.findIndex((item) => item.id === sector.id);
-        const targetModulo = -((selectedIndex + 0.5) * sectorAngle);
+        const selectedIndex = sectors.value.findIndex((item) => item.id === sector.id);
+        const targetModulo = -((selectedIndex + 0.5) * sectorAngle.value);
         const currentModulo = ((rotation.value % 360) + 360) % 360;
         const delta = ((targetModulo - currentModulo) % 360 + 360) % 360;
         rotation.value += 5 * 360 + delta;
@@ -125,6 +139,25 @@
         flex-direction: column; 
         align-items: center; 
         transform: translateY(-50%);
+    }
+
+    .fortune_wheel__preset {
+        @include text-info-size-s;
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        margin-bottom: 0.5rem;
+        color: $color-blue-light;
+
+        select {
+            max-width: 60vw;
+            padding: 0.4rem;
+            border: 1px solid $color-blue-light;
+            border-radius: 0.3rem;
+            background: #172432;
+            color: $color-yellow-super-light;
+            font: inherit;
+        }
     }
 
     .fortune_wheel__spins, .fortune_wheel__error { 
