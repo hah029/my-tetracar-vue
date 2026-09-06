@@ -18,7 +18,7 @@
           :class="{ 'objective-card--complete': isComplete(objective), 'objective-card--claimed': objectives.isClaimed(objective, isDaily) }">
           <div class="objective-card__main">
             <h2>{{ t(`objectives.items.${objective.id}.title`) }}</h2>
-            <p>{{ t(`objectives.items.${objective.id}.description`) }}</p>
+            <p>{{ t(`objectives.items.${objective.id}.description`, { target: objective.target, level: 'level' in objective ? objective.level : 1 }) }}</p>
             <div class="objective-card__progress">
               <span>{{ objectives.getProgress(objective, isDaily) }} / {{ objective.target }}</span>
               <span class="objective-card__track"><i :style="{ width: `${progressPercent(objective)}%` }"></i></span>
@@ -45,7 +45,7 @@ import { computed, ref } from "vue";
 import { useTranslation } from "i18next-vue";
 import { useGameState } from "@/store/gameState";
 import { useObjectivesStore } from "@/store/objectivesStore";
-import type { ObjectiveDefinition } from "@/configs/objectives";
+import type { ObjectiveDefinition, ResolvedAchievement } from "@/configs/objectives";
 import { SoundManager } from "@/game/sound/SoundManager";
 
 const { t } = useTranslation();
@@ -55,15 +55,17 @@ const activeTab = ref(gameState.objectivesSection ?? "daily");
 const isDaily = computed(() => activeTab.value === "daily");
 const currentObjectives = computed(() => isDaily.value ? objectives.dailyObjectives : objectives.achievements);
 
-function progressPercent(objective: ObjectiveDefinition) {
+type DisplayObjective = ObjectiveDefinition | ResolvedAchievement;
+
+function progressPercent(objective: DisplayObjective) {
   return Math.round((objectives.getProgress(objective, isDaily.value) / objective.target) * 100);
 }
 
-function isComplete(objective: ObjectiveDefinition) {
+function isComplete(objective: DisplayObjective) {
   return objectives.getProgress(objective, isDaily.value) >= objective.target;
 }
 
-function rewardLabel(objective: ObjectiveDefinition) {
+function rewardLabel(objective: DisplayObjective) {
   return objective.reward.map((reward) => {
     const amount = reward.effect?.amount ?? 1;
     if (reward.type === "currency") return `+${amount} ${t(`currency.${reward.effect.currency}`)}`;
@@ -74,7 +76,7 @@ function rewardLabel(objective: ObjectiveDefinition) {
   }).join(" · ");
 }
 
-async function claim(objective: ObjectiveDefinition) {
+async function claim(objective: DisplayObjective) {
   const claimed = await objectives.claim(objective, isDaily.value);
   SoundManager.getInstance().playCue(claimed ? "goldenPickup" : "actionRejected");
 }

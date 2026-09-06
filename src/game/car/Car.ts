@@ -405,6 +405,18 @@ export class Car extends THREE.Group {
   /** Кубы после взрыва становятся прямыми детьми scene. */
   public clearCubes(): void {
     this.cubes.forEach((cube) => {
+      cube.traverse((child) => {
+        if (child.name !== "neon-edge") return;
+
+        const outline = child as THREE.LineSegments;
+        outline.geometry.dispose();
+        const { material } = outline;
+        if (Array.isArray(material)) {
+          material.forEach((item) => item.dispose());
+        } else {
+          material.dispose();
+        }
+      });
       cube.parent?.remove(cube);
     });
     this.cubes = [];

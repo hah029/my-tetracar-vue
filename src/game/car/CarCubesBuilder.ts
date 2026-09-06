@@ -44,6 +44,7 @@ export class CarCubesBuilder {
           materialConfig,
         });
         this.makeMaterialsUnique(cube);
+        this.addNeonEdges(cube);
         cubes.push(cube);
         if (onCubeCreated) onCubeCreated(cube);
       } catch (error) {
@@ -56,6 +57,7 @@ export class CarCubesBuilder {
           materialConfig,
         });
         this.makeMaterialsUnique(fallbackCube);
+        this.addNeonEdges(fallbackCube);
         cubes.push(fallbackCube);
         if (onCubeCreated) onCubeCreated(fallbackCube);
       }
@@ -76,6 +78,41 @@ export class CarCubesBuilder {
       child.material = Array.isArray(child.material)
         ? child.material.map((material) => material.clone())
         : child.material.clone();
+    });
+  }
+
+  /** Adds a HDR contour, so the existing bloom pass turns cube edges neon. */
+  private addNeonEdges(cube: THREE.Object3D): void {
+    cube.traverse((child) => {
+      if (!(child instanceof THREE.Mesh)) return;
+
+      const geometry = new THREE.EdgesGeometry(child.geometry, 25);
+      const material = new THREE.ShaderMaterial({
+        transparent: true,
+        depthWrite: false,
+        uniforms: {
+          glowColor: { value: new THREE.Color(0x00eaff) },
+          intensity: { value: 5.0 },
+        },
+        vertexShader: `
+          void main() {
+            gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+          }
+        `,
+        fragmentShader: `
+          uniform vec3 glowColor;
+          uniform float intensity;
+
+          void main() {
+            gl_FragColor = vec4(glowColor * intensity, 1.0);
+          }
+        `,
+      });
+
+      const outline = new THREE.LineSegments(geometry, material);
+      outline.name = "neon-edge";
+      outline.renderOrder = 1;
+      child.add(outline);
     });
   }
 }

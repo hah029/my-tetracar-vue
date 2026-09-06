@@ -3,7 +3,10 @@ import { defineStore } from "pinia";
 import { Platform } from "@/sdk/Platform";
 import { RewardProcessor } from "@/purchase/RewardProcessor";
 import type { RewardDefinition } from "@/purchase/types";
-import { DAILY_GIFT_CYCLE_LENGTH, getDailyGiftRewards } from "@/configs/dailyGift";
+import {
+  DAILY_GIFT_CYCLE_LENGTH,
+  getDailyGiftRewards,
+} from "@/configs/dailyGift";
 import { useProgressStore } from "@/store/progressStore";
 
 const STORAGE_KEY = "dailyGiftV1";
@@ -16,14 +19,21 @@ export type DailyGiftState = {
   totalClaims: number;
 };
 
-const defaultState = (): DailyGiftState => ({ version: 1, cycleNumber: 1, totalClaims: 0 });
+const defaultState = (): DailyGiftState => ({
+  version: 1,
+  cycleNumber: 1,
+  totalClaims: 0,
+});
 
 function getUtcDay(date = new Date()): string {
   return date.toISOString().slice(0, 10);
 }
 
 function getUtcDayDifference(from: string, to: string): number {
-  return Math.round((Date.parse(`${to}T00:00:00Z`) - Date.parse(`${from}T00:00:00Z`)) / 86_400_000);
+  return Math.round(
+    (Date.parse(`${to}T00:00:00Z`) - Date.parse(`${from}T00:00:00Z`)) /
+      86_400_000,
+  );
 }
 
 export const useDailyGiftStore = defineStore("dailyGiftStore", () => {
@@ -52,7 +62,7 @@ export const useDailyGiftStore = defineStore("dailyGiftStore", () => {
   });
 
   const currentRewards = computed<RewardDefinition[]>(() =>
-    getDailyGiftRewards(status.value.day, status.value.cycleNumber),
+    getDailyGiftRewards(status.value.day),
   );
 
   function refreshStatus() {
@@ -70,7 +80,8 @@ export const useDailyGiftStore = defineStore("dailyGiftStore", () => {
         const parsed = JSON.parse(String(raw));
         if (parsed && parsed.version === 1) {
           state.value = {
-            ...defaultState(), ...parsed,
+            ...defaultState(),
+            ...parsed,
             cycleNumber: Math.max(1, Number(parsed.cycleNumber) || 1),
             totalClaims: Math.max(0, Number(parsed.totalClaims) || 0),
           };
@@ -113,5 +124,15 @@ export const useDailyGiftStore = defineStore("dailyGiftStore", () => {
     }
   }
 
-  return { state, status, currentRewards, isReady, isClaiming, error, refreshStatus, restore, claim };
+  return {
+    state,
+    status,
+    currentRewards,
+    isReady,
+    isClaiming,
+    error,
+    refreshStatus,
+    restore,
+    claim,
+  };
 });

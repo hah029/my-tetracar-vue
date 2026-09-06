@@ -49,7 +49,10 @@ export class RewardProcessor {
   }
 
   private static applyUpgrade(reward: RewardDefinition) {
-    UpgradeService.applyUpgrade(reward.effect);
+    const wasUpgraded = UpgradeService.applyUpgrade(reward.effect);
+    if (!wasUpgraded && reward.fallback) {
+      return this.apply(reward.fallback);
+    }
   }
 
   private static applyConsumable(reward: RewardDefinition) {

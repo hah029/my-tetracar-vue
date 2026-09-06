@@ -33,6 +33,7 @@ function applyObjectiveProgress(event: EventEnvelope): void {
       break;
     case "run.finished":
       applyRunBatch(event.batch);
+      objectives.evaluateRun(event.batch.totals, event.durationMs);
       if (event.reason === "crash") objectives.track("game_finished");
       break;
     case "run.suspended":

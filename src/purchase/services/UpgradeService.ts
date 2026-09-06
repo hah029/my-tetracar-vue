@@ -6,14 +6,18 @@ class UpgradeServiceClass {
   /**
    * Применить апгрейд (повысить уровень)
    */
-  applyUpgrade(effect: { upgrade: string; value: number; refill?: string }) {
+  applyUpgrade(effect: { upgrade: string; value: number; refill?: string }): boolean {
     const meta = useMetaStore();
+    const levelBefore = meta.getUpgradeLevel(effect.upgrade);
     meta.increaseUpgrade(effect.upgrade, effect.value);
+    const wasUpgraded = meta.getUpgradeLevel(effect.upgrade) > levelBefore;
 
     // Если апгрейд подразумевает пополнение — пополняем
-    if (effect.refill) {
+    if (wasUpgraded && effect.refill) {
       this.applyConsumable({ refill: effect.refill });
     }
+
+    return wasUpgraded;
   }
 
   /**

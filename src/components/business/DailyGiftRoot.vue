@@ -95,7 +95,7 @@ function getCardStyle(day: number) {
 }
 
 function getRewards(day: number) {
-  return getDailyGiftRewards(day, dailyGift.status.cycleNumber);
+  return getDailyGiftRewards(day);
 }
 
 function getRewardLabel(reward: RewardDefinition): string {
