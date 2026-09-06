@@ -61,7 +61,7 @@ export class PlatformAds {
       try {
         Platform.getInstance().showRewardedVideoAd({
           onOpen,
-          onRewarded,
+          onRewarded: () => { if (!settled) onRewarded(); },
           onClose: () => finish({ status: "closed" }),
           onError: (error) => finish({ status: "failed", reason: errorReason(error) }),
         });

@@ -246,6 +246,12 @@
         "noItems": "пусто"
     },
     "dailyGift": {
+        "doubleBadge": "2× with ad",
+        "claimDouble": "Watch an ad to claim 2×",
+        "watchingAd": "Watching ad…",
+        "adError": "Ad unavailable. Try again or claim the regular reward.",
+        "adNotCompleted": "Ad not completed. Try again or claim the regular reward.",
+        "upgrade": "boost upgrade",
         "recoveryInfo": "Missed days: {{missed}}. The battle pass restores progress to the start of week {{week}} — day {{day}}.",
         "recover": "Restore for {{cost}} energons",
         "recovering": "Restoring…",

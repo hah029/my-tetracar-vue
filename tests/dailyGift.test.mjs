@@ -5,7 +5,7 @@ import { createRequire } from 'node:module';
 
 const result = await build({
   stdin: { contents: `export { useDailyGiftStore } from './src/store/dailyGiftStore';
-    export { DAILY_GIFT_RECOVERY, DAILY_GIFT_CYCLE_LENGTH } from './src/configs/dailyGift';
+    export { DAILY_GIFT_RECOVERY, DAILY_GIFT_CYCLE_LENGTH, canDoubleDailyGift } from './src/configs/dailyGift';
     export { createPinia, setActivePinia } from 'pinia';`, resolveDir: process.cwd() },
   bundle: true, write: false, platform: 'node', format: 'cjs', tsconfig: 'tsconfig.app.json',
   plugins: [{ name: 'daily-mocks', setup(builder) {
@@ -13,7 +13,8 @@ const result = await build({
       '@/sdk/Platform': 'export const Platform = { getInstance: () => globalThis.dailyTest.platform };',
       '@/store/metaStore': 'export const useMetaStore = () => globalThis.dailyTest.meta;',
       '@/store/progressStore': 'export const useProgressStore = () => ({ saveProgress: async () => {} });',
-      '@/purchase/RewardProcessor': 'export const RewardProcessor = { applyAll: async rewards => { globalThis.dailyTest.rewards.push(rewards); } };',
+      '@/sdk/PlatformAds': 'export const PlatformAds = { showRewarded: async (_, onRewarded) => globalThis.dailyTest.ad(onRewarded) };',
+      '@/purchase/RewardProcessor': 'export const RewardProcessor = { resolve: reward => reward, applyAll: async rewards => { globalThis.dailyTest.rewards.push(rewards); } };',
     };
     builder.onResolve({ filter: /^@\// }, args => args.path in mocks ? { path: args.path, namespace: 'mock' } : undefined);
     builder.onLoad({ filter: /.*/, namespace: 'mock' }, args => ({ contents: mocks[args.path] }));
@@ -21,11 +22,12 @@ const result = await build({
 });
 const bundled = { exports: {} };
 new Function('require', 'module', 'exports', result.outputFiles[0].text)(createRequire(import.meta.url), bundled, bundled.exports);
-const { useDailyGiftStore, createPinia, setActivePinia, DAILY_GIFT_RECOVERY, DAILY_GIFT_CYCLE_LENGTH } = bundled.exports;
+const { useDailyGiftStore, createPinia, setActivePinia, DAILY_GIFT_RECOVERY, DAILY_GIFT_CYCLE_LENGTH, canDoubleDailyGift } = bundled.exports;
 function dateAgo(days) { return new Date(Date.now() - days * 86400000).toISOString().slice(0, 10); }
 async function setup(day = 10, missed = 1, balance = 20) {
   const state = {
     saved: { version: 1, cycleNumber: 1, totalClaims: day, lastClaimedDay: day, lastClaimedUtcDay: dateAgo(missed + 1) },
+    ad: async onRewarded => { onRewarded(); return { status: "closed" }; },
     meta: { energons: balance }, balance, debits: 0, rewards: [], failWrite: 0, writes: 0, failDebit: false, gate: null,
   };
   state.platform = {
@@ -172,4 +174,48 @@ test('configured price and minimum missed days apply to new purchases', async ()
     assert.equal(await store.recover(), true);
     assert.equal(state.balance, 11);
   } finally { Object.assign(DAILY_GIFT_RECOVERY, original); }
+});
+
+test('double rewards are available exactly on days 1, 3 and 6 of all four weeks', () => {
+  const eligible = Array.from({ length: 28 }, (_, i) => i + 1).filter(canDoubleDailyGift);
+  assert.deepEqual(eligible, [1, 3, 6, 8, 10, 13, 15, 17, 20, 22, 24, 27]);
+});
+
+test('rewarded viewing doubles both currencies once and preserves config rewards', async () => {
+  const { store, state } = await setup(7, 0);
+  const amounts = store.currentRewards.map(r => r.effect.amount);
+  state.ad = async onRewarded => { onRewarded(); onRewarded(); return { status: 'closed' }; };
+  assert.equal(await store.claim(true), true);
+  assert.deepEqual(state.rewards[0].map(r => r.effect.amount), amounts.map(v => v * 2));
+  assert.deepEqual(store.currentRewards.map(r => r.effect.amount), amounts);
+  assert.equal(state.rewards.length, 1);
+  assert.equal(await store.claim(true), false);
+});
+
+test('closed, failed or throwing ads grant nothing and allow a normal claim', async () => {
+  for (const mode of ['closed', 'failed', 'throw']) {
+    const { store, state } = await setup(2, 0);
+    state.ad = async () => { if (mode === 'throw') throw new Error('ad failed'); return { status: mode }; };
+    assert.equal(await withoutErrorLogs(() => store.claim(true)), false);
+    assert.equal(state.rewards.length, 0);
+    assert.equal(store.status.canClaim, true);
+    assert.equal(await store.claim(), true);
+    assert.equal(state.rewards[0][0].effect.amount, 500);
+  }
+});
+
+test('ad viewing locks claims and recovery; unsupported days cannot start an ad', async () => {
+  const blocked = await setup(1, 0);
+  blocked.state.ad = async () => { throw new Error('must not run'); };
+  assert.equal(await blocked.store.claim(true), false);
+  const { store, state } = await setup(2, 0);
+  let finish;
+  state.ad = async onRewarded => new Promise(resolve => { finish = () => { onRewarded(); resolve({ status: 'closed' }); }; });
+  const claim = store.claim(true);
+  assert.equal(store.isWatchingAd, true);
+  assert.equal(await store.claim(), false);
+  assert.equal(await store.claim(true), false);
+  assert.equal(await store.recover(), false);
+  finish();
+  assert.equal(await claim, true);
 });

@@ -6,6 +6,7 @@ export type DailyGiftDayConfig = {
 };
 
 export const DAILY_GIFT_WEEK_LENGTH = 7;
+export const DAILY_GIFT_DOUBLE_REWARD_WEEK_DAYS = [1, 3, 6] as const;
 
 export const DAILY_GIFT_RECOVERY = {
   enabled: true,
@@ -56,7 +57,11 @@ export const DAILY_GIFT_REWARDS: DailyGiftDayConfig[] = [
   },
   {
     day: DAILY_GIFT_WEEK_LENGTH * 0 + 7,
-    rewards: [{ type: "cosmetic", effect: { skinId: "???" } }],
+    rewards: [{
+      type: "cosmetic", onceKey: "daily-gift-day-7-skin",
+      effect: { skinId: "???" },
+      fallback: { type: "currency", effect: { currency: "golden", amount: 1000 } },
+    }],
   },
   // week 2
   {
@@ -72,6 +77,7 @@ export const DAILY_GIFT_REWARDS: DailyGiftDayConfig[] = [
       { type: "currency", effect: { currency: "golden", amount: 750 } },
       {
         type: "upgrade",
+        onceKey: "daily-gift-day-9-upgrade",
         effect: { upgrade: "armorLevel", value: 1 },
         fallback: {
           type: "currency",
@@ -98,6 +104,7 @@ export const DAILY_GIFT_REWARDS: DailyGiftDayConfig[] = [
       { type: "currency", effect: { currency: "energon", amount: 2 } },
       {
         type: "upgrade",
+        onceKey: "daily-gift-day-12-upgrade",
         effect: { upgrade: "ammoLevel", value: 1 },
         fallback: {
           type: "currency",
@@ -114,7 +121,11 @@ export const DAILY_GIFT_REWARDS: DailyGiftDayConfig[] = [
   },
   {
     day: DAILY_GIFT_WEEK_LENGTH * 1 + 7,
-    rewards: [{ type: "cosmetic", effect: { skinId: "???" } }],
+    rewards: [{
+      type: "cosmetic", onceKey: "daily-gift-day-14-skin",
+      effect: { skinId: "???" },
+      fallback: { type: "currency", effect: { currency: "golden", amount: 2500 } },
+    }],
   },
   // week 3
   {
@@ -129,6 +140,7 @@ export const DAILY_GIFT_REWARDS: DailyGiftDayConfig[] = [
       { type: "currency", effect: { currency: "golden", amount: 1750 } },
       {
         type: "upgrade",
+        onceKey: "daily-gift-day-16-upgrade",
         effect: { upgrade: "magnetRadiusLevel", value: 1 },
         fallback: {
           type: "currency",
@@ -153,6 +165,7 @@ export const DAILY_GIFT_REWARDS: DailyGiftDayConfig[] = [
       { type: "currency", effect: { currency: "golden", amount: 2000 } },
       {
         type: "upgrade",
+        onceKey: "daily-gift-day-19-upgrade",
         effect: { upgrade: "ammoLevel", value: 1 },
         fallback: {
           type: "currency",
@@ -170,7 +183,11 @@ export const DAILY_GIFT_REWARDS: DailyGiftDayConfig[] = [
   },
   {
     day: DAILY_GIFT_WEEK_LENGTH * 2 + 7,
-    rewards: [{ type: "cosmetic", effect: { skinId: "???" } }],
+    rewards: [{
+      type: "cosmetic", onceKey: "daily-gift-day-21-skin",
+      effect: { skinId: "???" },
+      fallback: { type: "currency", effect: { currency: "golden", amount: 5000 } },
+    }],
   },
   // week 4
   {
@@ -185,6 +202,7 @@ export const DAILY_GIFT_REWARDS: DailyGiftDayConfig[] = [
       { type: "currency", effect: { currency: "energon", amount: 5 } },
       {
         type: "upgrade",
+        onceKey: "daily-gift-day-23-upgrade",
         effect: { upgrade: "ammoLevel", value: 1 },
         fallback: {
           type: "currency",
@@ -219,7 +237,11 @@ export const DAILY_GIFT_REWARDS: DailyGiftDayConfig[] = [
   },
   {
     day: DAILY_GIFT_WEEK_LENGTH * 3 + 7,
-    rewards: [{ type: "cosmetic", effect: { skinId: "???" } }],
+    rewards: [{
+      type: "cosmetic", onceKey: "daily-gift-day-28-skin",
+      effect: { skinId: "???" },
+      fallback: { type: "currency", effect: { currency: "golden", amount: 10000 } },
+    }],
   },
 ];
 
@@ -250,4 +272,11 @@ export function getDailyGiftRewards(
 
 export function getDailyGiftWeekNumber(day: number): number {
   return Math.floor((day - 1) / DAILY_GIFT_WEEK_LENGTH) + 1;
+}
+
+export function canDoubleDailyGift(day: number): boolean {
+  const weekDay = ((day - 1) % DAILY_GIFT_WEEK_LENGTH) + 1;
+  const rewards = getDailyGiftRewards(day);
+  return DAILY_GIFT_DOUBLE_REWARD_WEEK_DAYS.some((value) => value === weekDay)
+    && rewards.length > 0 && rewards.every((reward) => reward.type === "currency");
 }

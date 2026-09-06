@@ -28,6 +28,7 @@ export const useMetaStore = defineStore("metaStore", () => {
 
   // Скины
   const ownedSkins = ref<string[]>([]);
+  const claimedRewardKeys = ref<string[]>([]);
   const activeSkin = ref<string | null>(null);
 
   // Апгрейды (уровни)
@@ -230,6 +231,7 @@ export const useMetaStore = defineStore("metaStore", () => {
 
     await platform.setPlayerData({
       ownedSkins: JSON.stringify(ownedSkins.value),
+      claimedRewardKeys: JSON.stringify(claimedRewardKeys.value),
       activeSkin: activeSkin.value ?? "",
       upgrades: JSON.stringify(upgrades.value),
       permanentFeatures: JSON.stringify(permanentFeatures.value),
@@ -248,6 +250,12 @@ export const useMetaStore = defineStore("metaStore", () => {
       if (e != null) energons.value = Number(e);
 
       const data = await platform.getPlayerData();
+      if (data?.claimedRewardKeys != null) {
+        try {
+          const keys = JSON.parse(String(data.claimedRewardKeys));
+          if (Array.isArray(keys)) claimedRewardKeys.value = keys.filter((key) => typeof key === "string");
+        } catch { /* Keep defaults for malformed saved keys. */ }
+      }
       const skins = data?.ownedSkins;
       if (skins != null) {
         try {
@@ -331,6 +339,7 @@ export const useMetaStore = defineStore("metaStore", () => {
     energons,
     fortuneSpins,
     ownedSkins,
+    claimedRewardKeys,
     activeSkin,
     upgrades,
     permanentFeatures,

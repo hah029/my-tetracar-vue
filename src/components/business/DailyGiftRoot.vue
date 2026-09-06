@@ -17,6 +17,7 @@
           class="ribbon__card" :class="getDayClass(day)" :style="getCardStyle(day)"
           :aria-current="day === selectedDay ? 'true' : undefined" role="button" tabindex="0" @click="onCardClick(day)"
           @keydown.enter="selectDay(day)">
+          <span v-if="canDoubleDailyGift(day)" class="ribbon__bonus">{{ t("dailyGift.doubleBadge") }}</span>
           <span class="ribbon__day">{{ t("dailyGift.day", { day }) }}</span>
           <span v-for="(reward, rewardIndex) in getRewards(day)" :key="rewardIndex" class="ribbon__reward">
             {{ getRewardLabel(reward) }}
@@ -45,11 +46,16 @@
         </button>
         <p v-if="!dailyGift.state.pendingRecovery && meta.energons < dailyGift.recovery.cost">{{ t("dailyGift.notEnoughEnergons") }}</p>
       </div>
-      <p v-if="dailyGift.error" class="daily-gift__error">{{ t(dailyGift.error === "recovery_failed" ? "dailyGift.recoveryError" : "dailyGift.claimError") }}</p>
+      <p v-if="dailyGift.error" class="daily-gift__error">{{ t(errorKey) }}</p>
       <button v-if="dailyGift.status.canClaim" class="menu_btn daily-gift__claim"
         :disabled="!dailyGift.isReady || dailyGift.isClaiming || dailyGift.isRecovering || !!dailyGift.state.pendingRecovery || selectedDay !== currentDay" @click="claim">{{ dailyGift.isClaiming ?
           t("dailyGift.claiming") : dailyGift.recovery.available ? t("dailyGift.restart") : t("dailyGift.claim") }}</button>
       <p v-else class="daily-gift__claimed">{{ t("dailyGift.claimed") }}</p>
+      <button v-if="dailyGift.canDouble" class="menu_btn daily-gift__double"
+        :disabled="!dailyGift.isReady || dailyGift.isClaiming || dailyGift.isRecovering || !!dailyGift.state.pendingRecovery || selectedDay !== currentDay"
+        @click="claimDouble">
+        {{ dailyGift.isWatchingAd ? t("dailyGift.watchingAd") : t("dailyGift.claimDouble") }}
+      </button>
     </section>
 
     <button class="menu_btn daily-gift__back" :disabled="dailyGift.isClaiming || dailyGift.isRecovering || !!dailyGift.state.pendingRecovery" @click="gameState.closeOverlay()">{{ t("mainMenu.goBack") }}</button>
@@ -60,7 +66,7 @@
 import { FORTUNE_WHEEL_PRESETS } from "@/configs/fortuneWheel";
 import { computed, nextTick, onMounted, onUnmounted, ref, watch } from "vue";
 import { useTranslation } from "i18next-vue";
-import { DAILY_GIFT_CYCLE_LENGTH, DAILY_GIFT_WEEK_LENGTH, getDailyGiftRewards } from "@/configs/dailyGift";
+import { DAILY_GIFT_CYCLE_LENGTH, DAILY_GIFT_WEEK_LENGTH, canDoubleDailyGift } from "@/configs/dailyGift";
 import { useDailyGiftStore } from "@/store/dailyGiftStore";
 import { useMetaStore } from "@/store/metaStore";
 import { useGameState } from "@/store/gameState";
@@ -72,6 +78,14 @@ const dailyGift = useDailyGiftStore();
 const gameState = useGameState();
 const meta = useMetaStore();
 const days = Array.from({ length: DAILY_GIFT_CYCLE_LENGTH }, (_, index) => index + 1);
+const errorKey = computed(() => {
+  switch (dailyGift.error) {
+    case "recovery_failed": return "dailyGift.recoveryError";
+    case "ad_failed": return "dailyGift.adError";
+    case "ad_not_completed": return "dailyGift.adNotCompleted";
+    default: return "dailyGift.claimError";
+  }
+});
 const currentDay = computed(() => dailyGift.status.day);
 const selectedDay = ref(currentDay.value);
 const ribbon = ref<HTMLElement | null>(null);
@@ -110,7 +124,7 @@ function getCardStyle(day: number) {
 }
 
 function getRewards(day: number) {
-  return getDailyGiftRewards(day);
+  return dailyGift.getDisplayRewards(day);
 }
 
 function getRewardLabel(reward: RewardDefinition): string {
@@ -120,6 +134,7 @@ function getRewardLabel(reward: RewardDefinition): string {
     case "ammo": return `${amount} ${t("dailyGift.ammo")}`;
     case "armor": return `${amount} ${t("dailyGift.armor")}`;
     case "fortune_spin": return `${amount} ${t("fortuneWheel.spinUnit")} (${t(FORTUNE_WHEEL_PRESETS[reward.effect.presetId].nameKey)})`;
+    case "upgrade": return t("dailyGift.upgrade");
     case "cosmetic": return t("dailyGift.skin");
     default: return t("dailyGift.reward");
   }
@@ -254,6 +269,11 @@ function updateFocusedDay() {
 async function recover() {
   const recovered = await dailyGift.recover();
   SoundManager.getInstance().playCue(recovered ? "uiSelect" : "actionRejected");
+}
+
+async function claimDouble() {
+  const claimed = await dailyGift.claim(true);
+  SoundManager.getInstance().playCue(claimed ? "goldenPickup" : "actionRejected");
 }
 
 async function claim() {
@@ -445,6 +465,7 @@ onUnmounted(() => {
 }
 
 .daily-gift__claim,
+.daily-gift__double,
 .daily-gift__recover,
 .daily-gift__back {
   @include text-button-size-s;
@@ -461,11 +482,19 @@ onUnmounted(() => {
   color: $color-blue-light;
 }
 
+.daily-gift__double:disabled,
 .daily-gift__claim:disabled,
 .daily-gift__recover:disabled,
 .daily-gift__back:disabled {
   opacity: 0.45;
   cursor: default;
+}
+
+.daily-gift__double { margin-top: 0.7rem; }
+
+.ribbon__bonus {
+  @include text-info-size-s;
+  color: $color-blue-light;
 }
 
 .daily-gift__recovery {

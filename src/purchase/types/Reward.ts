@@ -19,6 +19,8 @@ export type RewardDefinition = {
    * For example, an upgrade can become currency after it reaches its level cap.
    */
   fallback?: RewardDefinition;
+  /** Stable identity for rewards that can only be granted once per player. */
+  onceKey?: string;
 } & (
   | { type: "fortune_spin"; effect: { presetId: FortuneWheelPresetId; amount: number } }
   | { type: Exclude<RewardType, "fortune_spin">; effect: any }

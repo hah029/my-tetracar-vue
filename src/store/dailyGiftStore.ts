@@ -1,5 +1,6 @@
 import { computed, ref } from "vue";
 import { defineStore } from "pinia";
+import { PlatformAds } from "@/sdk/PlatformAds";
 import { Platform } from "@/sdk/Platform";
 import { RewardProcessor } from "@/purchase/RewardProcessor";
 import type { RewardDefinition } from "@/purchase/types";
@@ -8,6 +9,7 @@ import {
   DAILY_GIFT_RECOVERY,
   DAILY_GIFT_WEEK_LENGTH,
   getDailyGiftRewards,
+  canDoubleDailyGift,
 } from "@/configs/dailyGift";
 import { useMetaStore } from "@/store/metaStore";
 import { useProgressStore } from "@/store/progressStore";
@@ -55,6 +57,7 @@ export const useDailyGiftStore = defineStore("dailyGiftStore", () => {
   const currentUtcDay = ref(getUtcDay());
   const isReady = ref(false);
   const isClaiming = ref(false);
+  const isWatchingAd = ref(false);
   const isRecovering = ref(false);
   const error = ref<string | null>(null);
 
@@ -98,6 +101,15 @@ export const useDailyGiftStore = defineStore("dailyGiftStore", () => {
   const currentRewards = computed<RewardDefinition[]>(() =>
     getDailyGiftRewards(status.value.day),
   );
+
+  const canDouble = computed(() => status.value.canClaim && canDoubleDailyGift(status.value.day));
+
+  function getDisplayRewards(day: number): RewardDefinition[] {
+    return getDailyGiftRewards(day).flatMap((reward) => {
+      const resolved = RewardProcessor.resolve(reward);
+      return resolved ? [resolved] : [];
+    });
+  }
 
   function refreshStatus() {
     currentUtcDay.value = getUtcDay();
@@ -176,18 +188,35 @@ export const useDailyGiftStore = defineStore("dailyGiftStore", () => {
     }
   }
 
-  async function claim(): Promise<boolean> {
+  async function claim(doubleReward = false): Promise<boolean> {
     refreshStatus();
     if (!isReady.value || !status.value.canClaim || isClaiming.value || isRecovering.value || state.value.pendingRecovery) return false;
 
+    if (doubleReward && !canDouble.value) return false;
     isClaiming.value = true;
     error.value = null;
-    const claimStatus = status.value;
+    const claimStatus = { ...status.value };
+    const claimDate = currentUtcDay.value;
+    const rewards = currentRewards.value.map((reward) => doubleReward && reward.type === "currency"
+      ? { ...reward, effect: { ...reward.effect, amount: reward.effect.amount * 2 } }
+      : reward);
     try {
-      await RewardProcessor.applyAll(currentRewards.value);
+      if (doubleReward) {
+        let rewarded = false;
+        isWatchingAd.value = true;
+        const result = await PlatformAds.showRewarded(undefined, () => {
+          if (isWatchingAd.value) rewarded = true;
+        });
+        isWatchingAd.value = false;
+        if (!rewarded) {
+          error.value = result.status === "failed" ? "ad_failed" : "ad_not_completed";
+          return false;
+        }
+      }
+      await RewardProcessor.applyAll(rewards);
       state.value = {
         ...state.value,
-        lastClaimedUtcDay: currentUtcDay.value,
+        lastClaimedUtcDay: claimDate,
         lastClaimedDay: claimStatus.day,
         cycleNumber: claimStatus.cycleNumber,
         totalClaims: state.value.totalClaims + 1,
@@ -201,6 +230,7 @@ export const useDailyGiftStore = defineStore("dailyGiftStore", () => {
       error.value = "claim_failed";
       return false;
     } finally {
+      isWatchingAd.value = false;
       isClaiming.value = false;
     }
   }
@@ -209,6 +239,9 @@ export const useDailyGiftStore = defineStore("dailyGiftStore", () => {
     state,
     status,
     currentRewards,
+    getDisplayRewards,
+    canDouble,
+    isWatchingAd,
     recovery,
     canRecover,
     isRecovering,
