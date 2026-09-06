@@ -1,3 +1,4 @@
+import { Telemetry } from "@/telemetry/Telemetry";
 import { computed, ref } from "vue";
 import { defineStore } from "pinia";
 import { Platform } from "@/sdk/Platform";
@@ -239,7 +240,7 @@ export const useObjectivesStore = defineStore("objectivesStore", () => {
     isClaiming.value = objective.id;
     error.value = null;
     try {
-      await RewardProcessor.applyAll(objective.reward);
+      const receipts = await RewardProcessor.applyAll(objective.reward);
       if (isDaily) {
         state.value.dailyClaimed.push(objective.id);
       } else {
@@ -249,10 +250,12 @@ export const useObjectivesStore = defineStore("objectivesStore", () => {
       }
       await useProgressStore().saveProgress();
       await persist();
+      Telemetry.emit({ type: "reward.claimed", source: "objective", rewardId: objective.id, multiplier: 1, rewards: receipts });
       return true;
     } catch (cause) {
       console.error("[ObjectivesStore] claim error:", cause);
       error.value = "claim_failed";
+      Telemetry.emit({ type: "reward.failed", source: "objective", rewardId: objective.id, reason: "claim_failed" });
       return false;
     } finally {
       isClaiming.value = null;

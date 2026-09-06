@@ -66,6 +66,7 @@ export type AdFormat = "interstitial" | "rewarded" | "sticky_banner";
 export type AdPlacement =
   | "gameover_interstitial"
   | "gameover_continue"
+  | "daily_gift_double"
   | "gameover_bonus"
   | "sticky_banner";
 
@@ -138,8 +139,13 @@ export type TelemetryEvent =
       durationMs: number;
       isNewRecord: boolean;
     }
-  | { type: "economy.purchase_started"; productId: string; currency?: string }
-  | { type: "economy.purchase_completed"; productId: string }
+  | { type: "reward.claimed"; source: "daily_gift" | "fortune_wheel" | "objective";
+      rewardId: string; multiplier: 1 | 2; cycle?: number; presetId?: string; rewards: RewardReceipt[] }
+  | { type: "reward.failed"; source: "daily_gift" | "fortune_wheel" | "objective"; rewardId: string; reason: string }
+  | { type: "daily.recovered"; day: number; cost: number }
+  | { type: "daily.recovery_failed"; reason: string }
+  | { type: "economy.purchase_started"; productId: string; currency?: string; amount: number }
+  | { type: "economy.purchase_completed"; productId: string; currency: string; amount: number }
   | { type: "economy.purchase_failed"; productId: string; reason: string }
   | { type: "ad.requested"; placement: AdPlacement; format: AdFormat }
   | { type: "ad.opened"; placement: AdPlacement; format: AdFormat }
@@ -181,3 +187,6 @@ export type UiActionName =
   | "rewarded_ad_requested";
 
 export type EventEnvelope<T extends TelemetryEvent = TelemetryEvent> = T & EventContext;
+
+/** Actual granted reward, without upgrade config, fallbacks or UI metadata. */
+export type RewardReceipt = { type: string; amount?: number; currency?: string; id?: string; compensated: boolean };

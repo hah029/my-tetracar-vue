@@ -1,3 +1,4 @@
+import { Telemetry } from "@/telemetry/Telemetry";
 import { computed, ref } from "vue";
 import { defineStore } from "pinia";
 import { useMetaStore } from "@/store/metaStore";
@@ -56,6 +57,7 @@ export const useFortuneWheelStore = defineStore("fortuneWheelStore", () => {
       if (shouldConsumeSpin) meta.addFortuneSpins(presetId, 1);
       isSpinning.value = false;
       error.value = "spin_failed";
+      Telemetry.emit({ type: "reward.failed", source: "fortune_wheel", rewardId: presetId, reason: "spin_failed" });
       console.error("[FortuneWheelStore] could not save spin:", err);
       return null;
     }
@@ -66,12 +68,15 @@ export const useFortuneWheelStore = defineStore("fortuneWheelStore", () => {
     if (!sector) return false;
     pendingSector.value = null;
     try {
-      await RewardProcessor.applyAll(sector.rewards);
+      const receipts = await RewardProcessor.applyAll(sector.rewards);
       await progress.saveProgress();
       wonSector.value = sector;
+      Telemetry.emit({ type: "reward.claimed", source: "fortune_wheel", rewardId: sector.id,
+        presetId: selectedPresetId.value, multiplier: 1, rewards: receipts });
       return true;
     } catch (err) {
       error.value = "reward_failed";
+      Telemetry.emit({ type: "reward.failed", source: "fortune_wheel", rewardId: sector.id, reason: "reward_failed" });
       console.error("[FortuneWheelStore] could not grant reward:", err);
       return false;
     } finally {

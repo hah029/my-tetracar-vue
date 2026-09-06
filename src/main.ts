@@ -21,7 +21,6 @@ import {
   DevFileAnalyticsAdapter,
   installTelemetryDebugLogger,
   installObjectivesSubscriber,
-  SessionStatsCollector,
   Telemetry,
   type TelemetryPlatform,
 } from "./telemetry";
@@ -94,12 +93,10 @@ async function init() {
   const analyticsReporter = new AnalyticsReporter(
     import.meta.env.DEV
       ? [new ConsoleAnalyticsAdapter(), new DevFileAnalyticsAdapter()]
-      : [new ConsoleAnalyticsAdapter()],
+      : [],
   );
   installTelemetryDebugLogger();
   installObjectivesSubscriber();
-  const sessionStatsCollector = new SessionStatsCollector();
-  analyticsReporter.attachSessionStats(sessionStatsCollector);
   AdCoordinator.getInstance();
   Telemetry.emit({ type: "app.opened", launchType: "cold" });
 

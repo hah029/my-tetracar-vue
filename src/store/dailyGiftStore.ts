@@ -1,3 +1,4 @@
+import { Telemetry } from "@/telemetry/Telemetry";
 import { computed, ref } from "vue";
 import { defineStore } from "pinia";
 import { PlatformAds } from "@/sdk/PlatformAds";
@@ -178,10 +179,12 @@ export const useDailyGiftStore = defineStore("dailyGiftStore", () => {
       };
       await persist(nextState);
       state.value = nextState;
+      Telemetry.emit({ type: "daily.recovered", day: transaction.day, cost: transaction.balanceBefore - transaction.balanceAfter });
       return true;
     } catch (err) {
       console.error("[DailyGiftStore] recovery error:", err);
       error.value = "recovery_failed";
+      Telemetry.emit({ type: "daily.recovery_failed", reason: "recovery_failed" });
       return false;
     } finally {
       isRecovering.value = false;
@@ -204,16 +207,23 @@ export const useDailyGiftStore = defineStore("dailyGiftStore", () => {
       if (doubleReward) {
         let rewarded = false;
         isWatchingAd.value = true;
-        const result = await PlatformAds.showRewarded(undefined, () => {
+        const placement = "daily_gift_double" as const;
+        Telemetry.emit({ type: "ad.requested", placement, format: "rewarded" });
+        const result = await PlatformAds.showRewarded(() => {
+          Telemetry.emit({ type: "ad.opened", placement, format: "rewarded" });
+        }, () => {
           if (isWatchingAd.value) rewarded = true;
         });
         isWatchingAd.value = false;
+        Telemetry.emit(result.status === "closed"
+          ? { type: "ad.closed", placement, format: "rewarded" }
+          : { type: "ad.failed", placement, format: "rewarded", reason: result.reason });
         if (!rewarded) {
           error.value = result.status === "failed" ? "ad_failed" : "ad_not_completed";
           return false;
         }
       }
-      await RewardProcessor.applyAll(rewards);
+      const receipts = await RewardProcessor.applyAll(rewards);
       state.value = {
         ...state.value,
         lastClaimedUtcDay: claimDate,
@@ -224,10 +234,14 @@ export const useDailyGiftStore = defineStore("dailyGiftStore", () => {
       };
       await progressStore.saveProgress();
       await persist();
+      Telemetry.emit({ type: "reward.claimed", source: "daily_gift", rewardId: String(claimStatus.day),
+        cycle: claimStatus.cycleNumber, multiplier: doubleReward ? 2 : 1, rewards: receipts });
+      if (doubleReward) Telemetry.emit({ type: "ad.rewarded", placement: "daily_gift_double", rewardId: String(claimStatus.day) });
       return true;
     } catch (err) {
       console.error("[DailyGiftStore] claim error:", err);
       error.value = "claim_failed";
+      Telemetry.emit({ type: "reward.failed", source: "daily_gift", rewardId: String(claimStatus.day), reason: "claim_failed" });
       return false;
     } finally {
       isWatchingAd.value = false;

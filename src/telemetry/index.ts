@@ -6,7 +6,7 @@ export {
   type AnalyticsAdapter,
 } from "./AnalyticsAdapter";
 export { installObjectivesSubscriber } from "./ObjectivesSubscriber";
-export { SessionStatsCollector, type RunSummary } from "./SessionStatsCollector";
+export { toAnalyticsEvent, type AnalyticsEvent } from "./analyticsEvents";
 export { AnalyticsReporter } from "./AnalyticsReporter";
 export { installTelemetryDebugLogger } from "./TelemetryDebugLogger";
 export { RunTelemetry, RunTelemetryAccumulator } from "./RunTelemetryAccumulator";

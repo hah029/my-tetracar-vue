@@ -26,6 +26,7 @@ export class PurchaseService {
       type: "economy.purchase_started",
       productId: product.id,
       currency: product.price.currency,
+      amount: product.price.value,
     });
     try {
       // 0. Проверка: не куплен ли уже товар
@@ -70,7 +71,7 @@ export class PurchaseService {
       const meta = useMetaStore();
       await meta.saveProgress();
 
-      Telemetry.emit({ type: "economy.purchase_completed", productId: product.id });
+      Telemetry.emit({ type: "economy.purchase_completed", productId: product.id, currency: product.price.currency, amount: product.price.value });
 
       return {
         success: true,

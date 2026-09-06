@@ -1,18 +1,19 @@
 import type { AnalyticsAdapter } from "./AnalyticsAdapter";
-import type { RunSummary, SessionStatsCollector } from "./SessionStatsCollector";
+import { toAnalyticsEvent, type AnalyticsEvent } from "./analyticsEvents";
 import { Telemetry } from "./Telemetry";
 import type { EventEnvelope } from "./events";
 
-const QUEUE_KEY = "telemetry.queue.v1";
+const QUEUE_KEY = "telemetry.queue.v2";
 const MAX_QUEUE_SIZE = 500;
 const BATCH_SIZE = 50;
 const FLUSH_INTERVAL_MS = 30_000;
 
-function restoreQueue(): EventEnvelope[] {
+function restoreQueue(): AnalyticsEvent[] {
   try {
     const raw = localStorage.getItem(QUEUE_KEY);
     const value: unknown = raw ? JSON.parse(raw) : [];
-    return Array.isArray(value) ? (value as EventEnvelope[]) : [];
+    return Array.isArray(value) ? value.filter((event) => event?.schemaVersion === 2
+      && typeof event.eventId === "string" && typeof event.type === "string").slice(-MAX_QUEUE_SIZE) : [];
   } catch {
     return [];
   }
@@ -29,10 +30,6 @@ export class AnalyticsReporter {
     this.intervalId = window.setInterval(() => void this.flush(), FLUSH_INTERVAL_MS);
   }
 
-  attachSessionStats(collector: SessionStatsCollector): void {
-    collector.subscribe((summary) => void this.reportRunSummary(summary));
-  }
-
   async flush(): Promise<void> {
     if (this.flushPromise) return this.flushPromise;
     this.flushPromise = this.flushQueue().finally(() => {
@@ -47,7 +44,10 @@ export class AnalyticsReporter {
   }
 
   private enqueue(event: EventEnvelope): void {
-    this.queue.push(event);
+    if (!this.adapters.length) return;
+    const exported = toAnalyticsEvent(event);
+    if (!exported) return;
+    this.queue.push(exported);
     if (this.queue.length > MAX_QUEUE_SIZE) {
       this.queue.splice(0, this.queue.length - MAX_QUEUE_SIZE);
     }
@@ -79,24 +79,13 @@ export class AnalyticsReporter {
 
     try {
       await Promise.all(this.adapters.map((adapter) => adapter.track(batch)));
-      this.queue.splice(0, batch.length);
+      const sentIds = new Set(batch.map((event) => event.eventId));
+      this.queue = this.queue.filter((event) => !sentIds.has(event.eventId));
       this.persistQueue();
       return true;
     } catch (error) {
       if (import.meta.env.DEV) console.warn("[telemetry] analytics flush failed", error);
       return false;
-    }
-  }
-
-  private async reportRunSummary(summary: RunSummary): Promise<void> {
-    try {
-      await Promise.all(
-        this.adapters
-          .filter((adapter) => adapter.trackRunSummary)
-          .map((adapter) => adapter.trackRunSummary!(summary)),
-      );
-    } catch (error) {
-      if (import.meta.env.DEV) console.warn("[telemetry] run summary delivery failed", error);
     }
   }
 

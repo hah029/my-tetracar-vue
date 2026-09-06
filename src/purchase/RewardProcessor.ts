@@ -6,6 +6,7 @@ import { WalletService } from "./services/WalletService";
 import { usePlayerStore } from "@/store/playerStore";
 import { useMetaStore } from "@/store/metaStore";
 
+import type { RewardReceipt } from "@/telemetry/events";
 import metaConfig from "@/configs/meta";
 
 import type { RewardDefinition } from "./types";
@@ -25,14 +26,15 @@ export class RewardProcessor {
     return reward;
   }
 
-  static async apply(reward: RewardDefinition) {
+  static async apply(reward: RewardDefinition): Promise<RewardDefinition | null> {
     const resolved = this.resolve(reward);
-    if (!resolved) return;
+    if (!resolved) return null;
     await this.applyResolved(resolved);
     if (reward.onceKey && resolved === reward) {
       const meta = useMetaStore();
       if (!meta.claimedRewardKeys.includes(reward.onceKey)) meta.claimedRewardKeys.push(reward.onceKey);
     }
+    return resolved;
   }
 
   private static async applyResolved(reward: RewardDefinition) {
@@ -66,8 +68,20 @@ export class RewardProcessor {
     }
   }
 
-  static async applyAll(rewards: readonly RewardDefinition[]) {
-    for (const reward of rewards) await this.apply(reward);
+  static async applyAll(rewards: readonly RewardDefinition[]): Promise<RewardReceipt[]> {
+    const receipts: RewardReceipt[] = [];
+    for (const reward of rewards) {
+      const granted = await this.apply(reward);
+      if (!granted) continue;
+      receipts.push({
+        type: granted.type,
+        amount: granted.effect.amount ?? granted.effect.value,
+        currency: granted.type === "currency" ? granted.effect.currency : undefined,
+        id: granted.effect.presetId ?? granted.effect.skinId ?? granted.effect.upgrade ?? granted.effect.feature,
+        compensated: granted !== reward,
+      });
+    }
+    return receipts;
   }
 
   private static applyCosmetic(reward: RewardDefinition) {

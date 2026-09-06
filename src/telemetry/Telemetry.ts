@@ -101,8 +101,8 @@ export class TelemetryService {
     return this.session.getRunId();
   }
 
-  startRun(metadata: { levelId?: string; difficultyId?: string } = {}): string {
-    const runId = this.session.startRun();
+  startRun(metadata: { levelId?: string; difficultyId?: string; startPaused?: boolean } = {}): string {
+    const runId = this.session.startRun(metadata.startPaused);
     this.persistActiveRunCheckpoint({
       runId,
       startedAtUnixMs: this.session.getRunStartedAtUnixMs() ?? Date.now(),
@@ -132,6 +132,7 @@ export class TelemetryService {
     batch: RunStatsBatch;
   }): void {
     if (!this.session.getRunId()) return;
+    this.session.pauseRun();
     const durationMs = this.getRunDurationMs();
     const current = this.readCurrentActiveRunCheckpoint();
     if (current) {
@@ -148,6 +149,7 @@ export class TelemetryService {
 
   resumeRun(): void {
     if (!this.session.getRunId()) return;
+    this.session.resumeRun();
     this.emit({ type: "run.resumed", reason: "manual_resume" });
   }
 
@@ -179,6 +181,7 @@ export class TelemetryService {
   }
 
   emit<T extends TelemetryEvent>(event: T): EventEnvelope<T> {
+    if (event.type === "run.started") this.session.resumeRun();
     const envelope = { ...event, ...this.createContext() } as EventEnvelope<T>;
     for (const listener of this.listeners) {
       try {

@@ -12,6 +12,7 @@ const result = await build({
   define: { 'import.meta.env.DEV': 'false' },
   plugins: [{ name: 'game-mocks', setup(builder) {
     const mocks = {
+      "@/telemetry/Telemetry": "export const Telemetry = { emit: () => {} };",
       '@/sdk/Platform': 'export const Platform = { getInstance: () => globalThis.wheelTest.platform };',
       '@/store/commonStore': 'export const useCommonStore = () => ({ config: { xzScaling: 1 } });',
       '@/store/progressStore': 'export const useProgressStore = () => ({ saveProgress: async () => {} });',

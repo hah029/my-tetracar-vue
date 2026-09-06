@@ -7,11 +7,15 @@ export class SessionManager {
   readonly sessionId = createId("session");
   private runId: string | undefined;
   private runStartedAt: number | undefined;
+  private activeMs = 0;
   private runStartedAtUnixMs: number | undefined;
 
-  startRun(): string {
+  constructor(private readonly now: () => number = () => performance.now()) {}
+
+  startRun(paused = false): string {
     this.runId = createId("run");
-    this.runStartedAt = performance.now();
+    this.activeMs = 0;
+    this.runStartedAt = paused ? undefined : this.now();
     this.runStartedAtUnixMs = Date.now();
     return this.runId;
   }
@@ -21,8 +25,18 @@ export class SessionManager {
   }
 
   getRunDurationMs(): number {
-    if (this.runStartedAt === undefined) return 0;
-    return Math.max(0, Math.round(performance.now() - this.runStartedAt));
+    return Math.max(0, Math.round(this.activeMs +
+      (this.runStartedAt === undefined ? 0 : this.now() - this.runStartedAt)));
+  }
+
+  pauseRun(): void {
+    if (this.runStartedAt === undefined) return;
+    this.activeMs += this.now() - this.runStartedAt;
+    this.runStartedAt = undefined;
+  }
+
+  resumeRun(): void {
+    if (this.runId && this.runStartedAt === undefined) this.runStartedAt = this.now();
   }
 
   getRunStartedAtUnixMs(): number | undefined {
@@ -30,6 +44,7 @@ export class SessionManager {
   }
 
   finishRun(): void {
+    this.activeMs = 0;
     this.runId = undefined;
     this.runStartedAt = undefined;
     this.runStartedAtUnixMs = undefined;

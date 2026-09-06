@@ -117,7 +117,7 @@ export class RunTelemetryAccumulator {
 
   recordItemCollected(item: ItemType, amount = 1): void {
     increment(this.totals.itemsCollected, item, amount);
-    this.getItemOutcomes(item).collected += amount;
+    this.getItemOutcomes(item).collected += 1;
   }
 
   recordItemRejected(item: "ammo" | "armor"): void {

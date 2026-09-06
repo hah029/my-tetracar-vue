@@ -10,11 +10,12 @@ const result = await build({
   bundle: true, write: false, platform: 'node', format: 'cjs', tsconfig: 'tsconfig.app.json',
   plugins: [{ name: 'daily-mocks', setup(builder) {
     const mocks = {
+      "@/telemetry/Telemetry": "export const Telemetry = { emit: event => globalThis.dailyTest.events.push(event) };",
       '@/sdk/Platform': 'export const Platform = { getInstance: () => globalThis.dailyTest.platform };',
       '@/store/metaStore': 'export const useMetaStore = () => globalThis.dailyTest.meta;',
       '@/store/progressStore': 'export const useProgressStore = () => ({ saveProgress: async () => {} });',
       '@/sdk/PlatformAds': 'export const PlatformAds = { showRewarded: async (_, onRewarded) => globalThis.dailyTest.ad(onRewarded) };',
-      '@/purchase/RewardProcessor': 'export const RewardProcessor = { resolve: reward => reward, applyAll: async rewards => { globalThis.dailyTest.rewards.push(rewards); } };',
+      '@/purchase/RewardProcessor': 'export const RewardProcessor = { resolve: reward => reward, applyAll: async rewards => { globalThis.dailyTest.rewards.push(rewards); return rewards.map(reward => ({ type: reward.type, amount: reward.effect.amount, currency: reward.effect.currency, compensated: false })); } };',
     };
     builder.onResolve({ filter: /^@\// }, args => args.path in mocks ? { path: args.path, namespace: 'mock' } : undefined);
     builder.onLoad({ filter: /.*/, namespace: 'mock' }, args => ({ contents: mocks[args.path] }));
@@ -28,7 +29,7 @@ async function setup(day = 10, missed = 1, balance = 20) {
   const state = {
     saved: { version: 1, cycleNumber: 1, totalClaims: day, lastClaimedDay: day, lastClaimedUtcDay: dateAgo(missed + 1) },
     ad: async onRewarded => { onRewarded(); return { status: "closed" }; },
-    meta: { energons: balance }, balance, debits: 0, rewards: [], failWrite: 0, writes: 0, failDebit: false, gate: null,
+    meta: { energons: balance }, balance, debits: 0, rewards: [], events: [], failWrite: 0, writes: 0, failDebit: false, gate: null,
   };
   state.platform = {
     getPlayerDataByKey: async () => JSON.stringify(state.saved),
@@ -218,4 +219,16 @@ test('ad viewing locks claims and recovery; unsupported days cannot start an ad'
   assert.equal(await store.recover(), false);
   finish();
   assert.equal(await claim, true);
+});
+
+test('daily telemetry records one grant with doubled amounts and ad outcome', async () => {
+  const { store, state } = await setup(7, 0);
+  await store.claim(true);
+  const grants = state.events.filter(event => event.type === 'reward.claimed');
+  assert.equal(grants.length, 1);
+  assert.equal(grants[0].source, 'daily_gift');
+  assert.equal(grants[0].rewardId, '8');
+  assert.equal(grants[0].multiplier, 2);
+  assert.deepEqual(grants[0].rewards.map(reward => reward.amount), [1000, 4]);
+  assert.equal(state.events.filter(event => event.type === 'ad.rewarded').length, 1);
 });

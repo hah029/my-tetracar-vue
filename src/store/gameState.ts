@@ -146,6 +146,7 @@ export const useGameState = defineStore("gameState", () => {
         playerStore.resetPlayerAchievements();
         playerStore.resetGameData();
         Telemetry.startRun({
+          startPaused: true,
           levelId: levelStore.currentLevel.id,
           difficultyId: levelStore.currentDifficultyId,
         });
@@ -219,6 +220,23 @@ export const useGameState = defineStore("gameState", () => {
   }
 
   function onExit(state: GameStates, next: GameStates) {
+    const progress = useProgressStore();
+    if (next === GameStates.Menu && Telemetry.getRunId()) {
+      Telemetry.emit({
+        type: "run.finished",
+        reason: "quit",
+        score: progress.score,
+        distance: progress.getDistanceInCubes(),
+        batch: RunTelemetry.flush({
+          score: progress.score,
+          distance: progress.getDistanceInCubes(),
+        }),
+        durationMs: Telemetry.getRunDurationMs(),
+        isNewRecord: progress.isNewRecord,
+      });
+      Telemetry.finishRun();
+    }
+
     switch (state) {
       case GameStates.Play: {
         console.log("⬅️ Exit Play");
@@ -229,22 +247,6 @@ export const useGameState = defineStore("gameState", () => {
           .catch((err) =>
             console.error("Failed to save progress on exit play:", err),
           );
-
-        if (next === GameStates.Menu && Telemetry.getRunId()) {
-          Telemetry.emit({
-            type: "run.finished",
-            reason: "quit",
-            score: progress.score,
-            distance: progress.getDistanceInCubes(),
-            batch: RunTelemetry.flush({
-              score: progress.score,
-              distance: progress.getDistanceInCubes(),
-            }),
-            durationMs: Telemetry.getRunDurationMs(),
-            isNewRecord: progress.isNewRecord,
-          });
-          Telemetry.finishRun();
-        }
 
         platform.gameStop();
         break;

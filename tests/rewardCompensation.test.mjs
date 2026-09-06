@@ -74,3 +74,9 @@ test('every daily unique reward has a currency fallback and placeholders never u
   assert.deepEqual(state.ownedSkins, []);
   assert.equal(state.golden, 18500);
 });
+
+test('reward receipts describe the replacement currency instead of the original skin', async () => {
+  setup();
+  const receipts = await RewardProcessor.applyAll([{ type: 'cosmetic', effect: { skinId: '???' }, fallback: currency }]);
+  assert.deepEqual(receipts, [{ type: 'currency', amount: 750, currency: 'golden', id: undefined, compensated: true }]);
+});

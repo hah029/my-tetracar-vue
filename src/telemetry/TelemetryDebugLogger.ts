@@ -5,7 +5,7 @@ import { Telemetry } from "./Telemetry";
  * analytics batch, поэтому порядок и occurredAt отражают реальный gameplay.
  */
 export function installTelemetryDebugLogger(): () => void {
-  if (!import.meta.env.DEV) return () => undefined;
+  if (!import.meta.env.DEV || import.meta.env.VITE_TELEMETRY_DEBUG !== "true") return () => undefined;
   return Telemetry.subscribe((event) => {
     console.debug("[telemetry:event]", event.type, event);
   });
