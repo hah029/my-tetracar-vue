@@ -246,6 +246,13 @@
         "noItems": "пусто"
     },
     "dailyGift": {
+        "recoveryInfo": "Missed days: {{missed}}. The battle pass restores progress to the start of week {{week}} — day {{day}}.",
+        "recover": "Restore for {{cost}} energons",
+        "recovering": "Restoring…",
+        "retryRecovery": "Finish restoration",
+        "notEnoughEnergons": "Not enough energons",
+        "restart": "Start from day 1 for free",
+        "recoveryError": "Could not finish restoring progress. Try again: you will not be charged twice.",
         "title": "daily bonus",
         "cycle": "cycle {{cycle}}",
         "day": "day {{day}}",

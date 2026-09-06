@@ -33,14 +33,26 @@
           :aria-label="t('dailyGift.day', { day })" @click="selectDay(day)">●</button>
       </div>
 
-      <p v-if="dailyGift.error" class="daily-gift__error">{{ t("dailyGift.claimError") }}</p>
+      <div v-if="dailyGift.recovery.available || dailyGift.state.pendingRecovery" class="daily-gift__recovery">
+        <p>{{ t("dailyGift.recoveryInfo", {
+          missed: dailyGift.recovery.missedDays,
+          week: dailyGift.state.pendingRecovery ? Math.ceil(dailyGift.state.pendingRecovery.day / DAILY_GIFT_WEEK_LENGTH) : dailyGift.recovery.week,
+          day: dailyGift.state.pendingRecovery?.day ?? dailyGift.recovery.day,
+        }) }}</p>
+        <button class="menu_btn daily-gift__recover" :disabled="!dailyGift.canRecover" @click="recover">
+          {{ dailyGift.isRecovering ? t("dailyGift.recovering") : dailyGift.state.pendingRecovery
+            ? t("dailyGift.retryRecovery") : t("dailyGift.recover", { cost: dailyGift.recovery.cost }) }}
+        </button>
+        <p v-if="!dailyGift.state.pendingRecovery && meta.energons < dailyGift.recovery.cost">{{ t("dailyGift.notEnoughEnergons") }}</p>
+      </div>
+      <p v-if="dailyGift.error" class="daily-gift__error">{{ t(dailyGift.error === "recovery_failed" ? "dailyGift.recoveryError" : "dailyGift.claimError") }}</p>
       <button v-if="dailyGift.status.canClaim" class="menu_btn daily-gift__claim"
-        :disabled="dailyGift.isClaiming || selectedDay !== currentDay" @click="claim">{{ dailyGift.isClaiming ?
-          t("dailyGift.claiming") : t("dailyGift.claim") }}</button>
+        :disabled="!dailyGift.isReady || dailyGift.isClaiming || dailyGift.isRecovering || !!dailyGift.state.pendingRecovery || selectedDay !== currentDay" @click="claim">{{ dailyGift.isClaiming ?
+          t("dailyGift.claiming") : dailyGift.recovery.available ? t("dailyGift.restart") : t("dailyGift.claim") }}</button>
       <p v-else class="daily-gift__claimed">{{ t("dailyGift.claimed") }}</p>
     </section>
 
-    <button class="menu_btn daily-gift__back" @click="gameState.closeOverlay()">{{ t("mainMenu.goBack") }}</button>
+    <button class="menu_btn daily-gift__back" :disabled="dailyGift.isClaiming || dailyGift.isRecovering || !!dailyGift.state.pendingRecovery" @click="gameState.closeOverlay()">{{ t("mainMenu.goBack") }}</button>
   </div>
 </template>
 
@@ -48,8 +60,9 @@
 import { FORTUNE_WHEEL_PRESETS } from "@/configs/fortuneWheel";
 import { computed, nextTick, onMounted, onUnmounted, ref, watch } from "vue";
 import { useTranslation } from "i18next-vue";
-import { DAILY_GIFT_CYCLE_LENGTH, getDailyGiftRewards } from "@/configs/dailyGift";
+import { DAILY_GIFT_CYCLE_LENGTH, DAILY_GIFT_WEEK_LENGTH, getDailyGiftRewards } from "@/configs/dailyGift";
 import { useDailyGiftStore } from "@/store/dailyGiftStore";
+import { useMetaStore } from "@/store/metaStore";
 import { useGameState } from "@/store/gameState";
 import type { RewardDefinition } from "@/purchase/types";
 import { SoundManager } from "@/game/sound/SoundManager";
@@ -57,6 +70,7 @@ import { SoundManager } from "@/game/sound/SoundManager";
 const { t } = useTranslation();
 const dailyGift = useDailyGiftStore();
 const gameState = useGameState();
+const meta = useMetaStore();
 const days = Array.from({ length: DAILY_GIFT_CYCLE_LENGTH }, (_, index) => index + 1);
 const currentDay = computed(() => dailyGift.status.day);
 const selectedDay = ref(currentDay.value);
@@ -237,6 +251,11 @@ function updateFocusedDay() {
   });
 }
 
+async function recover() {
+  const recovered = await dailyGift.recover();
+  SoundManager.getInstance().playCue(recovered ? "uiSelect" : "actionRejected");
+}
+
 async function claim() {
   const claimed = await dailyGift.claim();
   SoundManager.getInstance().playCue(claimed ? "goldenPickup" : "actionRejected");
@@ -401,6 +420,8 @@ onUnmounted(() => {
 
 .ribbon__dots {
   display: flex;
+  flex-wrap: wrap;
+  max-width: 85vw;
   justify-content: center;
   gap: 0.55rem;
 }
@@ -424,6 +445,7 @@ onUnmounted(() => {
 }
 
 .daily-gift__claim,
+.daily-gift__recover,
 .daily-gift__back {
   @include text-button-size-s;
   color: $color-yellow-super-light;
@@ -439,9 +461,21 @@ onUnmounted(() => {
   color: $color-blue-light;
 }
 
-.daily-gift__claim:disabled {
+.daily-gift__claim:disabled,
+.daily-gift__recover:disabled,
+.daily-gift__back:disabled {
   opacity: 0.45;
   cursor: default;
+}
+
+.daily-gift__recovery {
+  @include text-info-size-s;
+  max-width: min(36rem, 90vw);
+  margin-top: 1rem;
+  color: $color-blue-light;
+  text-align: center;
+
+  p { margin: 0.5rem 0; }
 }
 
 @media (max-width: 700px) {

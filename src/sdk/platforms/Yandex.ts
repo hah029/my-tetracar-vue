@@ -219,6 +219,7 @@ export class YandexPlatform implements IGamePlatform {
       await player.setStats(stats);
     } catch (err) {
       console.error("[YandexPlatform.setPlayerStats]", err);
+      throw err;
     }
   }
 
