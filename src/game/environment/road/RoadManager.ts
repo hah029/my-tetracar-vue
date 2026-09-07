@@ -6,7 +6,7 @@ import { Road } from "./Road";
 import { RoadLine } from "./RoadLine";
 import { RoadLane } from "./RoadLane";
 import { SpeedLine } from "./SpeedLine";
-import { RoadEdge } from "./edges";
+import { RoadEdge, NeonRoadLine } from "./edges";
 import { SideObjectsInstanced } from "./SideObjectsInstanced";
 import { LampPostsInstanced } from "./LampPostsInstanced";
 import { RoadElevatedSection } from "./RoadElevatedSection";
@@ -31,6 +31,7 @@ export class RoadManager {
     private roadLanes: RoadLane[] = [];
     private speedLines: SpeedLine[] = [];
     private edges: THREE.Mesh[] = [];
+    private neonEdgeLines: NeonRoadLine[] = [];
     private elevatedSections: RoadElevatedSection[] = [];
     private segmentSurfaces: RoadSegmentSurface[] = [];
     private activeRoute:
@@ -342,6 +343,9 @@ export class RoadManager {
         );
         this.scene?.add(leftEdge);
         this.edges.push(leftEdge);
+        const leftNeonLine = new NeonRoadLine(left, this.config.length, color);
+        this.scene?.add(leftNeonLine);
+        this.neonEdgeLines.push(leftNeonLine);
 
         const rightEdge = new RoadEdge(
         right,
@@ -352,6 +356,9 @@ export class RoadManager {
         );
         this.scene?.add(rightEdge);
         this.edges.push(rightEdge);
+        const rightNeonLine = new NeonRoadLine(right, this.config.length, color);
+        this.scene?.add(rightNeonLine);
+        this.neonEdgeLines.push(rightNeonLine);
     };
 
     private addRoadLines(): void {
@@ -510,6 +517,12 @@ export class RoadManager {
         this.roadLanes = [];
         this.edges.forEach((edge) => this.scene?.remove(edge));
         this.edges = [];
+        this.neonEdgeLines.forEach((line) => {
+          this.scene?.remove(line);
+          line.geometry.dispose();
+          (line.material as THREE.Material).dispose();
+        });
+        this.neonEdgeLines = [];
         this.elevatedSections.forEach((section) => section.dispose());
         this.elevatedSections = [];
         this.segmentSurfaces.forEach((surface) => surface.dispose());

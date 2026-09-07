@@ -458,6 +458,12 @@ export function useGame() {
     collision: CollisionResult,
     currentSpeed: number,
   ): boolean {
+    if (playerStore.nitroSafetyActive) {
+      destroyObstacles(collision.impactPoint!, [collision.impactSubject as BaseObstacle]);
+      RunTelemetry.recordObstacleDestroyed("nitro", getObstacleKind(collision.impactSubject as BaseObstacle));
+      soundManager.playCue("obstacleDestroy");
+      return false;
+    }
     // Проверка наличия брони
     if (playerStore.isShieldEnabled) {
       destroyObstacles(collision.impactPoint!, [
@@ -536,6 +542,7 @@ export function useGame() {
         playerStore.addNewMsg("maxAmmo");
         soundManager.playCue("actionRejected");
         collision.impactSubject.rejectFromCar(carPos);
+        MagnetSystem.getInstance().removeItemEffects(collision.impactSubject as BaseItem);
         RunTelemetry.recordItemRejected("ammo");
         CameraSystem.triggerPickupRejectedShake();
         return false;
@@ -558,12 +565,13 @@ export function useGame() {
     if (collision.impactSubject instanceof NitroItem) {
       const corrupted =
         collision.impactSubject.userData.corruptedBoost === "heavyNitro";
+      const superNitro = collision.impactSubject.userData.superNitro === true;
       CarManager.getInstance().enableNitro();
 
-      playerStore.enableNitro(corrupted);
+      playerStore.enableNitro(corrupted, superNitro);
       RunTelemetry.recordItemCollected("nitro");
       soundManager.startCueLoop("nitroActive");
-      playerStore.addNewMsg(corrupted ? "heavyNitroActivated" : "nitroActivated");
+      playerStore.addNewMsg(corrupted ? "heavyNitroActivated" : superNitro ? "superNitroActivated" : "nitroActivated");
       playerStore.makeEventHappened("addNitro");
 
       soundManager.playCue("nitroPickup");
@@ -578,6 +586,7 @@ export function useGame() {
         playerStore.addNewMsg("maxArmor");
         soundManager.playCue("actionRejected");
         collision.impactSubject.rejectFromCar(carPos);
+        MagnetSystem.getInstance().removeItemEffects(collision.impactSubject as BaseItem);
         RunTelemetry.recordItemRejected("armor");
         CameraSystem.triggerPickupRejectedShake();
         return false;

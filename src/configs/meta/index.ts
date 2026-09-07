@@ -5,6 +5,7 @@ export default {
     magnetRadiusLevel: 3,
     magnetDurationLevel: 3,
     magnetCapacityLevel: 3,
+    nitroDurationLevel: 3,
   },
   base_counts: {
     ammo: 3,

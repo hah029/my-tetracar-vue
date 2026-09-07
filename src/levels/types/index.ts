@@ -620,6 +620,7 @@ export interface GameplayConfig {
   /** Chance that a bullet pickup becomes a super-ammo pickup. */
   superBulletChance: number;
   superBulletWeights: Record<"piercing" | "explosive" | "fan" | "railgun", number>;
+  superNitroChance: number;
 
   /**
    * Веса конкретных corrupted-вариантов внутри уже инвертированного буста.

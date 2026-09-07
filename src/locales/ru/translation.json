@@ -69,6 +69,7 @@
             "armorEquipped": "броня установлена!",
             "maxArmor": "достигнут максимум брони!",
             "nitroActivated": "нитро активировано!",
+            "superNitroActivated": "супер-нитро активировано!",
             "magnetActivated": "магнит запущен!",
             "superMagnetActivated": "супермагнит запущен!",
             "ammoRefilled": "боезапас пополнен!",

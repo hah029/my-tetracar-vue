@@ -47,9 +47,13 @@ export default {
   // нитро
   nitro: {
     multiplier: 1.5,
+    baseTimer: 3000,
+    timerPerLevel: 1000,
+    superTimer: 2500,
+    superMultiplier: 3,
+    superRewardMultiplier: 10,
     afterImagePass: 0.8,
     rgbShift: 0.003,
-    baseTimer: 5000,
     accelInSpeed: 0.005,
     accelOutSpeed: 0.001,
   },

@@ -902,6 +902,11 @@ export class InteractiveItemsManager {
     }
 
     const gameplay = useLevelStore().currentGameplay;
+    if (item instanceof NitroItem && Math.random() < gameplay.superNitroChance) {
+      item.userData.superNitro = true;
+      item.userData.corruptedBoostPulse = { color: 0xff3030, time: Math.random() * 1000 };
+      return;
+    }
     if (item instanceof BulletItem && Math.random() < gameplay.superBulletChance) {
       this.markSuperBullet(item, this.pickSuperBulletVariant(gameplay.superBulletWeights));
       return;

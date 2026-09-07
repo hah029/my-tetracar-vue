@@ -34,16 +34,16 @@ const nightCity = {
 
     lighting: {
       ambientLightColor: "#404060",
-      ambientLightIntensity: 0.3,
+      ambientLightIntensity: 0.12,
       directionalLightColor: "#aaccff",
       directionalLightPosition: [-10, 20, 5],
-      directionalLightIntensity: 2.0,
+      directionalLightIntensity: 0.7,
       fillLightColor: "#ccddff",
       fillLightPosition: [-5, 10, 5],
-      fillLightIntensity: 2.0,
+      fillLightIntensity: 0.5,
       backAccentLightColor: "#ffaa66",
       backAccentLightPosition: [0, 3, 15],
-      backAccentLightIntensity: 5.0,
+      backAccentLightIntensity: 1.5,
     },
   },
 

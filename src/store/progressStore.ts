@@ -56,7 +56,7 @@ export const useProgressStore = defineStore("progressStore", () => {
     let mplr = cfg.scoreMultiplier.base;
 
     if (playerStore.isNitroEnabled) {
-      mplr *= cfg.scoreMultiplier.growNitro;
+      mplr *= playerStore.isSuperNitro ? 10 : playerStore.corruptedNitroEnabled ? 1 : cfg.scoreMultiplier.growNitro;
     }
 
     if (metaStore.isFeatureActive("scoreMultiplier")) {

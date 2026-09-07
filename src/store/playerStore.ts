@@ -109,6 +109,8 @@ export const usePlayerStore = defineStore("playerStore", () => {
   const corruptedNitroEnabled = ref(false);
 
   const isNitroEnabled = ref(false);
+  const isSuperNitro = ref(false);
+  const nitroSafetyActive = ref(false);
   const nitroTimer = ref(config.value.nitro.baseTimer);
   const goldenNitroMultiplier = ref(2);
   const energonNitroMultiplier = ref(2);
@@ -218,18 +220,19 @@ export const usePlayerStore = defineStore("playerStore", () => {
     shieldBlindnessTimer.value = 0;
   }
 
-  function enableNitro(corrupted = false) {
+  function enableNitro(corrupted = false, superNitro = false) {
     if (!isNitroEnabled.value) {
       progressStore.riseMultiplier(2, "multiply");
     }
     isNitroEnabled.value = true;
-    nitroTimer.value = config.value.nitro.baseTimer;
+    isSuperNitro.value = superNitro;
+    nitroSafetyActive.value = !corrupted;
+    nitroTimer.value = superNitro ? config.value.nitro.superTimer : metaStore.nitroDuration;
     corruptedNitroEnabled.value = corrupted;
-    corruptedNitroMass.value =
-      corrupted && isMassEnabled.value
-        ? getClampedTemporaryMass(config.value.mass.corruptedNitroMass)
-        : 0;
-    nitroMultiplierTarget.value = config.value.nitro.multiplier;
+    corruptedNitroMass.value = 0;
+    nitroMultiplierTarget.value = corrupted ? 1.25 : superNitro ? config.value.nitro.superMultiplier : config.value.nitro.multiplier;
+    goldenNitroMultiplier.value = superNitro ? config.value.nitro.superRewardMultiplier : corrupted ? 1 : 2;
+    energonNitroMultiplier.value = goldenNitroMultiplier.value;
     if (renderInstance.value != null) {
       renderInstance.value.setAfterImagePassAmount(
         config.value.nitro.afterImagePass,
@@ -241,9 +244,12 @@ export const usePlayerStore = defineStore("playerStore", () => {
   function disableNitro() {
     isNitroEnabled.value = false;
     corruptedNitroEnabled.value = false;
+    isSuperNitro.value = false;
     corruptedNitroMass.value = 0;
-    nitroTimer.value = config.value.nitro.baseTimer;
+    nitroTimer.value = metaStore.nitroDuration;
     nitroMultiplierTarget.value = 1;
+    goldenNitroMultiplier.value = 2;
+    energonNitroMultiplier.value = 2;
     if (progressStore.currentMultiplier != 1) {
       progressStore.reduceMultiplier(2);
     }
@@ -263,6 +269,13 @@ export const usePlayerStore = defineStore("playerStore", () => {
       nitroMultiplierTarget.value,
       delta * transitionSpeed,
     );
+    if (
+      !isNitroEnabled.value &&
+      nitroSafetyActive.value &&
+      nitroMultiplierCurrent.value <= 1.01
+    ) {
+      nitroSafetyActive.value = false;
+    }
   }
 
   function enableMagnet(
@@ -321,6 +334,7 @@ export const usePlayerStore = defineStore("playerStore", () => {
     baseSpeed.value = startSpeed.value;
     speed.value = startSpeed.value;
     isNitroEnabled.value = false;
+    nitroSafetyActive.value = false;
     corruptedNitroEnabled.value = false;
     corruptedShieldEnabled.value = false;
     shieldBlindnessTimer.value = 0;
@@ -515,6 +529,8 @@ export const usePlayerStore = defineStore("playerStore", () => {
     startSpeed,
     baseSpeed,
     isNitroEnabled,
+    isSuperNitro,
+    nitroSafetyActive,
     corruptedNitroEnabled,
     isShieldEnabled,
     corruptedShieldEnabled,

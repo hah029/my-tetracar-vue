@@ -38,6 +38,7 @@ export const useMetaStore = defineStore("metaStore", () => {
     magnetRadiusLevel: 0,
     magnetDurationLevel: 0,
     magnetCapacityLevel: 0,
+    nitroDurationLevel: 0,
   });
 
   // Постоянные возможности
@@ -53,6 +54,7 @@ export const useMetaStore = defineStore("metaStore", () => {
   const bulletSpeed = computed(
     () => commonStore.config.bulletDefaultSpeed + upgrades.value.ammoLevel * 0.05,
   );
+  const nitroDuration = computed(() => 3000 + upgrades.value.nitroDurationLevel * 1000);
   const maxArmor = computed(
     () => meta.base_counts.shield + upgrades.value.armorLevel,
   );
@@ -76,6 +78,7 @@ export const useMetaStore = defineStore("metaStore", () => {
     magnetRadiusLevel: magnetRadius,
     magnetDurationLevel: meta.max_upgrades.magnetDurationLevel,
     magnetCapacityLevel: meta.max_upgrades.magnetCapacityLevel,
+    nitroDurationLevel: meta.max_upgrades.nitroDurationLevel,
   });
 
   // ===== ВАЛЮТА =====
@@ -362,6 +365,7 @@ export const useMetaStore = defineStore("metaStore", () => {
     // computed
     maxAmmo,
     bulletSpeed,
+    nitroDuration,
     maxArmor,
     magnetRadiusLaneStep,
     magnetRadius,

@@ -83,6 +83,7 @@ export class MagnetSystem {
       .filter((item) =>
         types.some((T) => item instanceof T) &&
         !item.userData.corruptedBoost &&
+        !item.userData.pickupRejected &&
         item.position.distanceToSquared(carPos) <= radiusSq,
       )
       .sort(
