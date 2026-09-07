@@ -902,6 +902,33 @@ export class InteractiveItemsManager {
     }
 
     const gameplay = useLevelStore().currentGameplay;
+    if (Math.random() > gameplay.specialBoostChance) return;
+    const resolve = (weights: Record<string, number>) => {
+      const entries = Object.entries(weights);
+      let roll = Math.random() * entries.reduce((sum, [, weight]) => sum + Math.max(0, weight), 0);
+      for (const [variant, weight] of entries) { roll -= Math.max(0, weight); if (roll <= 0) return variant; }
+      return entries[0]?.[0];
+    };
+    if (item instanceof NitroItem) {
+      const variant = resolve(gameplay.specialBoostWeights.nitro);
+      if (variant === "superNitro") { item.userData.superNitro = true; return; }
+      this.markCorruptedBoost(item, variant as CorruptedBoostVariant); return;
+    }
+    if (item instanceof ShieldItem) {
+      const variant = resolve(gameplay.specialBoostWeights.shield);
+      if (variant === "superShield") { item.userData.superShield = true; return; }
+      this.markCorruptedBoost(item, variant as CorruptedBoostVariant); return;
+    }
+    if (item instanceof MagnetItem) {
+      const variant = resolve(gameplay.specialBoostWeights.magnet);
+      if (variant === "superMagnet") { this.markSuperMagnet(item); return; }
+      this.markCorruptedBoost(item, variant as CorruptedBoostVariant); return;
+    }
+    if (item instanceof BulletItem) {
+      const variant = resolve(gameplay.specialBoostWeights.bullet);
+      if (variant === "blankBullet") { this.markCorruptedBoost(item, variant); return; }
+      this.markSuperBullet(item, variant as BulletVariant); return;
+    }
     if (item instanceof ShieldItem && Math.random() < gameplay.superShieldChance) {
       item.userData.superShield = true;
       item.userData.corruptedBoostPulse = { color: 0xf7fbff, time: Math.random() * 1000 };

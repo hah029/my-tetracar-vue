@@ -22,6 +22,13 @@ export const DIFFICULTIES = {
       superBulletChance: 0.05,
       superNitroChance: 0.03,
       superShieldChance: 0.03,
+      specialBoostChance: 0.15,
+      specialBoostWeights: {
+        nitro: { superNitro: 3, heavyNitro: 10 },
+        shield: { superShield: 3, blindShield: 10 },
+        magnet: { superMagnet: 5, repulseMagnet: 10 },
+        bullet: { piercing: 1, explosive: 1, fan: 1, railgun: 1, blankBullet: 4 },
+      },
       superBulletWeights: { piercing: 1, explosive: 1, fan: 1, railgun: 1 },
       corruptedBoostWeights: {
         nitro: { heavyNitro: 1 },
@@ -54,6 +61,8 @@ export const DIFFICULTIES = {
       superBulletChance: 0,
       superNitroChance: 0,
       superShieldChance: 0,
+      specialBoostChance: 0,
+      specialBoostWeights: { nitro: {}, shield: {}, magnet: {}, bullet: {} },
       superBulletWeights: { piercing: 1, explosive: 1, fan: 1, railgun: 1 },
       corruptedBoostWeights: {
         nitro: { heavyNitro: 1 },

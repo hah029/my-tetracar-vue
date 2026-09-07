@@ -622,6 +622,8 @@ export interface GameplayConfig {
   superBulletWeights: Record<"piercing" | "explosive" | "fan" | "railgun", number>;
   superNitroChance: number;
   superShieldChance: number;
+  specialBoostChance: number;
+  specialBoostWeights: Record<"nitro" | "shield" | "magnet" | "bullet", Record<string, number>>;
 
   /**
    * Веса конкретных corrupted-вариантов внутри уже инвертированного буста.
