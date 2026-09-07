@@ -72,6 +72,14 @@
                                     </span>
                                 </div>
                             </template>
+                            <template v-else-if="booster.key === 'armor'">
+                                <div class="armor-magazine" aria-label="Заряды щита">
+                                    <span v-for="slot in playerStore.maxArmor" :key="slot" class="armor-round"
+                                        :class="{ 'armor-round--filled': slot <= playerStore.armor, 'armor-round--super': playerStore.armorStack[slot - 1] === 'super' }">
+                                        <img src="@/assets/images/hud/cube_armor.svg" alt="" />
+                                    </span>
+                                </div>
+                            </template>
                             <template v-else>
                             <div class="booster_value" :class="booster.textColorClass">{{ booster.displayValue }}</div>
                             <div class="boosters_image_container">
@@ -659,6 +667,12 @@ $booster-icon-size: 1.875rem;
 .ammo-round--next { opacity: 1; transform: translateY(-0.34rem) scale(1.22); }
 .ammo-round--piercing img, .ammo-round--explosive img, .ammo-round--fan img, .ammo-round--railgun img { animation: ammo-round-pulse .75s ease-in-out infinite alternate; }
 .ammo-round--blank { opacity: .35; filter: grayscale(1); }
+.armor-magazine { display: flex; gap: .22rem; min-width: 2.8rem; }
+.armor-round { width: 1.35rem; height: 1.35rem; opacity: .18; transition: opacity 140ms ease, transform 140ms ease; }
+.armor-round img { width: 100%; height: 100%; display: block; }
+.armor-round--filled { opacity: 1; filter: drop-shadow(0 0 6px rgba(115, 210, 255, .75)); }
+.armor-round--super { animation: armor-round-pulse .7s ease-in-out infinite alternate; }
+@keyframes armor-round-pulse { to { transform: scale(1.16); filter: drop-shadow(0 0 9px rgba(255,255,255,.95)); } }
 @keyframes ammo-round-pulse { to { filter: drop-shadow(0 0 9px rgba(255, 255, 255, .95)); } }
 
 .with_shadow {

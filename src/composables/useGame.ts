@@ -19,6 +19,7 @@ import { UpdateMode } from "@/game/core/UpdateMode";
 import { useProgressStore } from "@/store/progressStore";
 import { usePlayerStore } from "@/store/playerStore";
 import { useLevelStore } from "@/store/levelStore";
+import { useMetaStore } from "@/store/metaStore";
 // objects
 import type { CarRef } from "@/game/car";
 import { CameraSystem } from "@/game/camera/CameraSystem";
@@ -466,15 +467,20 @@ export function useGame() {
     }
     // Проверка наличия брони
     if (playerStore.isShieldEnabled) {
-      destroyObstacles(collision.impactPoint!, [
-        collision.impactSubject as BaseObstacle,
-      ]);
+      const impact = collision.impactPoint!;
+      const chargeVariant = playerStore.armorStack[playerStore.armorStack.length - 1] ?? "normal";
+      const radius = chargeVariant === "super" ? 14 : useMetaStore().shieldWaveRadius;
+      const affected = radius > 0
+        ? obstacleManager!.getObstacles().filter((obstacle) => obstacle.position.distanceTo(impact) <= radius)
+        : [collision.impactSubject as BaseObstacle];
+      destroyObstacles(impact, affected);
 
       if (playerStore.corruptedShieldEnabled) {
-        playerStore.triggerShieldBlindness();
+        playerStore.triggerShieldBlindness(450);
+        while (playerStore.armor > 0) playerStore.reduceShield();
+      } else {
+        playerStore.reduceShield();
       }
-
-      playerStore.reduceShield();
       soundManager.playCue("shieldHit");
       RunTelemetry.recordShieldHit();
       if (playerStore.armor == 0) {
@@ -596,7 +602,9 @@ export function useGame() {
         collision.impactSubject.userData.corruptedBoost === "blindShield";
       const wasShieldEnabled = playerStore.isShieldEnabled;
 
-      playerStore.addArmor();
+      playerStore.addArmor(
+        collision.impactSubject.userData.superShield === true ? "super" : "normal",
+      );
       playerStore.enableShield(corrupted);
       RunTelemetry.recordItemCollected("armor");
       if (wasShieldEnabled) RunTelemetry.recordArmorAddedWhileShieldActive();

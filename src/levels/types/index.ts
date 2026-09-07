@@ -621,6 +621,7 @@ export interface GameplayConfig {
   superBulletChance: number;
   superBulletWeights: Record<"piercing" | "explosive" | "fan" | "railgun", number>;
   superNitroChance: number;
+  superShieldChance: number;
 
   /**
    * Веса конкретных corrupted-вариантов внутри уже инвертированного буста.

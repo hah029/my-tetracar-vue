@@ -9,7 +9,7 @@
     <RightsPanel />
     <TeamLogo />
     <DebugPanel />
-    <div class="blindness_overlay" :style="{ opacity: playerStore.shieldBlindnessTimer > 0 ? 1 : 0 }" />
+    <div class="blindness_overlay" :style="{ opacity: playerStore.shieldBlindnessTimer > 0 ? 0.35 : 0 }" />
 </template>
 
 
@@ -286,5 +286,4 @@
         transition: opacity 220ms ease-out;
     }
 </style>
-
 

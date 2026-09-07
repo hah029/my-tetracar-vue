@@ -12,6 +12,7 @@ import type {
   ShieldVisualConfig,
 } from "@/levels/types";
 import type { BulletVariant } from "@/game/combat/BulletVariant";
+export type ArmorVariant = "normal" | "super";
 
 const DEFAULT_NITRO_TRAIL: NitroTrailVisualConfig = {
   color: "#66ff66",
@@ -145,6 +146,7 @@ export const usePlayerStore = defineStore("playerStore", () => {
   const corruptedShieldEnabled = ref(false);
   const shieldBlindnessTimer = ref(0);
   const armor = ref(0);
+  const armorStack = ref<ArmorVariant[]>([]);
   const maxArmor = computed(() => metaStore.maxArmor);
 
   const ammo = ref(0);
@@ -299,12 +301,17 @@ export const usePlayerStore = defineStore("playerStore", () => {
     magnetVariant.value = "normal";
   }
 
-  function addArmor(): void {
-    if (armor.value < maxArmor.value) armor.value += 1;
+  function addArmor(variant: ArmorVariant = "normal"): boolean {
+    if (armor.value >= maxArmor.value) return false;
+    armor.value += 1;
+    armorStack.value.push(variant);
+    return true;
   }
 
-  function reduceShield() {
-    if (armor.value > 0) armor.value -= 1;
+  function reduceShield(): ArmorVariant | null {
+    if (armor.value <= 0) return null;
+    armor.value -= 1;
+    return armorStack.value.pop() ?? "normal";
   }
 
   function enableShield(corrupted = false) {
@@ -543,6 +550,7 @@ export const usePlayerStore = defineStore("playerStore", () => {
     cameraPosition,
     nitroTimer,
     armor,
+    armorStack,
     maxArmor,
     ammo,
     ammoStack,

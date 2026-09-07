@@ -56,8 +56,9 @@ export const useMetaStore = defineStore("metaStore", () => {
   );
   const nitroDuration = computed(() => 3000 + upgrades.value.nitroDurationLevel * 1000);
   const maxArmor = computed(
-    () => meta.base_counts.shield + upgrades.value.armorLevel,
+    () => meta.base_counts.shield + (upgrades.value.armorLevel >= 3 ? 1 : 0),
   );
+  const shieldWaveRadius = computed(() => [0, 3, 5, 7][Math.min(3, upgrades.value.armorLevel)] ?? 0);
   const magnetRadiusLaneStep = computed(() => commonStore.config.xzScaling * 6);
   const magnetRadius = computed(() =>
     meta.base_counts.magnetRadius +
@@ -367,6 +368,7 @@ export const useMetaStore = defineStore("metaStore", () => {
     bulletSpeed,
     nitroDuration,
     maxArmor,
+    shieldWaveRadius,
     magnetRadiusLaneStep,
     magnetRadius,
     magnetDuration,
