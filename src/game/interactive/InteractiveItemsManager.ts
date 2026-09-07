@@ -931,12 +931,12 @@ export class InteractiveItemsManager {
     }
     if (item instanceof ShieldItem && Math.random() < gameplay.superShieldChance) {
       item.userData.superShield = true;
-      item.userData.corruptedBoostPulse = { color: 0xf7fbff, time: Math.random() * 1000 };
+      item.userData.corruptedBoostPulse = { color: 0xffffff, time: Math.random() * 1000 };
       return;
     }
     if (item instanceof NitroItem && Math.random() < gameplay.superNitroChance) {
       item.userData.superNitro = true;
-      item.userData.corruptedBoostPulse = { color: 0xff3030, time: Math.random() * 1000 };
+      item.userData.corruptedBoostPulse = { color: 0xffffff, time: Math.random() * 1000 };
       return;
     }
     if (item instanceof BulletItem && Math.random() < gameplay.superBulletChance) {
@@ -1009,7 +1009,7 @@ export class InteractiveItemsManager {
   private markCorruptedBoost(item: BaseItem, variant: CorruptedBoostVariant) {
     item.userData.corruptedBoost = variant;
     item.userData.corruptedBoostPulse = {
-      color: this.getCorruptedEmissionColor(variant),
+      color: 0xffffff,
       time: Math.random() * 1000,
     };
   }
@@ -1018,7 +1018,7 @@ export class InteractiveItemsManager {
     item.userData.superMagnet = true;
     // Reuse the existing pulsing material path, with a distinct gold colour.
     item.userData.corruptedBoostPulse = {
-      color: 0xffdf4a,
+      color: 0xffffff,
       time: Math.random() * 1000,
     };
   }
@@ -1035,7 +1035,7 @@ export class InteractiveItemsManager {
 
   private markSuperBullet(item: BulletItem, variant: BulletVariant) {
     item.userData.superBullet = variant;
-    item.userData.corruptedBoostPulse = { color: 0xff3030, time: Math.random() * 1000 };
+    item.userData.corruptedBoostPulse = { color: 0xffffff, time: Math.random() * 1000 };
   }
 
   private getCorruptedEmissionColor(variant: CorruptedBoostVariant) {

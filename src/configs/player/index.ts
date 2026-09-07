@@ -19,7 +19,7 @@ export default {
   },
 
   // управление
-  laneChangeSpeed: 0.26,
+  laneChangeSpeed: 0.2,
   maxTilt: 0.05,
   tiltSmoothing: 0.2,
 

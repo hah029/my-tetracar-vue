@@ -134,10 +134,18 @@ export class CarPhysics {
     const tiltFactor = 1 - Math.pow(1 - this.config.tiltSmoothing, frameScale);
 
     const newX = currentX + deltaX * laneChangeFactor;
+    // Tilt follows the actual lateral motion, not the distance to the final
+    // lane. A burst of lane commands therefore stays one smooth manoeuvre.
+    const lateralVelocity = (newX - currentX) / Math.max(frameScale, 0.001);
+    const targetTilt = THREE.MathUtils.clamp(
+      -lateralVelocity * 0.012,
+      -this.config.maxTilt,
+      this.config.maxTilt,
+    );
 
     const newRotationY =
       currentRotationY +
-      (-deltaX * this.config.maxTilt - currentRotationY) * tiltFactor;
+      (targetTilt - currentRotationY) * tiltFactor;
 
     return { newX, newRotationY };
   }
