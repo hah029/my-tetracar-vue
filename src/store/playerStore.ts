@@ -12,6 +12,7 @@ import type {
   ShieldVisualConfig,
 } from "@/levels/types";
 import type { BulletVariant } from "@/game/combat/BulletVariant";
+import { getPlayerSkinConfig } from "@/configs/skins";
 export type ArmorVariant = "normal" | "super";
 
 const DEFAULT_NITRO_TRAIL: NitroTrailVisualConfig = {
@@ -69,6 +70,22 @@ export const usePlayerStore = defineStore("playerStore", () => {
   );
   const currentPlayerConfig = computed(() => levelStore.currentLevel.player);
   const currentPlayerVisual = computed(() => currentPlayerConfig.value.visual);
+  const activeSkinConfig = computed(() =>
+    getPlayerSkinConfig(metaStore.activeSkin),
+  );
+  const carMaterialConfig = computed(() => ({
+    ...config.value.carMaterialConfig,
+    ...activeSkinConfig.value?.material,
+  }));
+  const carMaterialConfigExtra = computed(() => ({
+    ...config.value.carMaterialConfigExtra,
+    ...activeSkinConfig.value?.textures,
+  }));
+  const neonEdgesConfig = computed(
+    () => activeSkinConfig.value?.effects?.neonEdges?.enabled
+      ? activeSkinConfig.value.effects.neonEdges
+      : null,
+  );
   const carEmissionConfigExtra = computed(() => ({
     ...config.value.carEmissionConfigExtra,
     ...currentPlayerVisual.value?.emissiveColors,
@@ -520,9 +537,10 @@ export const usePlayerStore = defineStore("playerStore", () => {
   return {
     config,
     CAR_CUBES_CONFIG: carCubesConfig,
-    CAR_MATERIAL_CONFIG: config.value.carMaterialConfig,
-    CAR_MATERIAL_CONFIG_EXTRA: config.value.carMaterialConfigExtra,
+    CAR_MATERIAL_CONFIG: carMaterialConfig,
+    CAR_MATERIAL_CONFIG_EXTRA: carMaterialConfigExtra,
     CAR_EMISSION_CONFIG_EXTRA: carEmissionConfigExtra,
+    CAR_NEON_EDGES_CONFIG: neonEdgesConfig,
     NITRO_MULTIPLIER: config.value.nitro.multiplier,
     BASE_NITRO_TIMER: config.value.nitro.baseTimer,
     BASE_MAGNET_TIMER: config.value.magnet.baseTimer,

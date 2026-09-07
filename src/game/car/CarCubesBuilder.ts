@@ -83,16 +83,22 @@ export class CarCubesBuilder {
 
   /** Adds a HDR contour, so the existing bloom pass turns cube edges neon. */
   private addNeonEdges(cube: THREE.Object3D): void {
+    const neonEdges = usePlayerStore().CAR_NEON_EDGES_CONFIG;
+    if (!neonEdges) return;
+
     cube.traverse((child) => {
       if (!(child instanceof THREE.Mesh)) return;
 
-      const geometry = new THREE.EdgesGeometry(child.geometry, 25);
+      const geometry = new THREE.EdgesGeometry(
+        child.geometry,
+        neonEdges.thresholdAngle ?? 25,
+      );
       const material = new THREE.ShaderMaterial({
         transparent: true,
         depthWrite: false,
         uniforms: {
-          glowColor: { value: new THREE.Color(0x00eaff) },
-          intensity: { value: 5.0 },
+          glowColor: { value: new THREE.Color(neonEdges.color) },
+          intensity: { value: neonEdges.intensity },
         },
         vertexShader: `
           void main() {

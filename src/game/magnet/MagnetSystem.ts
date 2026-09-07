@@ -80,11 +80,12 @@ export class MagnetSystem {
     const carPos = car.position;
 
     const targets = items
-      .filter((item) =>
-        types.some((T) => item instanceof T) &&
-        !item.userData.corruptedBoost &&
-        !item.userData.pickupRejected &&
-        item.position.distanceToSquared(carPos) <= radiusSq,
+      .filter(
+        (item) =>
+          types.some((T) => item instanceof T) &&
+          !item.userData.corruptedBoost &&
+          !item.userData.pickupRejected &&
+          item.position.distanceToSquared(carPos) <= radiusSq,
       )
       .sort(
         (a, b) =>
@@ -291,7 +292,7 @@ export class MagnetSystem {
       uniforms: {
         time: { value: 0 },
         color: { value: new THREE.Color(color) },
-        opacity: { value: 0.8 },
+        opacity: { value: 0.1 },
       },
       vertexShader: magnetLineVertex,
       fragmentShader: magnetLineFragment,

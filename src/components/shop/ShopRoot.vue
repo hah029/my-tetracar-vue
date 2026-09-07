@@ -445,7 +445,7 @@
         SoundManager.getInstance().playCue(bought ? "goldenPickup" : "actionRejected");
     }
 
-    function handleApplyClick(product: PurchaseProduct) {
+    async function handleApplyClick(product: PurchaseProduct) {
 
         console.log("Apply click for", product);
         if (product.type !== "cosmetic") {
@@ -454,6 +454,7 @@
         }
         SoundManager.getInstance().playCue("uiSelect");
         metaStore.setActiveSkin(product.effect.skinId);
+        await metaStore.saveProgress();
     }
 
     function getTimedProductTimer(product: any): string {

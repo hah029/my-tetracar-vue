@@ -2,6 +2,7 @@
 import { useGameState } from "@/store/gameState";
 import { useLevelStore } from "@/store/levelStore";
 import { usePlayerStore } from "@/store/playerStore";
+import { useMetaStore } from "@/store/metaStore";
 import { Car } from "./Car";
 import { type CarConfig, type CarStats } from "./types";
 import * as THREE from "three";
@@ -37,9 +38,19 @@ export class CarManager {
     this.stopPlayerVisualWatcher?.();
 
     const levelStore = useLevelStore();
+    const metaStore = useMetaStore();
     this.stopPlayerVisualWatcher = watch(
-      () => levelStore.currentLevel.player.visual,
-      () => this.applyPlayerVisualConfig(),
+      [
+        () => levelStore.currentLevel.player.visual,
+        () => metaStore.activeSkin,
+      ],
+      ([, skinId], [, previousSkinId]) => {
+        if (skinId !== previousSkinId) {
+          this.rebuildCarForSkin();
+          return;
+        }
+        this.applyPlayerVisualConfig();
+      },
       { deep: true },
     );
   }
@@ -130,6 +141,13 @@ export class CarManager {
     this.createNitroEffect();
     this.createShieldEffect();
     this.car.applyVisualConfig();
+  }
+
+  /** A skin can replace the body material or add mesh effects, so its body is rebuilt. */
+  private rebuildCarForSkin(): void {
+    if (!this.car) return;
+
+    void this.car.build(true).then(() => this.applyPlayerVisualConfig());
   }
 
   private createShieldEffect(): void {
