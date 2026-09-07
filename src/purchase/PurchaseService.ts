@@ -70,6 +70,7 @@ export class PurchaseService {
       // 6. Сохраняем прогресс
       const meta = useMetaStore();
       await meta.saveProgress();
+      await useProgressStore().saveArmorAndAmmo();
 
       Telemetry.emit({ type: "economy.purchase_completed", productId: product.id, currency: product.price.currency, amount: product.price.value });
 
