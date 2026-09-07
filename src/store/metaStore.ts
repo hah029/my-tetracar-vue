@@ -35,9 +35,7 @@ export const useMetaStore = defineStore("metaStore", () => {
   const upgrades = ref<Record<string, number>>({
     ammoLevel: 0,
     armorLevel: 0,
-    magnetRadiusLevel: 0,
-    magnetDurationLevel: 0,
-    magnetCapacityLevel: 0,
+    magnetLevel: 0,
     nitroDurationLevel: 0,
   });
 
@@ -62,23 +60,21 @@ export const useMetaStore = defineStore("metaStore", () => {
   const magnetRadiusLaneStep = computed(() => commonStore.config.xzScaling * 6);
   const magnetRadius = computed(() =>
     meta.base_counts.magnetRadius +
-    (upgrades.value.magnetRadiusLevel >= meta.max_upgrades.magnetRadiusLevel
+    (upgrades.value.magnetLevel >= meta.max_upgrades.magnetLevel
       ? magnetRadiusLaneStep.value
       : 0),
   );
   const magnetDuration = computed(
-    () => 6000 + upgrades.value.magnetDurationLevel * 1000,
+    () => 6000 + upgrades.value.magnetLevel * 1000,
   );
   const magnetMaxTargets = computed(
-    () => 2 + upgrades.value.magnetCapacityLevel * 2,
+    () => 2 + upgrades.value.magnetLevel * 2,
   );
   // Апгрейды (уровни)
   const maxUpgrades = ref<Record<string, any>>({
     ammoLevel: maxAmmo,
     armorLevel: maxArmor,
-    magnetRadiusLevel: magnetRadius,
-    magnetDurationLevel: meta.max_upgrades.magnetDurationLevel,
-    magnetCapacityLevel: meta.max_upgrades.magnetCapacityLevel,
+    magnetLevel: meta.max_upgrades.magnetLevel,
     nitroDurationLevel: meta.max_upgrades.nitroDurationLevel,
   });
 
@@ -298,7 +294,12 @@ export const useMetaStore = defineStore("metaStore", () => {
             parsed !== null &&
             !Array.isArray(parsed)
           ) {
-            upgrades.value = { ...upgrades.value, ...parsed };
+            const legacyMagnetLevel = Math.max(
+              Number(parsed.magnetRadiusLevel) || 0,
+              Number(parsed.magnetDurationLevel) || 0,
+              Number(parsed.magnetCapacityLevel) || 0,
+            );
+            upgrades.value = { ...upgrades.value, ...parsed, magnetLevel: Math.max(parsed.magnetLevel ?? 0, legacyMagnetLevel) };
           }
         } catch {
           // keep defaults

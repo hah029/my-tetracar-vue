@@ -136,7 +136,7 @@ export const usePlayerStore = defineStore("playerStore", () => {
   );
   const magnetFieldTurns = computed(() =>
     Math.round(
-      6 * Math.pow(1.5, metaStore.getUpgradeLevel("magnetCapacityLevel")),
+      6 * Math.pow(1.5, metaStore.getUpgradeLevel("magnetLevel")),
     ),
   );
   const magnetTypes = ref([] as any[]);

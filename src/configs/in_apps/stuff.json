@@ -112,44 +112,16 @@
         }
     },
     {
-        "id": "magnetRadiusIncreasing",
+        "id": "magnetIncreasing",
         "type": "upgrade",
-        "title": "Увеличение радиуса магнита",
-        "description": "Увеличивает радиус действия магнита на 1 полосу",
+        "title": "Усиление магнита",
+        "description": "Увеличивает длительность на 1 секунду и захват на 2 объекта. На максимальном уровне радиус увеличивается на 1 полосу",
         "price": {
             "value": 100,
             "currency": "golden"
         },
         "effect": {
-            "upgrade": "magnetRadiusLevel",
-            "value": 1
-        }
-    },
-    {
-        "id": "magnetDurationIncreasing",
-        "type": "upgrade",
-        "title": "Продление магнита",
-        "description": "Увеличивает время работы магнита на 1 секунду",
-        "price": {
-            "value": 100,
-            "currency": "golden"
-        },
-        "effect": {
-            "upgrade": "magnetDurationLevel",
-            "value": 1
-        }
-    },
-    {
-        "id": "magnetCapacityIncreasing",
-        "type": "upgrade",
-        "title": "Усиление захвата магнита",
-        "description": "Увеличивает число одновременно притягиваемых объектов на 2",
-        "price": {
-            "value": 100,
-            "currency": "golden"
-        },
-        "effect": {
-            "upgrade": "magnetCapacityLevel",
+            "upgrade": "magnetLevel",
             "value": 1
         }
     }

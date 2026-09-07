@@ -141,7 +141,7 @@ export const DAILY_GIFT_REWARDS: DailyGiftDayConfig[] = [
       {
         type: "upgrade",
         onceKey: "daily-gift-day-16-upgrade",
-        effect: { upgrade: "magnetRadiusLevel", value: 1 },
+        effect: { upgrade: "magnetLevel", value: 1 },
         fallback: {
           type: "currency",
           effect: { currency: "golden", amount: 1750 },

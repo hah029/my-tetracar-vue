@@ -293,17 +293,13 @@
     const upgradeValueLabels: Record<string, string> = {
         ammoLevel: "Патроны",
         armorLevel: "Броня",
-        magnetRadiusLevel: "Радиус",
-        magnetDurationLevel: "Длительность",
-        magnetCapacityLevel: "Захват",
+        magnetLevel: "Магнит",
     };
 
     const upgradeValueSteps: Record<string, number> = {
         ammoLevel: 1,
         armorLevel: 1,
-        magnetRadiusLevel: 1,
-        magnetDurationLevel: 1,
-        magnetCapacityLevel: 2,
+        magnetLevel: 1,
     };
 
     function getItemId(item: any): string {
@@ -536,17 +532,8 @@
             case "armorLevel":
                 return metaStore.maxArmor;
 
-            case "magnetRadiusLevel":
-                return metaStore.magnetRadiusLaneStep > 0 &&
-                    metaStore.getUpgradeLevel("magnetRadiusLevel") >= meta.max_upgrades.magnetRadiusLevel
-                    ? 1
-                    : 0;
-
-            case "magnetDurationLevel":
-                return metaStore.magnetDuration / 1000;
-
-            case "magnetCapacityLevel":
-                return metaStore.magnetMaxTargets;
+            case "magnetLevel":
+                return metaStore.getUpgradeLevel("magnetLevel");
 
             default:
                 return null;
@@ -568,19 +555,18 @@
             return "";
         }
 
-        if (upgradeKey === "magnetRadiusLevel") {
-            if (upgradeInfo.level >= upgradeInfo.maxLevel) {
-                return `${label}: ${currentValue} ${getLaneWord(currentValue)}`;
-            }
+        if (upgradeKey === "magnetLevel") {
+            const getMagnetStats = (level: number) => {
+                const duration = 6 + level;
+                const targets = 2 + level * 2;
+                const radiusBonus = level >= upgradeInfo.maxLevel ? ", +1 полоса" : "";
+                return `${duration} сек, захват ${targets}${radiusBonus}`;
+            };
 
-            const nextValue = upgradeInfo.level + 1 >= upgradeInfo.maxLevel ? 1 : 0;
-            return `${label}: ${currentValue} -> ${nextValue} ${getLaneWord(nextValue)}`;
-        }
-
-        if (upgradeKey === "magnetDurationLevel") {
+            const currentStats = getMagnetStats(upgradeInfo.level);
             return upgradeInfo.level >= upgradeInfo.maxLevel
-                ? `${label}: ${currentValue} сек`
-                : `${label}: ${currentValue} -> ${currentValue + step} сек`;
+                ? `${label}: ${currentStats}`
+                : `${label}: ${currentStats} → ${getMagnetStats(upgradeInfo.level + step)}`;
         }
 
         if (upgradeInfo.level >= upgradeInfo.maxLevel) {
@@ -591,8 +577,8 @@
     }
 
     function getMagnetLevelString(): string {
-        const level = metaStore.getUpgradeLevel("magnetRadiusLevel");
-        const maxLevel = meta.max_upgrades.magnetRadiusLevel;
+        const level = metaStore.getUpgradeLevel("magnetLevel");
+        const maxLevel = meta.max_upgrades.magnetLevel;
 
         return `${level} / ${maxLevel}`;
     }
