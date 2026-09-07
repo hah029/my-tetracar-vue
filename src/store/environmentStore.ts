@@ -64,6 +64,12 @@ export const useEnvironmentStore = defineStore("environmentStore", () => {
           scale: road.sideObjects.scale,
         }
       : undefined;
+    const lampPosts = road.lampPosts
+      ? {
+          ...road.lampPosts,
+          color: colorToNumber(road.lampPosts.color),
+        }
+      : undefined;
 
     return {
       ...neonRoadConfig.value,
@@ -75,6 +81,7 @@ export const useEnvironmentStore = defineStore("environmentStore", () => {
       emissiveIntensity: road.emissiveIntensity,
       opacity: road.opacity,
       sideObjects,
+      lampPosts,
       roadMode: road.roadMode ?? "static",
       enableElevatedSegments: road.enableElevatedSegments ?? false,
       enableCurvedSegments: road.enableCurvedSegments ?? false,

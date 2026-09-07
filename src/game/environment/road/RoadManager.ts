@@ -8,6 +8,7 @@ import { RoadLane } from "./RoadLane";
 import { SpeedLine } from "./SpeedLine";
 import { RoadEdge } from "./edges";
 import { SideObjectsInstanced } from "./SideObjectsInstanced";
+import { LampPostsInstanced } from "./LampPostsInstanced";
 import { RoadElevatedSection } from "./RoadElevatedSection";
 import {
     RoadSegmentSurface,
@@ -38,6 +39,8 @@ export class RoadManager {
     private idleSegmentSurface: RoadSegmentSurface | null = null;
     private leftSideObjects: SideObjectsInstanced | null = null;
     private rightSideObjects: SideObjectsInstanced | null = null;
+    private leftLampPosts: LampPostsInstanced | null = null;
+    private rightLampPosts: LampPostsInstanced | null = null;
     private carManager = CarManager.getInstance();
     private config!: RoadConfig;
     private scene: THREE.Scene | null = null;
@@ -87,6 +90,7 @@ export class RoadManager {
         }
         this.addElevatedSections();
         this.addSideObjects();
+        this.addLampPosts();
     };
 
     private addIdleSegmentSurface(): void {
@@ -293,6 +297,34 @@ export class RoadManager {
         this.rightSideObjects = null;
     };
 
+    private addLampPosts(): void {
+        if (!this.road || !this.scene) return;
+        const lampPosts = this.config.lampPosts;
+        if (!lampPosts?.enabled) return;
+
+        const { left, right } = this.road.getEdgePositions();
+        const startZ = useCommonStore().config.itemsRemovingZpos;
+        const endZ = this.config.length;
+        const config = {
+          ...lampPosts,
+          spacing: lampPosts.spacing * useCommonStore().config.xzScaling,
+        };
+
+        this.leftLampPosts = new LampPostsInstanced(
+          this.scene, left - lampPosts.offset, startZ, endZ, config, 1,
+        );
+        this.rightLampPosts = new LampPostsInstanced(
+          this.scene, right + lampPosts.offset, startZ, endZ, config, -1,
+        );
+    }
+
+    private clearLampPosts(): void {
+        this.leftLampPosts?.dispose();
+        this.rightLampPosts?.dispose();
+        this.leftLampPosts = null;
+        this.rightLampPosts = null;
+    }
+
     private addEdges(): void {
         if (!this.road) return;
 
@@ -408,6 +440,8 @@ export class RoadManager {
 
         this.leftSideObjects?.update(deltaTime, speed);
         this.rightSideObjects?.update(deltaTime, speed);
+        this.leftLampPosts?.update(deltaTime, speed);
+        this.rightLampPosts?.update(deltaTime, speed);
 
         if (this.isSegmentedMode()) {
           for (let i = this.segmentSurfaces.length - 1; i >= 0; i--) {
@@ -484,6 +518,7 @@ export class RoadManager {
         this.clearIdleSegmentSurface();
 
         this.clearSideObjects();
+        this.clearLampPosts();
     };
 
     private clearIdleSegmentSurface(): void {

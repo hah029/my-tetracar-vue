@@ -63,12 +63,23 @@
                 <template v-for="(group, groupIndex) in boosterGroups" :key="group.key">
                     <div class="booster_group" :class="`booster_group--${group.key}`">
                         <div v-for="booster in group.items" :key="booster.key" class="booster_item">
+                            <template v-if="booster.key === 'bullet'">
+                                <div class="ammo-magazine" aria-label="Боезапас">
+                                    <span v-for="(round, index) in ammoRounds" :key="index"
+                                        class="ammo-round" :class="[`ammo-round--${round}`, { 'ammo-round--next': index === ammoRounds.length - 1 }]">
+                                        <img src="@/assets/images/hud/cube_bullet.svg" alt="" />
+                                        <i v-if="round !== 'normal'" class="ammo-round__mark">{{ getAmmoRoundMark(round) }}</i>
+                                    </span>
+                                </div>
+                            </template>
+                            <template v-else>
                             <div class="booster_value" :class="booster.textColorClass">{{ booster.displayValue }}</div>
                             <div class="boosters_image_container">
                                 <img v-if="booster.isActive" class="icon with_shadow" :src="booster.activeIcon" />
                                 <img v-else class="icon with_white_glow"
                                     src="@/assets/images/hud/cube_booster_empty.svg" />
                             </div>
+                            </template>
                         </div>
                     </div>
                     <div v-if="groupIndex === 0" class="booster_group_divider"></div>
@@ -207,6 +218,19 @@ const boosters = computed(() => {
     ];
     return items;
 });
+
+const ammoRounds = computed(() => playerStore.ammoStack);
+
+function getAmmoRoundMark(round: string): string {
+    const marks: Record<string, string> = {
+        blank: '○',
+        piercing: 'III',
+        explosive: '✦',
+        fan: '≋',
+        railgun: '╫',
+    };
+    return marks[round] ?? '';
+}
 
 const boosterGroups = computed(() => [
     {
@@ -627,6 +651,15 @@ $booster-icon-size: 1.875rem;
     position: relative;
     flex: 0 0 auto;
 }
+
+.ammo-magazine { display: flex; align-items: flex-end; gap: 0.18rem; min-width: 5.2rem; min-height: 2.2rem; }
+.ammo-round { position: relative; width: 1.25rem; height: 1.25rem; opacity: .58; transform: translateY(0); transition: transform 140ms ease, opacity 140ms ease, filter 140ms ease; }
+.ammo-round img { width: 100%; height: 100%; display: block; filter: drop-shadow(0 0 4px rgba(255, 60, 35, .55)); }
+.ammo-round__mark { position: absolute; inset: 0; display: grid; place-items: center; color: #fff; font: 800 .48rem/1 system-ui, sans-serif; font-style: normal; text-shadow: 0 0 3px #ff2d22, 0 0 5px #ff2d22; pointer-events: none; }
+.ammo-round--next { opacity: 1; transform: translateY(-0.34rem) scale(1.22); }
+.ammo-round--piercing img, .ammo-round--explosive img, .ammo-round--fan img, .ammo-round--railgun img { animation: ammo-round-pulse .75s ease-in-out infinite alternate; }
+.ammo-round--blank { opacity: .35; filter: grayscale(1); }
+@keyframes ammo-round-pulse { to { filter: drop-shadow(0 0 9px rgba(255, 255, 255, .95)); } }
 
 .with_shadow {
     filter: drop-shadow(0 2px 15px rgba(0, 0, 0, 0.35));

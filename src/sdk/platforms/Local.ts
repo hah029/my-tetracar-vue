@@ -1,10 +1,14 @@
-import type { LeaderboardDescription, LeaderboardEntry, LeaderboardEntriesData } from "ysdk";
+import type {
+  LeaderboardDescription,
+  LeaderboardEntry,
+  LeaderboardEntriesData,
+} from "ysdk";
 import type { IGamePlatform, PlatformAdCallbacks } from "../IGamePlatform";
 const DEFAULT_AVATAR = [
-    '/src/assets/images/avatars/awatar_anonymous_1.jpg',
-    '/src/assets/images/avatars/awatar_anonymous_2.jpg',
-    '/src/assets/images/avatars/awatar_anonymous_3.jpg',
-    '/src/assets/images/avatars/awatar_anonymous_4.jpg'
+  "/src/assets/images/avatars/awatar_anonymous_1.jpg",
+  "/src/assets/images/avatars/awatar_anonymous_2.jpg",
+  "/src/assets/images/avatars/awatar_anonymous_3.jpg",
+  "/src/assets/images/avatars/awatar_anonymous_4.jpg",
 ];
 
 type Stats = Record<string | number, number>;
@@ -29,41 +33,41 @@ interface LocalLeaderboardEntry {
 
 // Описание таблицы лидеров
 interface ILeaderboardDescription {
-    appID: string;
-    default: boolean;
-    description: {
-        invert_sort_order: boolean;
-        score_format: {
-            options: {
-                decimal_offset: number;
-            };
-            type: 'numeric' | 'time';
-        };
-        sort_order: string;
+  appID: string;
+  default: boolean;
+  description: {
+    invert_sort_order: boolean;
+    score_format: {
+      options: {
+        decimal_offset: number;
+      };
+      type: "numeric" | "time";
     };
-    name: string;
-    title: Record<Locale, string>;
+    sort_order: string;
+  };
+  name: string;
+  title: Record<Locale, string>;
 }
 
 // Запись в таблице лидеров
 interface ILeaderboardEntry {
-    extraData: string;
-    rank: number;
-    score: number;
-    player: {
-        publicName: string;
-        uniqueID: string;
-        getAvatarSrc: (size?: 'small' | 'medium' | 'large') => string;
-        getAvatarSrcSet: (size?: 'small' | 'medium' | 'large') => string;
-    }
+  extraData: string;
+  rank: number;
+  score: number;
+  player: {
+    publicName: string;
+    uniqueID: string;
+    getAvatarSrc: (size?: "small" | "medium" | "large") => string;
+    getAvatarSrcSet: (size?: "small" | "medium" | "large") => string;
+  };
 }
 
 // Результат метода getEntries()
 interface ILeaderboardEntries {
-    leaderboard: ILeaderboardDescription;
-    ranges: { start: number; size: number; }[];
-    userRank: number;
-    entries: ILeaderboardEntry[];
+  leaderboard: ILeaderboardDescription;
+  ranges: { start: number; size: number }[];
+  userRank: number;
+  entries: ILeaderboardEntry[];
 }
 
 export class LocalStoragePlatform implements IGamePlatform {
@@ -84,7 +88,7 @@ export class LocalStoragePlatform implements IGamePlatform {
         name: "Developer",
         stats: {},
         data: {},
-        getAvatarSrc: '',
+        getAvatarSrc: "",
       };
       this.storage.setItem(this.PLAYER_KEY, JSON.stringify(defaultPlayer));
     }
@@ -138,16 +142,29 @@ export class LocalStoragePlatform implements IGamePlatform {
   }
 
   showStickyBannerAd(): void {
-    if (this.stickyBanner || typeof document === "undefined" || !document.body) return;
+    if (this.stickyBanner || typeof document === "undefined" || !document.body)
+      return;
 
     const banner = document.createElement("div");
     banner.setAttribute("data-testid", "local-sticky-banner-mock");
     banner.style.cssText = [
-      "position:fixed", "left:50%", "bottom:12px", "z-index:99998",
-      "transform:translateX(-50%)", "width:min(640px,calc(100% - 24px))",
-      "padding:12px 16px", "border:1px solid #ffd84d", "border-radius:10px",
-      "background:#18223c", "box-shadow:0 10px 30px rgba(0,0,0,.45)",
-      "font:600 14px system-ui,sans-serif", "color:#fff", "text-align:center",
+      "position:fixed",
+      "left:50%",
+      "top:12px",
+      "z-index:99998",
+      "opacity:0.75",
+      // This mock is visual-only: controls beneath it must still receive input.
+      "pointer-events:none",
+      "transform:translateX(-50%)",
+      "width:min(640px,calc(100% - 24px))",
+      "padding:12px 16px",
+      "border:1px solid #ffd84d",
+      "border-radius:10px",
+      "background:#18223c",
+      "box-shadow:0 10px 30px rgba(0,0,0,.45)",
+      "font:600 14px system-ui,sans-serif",
+      "color:#fff",
+      "text-align:center",
     ].join(";");
     banner.textContent = "DEV MOCK: Sticky banner";
     document.body.append(banner);
@@ -175,14 +192,23 @@ export class LocalStoragePlatform implements IGamePlatform {
     const overlay = document.createElement("div");
     overlay.setAttribute("data-testid", "local-ad-mock");
     overlay.style.cssText = [
-      "position:fixed", "inset:0", "z-index:99999", "display:grid",
-      "place-items:center", "padding:24px", "background:rgba(5,8,17,.9)",
-      "font-family:system-ui,sans-serif", "color:#fff", "text-align:center",
+      "position:fixed",
+      "inset:0",
+      "z-index:99999",
+      "display:grid",
+      "place-items:center",
+      "padding:24px",
+      "background:rgba(5,8,17,.9)",
+      "font-family:system-ui,sans-serif",
+      "color:#fff",
+      "text-align:center",
     ].join(";");
 
     const panel = document.createElement("div");
-    panel.style.cssText = "width:min(420px,100%);padding:32px;border:2px solid #ffd84d;border-radius:16px;background:#18223c;box-shadow:0 18px 60px rgba(0,0,0,.55)";
-    const title = format === "rewarded" ? "Rewarded реклама" : "Полноэкранная реклама";
+    panel.style.cssText =
+      "width:min(420px,100%);padding:32px;border:2px solid #ffd84d;border-radius:16px;background:#18223c;box-shadow:0 18px 60px rgba(0,0,0,.55)";
+    const title =
+      format === "rewarded" ? "Rewarded реклама" : "Полноэкранная реклама";
     panel.innerHTML = `<strong style="display:block;font-size:24px;margin-bottom:12px">DEV MOCK: ${title}</strong><p style="margin:0 0 24px">Проверьте обработку callback-ов без внешнего SDK.</p>`;
 
     let completed = false;
@@ -190,7 +216,8 @@ export class LocalStoragePlatform implements IGamePlatform {
       if (completed) return;
       completed = true;
       overlay.remove();
-      if (action === "error") callbacks.onError?.(new Error("dev_mock_ad_error"));
+      if (action === "error")
+        callbacks.onError?.(new Error("dev_mock_ad_error"));
       else {
         if (action === "reward") callbacks.onRewarded?.();
         callbacks.onClose?.();
@@ -200,12 +227,14 @@ export class LocalStoragePlatform implements IGamePlatform {
       const button = document.createElement("button");
       button.type = "button";
       button.textContent = label;
-      button.style.cssText = "margin:6px;padding:10px 16px;border:0;border-radius:8px;background:#ffd84d;color:#18223c;font-weight:700;cursor:pointer";
+      button.style.cssText =
+        "margin:6px;padding:10px 16px;border:0;border-radius:8px;background:#ffd84d;color:#18223c;font-weight:700;cursor:pointer";
       button.addEventListener("click", () => finish(action));
       panel.append(button);
     };
 
-    if (format === "rewarded") addButton("Получить награду и закрыть", "reward");
+    if (format === "rewarded")
+      addButton("Получить награду и закрыть", "reward");
     else addButton("Закрыть рекламу", "close");
     addButton("Симулировать ошибку", "error");
     overlay.append(panel);
@@ -305,7 +334,7 @@ export class LocalStoragePlatform implements IGamePlatform {
         playerId: player!.id,
         playerName: player!.name,
         score,
-        getAvatarSrc: player!.getAvatarSrc || '',
+        getAvatarSrc: player!.getAvatarSrc || "",
       });
     }
 
@@ -322,55 +351,58 @@ export class LocalStoragePlatform implements IGamePlatform {
     const boards = this.getLeaderboards();
     const board = boards[leaderboardName] || [];
     const player = this.getPlayer();
-  
+
     // 1. Формируем leaderboard (убран лишний sort_order)
     const leaderboardDescription: LeaderboardDescription = {
-      appID: 'local_app',
+      appID: "local_app",
       default: false,
       description: {
         invert_sort_order: false,
         score_format: {
           options: { decimal_offset: 0 },
         },
-        type: 'numberic', // ← "numberic" (с опечаткой, как в SDK)
+        type: "numberic", // ← "numberic" (с опечаткой, как в SDK)
       },
       name: leaderboardName,
       title: {
-        ru: 'Таблица лидеров',
-        en: 'Leaderboard',
+        ru: "Таблица лидеров",
+        en: "Leaderboard",
       },
     };
-  
+
     // 2. Формируем entries с правильным player
-    const topEntries: LeaderboardEntry[] = board.slice(0, quantityTop).map((entry, index) => ({
-      rank: index + 1,
-      score: entry.score,
-      extraData: '',
-      formattedScore: String(entry.score),
-      player: {
-        lang: 'ru', // ← обязательное поле
-        publicName: entry.playerName,
-        scopePermissions: { // ← обязательное поле
-          avatar: '',
-          public_name: entry.playerName,
+    const topEntries: LeaderboardEntry[] = board
+      .slice(0, quantityTop)
+      .map((entry, index) => ({
+        rank: index + 1,
+        score: entry.score,
+        extraData: "",
+        formattedScore: String(entry.score),
+        player: {
+          lang: "ru", // ← обязательное поле
+          publicName: entry.playerName,
+          scopePermissions: {
+            // ← обязательное поле
+            avatar: "",
+            public_name: entry.playerName,
+          },
+          uniqueID: entry.playerId,
+          getAvatarSrc: (size?: "small" | "medium" | "large") => {
+            //   return entry.getAvatarSrc || '/src/assets/images/avatars/awatar_anonymous_1.jpg';
+            const imageIndex = Math.floor(Math.random() * 4);
+            return entry.getAvatarSrc || DEFAULT_AVATAR[imageIndex];
+          },
+          getAvatarSrcSet: (size?: "small" | "medium" | "large") => {
+            //   return entry.getAvatarSrc || '/src/assets/images/avatars/awatar_anonymous_1.jpg';
+            const imageIndex = Math.floor(Math.random() * 4);
+            return entry.getAvatarSrc || DEFAULT_AVATAR[imageIndex];
+          },
         },
-        uniqueID: entry.playerId,
-        getAvatarSrc: (size?: 'small' | 'medium' | 'large') => {
-          //   return entry.getAvatarSrc || '/src/assets/images/avatars/awatar_anonymous_1.jpg';
-          const imageIndex = Math.floor(Math.random() * 4);
-          return entry.getAvatarSrc || DEFAULT_AVATAR[imageIndex];
-        },
-        getAvatarSrcSet: (size?: 'small' | 'medium' | 'large') => {
-          //   return entry.getAvatarSrc || '/src/assets/images/avatars/awatar_anonymous_1.jpg';
-          const imageIndex = Math.floor(Math.random() * 4);
-          return entry.getAvatarSrc || DEFAULT_AVATAR[imageIndex];
-        },
-      },
-    }));
-  
+      }));
+
     // 3. Поиск пользователя (только rank)
     let userRank: number = 0;
-  
+
     if (includeUser) {
       const userRankIndex = board.findIndex(
         (entry) => entry.playerId === player!.id,
@@ -379,14 +411,14 @@ export class LocalStoragePlatform implements IGamePlatform {
         userRank = userRankIndex + 1;
       }
     }
-  
+
     // 4. Возвращаем объект без userEntry
     return {
-        leaderboard: leaderboardDescription,
-        entries: topEntries,
-        userRank,
-        ranges: [],
-      };
+      leaderboard: leaderboardDescription,
+      entries: topEntries,
+      userRank,
+      ranges: [],
+    };
   }
 
   // ------------------------------------------------------------------

@@ -36,6 +36,8 @@ import { BulletItem } from "@/game/interactive/items/booster/BulletItem";
 import { NitroItem } from "@/game/interactive/items/booster/NitroItem";
 import { ShieldItem } from "@/game/interactive/items/booster/ShieldItem";
 import { MagnetItem } from "@/game/interactive/items/booster/MagnetItem";
+import { CoinItem } from "@/game/interactive/items/coin/CoinItem";
+import { BoosterItem } from "@/game/interactive/items/booster/BoosterItem";
 import { MagnetSystem } from "@/game/magnet/MagnetSystem";
 import { useEnvironmentStore } from "@/store/environmentStore";
 import { RunTelemetry } from "@/telemetry";
@@ -439,9 +441,10 @@ export function useGame() {
       return;
     }
 
-    bulletSystem.spawnBullet(carManager.getCar());
+    const variant = playerStore.consumeAmmo();
+    if (!variant) return;
+    bulletSystem.spawnBullet(carManager.getCar(), variant, playerStore.bulletSpeed);
     RunTelemetry.recordShotFired();
-    playerStore.consumeAmmo();
     soundManager.playCue("shot");
     CameraSystem.triggerShotShake();
   }
@@ -538,7 +541,11 @@ export function useGame() {
         return false;
       }
 
-      playerStore.addAmmo();
+      playerStore.addAmmo(
+        collision.impactSubject.userData.corruptedBoost === "blankBullet"
+          ? "blank"
+          : (collision.impactSubject.userData.superBullet as import("@/game/combat/BulletVariant").BulletVariant | undefined) ?? "normal",
+      );
       RunTelemetry.recordItemCollected("ammo");
       playerStore.addNewMsg("ammoRefilled");
       playerStore.makeEventHappened("addBullet");
@@ -602,6 +609,7 @@ export function useGame() {
 
     if (collision.impactSubject instanceof MagnetItem) {
       const corruptedBoost = collision.impactSubject.userData.corruptedBoost;
+      const isSuperMagnet = collision.impactSubject.userData.superMagnet === true;
       const magnetMode =
         corruptedBoost === "lethalMagnet"
           ? "lethalPull"
@@ -610,8 +618,11 @@ export function useGame() {
             : "pull";
 
       playerStore.enableMagnet(
-        collision.impactSubject.userData.magnetTypes!,
+        isSuperMagnet
+          ? [CoinItem, BoosterItem]
+          : collision.impactSubject.userData.magnetTypes!,
         magnetMode,
+        isSuperMagnet ? "super" : "normal",
       );
       RunTelemetry.recordItemCollected("magnet");
       soundManager.startCueLoop("magnetActive");
@@ -620,7 +631,9 @@ export function useGame() {
           ? "unstableMagnetActivated"
           : magnetMode === "repulse"
             ? "inverseMagnetActivated"
-            : "magnetActivated",
+            : isSuperMagnet
+              ? "superMagnetActivated"
+              : "magnetActivated",
       );
       playerStore.makeEventHappened("addMagnet");
       soundManager.playCue("magnetPickup");

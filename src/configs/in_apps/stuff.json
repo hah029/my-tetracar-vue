@@ -85,7 +85,7 @@
         "id": "bulletCapacityExtending",
         "type": "upgrade",
         "title": "Расширение слотов под патроны",
-        "description": "Увеличивает максимальное количество патронов на 2 + пополняет запас",
+        "description": "Увеличивает максимальное количество патронов на 1 и скорость пули на 0.05 + пополняет запас",
         "price": {
             "value": 5000,
             "currency": "golden"
@@ -122,6 +122,34 @@
         },
         "effect": {
             "upgrade": "magnetRadiusLevel",
+            "value": 1
+        }
+    },
+    {
+        "id": "magnetDurationIncreasing",
+        "type": "upgrade",
+        "title": "Продление магнита",
+        "description": "Увеличивает время работы магнита на 1 секунду",
+        "price": {
+            "value": 100,
+            "currency": "golden"
+        },
+        "effect": {
+            "upgrade": "magnetDurationLevel",
+            "value": 1
+        }
+    },
+    {
+        "id": "magnetCapacityIncreasing",
+        "type": "upgrade",
+        "title": "Усиление захвата магнита",
+        "description": "Увеличивает число одновременно притягиваемых объектов на 2",
+        "price": {
+            "value": 100,
+            "currency": "golden"
+        },
+        "effect": {
+            "upgrade": "magnetCapacityLevel",
             "value": 1
         }
     }

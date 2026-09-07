@@ -3,9 +3,11 @@ export default {
     ammoLevel: 3,
     armorLevel: 3,
     magnetRadiusLevel: 3,
+    magnetDurationLevel: 3,
+    magnetCapacityLevel: 3,
   },
   base_counts: {
-    ammo: 10,
+    ammo: 3,
     shield: 1,
     magnetRadius: 10,
   },

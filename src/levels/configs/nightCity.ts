@@ -77,6 +77,17 @@ const nightCity = {
         y: 0.4,
         scale: [1.75, 1.4, 1.75],
       },
+      lampPosts: {
+        enabled: true,
+        color: "#00FFFF",
+        opacity: 0.55,
+        spacing: 150,
+        offset: 1.2,
+        height: 12,
+        armLength: 10,
+        armAngleDeg: 60,
+        thickness: 0.16,
+      },
     },
 
     scenery: {

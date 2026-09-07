@@ -48,7 +48,7 @@ export default {
   bulletGeometry: [1, 1, 1] as [number, number, number],
 
   // Дроп при разрушении
-  allowCorruptedBoostDrops: false,
+  allowCorruptedBoostDrops: true,
   destroyedRolldropWeights: {
     golden_coin: 20,
     bullet: 20,

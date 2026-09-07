@@ -40,6 +40,7 @@ export interface RoadConfig {
   atlas?: TextureAtlas;
   atlasSprite?: string;
   sideObjects?: RoadSideObjectsConfig;
+  lampPosts?: RoadLampPostsConfig;
   elevatedSections?: RoadElevatedSectionConfig[];
   /**
    * `static` keeps one large immovable surface. `segmented` creates and moves
@@ -78,6 +79,20 @@ export interface RoadSideObjectsConfig {
   offset: number;
   y: number;
   scale: [number, number, number];
+}
+
+/** Decorative neon lamp posts placed outside both road edges. */
+export interface RoadLampPostsConfig {
+  enabled: boolean;
+  color: number;
+  opacity: number;
+  spacing: number;
+  offset: number;
+  height: number;
+  armLength: number;
+  /** Angle between the upward pole direction and the arm, in degrees. */
+  armAngleDeg: number;
+  thickness: number;
 }
 
 export interface SpeedLineConfig {

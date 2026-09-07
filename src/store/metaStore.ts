@@ -36,6 +36,8 @@ export const useMetaStore = defineStore("metaStore", () => {
     ammoLevel: 0,
     armorLevel: 0,
     magnetRadiusLevel: 0,
+    magnetDurationLevel: 0,
+    magnetCapacityLevel: 0,
   });
 
   // Постоянные возможности
@@ -46,22 +48,34 @@ export const useMetaStore = defineStore("metaStore", () => {
 
   // ===== COMPUTED (формулы из shop.md п.8) =====
   const maxAmmo = computed(
-    () => meta.base_counts.ammo + upgrades.value.ammoLevel * 2,
+    () => meta.base_counts.ammo + upgrades.value.ammoLevel,
+  );
+  const bulletSpeed = computed(
+    () => commonStore.config.bulletDefaultSpeed + upgrades.value.ammoLevel * 0.05,
   );
   const maxArmor = computed(
     () => meta.base_counts.shield + upgrades.value.armorLevel,
   );
   const magnetRadiusLaneStep = computed(() => commonStore.config.xzScaling * 6);
-  const magnetRadius = computed(
-    () =>
-      meta.base_counts.magnetRadius +
-      upgrades.value.magnetRadiusLevel * magnetRadiusLaneStep.value,
+  const magnetRadius = computed(() =>
+    meta.base_counts.magnetRadius +
+    (upgrades.value.magnetRadiusLevel >= meta.max_upgrades.magnetRadiusLevel
+      ? magnetRadiusLaneStep.value
+      : 0),
+  );
+  const magnetDuration = computed(
+    () => 6000 + upgrades.value.magnetDurationLevel * 1000,
+  );
+  const magnetMaxTargets = computed(
+    () => 2 + upgrades.value.magnetCapacityLevel * 2,
   );
   // Апгрейды (уровни)
   const maxUpgrades = ref<Record<string, any>>({
     ammoLevel: maxAmmo,
     armorLevel: maxArmor,
     magnetRadiusLevel: magnetRadius,
+    magnetDurationLevel: meta.max_upgrades.magnetDurationLevel,
+    magnetCapacityLevel: meta.max_upgrades.magnetCapacityLevel,
   });
 
   // ===== ВАЛЮТА =====
@@ -347,9 +361,12 @@ export const useMetaStore = defineStore("metaStore", () => {
 
     // computed
     maxAmmo,
+    bulletSpeed,
     maxArmor,
     magnetRadiusLaneStep,
     magnetRadius,
+    magnetDuration,
+    magnetMaxTargets,
     maxUpgrades,
 
     // валюта

@@ -70,6 +70,7 @@
             "maxArmor": "max armor reached!",
             "nitroActivated": "nitro activated!",
             "magnetActivated": "magnet activated!",
+            "superMagnetActivated": "super magnet activated!",
             "ammoRefilled": "ammo refilled!",
             "maxAmmo": "max ammo reached!",
             "outOfAmmo": "out of ammo!",

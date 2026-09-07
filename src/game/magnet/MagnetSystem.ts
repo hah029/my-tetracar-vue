@@ -11,7 +11,6 @@ export class MagnetSystem {
   private static instance: MagnetSystem | null = null;
   private scene!: THREE.Scene;
   private magnetField: THREE.Group | null = null;
-  private readonly fieldLineCount = 24;
   private readonly markersPerFieldLine = 1;
   private lastPullSoundAt = 0;
 
@@ -72,7 +71,7 @@ export class MagnetSystem {
     this.updateMagnetField(car, playerStore.isMagnetEnabled, now);
 
     if (!playerStore.isMagnetEnabled) {
-      items.forEach((item) => this.removeRepulseBeam(item));
+      items.forEach((item) => this.releaseItem(item));
       return;
     }
 
@@ -80,21 +79,23 @@ export class MagnetSystem {
     const radiusSq = radius * radius;
     const carPos = car.position;
 
-    for (let i = items.length - 1; i >= 0; i--) {
-      const item = items[i];
-      if (!item) continue;
+    const targets = items
+      .filter((item) =>
+        types.some((T) => item instanceof T) &&
+        !item.userData.corruptedBoost &&
+        item.position.distanceToSquared(carPos) <= radiusSq,
+      )
+      .sort(
+        (a, b) =>
+          a.position.distanceToSquared(carPos) -
+          b.position.distanceToSquared(carPos),
+      )
+      .slice(0, playerStore.magnetMaxTargets);
+    const targetSet = new Set(targets);
 
-      const isAllowedType = types.some((T) => item instanceof T);
-      if (!isAllowedType) {
-        this.removeRepulseBeam(item);
-        continue;
-      }
-
-      const distSq = item.position.distanceToSquared(carPos);
-      const isInRadius = distSq <= radiusSq;
-
-      if (!isInRadius) {
-        this.removeRepulseBeam(item);
+    for (const item of items) {
+      if (!targetSet.has(item)) {
+        this.releaseItem(item);
         continue;
       }
 
@@ -194,6 +195,11 @@ export class MagnetSystem {
     this.removeItemBeam(item, "repulseLine");
   }
 
+  private releaseItem(item: BaseItem): void {
+    this.removeItemEffects(item);
+    if (item.userData.status === "magnetized") item.userData.status = "landed";
+  }
+
   /** Удаляет все визуальные следы магнита, привязанные к предмету. */
   public removeItemEffects(item: BaseItem): void {
     this.removeItemBeam(item, "magnetLine");
@@ -234,9 +240,14 @@ export class MagnetSystem {
           ? "#ff7a2a"
           : "#00eaff";
 
-    if (!this.magnetField || this.magnetField.userData.radius !== radius) {
+    const turns = playerStore.magnetFieldTurns;
+    if (
+      !this.magnetField ||
+      this.magnetField.userData.radius !== radius ||
+      this.magnetField.userData.turns !== turns
+    ) {
       this.removeMagnetField();
-      this.magnetField = this.createMagnetField(color, radius);
+      this.magnetField = this.createMagnetField(color, radius, turns);
       this.scene.add(this.magnetField);
     }
 
@@ -262,9 +273,14 @@ export class MagnetSystem {
     this.updateMagnetFieldMarkers(now, direction);
   }
 
-  private createMagnetField(color: string, radius: number): THREE.Group {
+  private createMagnetField(
+    color: string,
+    radius: number,
+    turns: number,
+  ): THREE.Group {
     const field = new THREE.Group();
     field.userData.radius = radius;
+    field.userData.turns = turns;
 
     const lineMaterial = new THREE.ShaderMaterial({
       transparent: true,
@@ -288,15 +304,15 @@ export class MagnetSystem {
       blending: THREE.AdditiveBlending,
     });
 
-    for (let i = 0; i < this.fieldLineCount; i++) {
+    for (let i = 0; i < turns; i++) {
       const lineGroup = new THREE.Group();
-      const majorAngle = (i / this.fieldLineCount) * Math.PI * 2;
+      const majorAngle = (i / turns) * Math.PI * 2;
       const majorRadius = radius * 0.58;
       const minorRadius = radius * 0.28;
       lineGroup.userData.majorRadius = majorRadius;
       lineGroup.userData.minorRadius = minorRadius;
       lineGroup.userData.majorAngle = majorAngle;
-      lineGroup.userData.phase = (i / this.fieldLineCount) * Math.PI * 2;
+      lineGroup.userData.phase = (i / turns) * Math.PI * 2;
 
       const geometry = this.createFieldLineGeometry(
         majorRadius,

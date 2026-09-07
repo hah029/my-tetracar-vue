@@ -11,6 +11,7 @@ import type {
   NitroTrailVisualConfig,
   ShieldVisualConfig,
 } from "@/levels/types";
+import type { BulletVariant } from "@/game/combat/BulletVariant";
 
 const DEFAULT_NITRO_TRAIL: NitroTrailVisualConfig = {
   color: "#66ff66",
@@ -35,6 +36,7 @@ const DEFAULT_SHIELD: ShieldVisualConfig = {
 };
 
 export type MagnetMode = "pull" | "lethalPull" | "repulse";
+export type MagnetVariant = "normal" | "super";
 
 export const usePlayerStore = defineStore("playerStore", () => {
   const progressStore = useProgressStore();
@@ -115,9 +117,25 @@ export const usePlayerStore = defineStore("playerStore", () => {
 
   const isMagnetEnabled = ref(false);
   const magnetTimer = ref(config.value.magnet.baseTimer);
-  const magnetRadius = computed(() => metaStore.magnetRadius);
+  const magnetVariant = ref<MagnetVariant>("normal");
+  const magnetRadius = computed(() =>
+    metaStore.magnetRadius *
+    (magnetVariant.value === "super"
+      ? config.value.magnet.superRadiusMultiplier
+      : 1),
+  );
   const magnetForce = ref(config.value.magnet.force);
-  const magnetMaxTargets = ref(config.value.magnet.maxTargets);
+  const magnetMaxTargets = computed(() =>
+    metaStore.magnetMaxTargets +
+    (magnetVariant.value === "super"
+      ? config.value.magnet.superMaxTargetsBonus
+      : 0),
+  );
+  const magnetFieldTurns = computed(() =>
+    Math.round(
+      6 * Math.pow(1.5, metaStore.getUpgradeLevel("magnetCapacityLevel")),
+    ),
+  );
   const magnetTypes = ref([] as any[]);
   const magnetMode = ref<MagnetMode>("pull");
 
@@ -128,7 +146,9 @@ export const usePlayerStore = defineStore("playerStore", () => {
   const maxArmor = computed(() => metaStore.maxArmor);
 
   const ammo = ref(0);
+  const ammoStack = ref<BulletVariant[]>([]);
   const maxAmmo = computed(() => metaStore.maxAmmo);
+  const bulletSpeed = computed(() => metaStore.bulletSpeed);
   const bodyMass = computed(() =>
     carCubesConfig.value.reduce((sum, cube) => {
       const [sx, sy, sz] = cube.scale;
@@ -245,18 +265,25 @@ export const usePlayerStore = defineStore("playerStore", () => {
     );
   }
 
-  function enableMagnet(types: any[], mode: MagnetMode = "pull") {
+  function enableMagnet(
+    types: any[],
+    mode: MagnetMode = "pull",
+    variant: MagnetVariant = "normal",
+  ) {
     isMagnetEnabled.value = true;
-    magnetTimer.value = config.value.magnet.baseTimer;
+    magnetVariant.value = variant;
+    magnetTimer.value =
+      variant === "super" ? config.value.magnet.superTimer : metaStore.magnetDuration;
     magnetTypes.value = types;
     magnetMode.value = mode;
   }
 
   function disableMagnet() {
     isMagnetEnabled.value = false;
-    magnetTimer.value = config.value.magnet.baseTimer;
+    magnetTimer.value = metaStore.magnetDuration;
     magnetTypes.value = [];
     magnetMode.value = "pull";
+    magnetVariant.value = "normal";
   }
 
   function addArmor(): void {
@@ -392,12 +419,21 @@ export const usePlayerStore = defineStore("playerStore", () => {
     setMassEnabled(!isMassEnabled.value);
   }
 
-  function addAmmo(): void {
-    if (ammo.value < maxAmmo.value) ammo.value += 1;
+  function addAmmo(variant: BulletVariant = "normal"): boolean {
+    if (ammo.value >= maxAmmo.value) return false;
+    ammo.value += 1;
+    ammoStack.value.push(variant);
+    return true;
   }
 
-  function consumeAmmo() {
-    if (ammo.value > 0) ammo.value -= 1;
+  function consumeAmmo(): BulletVariant | null {
+    if (ammo.value <= 0) return null;
+    ammo.value -= 1;
+    return ammoStack.value.pop() ?? "normal";
+  }
+
+  function fillAmmo(): void {
+    while (ammo.value < maxAmmo.value) addAmmo();
   }
 
   function canShoot(): boolean {
@@ -493,7 +529,9 @@ export const usePlayerStore = defineStore("playerStore", () => {
     armor,
     maxArmor,
     ammo,
+    ammoStack,
     maxAmmo,
+    bulletSpeed,
     goldenNitroMultiplier,
     energonNitroMultiplier,
     notificationMsg,
@@ -504,8 +542,10 @@ export const usePlayerStore = defineStore("playerStore", () => {
     magnetRadius,
     magnetForce,
     magnetMaxTargets,
+    magnetFieldTurns,
     magnetTypes,
     magnetMode,
+    magnetVariant,
     forceJump,
     isMassEnabled,
     mass,
@@ -543,6 +583,7 @@ export const usePlayerStore = defineStore("playerStore", () => {
     getShieldConfig,
     addAmmo,
     consumeAmmo,
+    fillAmmo,
     addArmor,
     reduceShield,
     canShoot,

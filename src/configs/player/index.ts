@@ -56,9 +56,12 @@ export default {
 
   // магнит
   magnet: {
-    baseTimer: 10000,
+    baseTimer: 6000,
     force: 40,
-    maxTargets: 8,
+    maxTargets: 2,
+    superTimer: 8000,
+    superRadiusMultiplier: 1.75,
+    superMaxTargetsBonus: 6,
   },
 
   // визуальные эффекты

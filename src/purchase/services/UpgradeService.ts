@@ -28,7 +28,7 @@ class UpgradeServiceClass {
     const player = usePlayerStore();
 
     if (effect.refill === "ammo") {
-      player.ammo = meta.maxAmmo;
+      player.fillAmmo();
     } else if (effect.refill === "armor") {
       player.armor = meta.maxArmor;
       // Включаем флаг щита, чтобы броня работала при столкновениях

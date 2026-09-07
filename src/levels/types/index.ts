@@ -260,6 +260,9 @@ export interface RoadEnvironmentConfig {
    */
   sideObjects?: RoadSideObjectsConfig;
 
+  /** Неоновые фонарные столбы по обеим сторонам дороги. */
+  lampPosts?: RoadLampPostsConfig;
+
   /**
    * Короткие секции дороги, поднятые над базовой плоскостью.
    */
@@ -308,6 +311,19 @@ export interface RoadSideObjectsConfig {
   offset: number;
   y: number;
   scale: [number, number, number];
+}
+
+export interface RoadLampPostsConfig {
+  enabled: boolean;
+  color: string;
+  opacity: number;
+  spacing: number;
+  offset: number;
+  height: number;
+  armLength: number;
+  /** Угол между стойкой и консолью, в градусах. */
+  armAngleDeg: number;
+  thickness: number;
 }
 
 export interface SceneryConfig {
@@ -598,6 +614,13 @@ export interface GameplayConfig {
    */
   corruptedBoostChance: number;
 
+  /** Chance that a normally spawned magnet becomes a temporary super-magnet. */
+  superMagnetChance: number;
+
+  /** Chance that a bullet pickup becomes a super-ammo pickup. */
+  superBulletChance: number;
+  superBulletWeights: Record<"piercing" | "explosive" | "fan" | "railgun", number>;
+
   /**
    * Веса конкретных corrupted-вариантов внутри уже инвертированного буста.
    */
@@ -617,15 +640,18 @@ export interface GameplayConfig {
 export type CorruptedNitroVariant = "heavyNitro";
 export type CorruptedShieldVariant = "blindShield";
 export type CorruptedMagnetVariant = "lethalMagnet" | "repulseMagnet";
+export type CorruptedBulletVariant = "blankBullet";
 export type CorruptedBoostVariant =
   | CorruptedNitroVariant
   | CorruptedShieldVariant
-  | CorruptedMagnetVariant;
+  | CorruptedMagnetVariant
+  | CorruptedBulletVariant;
 
 export interface CorruptedBoostWeights {
   nitro: Record<CorruptedNitroVariant, number>;
   shield: Record<CorruptedShieldVariant, number>;
   magnet: Record<CorruptedMagnetVariant, number>;
+  bullet: Record<CorruptedBulletVariant, number>;
 }
 
 export interface MusicConfig {

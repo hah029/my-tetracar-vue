@@ -30,6 +30,7 @@ import { Golden } from "./items/coin/Golden";
 import { Energon } from "./items/coin/Energon";
 import { RunTelemetry, type ItemType as TelemetryItemType } from "@/telemetry";
 import type { CorruptedBoostVariant } from "@/levels/types";
+import { SUPER_BULLET_VARIANTS, type BulletVariant } from "@/game/combat/BulletVariant";
 import { RoadManager } from "@/game/environment/road";
 import { SoundManager } from "@/game/sound/SoundManager";
 import type {
@@ -901,6 +902,14 @@ export class InteractiveItemsManager {
     }
 
     const gameplay = useLevelStore().currentGameplay;
+    if (item instanceof BulletItem && Math.random() < gameplay.superBulletChance) {
+      this.markSuperBullet(item, this.pickSuperBulletVariant(gameplay.superBulletWeights));
+      return;
+    }
+    if (item instanceof MagnetItem && Math.random() < gameplay.superMagnetChance) {
+      this.markSuperMagnet(item);
+      return;
+    }
     const chance = gameplay.corruptedBoostChance;
     if (chance <= 0 || Math.random() > chance) return;
 
@@ -928,6 +937,14 @@ export class InteractiveItemsManager {
         this.pickWeightedCorruptedVariant(
           gameplay.corruptedBoostWeights.magnet,
         ),
+      );
+      return;
+    }
+
+    if (item instanceof BulletItem) {
+      this.markCorruptedBoost(
+        item,
+        this.pickWeightedCorruptedVariant(gameplay.corruptedBoostWeights.bullet),
       );
     }
   }
@@ -960,12 +977,37 @@ export class InteractiveItemsManager {
     };
   }
 
+  private markSuperMagnet(item: MagnetItem) {
+    item.userData.superMagnet = true;
+    // Reuse the existing pulsing material path, with a distinct gold colour.
+    item.userData.corruptedBoostPulse = {
+      color: 0xffdf4a,
+      time: Math.random() * 1000,
+    };
+  }
+
+  private pickSuperBulletVariant(weights: Record<Exclude<BulletVariant, "normal">, number>): BulletVariant {
+    const total = SUPER_BULLET_VARIANTS.reduce((sum, variant) => sum + Math.max(0, weights[variant]), 0);
+    let roll = Math.random() * total;
+    for (const variant of SUPER_BULLET_VARIANTS) {
+      roll -= Math.max(0, weights[variant]);
+      if (roll <= 0) return variant;
+    }
+    return "piercing";
+  }
+
+  private markSuperBullet(item: BulletItem, variant: BulletVariant) {
+    item.userData.superBullet = variant;
+    item.userData.corruptedBoostPulse = { color: 0xff3030, time: Math.random() * 1000 };
+  }
+
   private getCorruptedEmissionColor(variant: CorruptedBoostVariant) {
     const colorByVariant: Record<CorruptedBoostVariant, number> = {
       heavyNitro: 0xff2a7a,
       lethalMagnet: 0xff1f1f,
       repulseMagnet: 0x28d7ff,
       blindShield: 0xf7fbff,
+      blankBullet: 0xff3030,
     };
 
     return colorByVariant[variant] ?? 0xff2a7a;

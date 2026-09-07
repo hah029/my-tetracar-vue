@@ -70,6 +70,7 @@
             "maxArmor": "достигнут максимум брони!",
             "nitroActivated": "нитро активировано!",
             "magnetActivated": "магнит запущен!",
+            "superMagnetActivated": "супермагнит запущен!",
             "ammoRefilled": "боезапас пополнен!",
             "maxAmmo": "достигнут максимум патронов!",
             "outOfAmmo": "нет патронов!",
