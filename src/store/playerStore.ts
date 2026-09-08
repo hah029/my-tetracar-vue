@@ -13,6 +13,7 @@ import type {
 } from "@/levels/types";
 import type { BulletVariant } from "@/game/combat/BulletVariant";
 import { getPlayerSkinConfig } from "@/configs/skins";
+import meta from "@/configs/meta";
 export type ArmorVariant = "normal" | "super";
 
 const DEFAULT_NITRO_TRAIL: NitroTrailVisualConfig = {
@@ -129,26 +130,26 @@ export const usePlayerStore = defineStore("playerStore", () => {
   const isNitroEnabled = ref(false);
   const isSuperNitro = ref(false);
   const nitroSafetyActive = ref(false);
-  const nitroTimer = ref(config.value.nitro.baseTimer);
-  const goldenNitroMultiplier = ref(2);
-  const energonNitroMultiplier = ref(2);
+  const nitroTimer = ref(metaStore.nitroDuration);
+  const goldenNitroMultiplier = ref(meta.specialModes.nitro.normal.rewardMultiplier);
+  const energonNitroMultiplier = ref(meta.specialModes.nitro.normal.rewardMultiplier);
   const nitroMultiplierCurrent = ref(1);
   const nitroMultiplierTarget = ref(1);
 
   const isMagnetEnabled = ref(false);
-  const magnetTimer = ref(config.value.magnet.baseTimer);
+  const magnetTimer = ref(metaStore.magnetDuration);
   const magnetVariant = ref<MagnetVariant>("normal");
   const magnetRadius = computed(() =>
     metaStore.magnetRadius *
     (magnetVariant.value === "super"
-      ? config.value.magnet.superRadiusMultiplier
+      ? meta.specialModes.magnet.super.radiusMultiplier
       : 1),
   );
   const magnetForce = ref(config.value.magnet.force);
   const magnetMaxTargets = computed(() =>
     metaStore.magnetMaxTargets +
     (magnetVariant.value === "super"
-      ? config.value.magnet.superMaxTargetsBonus
+      ? meta.specialModes.magnet.super.maxTargetsBonus
       : 0),
   );
   const magnetFieldTurns = computed(() =>
@@ -245,12 +246,15 @@ export const usePlayerStore = defineStore("playerStore", () => {
     }
     isNitroEnabled.value = true;
     isSuperNitro.value = superNitro;
-    nitroSafetyActive.value = !corrupted;
-    nitroTimer.value = superNitro ? config.value.nitro.superTimer : metaStore.nitroDuration;
+    const nitroMode = superNitro ? meta.specialModes.nitro.super : corrupted ? meta.specialModes.nitro.corrupted : meta.specialModes.nitro.normal;
+    nitroSafetyActive.value = nitroMode.invulnerable;
+    nitroTimer.value = superNitro
+      ? meta.specialModes.nitro.super.durationMs
+      : metaStore.nitroDuration;
     corruptedNitroEnabled.value = corrupted;
     corruptedNitroMass.value = 0;
-    nitroMultiplierTarget.value = corrupted ? 1.25 : superNitro ? config.value.nitro.superMultiplier : config.value.nitro.multiplier;
-    goldenNitroMultiplier.value = superNitro ? config.value.nitro.superRewardMultiplier : corrupted ? 1 : 2;
+    nitroMultiplierTarget.value = nitroMode.speedMultiplier;
+    goldenNitroMultiplier.value = nitroMode.rewardMultiplier;
     energonNitroMultiplier.value = goldenNitroMultiplier.value;
     if (renderInstance.value != null) {
       renderInstance.value.setAfterImagePassAmount(
@@ -267,8 +271,8 @@ export const usePlayerStore = defineStore("playerStore", () => {
     corruptedNitroMass.value = 0;
     nitroTimer.value = metaStore.nitroDuration;
     nitroMultiplierTarget.value = 1;
-    goldenNitroMultiplier.value = 2;
-    energonNitroMultiplier.value = 2;
+    goldenNitroMultiplier.value = meta.specialModes.nitro.normal.rewardMultiplier;
+    energonNitroMultiplier.value = meta.specialModes.nitro.normal.rewardMultiplier;
     if (progressStore.currentMultiplier != 1) {
       progressStore.reduceMultiplier(2);
     }
@@ -305,7 +309,7 @@ export const usePlayerStore = defineStore("playerStore", () => {
     isMagnetEnabled.value = true;
     magnetVariant.value = variant;
     magnetTimer.value =
-      variant === "super" ? config.value.magnet.superTimer : metaStore.magnetDuration;
+      variant === "super" ? meta.specialModes.magnet.super.durationMs : metaStore.magnetDuration;
     magnetTypes.value = types;
     magnetMode.value = mode;
   }
@@ -396,7 +400,7 @@ export const usePlayerStore = defineStore("playerStore", () => {
     const massPenalty =
       getMassPenalty() * config.value.mass.controlPenaltyPerMassRatio;
     const nitroPenalty = corruptedNitroEnabled.value
-      ? config.value.mass.corruptedNitroControlPenalty
+      ? meta.specialModes.nitro.corrupted.controlPenalty
       : 0;
 
     return Math.max(
@@ -541,9 +545,7 @@ export const usePlayerStore = defineStore("playerStore", () => {
     CAR_MATERIAL_CONFIG_EXTRA: carMaterialConfigExtra,
     CAR_EMISSION_CONFIG_EXTRA: carEmissionConfigExtra,
     CAR_NEON_EDGES_CONFIG: neonEdgesConfig,
-    NITRO_MULTIPLIER: config.value.nitro.multiplier,
-    BASE_NITRO_TIMER: config.value.nitro.baseTimer,
-    BASE_MAGNET_TIMER: config.value.magnet.baseTimer,
+    NITRO_MULTIPLIER: meta.specialModes.nitro.normal.speedMultiplier,
     BASE_SPEED: config.value.baseSpeed,
     FORCED_JUMP_MULTIPLIER: config.value.forcedJumpMultiplier,
     JUMP_HEIGHT: config.value.jumpHeight,

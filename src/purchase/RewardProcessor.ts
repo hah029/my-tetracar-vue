@@ -5,9 +5,9 @@ import { EffectService } from "./services/EffectService";
 import { WalletService } from "./services/WalletService";
 import { usePlayerStore } from "@/store/playerStore";
 import { useMetaStore } from "@/store/metaStore";
+import { getUpgradeMaxLevel } from "@/configs/meta";
 
 import type { RewardReceipt } from "@/telemetry/events";
-import metaConfig from "@/configs/meta";
 
 import type { RewardDefinition } from "./types";
 
@@ -17,7 +17,7 @@ export class RewardProcessor {
     const alreadyClaimed = reward.onceKey && meta.claimedRewardKeys.includes(reward.onceKey);
     const unavailableSkin = reward.type === "cosmetic" &&
       (!reward.effect.skinId || reward.effect.skinId === "???" || InventoryService.isSkinOwned(reward.effect.skinId));
-    const maxLevel = metaConfig.max_upgrades[reward.effect?.upgrade as keyof typeof metaConfig.max_upgrades];
+    const maxLevel = getUpgradeMaxLevel(reward.effect?.upgrade);
     const cappedUpgrade = reward.type === "upgrade" &&
       (maxLevel === undefined || meta.getUpgradeLevel(reward.effect.upgrade) >= maxLevel);
     if (alreadyClaimed || unavailableSkin || cappedUpgrade) {

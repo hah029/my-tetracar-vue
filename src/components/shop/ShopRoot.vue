@@ -147,6 +147,9 @@
                             </div>
 
                             <div class="card__bottom">
+                                <div v-if="item.type === 'upgrade'" class="card__upgrade_stats">
+                                    {{ getUpgradeValueString(item) }}
+                                </div>
                                 <div class="card__price_row">
                                     {{ getItemPrice(item) }}
                                     {{ getItemCurrency(item) }}
@@ -265,7 +268,6 @@
 
     import type { Product as PurchaseProduct } from "@/purchase/types/Product";
     import { SoundManager } from "@/game/sound/SoundManager";
-    import meta from "@/configs/meta";
 
     const gameState = useGameState();
     const shopStore = useShopStore();
@@ -289,18 +291,6 @@
         | "available"
         | "owned"
         | "not_enough_currency";
-
-    const upgradeValueLabels: Record<string, string> = {
-        ammoLevel: "Патроны",
-        armorLevel: "Броня",
-        magnetLevel: "Магнит",
-    };
-
-    const upgradeValueSteps: Record<string, number> = {
-        ammoLevel: 1,
-        armorLevel: 1,
-        magnetLevel: 1,
-    };
 
     function getItemId(item: any): string {
         return item.id ?? item.title ?? "";
@@ -371,30 +361,32 @@
     }
 
     function getItemPrice(item: any): string {
+        const price = shopStore.getEffectivePrice(item as PurchaseProduct);
         if (item.platformPriceLabel) {
             return item.platformPriceLabel;
         }
 
         if (
-            typeof item.price === "object" &&
-            item.price !== null
+            typeof price === "object" &&
+            price !== null
         ) {
-            return String(item.price.value);
+            return String(price.value);
         }
 
         return String(item.price ?? "");
     }
 
     function getItemCurrency(item: any): string {
+        const price = shopStore.getEffectivePrice(item as PurchaseProduct);
         if (item.platformPriceLabel) {
             return "";
         }
 
         if (
-            typeof item.price === "object" &&
-            item.price !== null
+            typeof price === "object" &&
+            price !== null
         ) {
-            return getCurrencyLabel(item.price.currency);
+            return getCurrencyLabel(price.currency);
         }
 
         return getCurrencyLabel(
@@ -453,7 +445,8 @@
             return;
         }
         SoundManager.getInstance().playCue("uiSelect");
-        metaStore.setActiveSkin(product.effect.skinId);
+        // `null` is the intentional ID of the built-in fallback skin.
+        metaStore.setActiveSkin(product.effect.defaultSkin ? null : product.effect.skinId);
         await metaStore.saveProgress();
     }
 
@@ -492,7 +485,7 @@
         }
 
         const level = metaStore.getUpgradeLevel(product.effect?.upgrade);
-        const maxLevel = meta.max_upgrades[product.effect?.upgrade];
+        const maxLevel = metaStore.getMaxUpgradeLevel(product.effect?.upgrade) ?? 0;
 
         if (level === null) {
             return { level, maxLevel };
@@ -525,61 +518,64 @@
         return `Уровень: ${upgradeInfo!.level} / ${upgradeInfo!.maxLevel}`;
     }
 
-    function getUpgradeValue(product: any): number | null {
-        switch (product.effect?.upgrade) {
-            case "ammoLevel":
-                return metaStore.maxAmmo;
-
-            case "armorLevel":
-                return metaStore.maxArmor;
-
-            case "magnetLevel":
-                return metaStore.getUpgradeLevel("magnetLevel");
-
-            default:
-                return null;
-        }
-    }
-
     function getUpgradeValueString(product: any): string {
         if (product.type !== "upgrade") {
             return "";
         }
 
         const upgradeKey = product.effect?.upgrade;
-        const currentValue = getUpgradeValue(product);
         const upgradeInfo = getUpgradeLevel(product);
-        const label = upgradeValueLabels[upgradeKey];
-        const step = upgradeValueSteps[upgradeKey] ?? product.effect?.value ?? 0;
-
-        if (!label || currentValue === null || !upgradeInfo) {
+        if (!upgradeKey || !upgradeInfo) {
             return "";
         }
 
+        const formatTransition = (format: (level: number) => string) => {
+            const current = format(upgradeInfo.level);
+            return upgradeInfo.level >= upgradeInfo.maxLevel
+                ? current
+                : `${current} → ${format(upgradeInfo.level + 1)}`;
+        };
+
         if (upgradeKey === "magnetLevel") {
             const getMagnetStats = (level: number) => {
-                const duration = 6 + level;
-                const targets = 2 + level * 2;
-                const radiusBonus = level >= upgradeInfo.maxLevel ? ", +1 полоса" : "";
-                return `${duration} сек, захват ${targets}${radiusBonus}`;
+                const parameters = metaStore.getUpgradeParameters("magnetLevel", level)!;
+                const duration = parameters.durationMs / 1000;
+                const targets = parameters.maxTargets;
+                const radiusBonus = parameters.radiusLaneBonus > 0 ? " • радиус +1 полоса" : "";
+                return `${duration} сек • захват ${targets}${radiusBonus}`;
             };
-
-            const currentStats = getMagnetStats(upgradeInfo.level);
-            return upgradeInfo.level >= upgradeInfo.maxLevel
-                ? `${label}: ${currentStats}`
-                : `${label}: ${currentStats} → ${getMagnetStats(upgradeInfo.level + step)}`;
+            return formatTransition(getMagnetStats);
         }
 
-        if (upgradeInfo.level >= upgradeInfo.maxLevel) {
-            return `${label}: ${currentValue}`;
+        if (upgradeKey === "ammoLevel") {
+            const getAmmoStats = (level: number) => {
+                const parameters = metaStore.getUpgradeParameters("ammoLevel", level)!;
+                return `боезапас ${parameters.count} • скорость ${parameters.speed.toFixed(2)}`;
+            };
+            return formatTransition(getAmmoStats);
         }
 
-        return `${label}: ${currentValue} -> ${currentValue + step}`;
+        if (upgradeKey === "armorLevel") {
+            const getArmorStats = (level: number) => {
+                const parameters = metaStore.getUpgradeParameters("armorLevel", level)!;
+                return `заряды ${parameters.count} • волна ${parameters.waveRadius}`;
+            };
+            return formatTransition(getArmorStats);
+        }
+
+        if (upgradeKey === "nitroDurationLevel") {
+            return formatTransition((level) => {
+                const parameters = metaStore.getUpgradeParameters("nitroDurationLevel", level)!;
+                return `длительность ${parameters.durationMs / 1000} сек`;
+            });
+        }
+
+        return "";
     }
 
     function getMagnetLevelString(): string {
         const level = metaStore.getUpgradeLevel("magnetLevel");
-        const maxLevel = meta.max_upgrades.magnetLevel;
+        const maxLevel = metaStore.getMaxUpgradeLevel("magnetLevel") ?? 0;
 
         return `${level} / ${maxLevel}`;
     }
@@ -919,6 +915,14 @@
         align-items: center;
         flex-wrap: wrap;
         gap: .5rem;
+    }
+
+    .card__upgrade_stats {
+        flex: 1 1 100%;
+        color: #9fcaff;
+        font-family: 'jost-light';
+        font-size: clamp(.72rem, 1.3vmin, .9rem);
+        line-height: 1.2;
     }
 
     .card__title {

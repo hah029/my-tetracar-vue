@@ -20,6 +20,7 @@ import { useProgressStore } from "@/store/progressStore";
 import { usePlayerStore } from "@/store/playerStore";
 import { useLevelStore } from "@/store/levelStore";
 import { useMetaStore } from "@/store/metaStore";
+import { BOOST_SPECIAL_MODES } from "@/configs/meta";
 // objects
 import type { CarRef } from "@/game/car";
 import { CameraSystem } from "@/game/camera/CameraSystem";
@@ -469,14 +470,14 @@ export function useGame() {
     if (playerStore.isShieldEnabled) {
       const impact = collision.impactPoint!;
       const chargeVariant = playerStore.armorStack[playerStore.armorStack.length - 1] ?? "normal";
-      const radius = chargeVariant === "super" ? 14 : useMetaStore().shieldWaveRadius;
+      const radius = chargeVariant === "super" ? BOOST_SPECIAL_MODES.shield.super.waveRadius : useMetaStore().shieldWaveRadius;
       const affected = radius > 0
         ? obstacleManager!.getObstacles().filter((obstacle) => obstacle.position.distanceTo(impact) <= radius)
         : [collision.impactSubject as BaseObstacle];
       destroyObstacles(impact, affected);
 
       if (playerStore.corruptedShieldEnabled) {
-        playerStore.triggerShieldBlindness(450);
+        playerStore.triggerShieldBlindness(BOOST_SPECIAL_MODES.shield.corrupted.blindnessMs);
         while (playerStore.armor > 0) playerStore.reduceShield();
       } else {
         playerStore.reduceShield();

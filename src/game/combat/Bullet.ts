@@ -1,6 +1,7 @@
 import { useCommonStore } from "@/store/commonStore";
 import * as THREE from "three";
 import type { BulletVariant } from "./BulletVariant";
+import { BOOST_SPECIAL_MODES } from "@/configs/meta";
 
 export class Bullet extends THREE.Mesh {
   protected lane: number;
@@ -19,7 +20,7 @@ export class Bullet extends THREE.Mesh {
   ) {
     const geometry = useCommonStore().getBulletGeometry();
     const geo = variant === "railgun"
-      ? new THREE.BoxGeometry(geometry[0], geometry[1], 100)
+      ? new THREE.BoxGeometry(geometry[0], geometry[1], BOOST_SPECIAL_MODES.bullet.railgun.length)
       : new THREE.BoxGeometry(...geometry);
 
     const mat = new THREE.MeshStandardMaterial({
@@ -30,7 +31,7 @@ export class Bullet extends THREE.Mesh {
     this.lane = lane;
     this.variant = variant;
     this.speed = speed ?? this.speed;
-    this.remainingHits = variant === "piercing" ? 3 : variant === "railgun" ? Number.POSITIVE_INFINITY : 1;
+    this.remainingHits = variant === "piercing" ? BOOST_SPECIAL_MODES.bullet.piercing.maxHits : variant === "railgun" ? Number.POSITIVE_INFINITY : 1;
   }
 
   update(dt: number) {

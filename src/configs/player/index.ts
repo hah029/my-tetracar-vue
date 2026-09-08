@@ -39,19 +39,12 @@ export default {
     controlPenaltyPerMassRatio: 0.18,
     jumpPenaltyPerMassRatio: 0.24,
     speedPenaltyPerMassRatio: 0.08,
-    corruptedNitroControlPenalty: 0.18,
     lateralAcceleration: 0.03,
     lateralDamping: 0.18,
   },
 
   // нитро
   nitro: {
-    multiplier: 1.5,
-    baseTimer: 3000,
-    timerPerLevel: 1000,
-    superTimer: 2500,
-    superMultiplier: 3,
-    superRewardMultiplier: 10,
     afterImagePass: 0.8,
     rgbShift: 0.003,
     accelInSpeed: 0.005,
@@ -60,12 +53,7 @@ export default {
 
   // магнит
   magnet: {
-    baseTimer: 6000,
     force: 40,
-    maxTargets: 2,
-    superTimer: 8000,
-    superRadiusMultiplier: 1.75,
-    superMaxTargetsBonus: 6,
   },
 
   // визуальные эффекты

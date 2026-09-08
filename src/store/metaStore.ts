@@ -5,7 +5,7 @@ import { Platform } from "@/sdk/Platform";
 
 import { DEFAULT_FORTUNE_WHEEL_PRESET, isFortuneWheelPresetId, type FortuneWheelPresetId } from "@/configs/fortuneWheel";
 
-import meta from "@/configs/meta";
+import meta, { getUpgradeMaxLevel, getUpgradeState } from "@/configs/meta";
 import { useCommonStore } from "@/store/commonStore";
 
 export interface TimedEffect {
@@ -46,36 +46,27 @@ export const useMetaStore = defineStore("metaStore", () => {
   const activeTimedEffects = ref<TimedEffect[]>([]);
 
   // ===== COMPUTED (формулы из shop.md п.8) =====
-  const maxAmmo = computed(
-    () => meta.base_counts.ammo + upgrades.value.ammoLevel,
-  );
-  const bulletSpeed = computed(
-    () => commonStore.config.bulletDefaultSpeed + upgrades.value.ammoLevel * 0.05,
-  );
-  const nitroDuration = computed(() => 3000 + upgrades.value.nitroDurationLevel * 1000);
-  const maxArmor = computed(
-    () => meta.base_counts.shield + (upgrades.value.armorLevel >= 3 ? 1 : 0),
-  );
-  const shieldWaveRadius = computed(() => [0, 3, 5, 7][Math.min(3, upgrades.value.armorLevel)] ?? 0);
+  const ammoUpgrade = computed(() => getUpgradeState("ammoLevel", upgrades.value.ammoLevel)!);
+  const armorUpgrade = computed(() => getUpgradeState("armorLevel", upgrades.value.armorLevel)!);
+  const magnetUpgrade = computed(() => getUpgradeState("magnetLevel", upgrades.value.magnetLevel)!);
+  const nitroUpgrade = computed(() => getUpgradeState("nitroDurationLevel", upgrades.value.nitroDurationLevel)!);
+  const maxAmmo = computed(() => ammoUpgrade.value.count);
+  const bulletSpeed = computed(() => ammoUpgrade.value.speed);
+  const nitroDuration = computed(() => nitroUpgrade.value.durationMs);
+  const maxArmor = computed(() => armorUpgrade.value.count);
+  const shieldWaveRadius = computed(() => armorUpgrade.value.waveRadius);
   const magnetRadiusLaneStep = computed(() => commonStore.config.xzScaling * 6);
   const magnetRadius = computed(() =>
-    meta.base_counts.magnetRadius +
-    (upgrades.value.magnetLevel >= meta.max_upgrades.magnetLevel
-      ? magnetRadiusLaneStep.value
-      : 0),
+    magnetUpgrade.value.radius + magnetUpgrade.value.radiusLaneBonus * magnetRadiusLaneStep.value,
   );
-  const magnetDuration = computed(
-    () => 6000 + upgrades.value.magnetLevel * 1000,
-  );
-  const magnetMaxTargets = computed(
-    () => 2 + upgrades.value.magnetLevel * 2,
-  );
+  const magnetDuration = computed(() => magnetUpgrade.value.durationMs);
+  const magnetMaxTargets = computed(() => magnetUpgrade.value.maxTargets);
   // Апгрейды (уровни)
   const maxUpgrades = ref<Record<string, any>>({
-    ammoLevel: maxAmmo,
-    armorLevel: maxArmor,
-    magnetLevel: meta.max_upgrades.magnetLevel,
-    nitroDurationLevel: meta.max_upgrades.nitroDurationLevel,
+    ammoLevel: getUpgradeMaxLevel("ammoLevel"),
+    armorLevel: getUpgradeMaxLevel("armorLevel"),
+    magnetLevel: getUpgradeMaxLevel("magnetLevel"),
+    nitroDurationLevel: getUpgradeMaxLevel("nitroDurationLevel"),
   });
 
   // ===== ВАЛЮТА =====
@@ -153,7 +144,7 @@ export const useMetaStore = defineStore("metaStore", () => {
       upgrades.value[key] = 0;
     }
 
-    const maxLevel = meta.max_upgrades[key];
+    const maxLevel = getUpgradeMaxLevel(key);
     if (maxLevel === undefined) {
       return;
     }
@@ -161,6 +152,14 @@ export const useMetaStore = defineStore("metaStore", () => {
     if (upgrades.value[key] < maxLevel) {
       upgrades.value[key] = Math.min(upgrades.value[key] + amount, maxLevel);
     }
+  }
+
+  function getMaxUpgradeLevel(key: string): number | undefined {
+    return getUpgradeMaxLevel(key);
+  }
+
+  function getUpgradeParameters(key: string, level = getUpgradeLevel(key)) {
+    return getUpgradeState(key, level);
   }
 
   // ===== ПОСТОЯННЫЕ ФИЧИ =====
@@ -394,6 +393,8 @@ export const useMetaStore = defineStore("metaStore", () => {
     // апгрейды
     setUpgradeLevel,
     getUpgradeLevel,
+    getMaxUpgradeLevel,
+    getUpgradeParameters,
     increaseUpgrade,
 
     // постоянные фичи

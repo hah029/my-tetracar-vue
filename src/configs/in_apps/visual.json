@@ -1,5 +1,19 @@
 [
     {
+        "id": "carSkinDefault",
+        "type": "cosmetic",
+        "title": "Базовый скин",
+        "description": "Стандартный чёрный кузов без дополнительных эффектов.",
+        "price": {
+            "value": 0,
+            "currency": "golden"
+        },
+        "effect": {
+            "skinId": null,
+            "defaultSkin": true
+        }
+    },
+    {
         "id": "carSkinBasic1",
         "type": "cosmetic",
         "title": "Базовый скин 1",

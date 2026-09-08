@@ -7,6 +7,7 @@ import { Platform } from "@/sdk/Platform";
 import progressConfig from "@/configs/progress";
 import { fill } from "three/src/extras/TextureUtils.js";
 import { useObjectivesStore } from "@/store/objectivesStore";
+import { BOOST_SPECIAL_MODES } from "@/configs/meta";
 import type { BulletVariant } from "@/game/combat/BulletVariant";
 import type { ArmorVariant } from "@/store/playerStore";
 
@@ -63,7 +64,7 @@ export const useProgressStore = defineStore("progressStore", () => {
     let mplr = cfg.scoreMultiplier.base;
 
     if (playerStore.isNitroEnabled) {
-      mplr *= playerStore.isSuperNitro ? 10 : playerStore.corruptedNitroEnabled ? 1 : cfg.scoreMultiplier.growNitro;
+      mplr *= playerStore.isSuperNitro ? BOOST_SPECIAL_MODES.nitro.super.scoreMultiplier : playerStore.corruptedNitroEnabled ? BOOST_SPECIAL_MODES.nitro.corrupted.scoreMultiplier : BOOST_SPECIAL_MODES.nitro.normal.scoreMultiplier;
     }
 
     if (metaStore.isFeatureActive("scoreMultiplier")) {

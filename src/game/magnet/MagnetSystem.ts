@@ -1,4 +1,5 @@
 import * as THREE from "three";
+import meta from "@/configs/meta";
 import { Car } from "@/game/car/Car";
 import { BaseItem } from "@/game/interactive/items/BaseItem";
 import { usePlayerStore } from "@/store/playerStore";
@@ -41,7 +42,9 @@ export class MagnetSystem {
 
     const force =
       (playerStore.magnetForce ?? 8) *
-      (playerStore.magnetMode === "lethalPull" ? 0.45 : 1);
+      (playerStore.magnetMode === "lethalPull"
+        ? meta.specialModes.magnet.corrupted.lethalPull.forceMultiplier
+        : 1);
     const dt = deltaTime / 1000;
 
     const carPos = car.position;
@@ -107,7 +110,8 @@ export class MagnetSystem {
           dir.normalize();
           item.position.addScaledVector(
             dir,
-            (playerStore.magnetForce ?? 8) * 0.018,
+            (playerStore.magnetForce ?? 8) *
+              meta.specialModes.magnet.corrupted.repulse.pushDistance,
           );
           item.collider.center.copy(item.position);
         }

@@ -3,7 +3,6 @@ import { defineStore } from "pinia";
 import { Platform } from "@/sdk/Platform";
 import { ref, computed } from "vue";
 
-import metaConfig from "@/configs/meta";
 
 import currencyJson from "@/configs/in_apps/currency.json";
 import stuffJson from "@/configs/in_apps/stuff.json";
@@ -12,6 +11,7 @@ import type { Product as SdkProduct } from "@/sdk/types/Shop";
 import type { Product as PurchaseProduct } from "@/purchase/types/Product";
 import { PurchaseService } from "@/purchase/PurchaseService";
 import { useMetaStore } from "@/store/metaStore";
+import { getUpgradePrice } from "@/configs/meta";
 
 export const useShopStore = defineStore("shopStore", () => {
   const platform = Platform.getInstance();
@@ -104,6 +104,8 @@ export const useShopStore = defineStore("shopStore", () => {
 
     switch (product.type) {
       case "cosmetic":
+        // The fallback car appearance is available to every player and is never bought.
+        if (product.effect?.defaultSkin === true) return true;
         return meta.isSkinOwned(product.effect?.skinId);
 
       case "permanent_feature":
@@ -127,7 +129,7 @@ export const useShopStore = defineStore("shopStore", () => {
       case "upgrade": {
         const upgradeKey = product.effect?.upgrade;
         const currentLevel = meta.getUpgradeLevel(upgradeKey);
-        const maxLevel = metaConfig.max_upgrades[upgradeKey];
+        const maxLevel = meta.getMaxUpgradeLevel(upgradeKey);
         return currentLevel >= maxLevel;
       }
 
@@ -138,8 +140,9 @@ export const useShopStore = defineStore("shopStore", () => {
 
   function canAfford(product: PurchaseProduct): boolean {
     const meta = useMetaStore();
-    const currency = product.price.currency;
-    const amount = product.price.value;
+    const price = getEffectivePrice(product);
+    const currency = price.currency;
+    const amount = price.value;
 
     if (currency === "golden") {
       return meta.goldens >= amount;
@@ -151,11 +154,25 @@ export const useShopStore = defineStore("shopStore", () => {
     return true;
   }
 
+  function getEffectivePrice(product: PurchaseProduct): PurchaseProduct["price"] {
+    if (product.type !== "upgrade") return product.price;
+    const upgradeKey = product.effect?.upgrade;
+    const configuredPrice = getUpgradePrice(
+      upgradeKey,
+      useMetaStore().getUpgradeLevel(upgradeKey),
+    );
+    return configuredPrice ?? product.price;
+  }
+
   // ===== PURCHASE =====
   async function buyItem(product: PurchaseProduct) {
     let success = false;
     try {
-      const result = await purchaseService.purchase(product);
+      const productWithLevelPrice = {
+        ...product,
+        price: getEffectivePrice(product),
+      };
+      const result = await purchaseService.purchase(productWithLevelPrice);
 
       if (result.success) {
         success = true;
@@ -223,6 +240,7 @@ export const useShopStore = defineStore("shopStore", () => {
     loadCatalogs,
     isProductOwned,
     canAfford,
+    getEffectivePrice,
     buyItem,
     setView,
     show,

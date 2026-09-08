@@ -10,6 +10,7 @@ import { RunTelemetry } from "@/telemetry";
 import { getObstacleKind } from "../interactive/obstacle/telemetry";
 import { RoadManager } from "../environment/road";
 import type { BulletVariant } from "./BulletVariant";
+import { BOOST_SPECIAL_MODES } from "@/configs/meta";
 
 export class BulletSystem {
   private static instance: BulletSystem | null = null;
@@ -38,7 +39,7 @@ export class BulletSystem {
 
     if (variant === "fan") {
       const lanesCount = RoadManager.getInstance().getLanesCount();
-      for (const laneOffset of [-1, 0, 1]) {
+      for (const laneOffset of BOOST_SPECIAL_MODES.bullet.fan.laneOffsets) {
         const targetLane = lane + laneOffset;
         if (targetLane < 0 || targetLane >= lanesCount) continue;
         // All rounds leave the same muzzle point, then split at a broad angle.
@@ -46,7 +47,7 @@ export class BulletSystem {
           targetLane,
           "normal",
           speed,
-          laneOffset * 0.055,
+          laneOffset * BOOST_SPECIAL_MODES.bullet.fan.lateralSpeedStep,
         );
         fanBullet.position.copy(car.position);
         fanBullet.position.y = car.position.y + useCommonStore().baseItemYpos;
@@ -103,7 +104,7 @@ export class BulletSystem {
           if (bullet.variant === "explosive") {
             for (const nearby of obstacles) {
               if (nearby === obstacle) continue;
-              if (nearby.position.distanceTo(bullet.position) <= 7) {
+              if (nearby.position.distanceTo(bullet.position) <= BOOST_SPECIAL_MODES.bullet.explosive.radius) {
                 if (bullet.hitObstacles.has(nearby)) continue;
                 bullet.hitObstacles.add(nearby);
                 this.destroyObstacle(nearby, bullet.position.clone(), progressStore);
@@ -126,7 +127,7 @@ export class BulletSystem {
 
       if (removed) continue;
 
-      if (bullet.variant === "railgun" && performance.now() - bullet.createdAt > 150) {
+      if (bullet.variant === "railgun" && performance.now() - bullet.createdAt > BOOST_SPECIAL_MODES.bullet.railgun.lifetimeMs) {
         this.scene.remove(bullet);
         this.bullets.splice(i, 1);
       } else if (bullet.position.z < -this.MAX_DISTANCE) {
