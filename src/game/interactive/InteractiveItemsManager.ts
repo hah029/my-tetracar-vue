@@ -964,10 +964,9 @@ export class InteractiveItemsManager {
     this.markNonStandardBoost(item);
   }
 
-  /** Keeps the original booster material/atlas sprite and adds only a white pulse. */
+  /** Keeps the original booster material/atlas sprite and pulses its own emission. */
   private markNonStandardBoost(item: BaseItem) {
     item.userData.corruptedBoostPulse = {
-      color: 0xffffff,
       time: Math.random() * 1000,
     };
   }

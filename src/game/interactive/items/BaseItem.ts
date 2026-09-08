@@ -207,7 +207,7 @@ export class BaseItem extends THREE.Group {
 
   private updateCorruptedEmission(deltaTime: number) {
     const pulseConfig = this.userData.corruptedBoostPulse as
-      | { color: number; time: number }
+      | { time: number }
       | undefined;
     if (!pulseConfig) return;
 
@@ -222,7 +222,6 @@ export class BaseItem extends THREE.Group {
     const intensity = 0.75 + Math.sin(pulseConfig.time * 0.014) * 0.45;
 
     materials.forEach((material) => {
-      material.emissive.setHex(pulseConfig.color);
       material.emissiveIntensity = intensity;
     });
   }
