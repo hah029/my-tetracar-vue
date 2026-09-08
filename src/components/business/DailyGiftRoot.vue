@@ -9,30 +9,37 @@
     </div>
 
     <section class="daily-gift__content" aria-live="polite">
-      <!-- <p class="daily-gift__cycle">{{ t("dailyGift.cycle", { cycle: dailyGift.status.cycleNumber }) }}</p> -->
+      <div class="daily-gift__week-tabs" aria-label="Weeks">
+        <button v-for="week in weeks" :key="week" class="daily-gift__week-tab"
+          :class="{ active: week === selectedWeek }" @click="selectWeek(week)">
+          {{ week }}
+        </button>
+      </div>
 
-      <div ref="ribbon" class="ribbon" :class="{ 'is-dragging': isDragging }" aria-label="Daily rewards calendar"
-        @scroll.passive="updateFocusedDay" @mousedown.prevent="startDrag">
-        <article v-for="(day, index) in days" :key="day" :ref="(element) => setCardRef(element, index)"
-          class="ribbon__card" :class="getDayClass(day)" :style="getCardStyle(day)"
-          :aria-current="day === selectedDay ? 'true' : undefined" role="button" tabindex="0" @click="onCardClick(day)"
+      <div class="daily-gift__cards" aria-label="Daily rewards calendar">
+        <article v-for="day in weekDays" :key="day" class="daily-gift__card" :class="getDayClass(day)"
+          :aria-current="day === selectedDay ? 'true' : undefined" role="button" tabindex="0" @click="selectDay(day)"
           @keydown.enter="selectDay(day)">
-          <span v-if="canDoubleDailyGift(day)" class="ribbon__bonus">{{ t("dailyGift.doubleBadge") }}</span>
-          <span class="ribbon__day">{{ t("dailyGift.day", { day }) }}</span>
-          <span v-for="(reward, rewardIndex) in getRewards(day)" :key="rewardIndex" class="ribbon__reward">
-            {{ getRewardLabel(reward) }}
-          </span>
-          <span v-if="getDayClass(day).claimed" class="ribbon__status ribbon__status--claimed"
-            :aria-label="t('dailyGift.done')">✓</span>
-          <span v-else-if="day === currentDay" class="ribbon__status">{{ t("dailyGift.today") }}</span>
+          <span class="daily-gift__card-corner daily-gift__card-corner--tl"></span>
+          <span class="daily-gift__card-corner daily-gift__card-corner--br"></span>
+          <span class="daily-gift__day">{{ t("dailyGift.day", { day }) }}</span>
+          <span class="daily-gift__separator"></span>
+          <div class="daily-gift__rewards">
+            <div v-for="(reward, rewardIndex) in getRewards(day)" :key="rewardIndex" class="daily-gift__reward">
+              <img class="daily-gift__reward-icon" :class="`daily-gift__reward-icon--${reward.type}`"
+                :src="getRewardIcon(reward)" :alt="getRewardLabel(reward)" />
+              <span class="daily-gift__reward-value">{{ getRewardAmount(reward) }}</span>
+            </div>
+          </div>
+          <span v-if="canDoubleDailyGift(day)" class="daily-gift__bonus">×2</span>
+          <span v-if="getDayClass(day).claimed" class="daily-gift__status daily-gift__status--claimed">✓</span>
+          <span v-else-if="day === currentDay" class="daily-gift__status">{{ t("dailyGift.today") }}</span>
         </article>
       </div>
 
-      <div class="ribbon__dots" aria-label="Select day">
-        <button v-for="day in days" :key="day" class="ribbon__dot"
-          :class="{ active: day === selectedDay, claimed: getDayClass(day).claimed }"
-          :aria-label="t('dailyGift.day', { day })" @click="selectDay(day)">●</button>
-      </div>
+      <p class="daily-gift__week-caption">
+        {{ t("dailyGift.cycle", { cycle: dailyGift.status.cycleNumber }) }} · {{ selectedWeek }} / {{ weeks.length }}
+      </p>
 
       <div v-if="dailyGift.recovery.available || dailyGift.state.pendingRecovery" class="daily-gift__recovery">
         <p>{{ t("dailyGift.recoveryInfo", {
@@ -63,8 +70,7 @@
 </template>
 
 <script setup lang="ts">
-import { FORTUNE_WHEEL_PRESETS } from "@/configs/fortuneWheel";
-import { computed, nextTick, onMounted, onUnmounted, ref, watch } from "vue";
+import { computed, onMounted, onUnmounted, ref, watch } from "vue";
 import { useTranslation } from "i18next-vue";
 import { DAILY_GIFT_CYCLE_LENGTH, DAILY_GIFT_WEEK_LENGTH, canDoubleDailyGift } from "@/configs/dailyGift";
 import { useDailyGiftStore } from "@/store/dailyGiftStore";
@@ -72,12 +78,19 @@ import { useMetaStore } from "@/store/metaStore";
 import { useGameState } from "@/store/gameState";
 import type { RewardDefinition } from "@/purchase/types";
 import { SoundManager } from "@/game/sound/SoundManager";
+import goldenIcon from "@/assets/images/hud/cube_golden.svg";
+import energonIcon from "@/assets/images/hud/cube_energon_core.svg";
+import ammoIcon from "@/assets/images/hud/cube_bullet.svg";
+import armorIcon from "@/assets/images/hud/cube_armor.svg";
+import dailyIcon from "@/assets/images/daily_gifts_icon.svg";
+import wheelIcon from "@/assets/images/cube_buttons/btn_desktop_lucky_spin_wheel.svg";
 
 const { t } = useTranslation();
 const dailyGift = useDailyGiftStore();
 const gameState = useGameState();
 const meta = useMetaStore();
 const days = Array.from({ length: DAILY_GIFT_CYCLE_LENGTH }, (_, index) => index + 1);
+const weeks = Array.from({ length: DAILY_GIFT_CYCLE_LENGTH / DAILY_GIFT_WEEK_LENGTH }, (_, index) => index + 1);
 const errorKey = computed(() => {
   switch (dailyGift.error) {
     case "recovery_failed": return "dailyGift.recoveryError";
@@ -88,23 +101,14 @@ const errorKey = computed(() => {
 });
 const currentDay = computed(() => dailyGift.status.day);
 const selectedDay = ref(currentDay.value);
-const ribbon = ref<HTMLElement | null>(null);
-const cardRefs = ref<(HTMLElement | null)[]>([]);
-const isDragging = ref(false);
-const DRAG_SENSITIVITY = 60;
+const selectedWeek = computed(() => Math.ceil(selectedDay.value / DAILY_GIFT_WEEK_LENGTH));
+const weekDays = computed(() => {
+  const start = (selectedWeek.value - 1) * DAILY_GIFT_WEEK_LENGTH;
+  return days.slice(start, start + DAILY_GIFT_WEEK_LENGTH);
+});
 let refreshTimer: ReturnType<typeof setInterval> | null = null;
-let scrollFrame: number | null = null;
-let inertiaFrame: number | null = null;
-let lastDragX = 0;
-let lastDragTime = 0;
-let dragVelocity = 0;
-let skipCardClick = false;
 
-watch(currentDay, (day) => selectDay(day));
-
-function setCardRef(element: Element | null, index: number) {
-  cardRefs.value[index] = element instanceof HTMLElement ? element : null;
-}
+watch(currentDay, (day) => { selectedDay.value = day; });
 
 function getDayClass(day: number) {
   const { canClaim, day: availableDay } = dailyGift.status;
@@ -112,14 +116,6 @@ function getDayClass(day: number) {
     active: day === selectedDay.value,
     available: canClaim && day === availableDay,
     claimed: day < availableDay || (!canClaim && day === availableDay),
-  };
-}
-
-function getCardStyle(day: number) {
-  const distance = Math.abs(day - selectedDay.value);
-  return {
-    opacity: String(Math.max(0.1, 1 - distance * 0.4)),
-    transform: `scale(${Math.max(0.68, 1.3 - distance * 0.3)})`,
   };
 }
 
@@ -133,19 +129,39 @@ function getRewardLabel(reward: RewardDefinition): string {
     case "currency": return `${amount} ${t(`currency.${reward.effect.currency}`)}`;
     case "ammo": return `${amount} ${t("dailyGift.ammo")}`;
     case "armor": return `${amount} ${t("dailyGift.armor")}`;
-    case "fortune_spin": return `${amount} ${t("fortuneWheel.spinUnit")} (${t(FORTUNE_WHEEL_PRESETS[reward.effect.presetId].nameKey)})`;
+    case "fortune_spin": return `${amount} ${t("fortuneWheel.spinUnit")}`;
     case "upgrade": return t("dailyGift.upgrade");
     case "cosmetic": return t("dailyGift.skin");
     default: return t("dailyGift.reward");
   }
 }
 
+function getRewardAmount(reward: RewardDefinition): string {
+  if (reward.type === "cosmetic") return t("dailyGift.skin");
+  if (reward.type === "upgrade") return t("dailyGift.upgrade");
+  return String(reward.effect?.amount ?? 1);
+}
+
+function getRewardIcon(reward: RewardDefinition): string {
+  switch (reward.type) {
+    case "currency": return reward.effect?.currency === "energon" ? energonIcon : goldenIcon;
+    case "ammo": return ammoIcon;
+    case "armor": return armorIcon;
+    case "fortune_spin": return wheelIcon;
+    case "cosmetic": return dailyIcon;
+    case "upgrade": return dailyIcon;
+    default: return dailyIcon;
+  }
+}
+
 function selectDay(day: number) {
   if (day < 1 || day > DAILY_GIFT_CYCLE_LENGTH) return;
   selectedDay.value = day;
-  nextTick(() => {
-    cardRefs.value[day - 1]?.scrollIntoView({ behavior: "smooth", block: "nearest", inline: "center" });
-  });
+}
+
+function selectWeek(week: number) {
+  const day = (week - 1) * DAILY_GIFT_WEEK_LENGTH + 1;
+  selectDay(day);
 }
 
 function handleKeydown(event: KeyboardEvent) {
@@ -160,111 +176,6 @@ function handleKeydown(event: KeyboardEvent) {
   }
 }
 
-function onCardClick(day: number) {
-  if (skipCardClick) {
-    skipCardClick = false;
-    return;
-  }
-  selectDay(day);
-}
-
-function startDrag(event: MouseEvent) {
-  if (event.button !== 0) return;
-  const viewport = ribbon.value;
-  if (!viewport) return;
-
-  if (inertiaFrame !== null) {
-    cancelAnimationFrame(inertiaFrame);
-    inertiaFrame = null;
-  }
-
-  isDragging.value = true;
-  lastDragX = event.clientX;
-  lastDragTime = performance.now();
-  dragVelocity = 0;
-  window.addEventListener("mousemove", drag);
-  window.addEventListener("mouseup", finishDrag, { once: true });
-}
-
-function drag(event: MouseEvent) {
-  if (!isDragging.value || !ribbon.value) return;
-
-  const now = performance.now();
-  const deltaX = event.clientX - lastDragX;
-  const elapsed = Math.max(1, now - lastDragTime);
-  if (Math.abs(deltaX) > 1) skipCardClick = true;
-
-  const scrollDelta = deltaX * DRAG_SENSITIVITY;
-  ribbon.value.scrollLeft -= scrollDelta;
-  // Inertia is based on actual hand speed, not the amplified scroll distance.
-  dragVelocity = deltaX / elapsed;
-  lastDragX = event.clientX;
-  lastDragTime = now;
-  event.preventDefault();
-}
-
-function finishDrag() {
-  if (!isDragging.value) return;
-  isDragging.value = false;
-  window.removeEventListener("mousemove", drag);
-  startInertia();
-}
-
-function startInertia() {
-  const viewport = ribbon.value;
-  if (!viewport || Math.abs(dragVelocity) < 0.05) {
-    snapToNearestDay();
-    return;
-  }
-
-  let velocity = dragVelocity * DRAG_SENSITIVITY;
-  const animate = () => {
-    if (!ribbon.value || Math.abs(velocity) < 0.1) {
-      inertiaFrame = null;
-      snapToNearestDay();
-      return;
-    }
-    ribbon.value.scrollLeft -= velocity;
-    velocity *= 0.96;
-    inertiaFrame = requestAnimationFrame(animate);
-  };
-  inertiaFrame = requestAnimationFrame(animate);
-}
-
-function getNearestDay(): number {
-  const viewport = ribbon.value;
-  if (!viewport) return selectedDay.value;
-
-  const center = viewport.getBoundingClientRect().left + viewport.clientWidth / 2;
-  let nearestDay = selectedDay.value;
-  let nearestDistance = Number.POSITIVE_INFINITY;
-  cardRefs.value.forEach((card, index) => {
-    if (!card) return;
-    const rect = card.getBoundingClientRect();
-    const distance = Math.abs(rect.left + rect.width / 2 - center);
-    if (distance < nearestDistance) {
-      nearestDistance = distance;
-      nearestDay = index + 1;
-    }
-  });
-  return nearestDay;
-}
-
-function snapToNearestDay() {
-  selectDay(getNearestDay());
-}
-
-function updateFocusedDay() {
-  if (scrollFrame !== null) return;
-  scrollFrame = requestAnimationFrame(() => {
-    if (!ribbon.value) {
-      scrollFrame = null;
-      return;
-    }
-    selectedDay.value = getNearestDay();
-    scrollFrame = null;
-  });
-}
 
 async function recover() {
   const recovered = await dailyGift.recover();
@@ -282,17 +193,12 @@ async function claim() {
 }
 
 onMounted(async () => {
-  await nextTick();
-  selectDay(currentDay.value);
   refreshTimer = setInterval(() => dailyGift.refreshStatus(), 60_000);
   window.addEventListener("keydown", handleKeydown);
 });
 
 onUnmounted(() => {
   if (refreshTimer) clearInterval(refreshTimer);
-  if (scrollFrame !== null) cancelAnimationFrame(scrollFrame);
-  if (inertiaFrame !== null) cancelAnimationFrame(inertiaFrame);
-  window.removeEventListener("mousemove", drag);
   window.removeEventListener("keydown", handleKeydown);
 });
 </script>
@@ -304,35 +210,33 @@ onUnmounted(() => {
 
 .daily-gift {
   justify-content: flex-start;
+  padding-top: clamp(14rem, 40vh, 29rem);
+  background: radial-gradient(ellipse at 50% 55%, rgba(40, 75, 105, .2), transparent 45%), rgba(0, 0, 0, .72);
 }
 
 .daily-gift .header_block {
-  position: absolute;
-  top: clamp(3rem, 15vh, 10rem);
-  margin: 0;
+  position: static;
+  margin: 0 0 clamp(.7rem, 1.6vh, 1.25rem);
 }
 
 .daily-gift__content {
-  position: absolute;
-  top: 50%;
-  width: 100%;
+  width: min(88rem, 92vw);
   display: flex;
   flex-direction: column;
   align-items: center;
-  transform: translateY(-50%);
 }
 
-.daily-gift__cycle,
 .daily-gift__claimed,
 .daily-gift__error,
-.ribbon__status {
+.daily-gift__status,
+.daily-gift__week-caption {
   @include text-info-size-s;
   margin: 0;
   text-transform: uppercase;
 }
 
-.daily-gift__cycle,
-.ribbon__status {
+.daily-gift__status,
+.daily-gift__week-caption {
   color: $color-blue-light;
 }
 
@@ -346,123 +250,158 @@ onUnmounted(() => {
   margin-top: 1.8rem;
 }
 
-.ribbon {
-  --card-width: clamp(8.5rem, 15vw, 12rem);
-  width: min(70rem, 100%);
+.daily-gift__week-tabs {
   display: flex;
-  gap: clamp(0.45rem, 1vw, 0.85rem);
-  box-sizing: border-box;
-  overflow-x: auto;
-  overscroll-behavior-x: contain;
-  scroll-snap-type: x mandatory;
-  scroll-behavior: smooth;
-  padding: 1.8rem calc((100% - var(--card-width)) / 2);
-  scrollbar-width: none;
-  touch-action: pan-y;
-  cursor: grab;
+  gap: .55rem;
+  margin-bottom: clamp(.8rem, 2vh, 1.4rem);
 }
 
-.ribbon::-webkit-scrollbar {
-  display: none;
+.daily-gift__week-tab {
+  min-width: 2.25rem;
+  padding: .35rem .65rem;
+  border: 1px solid rgba(114, 179, 238, .35);
+  background: rgba(3, 12, 22, .55);
+  color: $color-gray;
+  cursor: pointer;
+  font-family: 'vla_shu';
 }
 
-.ribbon.is-dragging {
-  cursor: grabbing;
-  scroll-snap-type: none;
-  user-select: none;
+.daily-gift__week-tab.active {
+  color: $color-blue-light;
+  border-color: $color-blue-light;
+  box-shadow: 0 0 .9rem rgba(80, 170, 255, .35);
 }
 
-.ribbon__card {
+.daily-gift__cards {
+  width: 100%;
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: clamp(.45rem, 1vw, .9rem);
+}
+
+.daily-gift__card {
   position: relative;
-  flex: 0 0 var(--card-width);
-  min-height: 9.5rem;
+  min-height: clamp(12rem, 29vh, 17.6rem);
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
-  gap: 0.55rem;
+  justify-content: flex-start;
   box-sizing: border-box;
-  padding: 0.75rem;
-  border: 1px solid rgba(215, 251, 255, 0.2);
-  background: rgba(4, 11, 21, 0.2);
+  padding: clamp(.8rem, 1.8vmin, 1.25rem) .4rem;
+  overflow: hidden;
+  border: 1px solid rgba(158, 206, 240, .27);
+  background: linear-gradient(145deg, rgba(15, 27, 40, .87), rgba(0, 3, 8, .8));
   color: $color-gray;
   cursor: pointer;
-  scroll-snap-align: center;
-  transform-origin: center;
-  transition: transform 180ms ease-out, opacity 180ms ease-out, border-color 180ms ease-out;
-  z-index: 1;
+  transition: .2s ease;
 }
 
-.ribbon__card.active {
-  // border-color: rgba(255, 245, 173, 0.68);
-  background: rgb(29, 38, 51);
-  z-index: 2;
-
+.daily-gift__card:hover,
+.daily-gift__card.active {
+  transform: translateY(-.25rem);
+  border-color: rgba(132, 210, 255, .8);
+  box-shadow: 0 .5rem 1.8rem rgba(58, 150, 225, .16), inset 0 0 2rem rgba(74, 159, 220, .08);
 }
 
-.ribbon__card.claimed {
-  border: 2px solid rgba(114, 179, 238, 0.74);
-  background-color: rgb(53, 84, 113);
-  background-image: radial-gradient(rgba(215, 251, 255, 0.33) 1px, transparent 1.25px);
-  background-size: 0.62rem 0.62rem;
-}
-
-.ribbon__card.claimed.active {
+.daily-gift__card.available {
   border-color: $color-blue-light;
+  box-shadow: 0 0 1.6rem rgba(71, 171, 255, .36), inset 0 0 2rem rgba(57, 148, 225, .13);
 }
 
-.ribbon__card.available .ribbon__day {
+.daily-gift__card.claimed {
+  opacity: .38;
+  filter: saturate(.45);
+}
+
+.daily-gift__card-corner {
+  position: absolute;
+  width: 1.05rem;
+  height: 1.05rem;
+  border-color: transparent;
+  pointer-events: none;
+}
+
+.daily-gift__card.available .daily-gift__card-corner {
+  border-color: $color-blue-light;
+  filter: drop-shadow(0 0 .3rem $color-blue-light);
+}
+
+.daily-gift__card-corner--tl { top: -.08rem; left: -.08rem; border-top: 3px solid; border-left: 3px solid; }
+.daily-gift__card-corner--br { right: -.08rem; bottom: -.08rem; border-right: 3px solid; border-bottom: 3px solid; }
+
+.daily-gift__day {
+  @include text-button-size-s;
+  color: $color-yellow-super-light;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.daily-gift__separator {
+  width: 72%;
+  height: 1px;
+  margin: clamp(.65rem, 1.6vh, 1rem) 0 auto;
+  background: linear-gradient(90deg, transparent, rgba(122, 193, 235, .6), transparent);
+}
+
+.daily-gift__rewards {
+  min-height: 48%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: clamp(.35rem, .8vw, .75rem);
+  flex-wrap: wrap;
+  padding: .7rem .2rem;
+}
+
+.daily-gift__reward {
+  min-width: 2.6rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: .25rem;
   color: $color-yellow-super-light;
 }
 
-.ribbon__card.claimed .ribbon__day {
+.daily-gift__reward-icon {
+  width: clamp(2.35rem, 4.4vw, 4.1rem);
+  height: clamp(2.35rem, 4.4vw, 4.1rem);
+  object-fit: contain;
+  filter: drop-shadow(0 0 .75rem rgba(121, 193, 255, .35));
+}
+
+.daily-gift__reward-icon--currency { filter: drop-shadow(0 0 .75rem rgba(255, 215, 73, .48)); }
+.daily-gift__reward-icon--fortune_spin,
+.daily-gift__reward-icon--cosmetic,
+.daily-gift__reward-icon--upgrade { filter: drop-shadow(0 0 .8rem rgba(93, 183, 255, .55)); }
+
+.daily-gift__reward-value {
+  @include text-info-size-s;
+  text-align: center;
+  text-transform: uppercase;
+}
+
+.daily-gift__bonus {
+  position: absolute;
+  right: .55rem;
+  bottom: .45rem;
+  @include text-info-size-s;
   color: $color-blue-light;
 }
 
-.ribbon__day {
-  @include text-button-size-s;
-}
-
-.ribbon__reward {
-  @include text-info-size-s;
-  color: $color-yellow-light;
-  text-align: center;
-}
-
-.ribbon__status--claimed {
+.daily-gift__status {
   position: absolute;
-  top: 0.45rem;
-  right: 0.55rem;
+  top: .5rem;
+  right: .55rem;
+  color: $color-blue-light;
+}
+
+.daily-gift__status--claimed {
   color: $color-green-light;
   font-weight: 700;
   font-size: 1.35em;
 }
 
-.ribbon__dots {
-  display: flex;
-  flex-wrap: wrap;
-  max-width: 85vw;
-  justify-content: center;
-  gap: 0.55rem;
-}
-
-.ribbon__dot {
-  padding: 0;
-  border: 0;
-  background: transparent;
-  color: $color-gray;
-  cursor: pointer;
-  font-size: 0.62rem;
-}
-
-.ribbon__dot.claimed {
-  color: $color-blue-light;
-}
-
-.ribbon__dot.active {
-  color: $color-yellow-super-light;
-  transform: scale(1.45);
-}
+.daily-gift__week-caption { margin-top: 1rem; color: $color-yellow-super-light; }
 
 .daily-gift__claim,
 .daily-gift__double,
@@ -492,11 +431,6 @@ onUnmounted(() => {
 
 .daily-gift__double { margin-top: 0.7rem; }
 
-.ribbon__bonus {
-  @include text-info-size-s;
-  color: $color-blue-light;
-}
-
 .daily-gift__recovery {
   @include text-info-size-s;
   max-width: min(36rem, 90vw);
@@ -508,12 +442,16 @@ onUnmounted(() => {
 }
 
 @media (max-width: 700px) {
-  .ribbon {
-    --card-width: clamp(7.5rem, 46vw, 10rem);
+  .daily-gift {
+    padding-top: clamp(4.5rem, 12vh, 7rem);
   }
-
-  .ribbon__card {
-    min-height: 8rem;
+  .daily-gift__content { width: min(92vw, 34rem); }
+  .daily-gift__cards {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    max-height: 53vh;
+    overflow-y: auto;
+    padding: .3rem;
   }
+  .daily-gift__card { min-height: 10rem; }
 }
 </style>
