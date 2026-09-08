@@ -911,12 +911,20 @@ export class InteractiveItemsManager {
     };
     if (item instanceof NitroItem) {
       const variant = resolve(gameplay.specialBoostWeights.nitro);
-      if (variant === "superNitro") { item.userData.superNitro = true; return; }
+      if (variant === "superNitro") {
+        item.userData.superNitro = true;
+        this.markNonStandardBoost(item);
+        return;
+      }
       this.markCorruptedBoost(item, variant as CorruptedBoostVariant); return;
     }
     if (item instanceof ShieldItem) {
       const variant = resolve(gameplay.specialBoostWeights.shield);
-      if (variant === "superShield") { item.userData.superShield = true; return; }
+      if (variant === "superShield") {
+        item.userData.superShield = true;
+        this.markNonStandardBoost(item);
+        return;
+      }
       this.markCorruptedBoost(item, variant as CorruptedBoostVariant); return;
     }
     if (item instanceof MagnetItem) {
@@ -928,61 +936,6 @@ export class InteractiveItemsManager {
       const variant = resolve(gameplay.specialBoostWeights.bullet);
       if (variant === "blankBullet") { this.markCorruptedBoost(item, variant); return; }
       this.markSuperBullet(item, variant as BulletVariant); return;
-    }
-    if (item instanceof ShieldItem && Math.random() < gameplay.superShieldChance) {
-      item.userData.superShield = true;
-      item.userData.corruptedBoostPulse = { color: 0xffffff, time: Math.random() * 1000 };
-      return;
-    }
-    if (item instanceof NitroItem && Math.random() < gameplay.superNitroChance) {
-      item.userData.superNitro = true;
-      item.userData.corruptedBoostPulse = { color: 0xffffff, time: Math.random() * 1000 };
-      return;
-    }
-    if (item instanceof BulletItem && Math.random() < gameplay.superBulletChance) {
-      this.markSuperBullet(item, this.pickSuperBulletVariant(gameplay.superBulletWeights));
-      return;
-    }
-    if (item instanceof MagnetItem && Math.random() < gameplay.superMagnetChance) {
-      this.markSuperMagnet(item);
-      return;
-    }
-    const chance = gameplay.corruptedBoostChance;
-    if (chance <= 0 || Math.random() > chance) return;
-
-    if (item instanceof NitroItem) {
-      this.markCorruptedBoost(
-        item,
-        this.pickWeightedCorruptedVariant(gameplay.corruptedBoostWeights.nitro),
-      );
-      return;
-    }
-
-    if (item instanceof ShieldItem) {
-      this.markCorruptedBoost(
-        item,
-        this.pickWeightedCorruptedVariant(
-          gameplay.corruptedBoostWeights.shield,
-        ),
-      );
-      return;
-    }
-
-    if (item instanceof MagnetItem) {
-      this.markCorruptedBoost(
-        item,
-        this.pickWeightedCorruptedVariant(
-          gameplay.corruptedBoostWeights.magnet,
-        ),
-      );
-      return;
-    }
-
-    if (item instanceof BulletItem) {
-      this.markCorruptedBoost(
-        item,
-        this.pickWeightedCorruptedVariant(gameplay.corruptedBoostWeights.bullet),
-      );
     }
   }
 
@@ -1008,6 +961,11 @@ export class InteractiveItemsManager {
 
   private markCorruptedBoost(item: BaseItem, variant: CorruptedBoostVariant) {
     item.userData.corruptedBoost = variant;
+    this.markNonStandardBoost(item);
+  }
+
+  /** Keeps the original booster material/atlas sprite and adds only a white pulse. */
+  private markNonStandardBoost(item: BaseItem) {
     item.userData.corruptedBoostPulse = {
       color: 0xffffff,
       time: Math.random() * 1000,
@@ -1016,11 +974,7 @@ export class InteractiveItemsManager {
 
   private markSuperMagnet(item: MagnetItem) {
     item.userData.superMagnet = true;
-    // Reuse the existing pulsing material path, with a distinct gold colour.
-    item.userData.corruptedBoostPulse = {
-      color: 0xffffff,
-      time: Math.random() * 1000,
-    };
+    this.markNonStandardBoost(item);
   }
 
   private pickSuperBulletVariant(weights: Record<Exclude<BulletVariant, "normal">, number>): BulletVariant {
@@ -1035,19 +989,7 @@ export class InteractiveItemsManager {
 
   private markSuperBullet(item: BulletItem, variant: BulletVariant) {
     item.userData.superBullet = variant;
-    item.userData.corruptedBoostPulse = { color: 0xffffff, time: Math.random() * 1000 };
-  }
-
-  private getCorruptedEmissionColor(variant: CorruptedBoostVariant) {
-    const colorByVariant: Record<CorruptedBoostVariant, number> = {
-      heavyNitro: 0xff2a7a,
-      lethalMagnet: 0xff1f1f,
-      repulseMagnet: 0x28d7ff,
-      blindShield: 0xf7fbff,
-      blankBullet: 0xff3030,
-    };
-
-    return colorByVariant[variant] ?? 0xff2a7a;
+    this.markNonStandardBoost(item);
   }
 
   public removeItem(item: BaseItem, reason: "expired" | "other" = "other") {

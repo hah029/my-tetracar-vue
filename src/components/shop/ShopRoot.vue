@@ -207,6 +207,7 @@
 
                             <button v-if="
                                 selectedItem.type === 'cosmetic' &&
+                                getProductStatus(selectedItem) === 'owned' &&
                                 selectedItem.effect.skinId !== metaStore.activeSkin
                             " class="preview__buy_btn" @click="handleApplyClick(selectedItem)">
                                 {{ foo.makeText("shop.previewBtn.apply") }}
@@ -214,6 +215,7 @@
 
                             <div v-else-if="
                                 selectedItem.type === 'cosmetic' &&
+                                getProductStatus(selectedItem) === 'owned' &&
                                 selectedItem.effect.skinId === metaStore.activeSkin
                             " class="preview__status">
                                 {{ foo.makeText("shop.previewBtn.applied") }}

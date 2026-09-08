@@ -27,7 +27,7 @@ export const PLAYER_SKINS: Record<string, PlayerSkinConfig> = {
     material: {
       atlas,
       atlasSprite: ATLAS_SPRITES.cube.base,
-      color: 0x6688aa,
+      // color: 0x6688aa,
     },
     textures: { default: ATLAS_SPRITES.cube.energon },
   },
@@ -35,7 +35,7 @@ export const PLAYER_SKINS: Record<string, PlayerSkinConfig> = {
     material: {
       atlas,
       atlasSprite: ATLAS_SPRITES.cube.base,
-      color: 0xaa6688,
+      // color: 0xaa6688,
     },
     textures: { default: ATLAS_SPRITES.cube.gold },
   },
@@ -43,7 +43,7 @@ export const PLAYER_SKINS: Record<string, PlayerSkinConfig> = {
     material: {
       atlas,
       atlasSprite: ATLAS_SPRITES.cube.base,
-      color: 0x66dfff,
+      // color: 0x66dfff,
     },
     textures: { default: ATLAS_SPRITES.cube.energon },
     effects: {
@@ -59,14 +59,22 @@ export const PLAYER_SKINS: Record<string, PlayerSkinConfig> = {
     material: {
       atlas,
       atlasSprite: ATLAS_SPRITES.cube.base,
-      color: 0xd070ff,
+      // color: 0xd070ff,
     },
     textures: { default: ATLAS_SPRITES.cube.magnet },
+    effects: {
+      neonEdges: {
+        enabled: true,
+        color: 0x00eaff,
+        intensity: 5,
+        thresholdAngle: 25,
+      },
+    },
   },
 };
 
 export function getPlayerSkinConfig(
   skinId: string | null | undefined,
 ): PlayerSkinConfig | null {
-  return skinId ? PLAYER_SKINS[skinId] ?? null : null;
+  return skinId ? (PLAYER_SKINS[skinId] ?? null) : null;
 }
