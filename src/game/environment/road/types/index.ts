@@ -86,6 +86,8 @@ export interface RoadLampPostsConfig {
   enabled: boolean;
   color: number;
   opacity: number;
+  /** HDR brightness of the lamp post and its arm. */
+  emissiveIntensity?: number;
   spacing: number;
   offset: number;
   height: number;
@@ -93,6 +95,12 @@ export interface RoadLampPostsConfig {
   /** Angle between the upward pole direction and the arm, in degrees. */
   armAngleDeg: number;
   thickness: number;
+  /** Maximum number of real, nearby spotlights per side of the road. */
+  realLightCount?: number;
+  realLightIntensity?: number;
+  realLightDistance?: number;
+  realLightAngle?: number;
+  realLightPenumbra?: number;
 }
 
 export interface SpeedLineConfig {
