@@ -5,6 +5,9 @@ import type { RoadLampPostsConfig } from "./types";
 /**
  * Repeating decorative lamps. Both parts use an unlit material deliberately:
  * their colour remains neon even on levels with no suitable scene lighting.
+ * Ground illumination is faked with an instanced additive plane. Real lights
+ * are deliberately avoided here: every SpotLight enlarges the lighting shader
+ * loop for all lit objects in the scene.
  */
 export class LampPostsInstanced {
   private readonly group = new THREE.Group();
@@ -12,8 +15,7 @@ export class LampPostsInstanced {
   private readonly dummy = new THREE.Object3D();
   private readonly post: THREE.InstancedMesh;
   private readonly arm: THREE.InstancedMesh;
-  private readonly lights: THREE.SpotLight[] = [];
-  private readonly lightTargets: THREE.Object3D[] = [];
+  private readonly groundGlow: THREE.InstancedMesh;
   private readonly count: number;
 
   constructor(
@@ -42,26 +44,24 @@ export class LampPostsInstanced {
       material.clone(),
       this.count,
     );
-    this.group.add(this.post, this.arm);
+    this.groundGlow = new THREE.InstancedMesh(
+      new THREE.CircleGeometry(Math.max(2.5, config.armLength * 0.45), 16),
+      new THREE.MeshBasicMaterial({
+        color: config.color,
+        transparent: true,
+        opacity: Math.min(0.22, config.opacity * 0.4),
+        depthWrite: false,
+        blending: THREE.AdditiveBlending,
+        toneMapped: false,
+      }),
+      this.count,
+    );
+    this.groundGlow.frustumCulled = false;
+    this.group.add(this.post, this.arm, this.groundGlow);
     this.scene.add(this.group);
 
     for (let i = 0; i < this.count; i++) {
       this.positions.push(new THREE.Vector3(x, 0, startZ - i * config.spacing));
-      const light = new THREE.SpotLight(
-        config.color,
-        14,
-        Math.max(20, config.height * 2.2),
-        Math.PI / 5,
-        0.65,
-        1.4,
-      );
-      // Decorative lights should remain cheap even when a level uses many lamps.
-      light.castShadow = false;
-      const target = new THREE.Object3D();
-      this.group.add(light, target);
-      light.target = target;
-      this.lights.push(light);
-      this.lightTargets.push(target);
     }
     this.updateInstances();
   }
@@ -100,29 +100,29 @@ export class LampPostsInstanced {
       this.dummy.updateMatrix();
       this.arm.setMatrixAt(i, this.dummy.matrix);
 
-      const light = this.lights[i];
-      const target = this.lightTargets[i];
-      if (light && target) {
-        light.position.set(position.x, this.config.height, position.z);
-        // Aim slightly inward, following the arm, then down to the road.
-        target.position.set(
-          position.x + this.armDirection * this.config.armLength,
-          0,
-          position.z,
-        );
-      }
+      // A horizontal, additive disk gives the road a light pool without a
+      // SpotLight's scene-wide shader cost.
+      this.dummy.position.set(
+        position.x + this.armDirection * this.config.armLength,
+        0.015,
+        position.z,
+      );
+      this.dummy.rotation.set(-Math.PI / 2, 0, 0);
+      this.dummy.updateMatrix();
+      this.groundGlow.setMatrixAt(i, this.dummy.matrix);
     }
     this.post.instanceMatrix.needsUpdate = true;
     this.arm.instanceMatrix.needsUpdate = true;
+    this.groundGlow.instanceMatrix.needsUpdate = true;
   }
 
   public dispose(): void {
     this.scene.remove(this.group);
     this.post.geometry.dispose();
     this.arm.geometry.dispose();
+    this.groundGlow.geometry.dispose();
     (this.post.material as THREE.Material).dispose();
     (this.arm.material as THREE.Material).dispose();
-    this.lights.length = 0;
-    this.lightTargets.length = 0;
+    (this.groundGlow.material as THREE.Material).dispose();
   }
 }
