@@ -14,13 +14,13 @@
     "businessMenu": {
         "namesList": {
             "luckySpin": "lucky spin",
-            "dailyBonus": "daily bonus",
+            "dailyGift": "daily gift",
             "quests": "quests",
             "achievements": "achievements"
         },
         "remindersList": {
             "luckySpin": "spin the wheel!",
-            "dailyBonus": "claim your reward!",
+            "dailyGift": "claim your reward!",
             "quests": "claim your reward!",
             "achievements": "new achievement!"
         }
@@ -248,6 +248,16 @@
         "noItems": "пусто"
     },
     "dailyGift": {
+        "title": "daily gift",
+        "claimed": "today's gift is claimed!\ncome back tomorrow.",
+        "weekName": [
+            "week 1: basic rewards",
+            "week 2: enhanced rewards",
+            "week 3: mega rewards",
+            "week 4: premium rewards"
+        ],
+        "day": "day {{day}}",
+
         "doubleBadge": "2× with ad",
         "claimDouble": "Watch an ad to claim 2×",
         "watchingAd": "Watching ad…",
@@ -261,14 +271,9 @@
         "notEnoughEnergons": "Not enough energons",
         "restart": "Start from day 1 for free",
         "recoveryError": "Could not finish restoring progress. Try again: you will not be charged twice.",
-        "title": "daily bonus",
-        "cycle": "cycle {{cycle}}",
-        "day": "day {{day}}",
         "claim": "claim",
         "claiming": "claiming…",
-        "claimed": "today's reward has already been claimed",
         "claimError": "could not save the reward. please try again.",
-        "today": "today",
         "done": "claimed",
         "ammo": "ammo",
         "armor": "armor",

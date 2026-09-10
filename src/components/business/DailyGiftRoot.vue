@@ -1,457 +1,606 @@
 <template>
-  <div class="container daily-gift">
-    <div class="header_block">
-      <div class="header_text">{{ t("dailyGift.title") }} | {{ t("dailyGift.cycle", {
-        cycle:
-          dailyGift.status.cycleNumber
-      }) }}</div>
-      <div class="header_image"><img class="image" src="@/assets/images/title_line_image.svg" /></div>
-    </div>
-
-    <section class="daily-gift__content" aria-live="polite">
-      <div class="daily-gift__week-tabs" aria-label="Weeks">
-        <button v-for="week in weeks" :key="week" class="daily-gift__week-tab"
-          :class="{ active: week === selectedWeek }" @click="selectWeek(week)">
-          {{ week }}
-        </button>
-      </div>
-
-      <div class="daily-gift__cards" aria-label="Daily rewards calendar">
-        <article v-for="day in weekDays" :key="day" class="daily-gift__card" :class="getDayClass(day)"
-          :aria-current="day === selectedDay ? 'true' : undefined" role="button" tabindex="0" @click="selectDay(day)"
-          @keydown.enter="selectDay(day)">
-          <span class="daily-gift__card-corner daily-gift__card-corner--tl"></span>
-          <span class="daily-gift__card-corner daily-gift__card-corner--br"></span>
-          <span class="daily-gift__day">{{ t("dailyGift.day", { day }) }}</span>
-          <span class="daily-gift__separator"></span>
-          <div class="daily-gift__rewards">
-            <div v-for="(reward, rewardIndex) in getRewards(day)" :key="rewardIndex" class="daily-gift__reward">
-              <img class="daily-gift__reward-icon" :class="`daily-gift__reward-icon--${reward.type}`"
-                :src="getRewardIcon(reward)" :alt="getRewardLabel(reward)" />
-              <span class="daily-gift__reward-value">{{ getRewardAmount(reward) }}</span>
+    <div class="container daily-gift">
+        <div class="header_block">
+            <div class="header_text">
+                <!-- {{ t("dailyGift.title") }} | {{ t("dailyGift.cycle", { cycle: dailyGift.status.cycleNumber }) }} -->
+                {{ t("dailyGift.title") }}
             </div>
-          </div>
-          <span v-if="canDoubleDailyGift(day)" class="daily-gift__bonus">×2</span>
-          <span v-if="getDayClass(day).claimed" class="daily-gift__status daily-gift__status--claimed">✓</span>
-          <span v-else-if="day === currentDay" class="daily-gift__status">{{ t("dailyGift.today") }}</span>
-        </article>
-      </div>
+            <div class="header_image"><img class="image" src="@/assets/images/title_line_image.svg" /></div>
+        </div>
 
-      <p class="daily-gift__week-caption">
-        {{ t("dailyGift.cycle", { cycle: dailyGift.status.cycleNumber }) }} · {{ selectedWeek }} / {{ weeks.length }}
-      </p>
+        <div class="daily_gift_content">
+            <!-- <div class="daily-gift__week-tabs">
+                <button v-for="week in weeks" :key="week" class="daily-gift__week-tab"
+                :class="{ active: week === selectedWeek }" @click="selectWeek(week)">
+                {{ week }}
+                </button>
+            </div> -->
 
-      <div v-if="dailyGift.recovery.available || dailyGift.state.pendingRecovery" class="daily-gift__recovery">
-        <p>{{ t("dailyGift.recoveryInfo", {
-          missed: dailyGift.recovery.missedDays,
-          week: dailyGift.state.pendingRecovery ? Math.ceil(dailyGift.state.pendingRecovery.day / DAILY_GIFT_WEEK_LENGTH) : dailyGift.recovery.week,
-          day: dailyGift.state.pendingRecovery?.day ?? dailyGift.recovery.day,
-        }) }}</p>
-        <button class="menu_btn daily-gift__recover" :disabled="!dailyGift.canRecover" @click="recover">
-          {{ dailyGift.isRecovering ? t("dailyGift.recovering") : dailyGift.state.pendingRecovery
-            ? t("dailyGift.retryRecovery") : t("dailyGift.recover", { cost: dailyGift.recovery.cost }) }}
-        </button>
-        <p v-if="!dailyGift.state.pendingRecovery && meta.energons < dailyGift.recovery.cost">{{ t("dailyGift.notEnoughEnergons") }}</p>
-      </div>
-      <p v-if="dailyGift.error" class="daily-gift__error">{{ t(errorKey) }}</p>
-      <button v-if="dailyGift.status.canClaim" class="menu_btn daily-gift__claim"
-        :disabled="!dailyGift.isReady || dailyGift.isClaiming || dailyGift.isRecovering || !!dailyGift.state.pendingRecovery || selectedDay !== currentDay" @click="claim">{{ dailyGift.isClaiming ?
-          t("dailyGift.claiming") : dailyGift.recovery.available ? t("dailyGift.restart") : t("dailyGift.claim") }}</button>
-      <p v-else class="daily-gift__claimed">{{ t("dailyGift.claimed") }}</p>
-      <button v-if="dailyGift.canDouble" class="menu_btn daily-gift__double"
-        :disabled="!dailyGift.isReady || dailyGift.isClaiming || dailyGift.isRecovering || !!dailyGift.state.pendingRecovery || selectedDay !== currentDay"
-        @click="claimDouble">
-        {{ dailyGift.isWatchingAd ? t("dailyGift.watchingAd") : t("dailyGift.claimDouble") }}
-      </button>
-    </section>
+            <div class="daily_gift_cards_block">
+                <div v-for="day in weekDays" :key="day" class="daily_gift_card" :class="getDayClass(day)"
+                    :aria-current="day === selectedDay ? 'true' : undefined" role="button" tabindex="0" @click="selectDay(day)"
+                    @keydown.enter="selectDay(day)"
+                >
 
-    <button class="menu_btn daily-gift__back" :disabled="dailyGift.isClaiming || dailyGift.isRecovering || !!dailyGift.state.pendingRecovery" @click="gameState.closeOverlay()">{{ t("mainMenu.goBack") }}</button>
-  </div>
+                    <!-- Свечение за иконками -->
+                    <div class="card_background_glow"></div>
+
+                    <!-- Титул -->
+                    <div class="daily_gift_title_block">
+                        <span class="daily_gift_title">{{ t("dailyGift.day", { day }) }}</span>
+                        <span class="daily_gift_separator"></span>
+                    </div>
+
+                    <!-- Блок с иконками и числами наград -->
+                    <div class="daily_gift_rewards_block">
+                        <div v-for="(reward, rewardIndex) in getRewards(day)" :key="rewardIndex" class="daily-gift__reward">
+                            <img class="daily-gift__reward-icon" :class="`daily-gift__reward-icon--${reward.type}`"
+                                :src="getRewardIcon(reward)" :alt="getRewardLabel(reward)" />
+                            <span class="daily-gift__reward-value">{{ getRewardAmount(reward) }}</span>
+                        </div>
+                    </div>
+
+                    <!-- Рекламный бонус (x2) -->
+                    <span v-if="canDoubleDailyGift(day)" class="daily-gift__bonus">×2</span>
+
+                    <!-- Галочка (бонус взят) -->
+                    <span v-if="getDayClass(day).claimed" class="daily-gift__status daily-gift__status--claimed">✓</span>
+
+                    <!-- Рамки -->
+                    <div class="daily_gift_card_corner corner_top_left"></div>
+                    <div class="daily_gift_card_corner corner_top_right"></div>
+                    <div class="daily_gift_card_corner corner_bottom_left"></div>
+                    <div class="daily_gift_card_corner corner_bottom_right"></div>
+                </div>
+            </div>
+
+            <!-- Блок с подсказками (под карточками) -->
+            <div class="daily_gift_tips_block">
+                <div class="text_claimed">{{ t("dailyGift.claimed") }}</div>
+                <div class="text_week_caption">
+                    <!-- {{ t("dailyGift.cycle", { cycle: dailyGift.status.cycleNumber }) }} · {{ selectedWeek }} / {{ weeks.length }} -->
+                    {{ weekName }}
+                </div>
+            </div>
+
+            <div v-if="dailyGift.recovery.available || dailyGift.state.pendingRecovery" class="daily-gift__recovery">
+                <p>
+                    {{ t("dailyGift.recoveryInfo", {
+                        missed: dailyGift.recovery.missedDays,
+                        week: dailyGift.state.pendingRecovery ? Math.ceil(dailyGift.state.pendingRecovery.day / DAILY_GIFT_WEEK_LENGTH) : dailyGift.recovery.week,
+                        day: dailyGift.state.pendingRecovery?.day ?? dailyGift.recovery.day,
+                    }) }}
+                </p>
+                <button class="menu_btn daily-gift__recover" :disabled="!dailyGift.canRecover" @click="recover">
+                {{ dailyGift.isRecovering ? t("dailyGift.recovering") : dailyGift.state.pendingRecovery
+                    ? t("dailyGift.retryRecovery") : t("dailyGift.recover", { cost: dailyGift.recovery.cost }) }}
+                </button>
+                <p v-if="!dailyGift.state.pendingRecovery && meta.energons < dailyGift.recovery.cost">{{ t("dailyGift.notEnoughEnergons") }}</p>
+            </div>
+
+            <p v-if="dailyGift.error" class="daily-gift__error">{{ t(errorKey) }}</p>
+
+            <button v-if="dailyGift.status.canClaim" class="menu_btn daily-gift__claim"
+                :disabled="!dailyGift.isReady || dailyGift.isClaiming || dailyGift.isRecovering || !!dailyGift.state.pendingRecovery || selectedDay !== currentDay" @click="claim">{{ dailyGift.isClaiming ?
+                t("dailyGift.claiming") : dailyGift.recovery.available ? t("dailyGift.restart") : t("dailyGift.claim") }}
+            </button>
+            
+
+            <button v-if="dailyGift.canDouble" class="menu_btn daily-gift__double"
+                :disabled="!dailyGift.isReady || dailyGift.isClaiming || dailyGift.isRecovering || !!dailyGift.state.pendingRecovery || selectedDay !== currentDay"
+                @click="claimDouble">
+                {{ dailyGift.isWatchingAd ? t("dailyGift.watchingAd") : t("dailyGift.claimDouble") }}
+            </button>
+        </div>
+
+        <button class="menu_btn daily-gift__back" :disabled="dailyGift.isClaiming || dailyGift.isRecovering || !!dailyGift.state.pendingRecovery" @click="gameState.closeOverlay()">{{ t("mainMenu.goBack") }}</button>
+    </div>
 </template>
 
+
 <script setup lang="ts">
-import { computed, onMounted, onUnmounted, ref, watch } from "vue";
-import { useTranslation } from "i18next-vue";
-import { DAILY_GIFT_CYCLE_LENGTH, DAILY_GIFT_WEEK_LENGTH, canDoubleDailyGift } from "@/configs/dailyGift";
-import { useDailyGiftStore } from "@/store/dailyGiftStore";
-import { useMetaStore } from "@/store/metaStore";
-import { useGameState } from "@/store/gameState";
-import type { RewardDefinition } from "@/purchase/types";
-import { SoundManager } from "@/game/sound/SoundManager";
-import goldenIcon from "@/assets/images/hud/cube_golden.svg";
-import energonIcon from "@/assets/images/hud/cube_energon_core.svg";
-import ammoIcon from "@/assets/images/hud/cube_bullet.svg";
-import armorIcon from "@/assets/images/hud/cube_armor.svg";
-import dailyIcon from "@/assets/images/daily_gifts_icon.svg";
-import wheelIcon from "@/assets/images/cube_buttons/btn_desktop_lucky_spin_wheel.svg";
+    import { computed, onMounted, onUnmounted, ref, watch } from "vue";
+    import { useTranslation } from "i18next-vue";
+    import { DAILY_GIFT_CYCLE_LENGTH, DAILY_GIFT_WEEK_LENGTH, canDoubleDailyGift } from "@/configs/dailyGift";
+    import { useDailyGiftStore } from "@/store/dailyGiftStore";
+    import { useMetaStore } from "@/store/metaStore";
+    import { useGameState } from "@/store/gameState";
+    import type { RewardDefinition } from "@/purchase/types";
+    import { SoundManager } from "@/game/sound/SoundManager";
+    import goldenIcon from "@/assets/images/hud/cube_golden.svg";
+    import energonIcon from "@/assets/images/hud/cube_energon_core.svg";
+    import ammoIcon from "@/assets/images/hud/cube_bullet.svg";
+    import armorIcon from "@/assets/images/hud/cube_armor.svg";
+    import dailyIcon from "@/assets/images/daily_gifts_icon.svg";
+    import wheelIcon from "@/assets/images/cube_buttons/btn_desktop_lucky_spin_wheel.svg";
+    import { createNewText } from '@/helpers/functions';
 
-const { t } = useTranslation();
-const dailyGift = useDailyGiftStore();
-const gameState = useGameState();
-const meta = useMetaStore();
-const days = Array.from({ length: DAILY_GIFT_CYCLE_LENGTH }, (_, index) => index + 1);
-const weeks = Array.from({ length: DAILY_GIFT_CYCLE_LENGTH / DAILY_GIFT_WEEK_LENGTH }, (_, index) => index + 1);
-const errorKey = computed(() => {
-  switch (dailyGift.error) {
-    case "recovery_failed": return "dailyGift.recoveryError";
-    case "ad_failed": return "dailyGift.adError";
-    case "ad_not_completed": return "dailyGift.adNotCompleted";
-    default: return "dailyGift.claimError";
-  }
-});
-const currentDay = computed(() => dailyGift.status.day);
-const selectedDay = ref(currentDay.value);
-const selectedWeek = computed(() => Math.ceil(selectedDay.value / DAILY_GIFT_WEEK_LENGTH));
-const weekDays = computed(() => {
-  const start = (selectedWeek.value - 1) * DAILY_GIFT_WEEK_LENGTH;
-  return days.slice(start, start + DAILY_GIFT_WEEK_LENGTH);
-});
-let refreshTimer: ReturnType<typeof setInterval> | null = null;
+    const { t } = useTranslation();
+    const foo = createNewText();
+    const dailyGift = useDailyGiftStore();
+    const gameState = useGameState();
+    const meta = useMetaStore();
+    const days = Array.from({ length: DAILY_GIFT_CYCLE_LENGTH }, (_, index) => index + 1);
+    const weeks = Array.from({ length: DAILY_GIFT_CYCLE_LENGTH / DAILY_GIFT_WEEK_LENGTH }, (_, index) => index + 1);
+    
+    const errorKey = computed(() => {
+        switch (dailyGift.error) {
+            case "recovery_failed": return "dailyGift.recoveryError";
+            case "ad_failed": return "dailyGift.adError";
+            case "ad_not_completed": return "dailyGift.adNotCompleted";
+            default: return "dailyGift.claimError";
+        }
+    });
 
-watch(currentDay, (day) => { selectedDay.value = day; });
+    const currentDay = computed(() => dailyGift.status.day);
+    const selectedDay = ref(currentDay.value);
+    const selectedWeek = computed(() => Math.ceil(selectedDay.value / DAILY_GIFT_WEEK_LENGTH));
 
-function getDayClass(day: number) {
-  const { canClaim, day: availableDay } = dailyGift.status;
-  return {
-    active: day === selectedDay.value,
-    available: canClaim && day === availableDay,
-    claimed: day < availableDay || (!canClaim && day === availableDay),
-  };
-}
+    const weekName = computed(() => foo.getElementFromArray('dailyGift.weekName', selectedWeek.value - 1));
+    
+    const weekDays = computed(() => {
+        const start = (selectedWeek.value - 1) * DAILY_GIFT_WEEK_LENGTH;
+        return days.slice(start, start + DAILY_GIFT_WEEK_LENGTH);
+    });
 
-function getRewards(day: number) {
-  return dailyGift.getDisplayRewards(day);
-}
+    let refreshTimer: ReturnType<typeof setInterval> | null = null;
 
-function getRewardLabel(reward: RewardDefinition): string {
-  const amount = reward.effect?.amount ?? 1;
-  switch (reward.type) {
-    case "currency": return `${amount} ${t(`currency.${reward.effect.currency}`)}`;
-    case "ammo": return `${amount} ${t("dailyGift.ammo")}`;
-    case "armor": return `${amount} ${t("dailyGift.armor")}`;
-    case "fortune_spin": return `${amount} ${t("fortuneWheel.spinUnit")}`;
-    case "upgrade": return t("dailyGift.upgrade");
-    case "cosmetic": return t("dailyGift.skin");
-    default: return t("dailyGift.reward");
-  }
-}
+    watch(
+        currentDay, 
+        (day) => { 
+            selectedDay.value = day; 
+        },
+    );
 
-function getRewardAmount(reward: RewardDefinition): string {
-  if (reward.type === "cosmetic") return t("dailyGift.skin");
-  if (reward.type === "upgrade") return t("dailyGift.upgrade");
-  return String(reward.effect?.amount ?? 1);
-}
+    function getDayClass(day: number) {
+        const { canClaim, day: availableDay } = dailyGift.status;
 
-function getRewardIcon(reward: RewardDefinition): string {
-  switch (reward.type) {
-    case "currency": return reward.effect?.currency === "energon" ? energonIcon : goldenIcon;
-    case "ammo": return ammoIcon;
-    case "armor": return armorIcon;
-    case "fortune_spin": return wheelIcon;
-    case "cosmetic": return dailyIcon;
-    case "upgrade": return dailyIcon;
-    default: return dailyIcon;
-  }
-}
+        return {
+            active: day === selectedDay.value,
+            available: canClaim && day === availableDay,
+            claimed: day < availableDay || (!canClaim && day === availableDay),
+        };
+    };
 
-function selectDay(day: number) {
-  if (day < 1 || day > DAILY_GIFT_CYCLE_LENGTH) return;
-  selectedDay.value = day;
-}
+    function getRewards(day: number) {
+        return dailyGift.getDisplayRewards(day);
+    };
 
-function selectWeek(week: number) {
-  const day = (week - 1) * DAILY_GIFT_WEEK_LENGTH + 1;
-  selectDay(day);
-}
+    function getRewardLabel(reward: RewardDefinition): string {
+        const amount = reward.effect?.amount ?? 1;
 
-function handleKeydown(event: KeyboardEvent) {
-  const key = event.key.toLowerCase();
-  if (key === "arrowleft" || key === "a") {
-    event.preventDefault();
-    selectDay(selectedDay.value - 1);
-  }
-  if (key === "arrowright" || key === "d") {
-    event.preventDefault();
-    selectDay(selectedDay.value + 1);
-  }
-}
+        switch (reward.type) {
+            case "currency": return `${amount} ${t(`currency.${reward.effect.currency}`)}`;
+            case "ammo": return `${amount} ${t("dailyGift.ammo")}`;
+            case "armor": return `${amount} ${t("dailyGift.armor")}`;
+            case "fortune_spin": return `${amount} ${t("fortuneWheel.spinUnit")}`;
+            case "upgrade": return t("dailyGift.upgrade");
+            case "cosmetic": return t("dailyGift.skin");
+            default: return t("dailyGift.reward");
+        };
+    };
+
+    function getRewardAmount(reward: RewardDefinition): string {
+        if (reward.type === "cosmetic") return t("dailyGift.skin");
+        if (reward.type === "upgrade") return t("dailyGift.upgrade");
+        return String(reward.effect?.amount ?? 1);
+    };
+
+    function getRewardIcon(reward: RewardDefinition): string {
+        switch (reward.type) {
+            case "currency": return reward.effect?.currency === "energon" ? energonIcon : goldenIcon;
+            case "ammo": return ammoIcon;
+            case "armor": return armorIcon;
+            case "fortune_spin": return wheelIcon;
+            case "cosmetic": return dailyIcon;
+            case "upgrade": return dailyIcon;
+            default: return dailyIcon;
+        };
+    };
+
+    function selectDay(day: number) {
+        if (day < 1 || day > DAILY_GIFT_CYCLE_LENGTH) return;
+        selectedDay.value = day;
+    };
+
+    function selectWeek(week: number) {
+        const day = (week - 1) * DAILY_GIFT_WEEK_LENGTH + 1;
+        selectDay(day);
+    };
+
+    function handleKeydown(event: KeyboardEvent) {
+        const key = event.key.toLowerCase();
+
+        if (key === "arrowleft" || key === "a") {
+            event.preventDefault();
+            selectDay(selectedDay.value - 1);
+        };
+
+        if (key === "arrowright" || key === "d") {
+            event.preventDefault();
+            selectDay(selectedDay.value + 1);
+        };
+    };
 
 
-async function recover() {
-  const recovered = await dailyGift.recover();
-  SoundManager.getInstance().playCue(recovered ? "uiSelect" : "actionRejected");
-}
+    async function recover() {
+        const recovered = await dailyGift.recover();
+        SoundManager.getInstance().playCue(recovered ? "uiSelect" : "actionRejected");
+    };
 
-async function claimDouble() {
-  const claimed = await dailyGift.claim(true);
-  SoundManager.getInstance().playCue(claimed ? "goldenPickup" : "actionRejected");
-}
+    async function claimDouble() {
+        const claimed = await dailyGift.claim(true);
+        SoundManager.getInstance().playCue(claimed ? "goldenPickup" : "actionRejected");
+    };
 
-async function claim() {
-  const claimed = await dailyGift.claim();
-  SoundManager.getInstance().playCue(claimed ? "goldenPickup" : "actionRejected");
-}
+    async function claim() {
+        const claimed = await dailyGift.claim();
+        SoundManager.getInstance().playCue(claimed ? "goldenPickup" : "actionRejected");
+    };
 
-onMounted(async () => {
-  refreshTimer = setInterval(() => dailyGift.refreshStatus(), 60_000);
-  window.addEventListener("keydown", handleKeydown);
-});
+    onMounted(async () => {
+        refreshTimer = setInterval(() => dailyGift.refreshStatus(), 60_000);
+        window.addEventListener("keydown", handleKeydown);
+    });
 
-onUnmounted(() => {
-  if (refreshTimer) clearInterval(refreshTimer);
-  window.removeEventListener("keydown", handleKeydown);
-});
+    onUnmounted(() => {
+        if (refreshTimer) clearInterval(refreshTimer);
+        window.removeEventListener("keydown", handleKeydown);
+    });
 </script>
 
+
 <style scoped lang="scss">
-@use "@/styles/menu.scss";
-@use "@/styles/typography" as *;
-@use "@/styles/colors" as *;
+    @use "@/styles/menu.scss";
+    @use "@/styles/typography" as *;
+    @use "@/styles/colors" as *;
 
-.daily-gift {
-  justify-content: flex-start;
-  padding-top: clamp(14rem, 40vh, 29rem);
-  background: radial-gradient(ellipse at 50% 55%, rgba(40, 75, 105, .2), transparent 45%), rgba(0, 0, 0, .72);
-}
+    // #region - основное
+        .daily_gift_content {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: flex-start;
+            gap: 30px;
+        }
 
-.daily-gift .header_block {
-  position: static;
-  margin: 0 0 clamp(.7rem, 1.6vh, 1.25rem);
-}
+        .daily_gift_cards_block {
+            display: flex;
+            gap: 24px;
+        }
 
-.daily-gift__content {
-  width: min(88rem, 92vw);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-}
+        .header_block {
+            margin-bottom: 38px;
+        }
+    // #endregion
 
-.daily-gift__claimed,
-.daily-gift__error,
-.daily-gift__status,
-.daily-gift__week-caption {
-  @include text-info-size-s;
-  margin: 0;
-  text-transform: uppercase;
-}
+    // #region - карточки наград
+        
+        // #region - тело карточки    
+        .daily_gift_card {
+            position: relative;
+            width: 200px;
+            height: 280px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-start;
+            padding: 26px 25px;
+            box-sizing: border-box;
+            // overflow: hidden;
 
-.daily-gift__status,
-.daily-gift__week-caption {
-  color: $color-blue-light;
-}
+            border: 1px solid rgba(121, 190, 255, 0.6);
+            background-color: rgba($color: #000000, $alpha: 0.5);
+            color: $color-gray;
+            cursor: pointer;
+            transition: 0.2s ease;
+        }
 
-.daily-gift__error {
-  color: $color-red-light;
-  margin-top: 1rem;
-}
+        .daily_gift_card:hover,
+        .daily_gift_card.active {
+            transform: translateY(-.25rem);
+            border-color: rgba(132, 210, 255, .8);
+            box-shadow: 0 .5rem 1.8rem rgba(58, 150, 225, .16), inset 0 0 2rem rgba(74, 159, 220, .08);
+        }
 
-.daily-gift__claimed {
-  color: $color-blue-light;
-  margin-top: 1.8rem;
-}
+        .daily_gift_card.available {
+            border-color: $color-blue-light;
+            box-shadow: 0 0 1.6rem rgba(71, 171, 255, .36), inset 0 0 2rem rgba(57, 148, 225, .13);
+        }
 
-.daily-gift__week-tabs {
-  display: flex;
-  gap: .55rem;
-  margin-bottom: clamp(.8rem, 2vh, 1.4rem);
-}
+        .daily_gift_card.claimed {
+            opacity: .38;
+            filter: saturate(.45);
+        }
+        // #endregion
 
-.daily-gift__week-tab {
-  min-width: 2.25rem;
-  padding: .35rem .65rem;
-  border: 1px solid rgba(114, 179, 238, .35);
-  background: rgba(3, 12, 22, .55);
-  color: $color-gray;
-  cursor: pointer;
-  font-family: 'vla_shu';
-}
+        // #region - рамки
+        .daily_gift_card_corner {
+            position: absolute;
+            width: 15px;
+            height: 15px;
+            pointer-events: none;
+        }
 
-.daily-gift__week-tab.active {
-  color: $color-blue-light;
-  border-color: $color-blue-light;
-  box-shadow: 0 0 .9rem rgba(80, 170, 255, .35);
-}
+        .corner_top_left {
+            top: -2px;
+            left: -2px;
+            border-top: 3px solid;
+            border-left: 3px solid;
+            border-color: $color-blue;
+        }
 
-.daily-gift__cards {
-  width: 100%;
-  display: grid;
-  grid-template-columns: repeat(7, minmax(0, 1fr));
-  gap: clamp(.45rem, 1vw, .9rem);
-}
+        .corner_top_right {
+            top: -2px;
+            right: -2px;
+            border-top: 3px solid;
+            border-right: 3px solid;
+            border-color: $color-blue;
+        }
 
-.daily-gift__card {
-  position: relative;
-  min-height: clamp(12rem, 29vh, 17.6rem);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: flex-start;
-  box-sizing: border-box;
-  padding: clamp(.8rem, 1.8vmin, 1.25rem) .4rem;
-  overflow: hidden;
-  border: 1px solid rgba(158, 206, 240, .27);
-  background: linear-gradient(145deg, rgba(15, 27, 40, .87), rgba(0, 3, 8, .8));
-  color: $color-gray;
-  cursor: pointer;
-  transition: .2s ease;
-}
+        .corner_bottom_left {
+            left: -2px;
+            bottom: -2px;
+            border-left: 3px solid;
+            border-bottom: 3px solid;
+            border-color: $color-blue;
+        }
 
-.daily-gift__card:hover,
-.daily-gift__card.active {
-  transform: translateY(-.25rem);
-  border-color: rgba(132, 210, 255, .8);
-  box-shadow: 0 .5rem 1.8rem rgba(58, 150, 225, .16), inset 0 0 2rem rgba(74, 159, 220, .08);
-}
+        .corner_bottom_right {
+            right: -2px;
+            bottom: -2px;
+            border-right: 3px solid;
+            border-bottom: 3px solid;
+            border-color: $color-blue;
+        }
+        // #endregion
 
-.daily-gift__card.available {
-  border-color: $color-blue-light;
-  box-shadow: 0 0 1.6rem rgba(71, 171, 255, .36), inset 0 0 2rem rgba(57, 148, 225, .13);
-}
+        // #region - титул
+        .daily_gift_title_block {
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-start;
+            align-items: center;
+            gap: 26px;
+        }
 
-.daily-gift__card.claimed {
-  opacity: .38;
-  filter: saturate(.45);
-}
+        .daily_gift_title {
+            @include text-info-size-m;
+            color: $color-yellow-super-light;
+            text-transform: uppercase;
+            line-height: 1;
+        }
 
-.daily-gift__card-corner {
-  position: absolute;
-  width: 1.05rem;
-  height: 1.05rem;
-  border-color: transparent;
-  pointer-events: none;
-}
+        .daily_gift_separator {
+            width: 100%;
+            height: 1px;
+            background: linear-gradient(to right,
+                rgba(121, 190, 255, 0) 5%,
+                rgba(121, 190, 255, 1) 40%,
+                rgba(121, 190, 255, 1) 60%,
+                rgba(121, 190, 255, 0) 100%
+            );
+        }
+        // #endregion
+        
+        // #region - блок с иконками и числами наград
+        .daily_gift_rewards_block {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: clamp(.35rem, .8vw, .75rem);
+            flex-wrap: wrap;
+            padding-top: 30px;
+        }
 
-.daily-gift__card.available .daily-gift__card-corner {
-  border-color: $color-blue-light;
-  filter: drop-shadow(0 0 .3rem $color-blue-light);
-}
+        .card_background_glow {
+            position: absolute;
+            bottom: 0;
+            width: 100%;
+            height: 82.14%;
+            background: radial-gradient(
+                circle at center,
+                rgba(121, 190, 255, 0.45) 0%,
+                rgba(121, 190, 255, 0.25) 30%,
+                rgba(121, 190, 255, 0) 65%
+            );
+        }
+        // #endregion
+    
+    // #endregion
 
-.daily-gift__card-corner--tl { top: -.08rem; left: -.08rem; border-top: 3px solid; border-left: 3px solid; }
-.daily-gift__card-corner--br { right: -.08rem; bottom: -.08rem; border-right: 3px solid; border-bottom: 3px solid; }
+    // #region - блок с подсказками (под карточками)
+        .daily_gift_tips_block {
+            width: 100%;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+        }
 
-.daily-gift__day {
-  @include text-button-size-s;
-  color: $color-yellow-super-light;
-  text-transform: uppercase;
-  white-space: nowrap;
-}
+        .text_claimed {
+            @include text-info-size-s;
+            color: $color-yellow-super-light;
+            text-transform: uppercase;
+            white-space: pre-line;
+        }
+        
+        .text_week_caption {
+            @include text-info-size-s;
+            color: $color-pink;
+            text-transform: uppercase;
+        }
+    // #endregion
 
-.daily-gift__separator {
-  width: 72%;
-  height: 1px;
-  margin: clamp(.65rem, 1.6vh, 1rem) 0 auto;
-  background: linear-gradient(90deg, transparent, rgba(122, 193, 235, .6), transparent);
-}
+        
 
-.daily-gift__rewards {
-  min-height: 48%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: clamp(.35rem, .8vw, .75rem);
-  flex-wrap: wrap;
-  padding: .7rem .2rem;
-}
 
-.daily-gift__reward {
-  min-width: 2.6rem;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: .25rem;
-  color: $color-yellow-super-light;
-}
 
-.daily-gift__reward-icon {
-  width: clamp(2.35rem, 4.4vw, 4.1rem);
-  height: clamp(2.35rem, 4.4vw, 4.1rem);
-  object-fit: contain;
-  filter: drop-shadow(0 0 .75rem rgba(121, 193, 255, .35));
-}
 
-.daily-gift__reward-icon--currency { filter: drop-shadow(0 0 .75rem rgba(255, 215, 73, .48)); }
-.daily-gift__reward-icon--fortune_spin,
-.daily-gift__reward-icon--cosmetic,
-.daily-gift__reward-icon--upgrade { filter: drop-shadow(0 0 .8rem rgba(93, 183, 255, .55)); }
+    .daily-gift {
+        justify-content: flex-start;
+        padding-top: clamp(14rem, 40vh, 29rem);
+        // background: radial-gradient(ellipse at 50% 55%, rgba(40, 75, 105, .2), transparent 45%), rgba(0, 0, 0, .72);
+    }
 
-.daily-gift__reward-value {
-  @include text-info-size-s;
-  text-align: center;
-  text-transform: uppercase;
-}
+    .daily-gift {
+        position: static;
+        margin: 0 0 clamp(.7rem, 1.6vh, 1.25rem);
+    }
 
-.daily-gift__bonus {
-  position: absolute;
-  right: .55rem;
-  bottom: .45rem;
-  @include text-info-size-s;
-  color: $color-blue-light;
-}
+    
 
-.daily-gift__status {
-  position: absolute;
-  top: .5rem;
-  right: .55rem;
-  color: $color-blue-light;
-}
+    .daily-gift__error,
+    .daily-gift__status {
+        @include text-info-size-s;
+        margin: 0;
+        text-transform: uppercase;
+    }
 
-.daily-gift__status--claimed {
-  color: $color-green-light;
-  font-weight: 700;
-  font-size: 1.35em;
-}
+    .daily-gift__status {
+        color: $color-blue-light;
+    }
 
-.daily-gift__week-caption { margin-top: 1rem; color: $color-yellow-super-light; }
+    .daily-gift__error {
+        color: $color-red-light;
+        margin-top: 1rem;
+    }
 
-.daily-gift__claim,
-.daily-gift__double,
-.daily-gift__recover,
-.daily-gift__back {
-  @include text-button-size-s;
-  color: $color-yellow-super-light;
-}
+    
 
-.daily-gift__claim {
-  margin-top: 1.8rem;
-}
+    .daily-gift__week-tabs {
+        display: flex;
+        gap: .55rem;
+        margin-bottom: clamp(.8rem, 2vh, 1.4rem);
+    }
 
-.daily-gift__back {
-  position: absolute;
-  bottom: 5.556vh;
-  color: $color-blue-light;
-}
+    .daily-gift__week-tab {
+        min-width: 2.25rem;
+        padding: .35rem .65rem;
+        border: 1px solid rgba(114, 179, 238, .35);
+        background: rgba(3, 12, 22, .55);
+        color: $color-gray;
+        cursor: pointer;
+        font-family: 'vla_shu';
+    }
 
-.daily-gift__double:disabled,
-.daily-gift__claim:disabled,
-.daily-gift__recover:disabled,
-.daily-gift__back:disabled {
-  opacity: 0.45;
-  cursor: default;
-}
+    .daily-gift__week-tab.active {
+        color: $color-blue-light;
+        border-color: $color-blue-light;
+        box-shadow: 0 0 .9rem rgba(80, 170, 255, .35);
+    }
 
-.daily-gift__double { margin-top: 0.7rem; }
+    
 
-.daily-gift__recovery {
-  @include text-info-size-s;
-  max-width: min(36rem, 90vw);
-  margin-top: 1rem;
-  color: $color-blue-light;
-  text-align: center;
+    
 
-  p { margin: 0.5rem 0; }
-}
+    
 
-@media (max-width: 700px) {
-  .daily-gift {
-    padding-top: clamp(4.5rem, 12vh, 7rem);
-  }
-  .daily-gift__content { width: min(92vw, 34rem); }
-  .daily-gift__cards {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    max-height: 53vh;
-    overflow-y: auto;
-    padding: .3rem;
-  }
-  .daily-gift__card { min-height: 10rem; }
-}
+    .daily_gift_card.available {
+        border-color: $color-blue-light;
+        filter: drop-shadow(0 0 .3rem $color-blue-light);
+    }
+
+    
+
+    
+
+    
+
+    
+
+    .daily-gift__reward {
+        min-width: 2.6rem;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: .25rem;
+        color: $color-yellow-super-light;
+    }
+
+    .daily-gift__reward-icon {
+        width: clamp(2.35rem, 4.4vw, 4.1rem);
+        height: clamp(2.35rem, 4.4vw, 4.1rem);
+        object-fit: contain;
+        filter: drop-shadow(0 0 .75rem rgba(121, 193, 255, .35));
+    }
+
+    .daily-gift__reward-icon--currency { 
+        filter: drop-shadow(0 0 .75rem rgba(255, 215, 73, .48)); 
+    }
+
+    .daily-gift__reward-icon--fortune_spin,
+    .daily-gift__reward-icon--cosmetic,
+    .daily-gift__reward-icon--upgrade { 
+        filter: drop-shadow(0 0 .8rem rgba(93, 183, 255, .55)); 
+    }
+
+    .daily-gift__reward-value {
+        @include text-info-size-s;
+        text-align: center;
+        text-transform: uppercase;
+    }
+
+    .daily-gift__bonus {
+        position: absolute;
+        right: .55rem;
+        bottom: .45rem;
+        @include text-info-size-s;
+        color: $color-blue-light;
+    }
+
+    .daily-gift__status {
+        position: absolute;
+        top: .5rem;
+        right: .55rem;
+        color: $color-blue-light;
+    }
+
+    .daily-gift__status--claimed {
+        color: $color-green-light;
+        font-weight: 700;
+        font-size: 1.35em;
+    }
+
+    .daily-gift__claim,
+    .daily-gift__double,
+    .daily-gift__recover,
+    .daily-gift__back {
+        @include text-button-size-s;
+        color: $color-yellow-super-light;
+    }
+
+    .daily-gift__claim {
+        margin-top: 1.8rem;
+    }
+
+    .daily-gift__back {
+        position: absolute;
+        bottom: 5.556vh;
+        color: $color-blue-light;
+    }
+
+    .daily-gift__double:disabled,
+    .daily-gift__claim:disabled,
+    .daily-gift__recover:disabled,
+    .daily-gift__back:disabled {
+        opacity: 0.45;
+        cursor: default;
+    }
+
+    .daily-gift__double { 
+        margin-top: 0.7rem; 
+    }
+
+    .daily-gift__recovery {
+        @include text-info-size-s;
+        max-width: min(36rem, 90vw);
+        margin-top: 1rem;
+        color: $color-blue-light;
+        text-align: center;
+
+        p { margin: 0.5rem 0; }
+    }
 </style>

@@ -134,8 +134,8 @@
             action: goToFortuneWheel 
         },
         { id: 2, 
-            text: foo.makeText("businessMenu.namesList.dailyBonus", 'empty'), 
-            reminder: foo.makeText("businessMenu.remindersList.dailyBonus", 'empty'), 
+            text: foo.makeText("businessMenu.namesList.dailyGift", 'empty'), 
+            reminder: foo.makeText("businessMenu.remindersList.dailyGift", 'empty'), 
             action: goToDailyGift 
         },
         { id: 3, 
