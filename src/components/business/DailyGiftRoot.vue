@@ -16,12 +16,12 @@
                 </button>
             </div> -->
 
+            <!-- Блок с карточками -->
             <div class="daily_gift_cards_block">
                 <div v-for="day in weekDays" :key="day" class="daily_gift_card" :class="getDayClass(day)"
                     :aria-current="day === selectedDay ? 'true' : undefined" role="button" tabindex="0" @click="selectDay(day)"
                     @keydown.enter="selectDay(day)"
                 >
-
                     <!-- Свечение за иконками -->
                     <div class="card_background_glow"></div>
 
@@ -33,10 +33,16 @@
 
                     <!-- Блок с иконками и числами наград -->
                     <div class="daily_gift_rewards_block">
-                        <div v-for="(reward, rewardIndex) in getRewards(day)" :key="rewardIndex" class="daily-gift__reward">
-                            <img class="daily-gift__reward-icon" :class="`daily-gift__reward-icon--${reward.type}`"
-                                :src="getRewardIcon(reward)" :alt="getRewardLabel(reward)" />
-                            <span class="daily-gift__reward-value">{{ getRewardAmount(reward) }}</span>
+                        <div v-for="(reward, rewardIndex) in getRewards(day)" :key="rewardIndex" class="daily_gift_reward">
+                            
+                            <div class="daily_gift_reward_icon_container" :class="setGiftIconSize(reward, getRewards(day).length)">
+                                <img class="reward_img" :src="getRewardIcon(reward)" />
+                            </div>
+
+                            <!-- :class="`daily_gift_reward_icon--${reward.type}`" -->
+
+                            <span class="daily_gift_reward_value" :style="setGiftValueStyle(reward)">{{ getRewardAmount(reward) }}</span>
+
                         </div>
                     </div>
 
@@ -107,15 +113,18 @@
     import { useGameState } from "@/store/gameState";
     import type { RewardDefinition } from "@/purchase/types";
     import { SoundManager } from "@/game/sound/SoundManager";
+    import { createNewText } from '@/helpers/functions';
+
     import goldenIcon from "@/assets/images/hud/cube_golden.svg";
     import energonIcon from "@/assets/images/hud/cube_energon_core.svg";
     import ammoIcon from "@/assets/images/hud/cube_bullet.svg";
     import armorIcon from "@/assets/images/hud/cube_armor.svg";
     import dailyIcon from "@/assets/images/daily_gifts_icon.svg";
-    import wheelIcon from "@/assets/images/cube_buttons/btn_desktop_lucky_spin_wheel.svg";
-    import { createNewText } from '@/helpers/functions';
+    import wheelIcon from "@/assets/images/daily_gifts/fortune_wheel_icon.png";
+    
 
     const { t } = useTranslation();
+    const { i18next } = useTranslation();
     const foo = createNewText();
     const dailyGift = useDailyGiftStore();
     const gameState = useGameState();
@@ -162,28 +171,25 @@
         };
     };
 
+    // получаем массив доступных наград за конкретный день
     function getRewards(day: number) {
         return dailyGift.getDisplayRewards(day);
     };
 
-    function getRewardLabel(reward: RewardDefinition): string {
-        const amount = reward.effect?.amount ?? 1;
-
-        switch (reward.type) {
-            case "currency": return `${amount} ${t(`currency.${reward.effect.currency}`)}`;
-            case "ammo": return `${amount} ${t("dailyGift.ammo")}`;
-            case "armor": return `${amount} ${t("dailyGift.armor")}`;
-            case "fortune_spin": return `${amount} ${t("fortuneWheel.spinUnit")}`;
-            case "upgrade": return t("dailyGift.upgrade");
-            case "cosmetic": return t("dailyGift.skin");
-            default: return t("dailyGift.reward");
-        };
-    };
-
+    // получаем число под иконкой награды (в формате выбранного языка)
     function getRewardAmount(reward: RewardDefinition): string {
-        if (reward.type === "cosmetic") return t("dailyGift.skin");
-        if (reward.type === "upgrade") return t("dailyGift.upgrade");
-        return String(reward.effect?.amount ?? 1);
+        let newString = '';
+        if (reward.type === "cosmetic") {
+            newString = t("dailyGift.skin");
+
+        } else if (reward.type === "upgrade") {
+            newString = t("dailyGift.upgrade");
+
+        } else {
+            newString = String(reward.effect?.amount ?? 1);
+        }
+        
+        return formatScore(Number(newString));
     };
 
     function getRewardIcon(reward: RewardDefinition): string {
@@ -222,6 +228,40 @@
         };
     };
 
+    // приводим в нужный формат очки игрока (с учетом его страны) 
+    // (дублируется с такой же функцией в LeaderBoarsRoot.vue - позже вынести как универсальную)
+    function formatScore(score: number) {
+        const locale = i18next.language || "ru-RU";
+        return Math.floor(score).toLocaleString(locale);
+    };
+
+    // назначаем габариты иконке награды
+    function setGiftIconSize(reward_, rewardsCount_) {
+      if (reward_.type == 'fortune_spin') {
+        return 'icon_fortune_size';
+      } else if (rewardsCount_ == 1) {
+        return 'icon_normal_size';
+      } else {
+        return 'icon_small_size';
+      };
+    };
+
+    // назначаем стиль подписи под иконкой награды
+    function setGiftValueStyle(reward_) {
+      let newColor = '';
+      if (reward_.type == 'currency') {
+        newColor = reward_.effect.currency == 'golden' ? 'FFF5AD' : 'D7FBFF';
+      } else if (reward_.type == 'ammo') {
+        newColor = 'FFC3C5';
+      } else if (reward_.type == 'armor') {
+        newColor = 'FFFFFF';
+      };
+
+
+      return {
+        color: `#${newColor}`,
+      };
+    };
 
     async function recover() {
         const recovered = await dailyGift.recover();
@@ -391,10 +431,58 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            gap: clamp(.35rem, .8vw, .75rem);
-            flex-wrap: wrap;
+            gap: 20px;
             padding-top: 30px;
         }
+
+        .daily_gift_reward {
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-start;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .daily_gift_reward_value {
+            @include text-info-size-m;
+            text-align: center;
+            text-transform: uppercase;
+        }
+
+        .daily_gift_reward_icon_container {
+            z-index: 1;
+            // filter: drop-shadow(0 0 .75rem rgba(121, 193, 255, .35));
+        }
+
+        .reward_img {
+          width: 100%;
+          height: 100%;
+        }
+
+        .icon_normal_size {
+          width: 66px;
+          height: 66px;
+        }
+
+        .icon_small_size {
+          width: 52px;
+          height: 52px;
+        }
+
+        .icon_fortune_size {
+          width: 123px;
+          height: 125px;
+        }
+
+        // .daily_gift_reward_icon--currency { 
+        //     filter: drop-shadow(0 0 .75rem rgba(255, 215, 73, .48)); 
+        // }
+
+        // .daily_gift_reward_icon--fortune_spin,
+        // .daily_gift_reward_icon--cosmetic,
+        // .daily_gift_reward_icon--upgrade { 
+        //     filter: drop-shadow(0 0 .8rem rgba(93, 183, 255, .55)); 
+        // }
 
         .card_background_glow {
             position: absolute;
@@ -450,8 +538,6 @@
         margin: 0 0 clamp(.7rem, 1.6vh, 1.25rem);
     }
 
-    
-
     .daily-gift__error,
     .daily-gift__status {
         @include text-info-size-s;
@@ -467,8 +553,6 @@
         color: $color-red-light;
         margin-top: 1rem;
     }
-
-    
 
     .daily-gift__week-tabs {
         display: flex;
@@ -492,55 +576,9 @@
         box-shadow: 0 0 .9rem rgba(80, 170, 255, .35);
     }
 
-    
-
-    
-
-    
-
     .daily_gift_card.available {
         border-color: $color-blue-light;
         filter: drop-shadow(0 0 .3rem $color-blue-light);
-    }
-
-    
-
-    
-
-    
-
-    
-
-    .daily-gift__reward {
-        min-width: 2.6rem;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        gap: .25rem;
-        color: $color-yellow-super-light;
-    }
-
-    .daily-gift__reward-icon {
-        width: clamp(2.35rem, 4.4vw, 4.1rem);
-        height: clamp(2.35rem, 4.4vw, 4.1rem);
-        object-fit: contain;
-        filter: drop-shadow(0 0 .75rem rgba(121, 193, 255, .35));
-    }
-
-    .daily-gift__reward-icon--currency { 
-        filter: drop-shadow(0 0 .75rem rgba(255, 215, 73, .48)); 
-    }
-
-    .daily-gift__reward-icon--fortune_spin,
-    .daily-gift__reward-icon--cosmetic,
-    .daily-gift__reward-icon--upgrade { 
-        filter: drop-shadow(0 0 .8rem rgba(93, 183, 255, .55)); 
-    }
-
-    .daily-gift__reward-value {
-        @include text-info-size-s;
-        text-align: center;
-        text-transform: uppercase;
     }
 
     .daily-gift__bonus {
