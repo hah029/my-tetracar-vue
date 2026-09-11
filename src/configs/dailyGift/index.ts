@@ -59,7 +59,7 @@ export const DAILY_GIFT_REWARDS: DailyGiftDayConfig[] = [
     day: DAILY_GIFT_WEEK_LENGTH * 0 + 7,
     rewards: [{
       type: "cosmetic", onceKey: "daily-gift-day-7-skin",
-      effect: { skinId: "???" },
+      effect: { skinId: "basic1" },
       fallback: { type: "currency", effect: { currency: "golden", amount: 1000 } },
     }],
   },
@@ -123,7 +123,7 @@ export const DAILY_GIFT_REWARDS: DailyGiftDayConfig[] = [
     day: DAILY_GIFT_WEEK_LENGTH * 1 + 7,
     rewards: [{
       type: "cosmetic", onceKey: "daily-gift-day-14-skin",
-      effect: { skinId: "???" },
+      effect: { skinId: "basic2" },
       fallback: { type: "currency", effect: { currency: "golden", amount: 2500 } },
     }],
   },
@@ -185,7 +185,7 @@ export const DAILY_GIFT_REWARDS: DailyGiftDayConfig[] = [
     day: DAILY_GIFT_WEEK_LENGTH * 2 + 7,
     rewards: [{
       type: "cosmetic", onceKey: "daily-gift-day-21-skin",
-      effect: { skinId: "???" },
+      effect: { skinId: "premium1" },
       fallback: { type: "currency", effect: { currency: "golden", amount: 5000 } },
     }],
   },
@@ -239,7 +239,7 @@ export const DAILY_GIFT_REWARDS: DailyGiftDayConfig[] = [
     day: DAILY_GIFT_WEEK_LENGTH * 3 + 7,
     rewards: [{
       type: "cosmetic", onceKey: "daily-gift-day-28-skin",
-      effect: { skinId: "???" },
+      effect: { skinId: "premium2" },
       fallback: { type: "currency", effect: { currency: "golden", amount: 10000 } },
     }],
   },

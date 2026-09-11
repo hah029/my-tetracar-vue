@@ -23,7 +23,15 @@
                     @keydown.enter="selectDay(day)"
                 >
                     <!-- Свечение за иконками -->
-                    <div class="card_background_glow"></div>
+                    <div class="card_background_glow" :class="setBgGlow(day)"></div>
+
+                    <!-- Лучи за иконками -->
+                    <div v-if="checkDayPrize(day)" class="rays_image_container">
+                        <img v-if="checkRaysType(day) == 1" class='rays_image' src="@/assets/images/business/gift_rays1.svg" />
+                        <img v-else-if="checkRaysType(day) == 2" class='rays_image' src="@/assets/images/business/gift_rays2.svg" />
+                        <img v-else-if="checkRaysType(day) == 3" class='rays_image' src="@/assets/images/business/gift_rays3.svg" />
+                        <img v-else-if="checkRaysType(day) == 4" class='rays_image' src="@/assets/images/business/gift_rays4.svg" />
+                    </div>
 
                     <!-- Титул -->
                     <div class="daily_gift_title_block">
@@ -32,22 +40,50 @@
                     </div>
 
                     <!-- Блок с иконками и числами наград -->
-                    <div class="daily_gift_rewards_block">
-                        <div v-for="(reward, rewardIndex) in getRewards(day)" :key="rewardIndex" class="daily_gift_reward">
-                            
-                            <div class="daily_gift_reward_icon_container" :class="setGiftIconSize(reward, getRewards(day).length)">
-                                <img class="reward_img" :src="getRewardIcon(reward)" />
+                    <div class="daily_gift_rewards_block_wrapper" :style="setRewardsWrapperStyle(day)">
+                        
+                        <div class="daily_gift_rewards_block">
+                            <div v-for="(reward, rewardIndex) in getRewards(day)" :key="rewardIndex" class="daily_gift_reward">
+                                
+                                <div 
+                                    class="daily_gift_reward_icon_container" 
+                                    :class="setGiftIconSize(reward, getRewards(day).length)"
+                                    :style="setRewardIconGlow(reward)"
+                                >
+                                    <EnergonIcon v-if="reward.effect?.currency === 'energon'"/>
+                                    <img v-else class="reward_img" :src="getRewardIcon(reward)" />
+                                </div>
+    
+                                <span 
+                                    v-if="reward.type != 'fortune_spin'" 
+                                    class="daily_gift_reward_value" 
+                                    :style="setGiftValueStyle(reward)"
+                                >
+                                    {{ getRewardAmount(reward) }}
+                                </span>
+                                
                             </div>
-
-                            <!-- :class="`daily_gift_reward_icon--${reward.type}`" -->
-
-                            <span class="daily_gift_reward_value" :style="setGiftValueStyle(reward)">{{ getRewardAmount(reward) }}</span>
-
                         </div>
+
+                        <!-- Таймер обратного отсчета -->
+                        <div v-if="day == 2" class="countdown_timer">
+                            05 : 26 : 59
+                        </div>
+
                     </div>
 
                     <!-- Рекламный бонус (x2) -->
-                    <span v-if="canDoubleDailyGift(day)" class="daily-gift__bonus">×2</span>
+                    <div v-if="canDoubleDailyGift(day)" class="advertisement_block">
+                        <span class="advertisement_text">×2</span>
+                        <div class="advertisement_image_container">
+                            <img class='rays_image' src="@/assets/images/business/advertisement_icon.svg" />
+                        </div>
+                    </div>
+
+                    <div v-if="day == 7" class="level_value">
+                        <span class="level_value_1">1</span>
+                        <span class="level_value_2">ур.</span>
+                    </div>
 
                     <!-- Галочка (бонус взят) -->
                     <span v-if="getDayClass(day).claimed" class="daily-gift__status daily-gift__status--claimed">✓</span>
@@ -115,14 +151,18 @@
     import { SoundManager } from "@/game/sound/SoundManager";
     import { createNewText } from '@/helpers/functions';
 
+    import EnergonIcon from "@/components/icons/EnergonIcon.vue";
+
     import goldenIcon from "@/assets/images/hud/cube_golden.svg";
-    import energonIcon from "@/assets/images/hud/cube_energon_core.svg";
     import ammoIcon from "@/assets/images/hud/cube_bullet.svg";
     import armorIcon from "@/assets/images/hud/cube_armor.svg";
-    import dailyIcon from "@/assets/images/daily_gifts_icon.svg";
-    import wheelIcon from "@/assets/images/daily_gifts/fortune_wheel_icon.png";
+    import dailyIcon from "@/assets/images/cube_buttons/btn_desktop_daily_bonus.svg";
+    import skinIcon1 from "@/assets/images/business/gift_skin1_icon.png";
+    import skinIcon2 from "@/assets/images/business/gift_skin2_icon.png";
+    import skinIcon3 from "@/assets/images/business/gift_skin3_icon.png";
+    import skinIcon4 from "@/assets/images/business/gift_skin4_icon.png";
+    import wheelIcon from "@/assets/images/business/fortune_wheel_icon.png";
     
-
     const { t } = useTranslation();
     const { i18next } = useTranslation();
     const foo = createNewText();
@@ -176,7 +216,33 @@
         return dailyGift.getDisplayRewards(day);
     };
 
-    // получаем число под иконкой награды (в формате выбранного языка)
+    // проверяем на тип приза: Колесо фортуны или Скин (если да, то показываем лучи)
+    function checkDayPrize(day_) {
+        const prizeType = getRewards(day_)[0].type;
+        return (prizeType == 'fortune_spin' || prizeType == 'cosmetic') ? true : false;
+    };
+
+    // проверяем на тип приза: Колесо фортуны или Скин (если да, то показываем лучи)
+    function checkRaysType(day_) {
+        const prizeType = getRewards(day_)[0].type;
+
+        if (prizeType == 'fortune_spin') {
+            return 1;
+        } else {
+            const skinId = getRewards(day_)[0].effect.skinId;
+            if (skinId == 'basic1') {
+                return 1;
+            } else if (skinId == 'basic2') {
+                return 2;
+            } else if (skinId == 'premium1') {
+                return 3;
+            } else if (skinId == 'premium2') {
+                return 4;
+            };
+        };
+    };
+
+    // получаем текст под иконкой награды (или число в формате выбранного языка)
     function getRewardAmount(reward: RewardDefinition): string {
         let newString = '';
         if (reward.type === "cosmetic") {
@@ -187,21 +253,53 @@
 
         } else {
             newString = String(reward.effect?.amount ?? 1);
-        }
+            newString = formatScore(Number(newString));
+        };
         
-        return formatScore(Number(newString));
+        return newString;
     };
 
-    function getRewardIcon(reward: RewardDefinition): string {
-        switch (reward.type) {
-            case "currency": return reward.effect?.currency === "energon" ? energonIcon : goldenIcon;
-            case "ammo": return ammoIcon;
-            case "armor": return armorIcon;
-            case "fortune_spin": return wheelIcon;
-            case "cosmetic": return dailyIcon;
-            case "upgrade": return dailyIcon;
-            default: return dailyIcon;
+    // 
+    function setRewardsWrapperStyle(day_) {
+        const calcMarginTop = day_ == 2 ? 0 : 30;
+
+        return {
+            marginTop: `${calcMarginTop}px`,
+        }
+    };
+
+    // загружаем нужное изображение для иконки награды
+    function getRewardIcon(reward_) {
+        if (reward_.type == 'currency') {
+            return goldenIcon;
+        } else if (reward_.type == 'ammo') {
+            return ammoIcon;
+        } else if (reward_.type == 'armor') {
+            return armorIcon;
+        } else if (reward_.type == 'fortune_spin') {
+            return wheelIcon;
+        } else if (reward_.type == 'cosmetic') {
+            if (reward_.effect.skinId == 'basic1') {
+                return skinIcon1;
+            } else if (reward_.effect.skinId == 'basic2') {
+                return skinIcon2;
+            } else if (reward_.effect.skinId == 'premium1') {
+                return skinIcon3;
+            } else if (reward_.effect.skinId == 'premium2') {
+                return skinIcon4;
+            };
+        } else if (reward_.type == 'upgrade') {
+            return dailyIcon;
+        } else {
+            return dailyIcon;
         };
+    };
+
+    // приводим в нужный формат очки игрока (с учетом его страны) 
+    // (дублируется с такой же функцией в LeaderBoarsRoot.vue - позже вынести как универсальную)
+    function formatScore(score: number) {
+        const locale = i18next.language || "ru-RU";
+        return Math.floor(score).toLocaleString(locale);
     };
 
     function selectDay(day: number) {
@@ -228,40 +326,95 @@
         };
     };
 
-    // приводим в нужный формат очки игрока (с учетом его страны) 
-    // (дублируется с такой же функцией в LeaderBoarsRoot.vue - позже вынести как универсальную)
-    function formatScore(score: number) {
-        const locale = i18next.language || "ru-RU";
-        return Math.floor(score).toLocaleString(locale);
-    };
+    // -----------------
+    // #region - стили
+        // назначаем габариты иконкам наград
+        function setGiftIconSize(reward_, rewardsCount_) {
+            if (reward_.type == 'cosmetic') {
+                return 'icon_skin_size';
+            } else if (reward_.type == 'fortune_spin') {
+                return 'icon_fortune_size';
+            } else if (rewardsCount_ == 1) {
+                return 'icon_normal_size';
+            } else {
+                return 'icon_small_size';
+            };
+        };
 
-    // назначаем габариты иконке награды
-    function setGiftIconSize(reward_, rewardsCount_) {
-      if (reward_.type == 'fortune_spin') {
-        return 'icon_fortune_size';
-      } else if (rewardsCount_ == 1) {
-        return 'icon_normal_size';
-      } else {
-        return 'icon_small_size';
-      };
-    };
+        // назначаем стиль подписи под иконками наград
+        function setGiftValueStyle(reward_) {
+            let newColor = '';
+            
+            if (reward_.type == 'currency') {
+                newColor = reward_.effect.currency == 'golden' ? 'FFF5AD' : 'D7FBFF';
 
-    // назначаем стиль подписи под иконкой награды
-    function setGiftValueStyle(reward_) {
-      let newColor = '';
-      if (reward_.type == 'currency') {
-        newColor = reward_.effect.currency == 'golden' ? 'FFF5AD' : 'D7FBFF';
-      } else if (reward_.type == 'ammo') {
-        newColor = 'FFC3C5';
-      } else if (reward_.type == 'armor') {
-        newColor = 'FFFFFF';
-      };
+            } else if (reward_.type == 'ammo') {
+                newColor = 'FFC3C5';
 
+            } else if (reward_.type == 'armor') {
+                newColor = 'FFFFFF';
 
-      return {
-        color: `#${newColor}`,
-      };
-    };
+            } else if (reward_.type == 'cosmetic') {
+                const skinId = reward_.effect.skinId;
+
+                if (skinId == 'basic1') {
+                    newColor = '79BEFF';
+                } else if (skinId == 'basic2') {
+                    newColor = 'FF6E6E';
+                } else if (skinId == 'premium1') {
+                    newColor = 'FFF080';
+                } else if (skinId == 'premium2') {
+                    newColor = 'F477FF';
+                };
+            };
+
+            return {
+                color: `#${newColor}`,
+            };
+        };
+
+        // придаем свечение иконкам наград
+        function setRewardIconGlow (reward_) {
+            let filterColor = '';
+
+            if (reward_.type == 'currency') {
+                if (reward_.effect.currency == 'golden') {
+                    filterColor = '255, 220, 20';
+                };
+
+            } else if (reward_.type == 'ammo') {
+                filterColor = '255, 116, 121';
+
+            } else if (reward_.type == 'armor') {
+                filterColor = '255, 255, 255';
+            };
+            
+            return {
+                filter: `drop-shadow(0 0 10px rgba(${filterColor}, 0.3))`
+            };
+        };
+
+        // меняем цвет свечения заднего плана карточки
+        function setBgGlow(day_) {
+            const prizeType = getRewards(day_)[0].type;
+
+            if (prizeType != 'cosmetic') {
+                return 'background_glow_blue';
+            } else {
+                const skinId = getRewards(day_)[0].effect.skinId;
+                if (skinId == 'basic1') {
+                    return 'background_glow_blue';
+                } else if (skinId == 'basic2') {
+                    return 'background_glow_red';
+                } else if (skinId == 'premium1') {
+                    return 'background_glow_yellow';
+                } else if (skinId == 'premium2') {
+                    return 'background_glow_pink';
+                };
+            };
+        };
+    // #endregion
+    // -----------------
 
     async function recover() {
         const recovered = await dailyGift.recover();
@@ -425,6 +578,16 @@
         // #endregion
         
         // #region - блок с иконками и числами наград
+        .daily_gift_rewards_block_wrapper {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            align-items: center;
+            // padding-top: 30px;
+        }
+
         .daily_gift_rewards_block {
             width: 100%;
             height: 100%;
@@ -432,7 +595,6 @@
             align-items: center;
             justify-content: center;
             gap: 20px;
-            padding-top: 30px;
         }
 
         .daily_gift_reward {
@@ -447,31 +609,39 @@
             @include text-info-size-m;
             text-align: center;
             text-transform: uppercase;
+            line-height: 1;
         }
 
         .daily_gift_reward_icon_container {
             z-index: 1;
-            // filter: drop-shadow(0 0 .75rem rgba(121, 193, 255, .35));
         }
 
         .reward_img {
-          width: 100%;
-          height: 100%;
+            width: 100%;
+            height: 100%;
         }
 
         .icon_normal_size {
-          width: 66px;
-          height: 66px;
+            width: 66px;
+            height: 66px;
+            margin-bottom: 5px;
         }
 
         .icon_small_size {
-          width: 52px;
-          height: 52px;
+            width: 52px;
+            height: 52px;
+            margin-bottom: 5px;
         }
 
         .icon_fortune_size {
-          width: 123px;
-          height: 125px;
+            width: 123px;
+            height: 125px;
+        }
+
+        .icon_skin_size {
+            width: 103px;
+            height: 120px;
+            margin-bottom: -15px;
         }
 
         // .daily_gift_reward_icon--currency { 
@@ -483,12 +653,17 @@
         // .daily_gift_reward_icon--upgrade { 
         //     filter: drop-shadow(0 0 .8rem rgba(93, 183, 255, .55)); 
         // }
-
+        // #endregion
+        
+        // #region - изображения на фоне карточки
         .card_background_glow {
             position: absolute;
             bottom: 0;
             width: 100%;
             height: 82.14%;
+        }
+
+        .background_glow_blue {
             background: radial-gradient(
                 circle at center,
                 rgba(121, 190, 255, 0.45) 0%,
@@ -496,8 +671,111 @@
                 rgba(121, 190, 255, 0) 65%
             );
         }
+
+        .background_glow_red {
+            background: radial-gradient(
+                circle at center,
+                rgba(255, 121, 121, 0.45) 0%,
+                rgba(255, 121, 121, 0.25) 30%,
+                rgba(255, 121, 121, 0) 65%
+            );
+        }
+
+        .background_glow_yellow {
+            background: radial-gradient(
+                circle at center,
+                rgba(255, 228, 121, 0.45) 0%,
+                rgba(255, 228, 121, 0.25) 30%,
+                rgba(255, 228, 121, 0) 65%
+            );
+        }
+
+        .background_glow_pink {
+            background: radial-gradient(
+                circle at center,
+                rgba(253, 151, 255, 0.45) 0%,
+                rgba(253, 151, 255, 0.25) 30%,
+                rgba(253, 151, 255, 0) 65%
+            );
+        }
+
+        .rays_image_container {
+            position: absolute;
+            top: 40px;
+            width: 270px;
+            height: 270px;
+        }
+
+        .rays_image {
+            width: 100%;
+            height: 100%;
+        }
         // #endregion
-    
+
+        // #region - текст с уровнем скина на карточке
+        .level_value {
+            position: absolute;
+            top: 98px;
+            right: 35px;
+            display: flex;
+            justify-content: flex-end;
+            align-items: flex-end;
+            gap: 4px;
+            color: $color-hard-blue;
+        }
+
+        .level_value_1 {
+            @include text-info-size-m;
+            line-height: 1;
+            font-weight: 600
+        }
+
+        .level_value_2 {
+            @include text-info-size-s;
+            line-height: 1;
+        }
+        // #endregion
+
+        // #region - таймер
+        .countdown_timer {
+            display: flex;
+            justify-content: center;
+            @include text-info-size-m;
+            color: $color-pink;
+            line-height: 1;
+            filter: drop-shadow(0 0 10px rgba(247, 156, 255, 1));
+        }
+        // #endregion
+
+        // #region - значок с рекламой
+        .advertisement_block {
+            position: absolute;
+            bottom: 16px;
+            right: 16px;
+            display: flex;
+            justify-content: flex-end;
+            align-items: flex-end;
+            gap: 4px;
+            opacity: 0.5;
+        }
+        
+        .advertisement_text {
+            @include text-info-size-s;
+            color: $color-hard-blue;
+            line-height: 0.7;
+        }
+
+        .advertisement_image_container {
+            width: 20px;
+            height: 20px;
+        }
+
+        .advertisement_image {
+            width: 100%;
+            height: 100%;
+        }
+        // #endregion
+
     // #endregion
 
     // #region - блок с подсказками (под карточками)
@@ -581,13 +859,7 @@
         filter: drop-shadow(0 0 .3rem $color-blue-light);
     }
 
-    .daily-gift__bonus {
-        position: absolute;
-        right: .55rem;
-        bottom: .45rem;
-        @include text-info-size-s;
-        color: $color-blue-light;
-    }
+    
 
     .daily-gift__status {
         position: absolute;
