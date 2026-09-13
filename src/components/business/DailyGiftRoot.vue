@@ -1,6 +1,6 @@
 <template>
     <div class="container daily-gift">
-        <div class="header_block">
+        <div class="header_block" @click="startTimer()">
             <div class="header_text">
                 <!-- {{ t("dailyGift.title") }} | {{ t("dailyGift.cycle", { cycle: dailyGift.status.cycleNumber }) }} -->
                 {{ t("dailyGift.title") }}
@@ -66,9 +66,7 @@
                         </div>
 
                         <!-- Таймер обратного отсчета -->
-                        <div v-if="day == 2" class="countdown_timer">
-                            05 : 26 : 59
-                        </div>
+                        <div v-if="day == 2" class="countdown_timer">{{ timerTestStroke }}</div>
 
                     </div>
 
@@ -76,7 +74,7 @@
                     <div v-if="canDoubleDailyGift(day)" class="advertisement_block">
                         <span class="advertisement_text">×2</span>
                         <div class="advertisement_image_container">
-                            <img class='rays_image' src="@/assets/images/business/advertisement_icon.svg" />
+                            <img class='adv_image' src="@/assets/images/business/advertisement_icon.svg" />
                         </div>
                     </div>
 
@@ -325,6 +323,42 @@
             selectDay(selectedDay.value + 1);
         };
     };
+
+    // #region - функции таймера
+        const timerStartValue = 3650;
+        const timerTest = ref(0);
+        const timerTestStroke = ref('');
+
+        function startTimer() {
+            timerTest.value = timerStartValue;
+            countDownTimer();
+        };
+
+        // функция таймера обратного отсчета (при улучшении или ремонте узла)
+        function countDownTimer() {
+            timerTestStroke.value = getTimerStroke();   // преобразуем число с секундами в строковое значение
+            
+            if (timerTest.value > 0) {
+                setTimeout(() => {
+                    timerTest.value -=1;
+                    countDownTimer();
+                }, 1000);
+            } else {
+                console.log('Таймер окончился!');
+            };
+        };
+
+        // преобразуем число с секундами в строковое значение
+        function getTimerStroke() {
+            const total = timerTest.value;
+            const hours   = Math.floor(total / 3600);
+            const minutes = Math.floor((total % 3600) / 60);
+            const seconds = total % 60;
+            const pad = (n: number) => (n < 10 ? "0" + n : String(n));
+
+            return `${pad(hours)} : ${pad(minutes)} : ${pad(seconds)}`;
+        };
+    // #endregion
 
     // -----------------
     // #region - стили
@@ -704,11 +738,20 @@
             top: 40px;
             width: 270px;
             height: 270px;
+            pointer-events: none; // чтобы не мешал кликам по карточке
         }
 
         .rays_image {
             width: 100%;
             height: 100%;
+            transform-origin: 50% 50%;         // центр вращения — центр иконки
+            animation: rays-rotate 40s linear infinite;
+            will-change: transform;            // подсказка браузеру для плавности
+        }
+
+        @keyframes rays-rotate {
+            from { transform: rotate(0deg); }
+            to   { transform: rotate(360deg); }
         }
         // #endregion
 
@@ -744,6 +787,9 @@
             color: $color-pink;
             line-height: 1;
             filter: drop-shadow(0 0 10px rgba(247, 156, 255, 1));
+
+            font-variant-numeric: tabular-nums;
+            font-feature-settings: "tnum" 1;
         }
         // #endregion
 
@@ -770,7 +816,7 @@
             height: 20px;
         }
 
-        .advertisement_image {
+        .adv_image {
             width: 100%;
             height: 100%;
         }
@@ -803,7 +849,13 @@
         
 
 
-
+        .timer {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            color: white;
+            @include text-info-size-m;
+        }
 
     .daily-gift {
         justify-content: flex-start;
