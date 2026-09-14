@@ -25,10 +25,13 @@ interface FlashEffect {
   createdAt: number;
   duration: number;
   billboard?: boolean;
+  /** Shield waves already use their final gameplay radius. */
+  animateScale?: boolean;
 }
 
 export class FlashEffectManager {
   private static instance: FlashEffectManager | null = null;
+  private static readonly SHIELD_WAVE_VISUAL_RADIUS_MULTIPLIER = 1;
   private effects: FlashEffect[] = [];
   private scene: THREE.Scene | null = null;
 
@@ -142,6 +145,51 @@ export class FlashEffectManager {
   }
 
   spawnLandingWave(position: THREE.Vector3, size = 10, duration = 200) {
+    this.spawnGroundWave(position, size, duration, {
+      color: new THREE.Color("#ececec"),
+      intensity: 1,
+      thickness: 0.06,
+      trailLength: 0.12,
+      arcAngle: Math.PI * 2,
+      animateScale: true,
+    });
+
+    CameraSystem.triggerLandingShake();
+  }
+
+  /**
+   * A ground wave whose visual reach intentionally exceeds the gameplay
+   * radius. Unlike the landing effect, the mesh is not scaled while animating.
+   */
+  spawnShieldWave(position: THREE.Vector3, radius: number, duration = 420) {
+    if (!this.scene || radius <= 0) return;
+
+    const visualRadius =
+      radius * FlashEffectManager.SHIELD_WAVE_VISUAL_RADIUS_MULTIPLIER;
+
+    this.spawnGroundWave(position, visualRadius * 2, duration, {
+      color: new THREE.Color("#ffffff"),
+      intensity: 2.8,
+      thickness: 0.012,
+      trailLength: 0.055,
+      arcAngle: Math.PI / 2,
+      animateScale: false,
+    });
+  }
+
+  private spawnGroundWave(
+    position: THREE.Vector3,
+    size: number,
+    duration: number,
+    options: {
+      color: THREE.Color;
+      intensity: number;
+      thickness: number;
+      trailLength: number;
+      arcAngle: number;
+      animateScale: boolean;
+    },
+  ) {
     if (!this.scene) return;
 
     const material = new THREE.ShaderMaterial({
@@ -153,11 +201,16 @@ export class FlashEffectManager {
 
       uniforms: {
         uTime: { value: 0 },
-        uColor: { value: new THREE.Color("#ececec") },
+        uColor: { value: options.color },
+        uIntensity: { value: options.intensity },
+        uThickness: { value: options.thickness },
+        uTrailLength: { value: options.trailLength },
+        uArcAngle: { value: options.arcAngle },
       },
 
       vertexShader: landingWaveVertexShader,
       fragmentShader: landingWaveFragmentShader,
+      toneMapped: false,
     });
 
     const mesh = new THREE.Mesh(new THREE.PlaneGeometry(size, size), material);
@@ -166,7 +219,8 @@ export class FlashEffectManager {
     mesh.rotation.x = -Math.PI / 2;
 
     mesh.position.copy(position);
-    // mesh.position.y += 0.03;
+    // Keep the transparent ring above the road to avoid z-fighting.
+    mesh.position.y += 0.08;
 
     this.scene.add(mesh);
 
@@ -175,9 +229,8 @@ export class FlashEffectManager {
       createdAt: performance.now(),
       duration,
       billboard: false,
+      animateScale: options.animateScale,
     });
-
-    CameraSystem.triggerLandingShake();
   }
 
   update(now = performance.now()) {
@@ -199,8 +252,10 @@ export class FlashEffectManager {
       const mat = fx.mesh.material as THREE.ShaderMaterial;
       mat.uniforms.uTime.value = progress;
 
-      const scale = 1 + progress * 0.7;
-      fx.mesh.scale.set(scale, scale, 1);
+      if (fx.animateScale !== false) {
+        const scale = 1 + progress * 0.7;
+        fx.mesh.scale.set(scale, scale, 1);
+      }
     }
   }
 

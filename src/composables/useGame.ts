@@ -82,6 +82,13 @@ export function useGame() {
   let bulletSystem: BulletSystem;
   let collisionSystem: CollisionSystem;
   let stopRoadConfigWatcher: WatchStopHandle | null = null;
+  const SHIELD_WAVE_DURATION = 600;
+  const pendingShieldWaves: {
+    impactPoint: THREE.Vector3;
+    radius: number;
+    createdAt: number;
+    destroyed: Set<BaseObstacle>;
+  }[] = [];
 
   function rebuildRoadRuntime() {
     if (!roadManager) return;
@@ -203,6 +210,67 @@ export function useGame() {
     }
   }
 
+  function clearPendingShieldWaves() {
+    pendingShieldWaves.length = 0;
+  }
+
+  function updatePendingShieldWaves(now = performance.now()) {
+    for (let i = pendingShieldWaves.length - 1; i >= 0; i--) {
+      const wave = pendingShieldWaves[i];
+      const progress = Math.min(
+        (now - wave.createdAt) / SHIELD_WAVE_DURATION,
+        1,
+      );
+      const frontRadius = wave.radius * progress;
+
+      obstacleManager.getObstacles().forEach((obstacle) => {
+        if (wave.destroyed.has(obstacle)) return;
+
+        const dx = obstacle.position.x - wave.impactPoint.x;
+        const dz = obstacle.position.z - wave.impactPoint.z;
+
+        // The shader expands along the road surface, so compare XZ distance
+        // rather than 3D distance including the obstacle's height.
+        if (Math.hypot(dx, dz) <= frontRadius) {
+          destroyObstacles(wave.impactPoint, [obstacle]);
+          wave.destroyed.add(obstacle);
+        }
+      });
+
+      if (progress >= 1) {
+        pendingShieldWaves.splice(i, 1);
+      }
+    }
+  }
+
+  function destroyObstaclesWithShieldWave(
+    impactPoint: THREE.Vector3,
+    collisionObstacle: BaseObstacle,
+    radius: number,
+    animateWave: boolean,
+  ) {
+    // The obstacle already touching the car must disappear immediately to
+    // prevent a second collision before the next frame.
+    destroyObstacles(impactPoint, [collisionObstacle]);
+
+    if (radius <= 0) return;
+
+    if (!animateWave) {
+      const affected = obstacleManager
+        .getObstacles()
+        .filter((obstacle) => obstacle.position.distanceTo(impactPoint) <= radius);
+      destroyObstacles(impactPoint, affected);
+      return;
+    }
+
+    pendingShieldWaves.push({
+      impactPoint: impactPoint.clone(),
+      radius,
+      createdAt: performance.now(),
+      destroyed: new Set([collisionObstacle]),
+    });
+  }
+
   function destroyCar(impactPoint?: THREE.Vector3) {
     if (!carManager) return;
 
@@ -261,6 +329,7 @@ export function useGame() {
     mode: UpdateMode,
   ) {
     interactiveManager.update(carManager.getCar(), deltaTime, speed, mode);
+    updatePendingShieldWaves();
 
     obstacleSyncTimer += deltaTime;
     if (obstacleSyncTimer < 1000) return; // ⛔ 1 раз в сек
@@ -366,6 +435,7 @@ export function useGame() {
     collisionSystem.reset();
     bulletSystem.reset();
     flashEffectManager.clear();
+    clearPendingShieldWaves();
 
     // Дополнительная очистка: удаляем оставшиеся объекты по тегам
     if (sceneRef) {
@@ -423,6 +493,7 @@ export function useGame() {
     obstacleManager?.reset();
     bulletSystem?.reset();
     flashEffectManager?.clear();
+    clearPendingShieldWaves();
     roadManager?.dispose();
     cityManager?.dispose();
     carManager?.dispose();
@@ -471,10 +542,20 @@ export function useGame() {
       const impact = collision.impactPoint!;
       const chargeVariant = playerStore.armorStack[playerStore.armorStack.length - 1] ?? "normal";
       const radius = chargeVariant === "super" ? BOOST_SPECIAL_MODES.shield.super.waveRadius : useMetaStore().shieldWaveRadius;
-      const affected = radius > 0
-        ? obstacleManager!.getObstacles().filter((obstacle) => obstacle.position.distanceTo(impact) <= radius)
-        : [collision.impactSubject as BaseObstacle];
-      destroyObstacles(impact, affected);
+      const collisionObstacle = collision.impactSubject as BaseObstacle;
+      destroyObstaclesWithShieldWave(
+        impact,
+        collisionObstacle,
+        radius,
+        !playerStore.corruptedShieldEnabled,
+      );
+      if (!playerStore.corruptedShieldEnabled) {
+        flashEffectManager.spawnShieldWave(
+          impact,
+          radius,
+          SHIELD_WAVE_DURATION,
+        );
+      }
 
       if (playerStore.corruptedShieldEnabled) {
         playerStore.triggerShieldBlindness(BOOST_SPECIAL_MODES.shield.corrupted.blindnessMs);

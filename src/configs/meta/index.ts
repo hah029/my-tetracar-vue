@@ -37,15 +37,15 @@ const boosts = {
     base: { count: 1, waveRadius: 0 },
     levels: [
       {
-        stats: { count: 1, waveRadius: 3 },
+        stats: { count: 1, waveRadius: 15 },
         price: { value: 10_000, currency: "golden" },
       },
       {
-        stats: { count: 2, waveRadius: 5 },
+        stats: { count: 2, waveRadius: 25 },
         price: { value: 50_000, currency: "golden" },
       },
       {
-        stats: { count: 3, waveRadius: 7 },
+        stats: { count: 3, waveRadius: 35 },
         price: { value: 100, currency: "energon" },
       },
     ],
@@ -139,7 +139,7 @@ export const BOOST_SPECIAL_MODES = {
       repulse: { pushDistance: 0.018 },
     },
   },
-  shield: { super: { waveRadius: 14 }, corrupted: { blindnessMs: 450 } },
+  shield: { super: { waveRadius: 70 }, corrupted: { blindnessMs: 450 } },
   bullet: {
     piercing: { maxHits: 3 },
     explosive: { radius: 7 },

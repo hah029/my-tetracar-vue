@@ -478,6 +478,10 @@ export const usePlayerStore = defineStore("playerStore", () => {
     while (ammo.value < maxAmmo.value) addAmmo();
   }
 
+  function fillArmor(): void {
+    while (armor.value < maxArmor.value) addArmor();
+  }
+
   function canShoot(): boolean {
     return ammo.value > 0;
   }
@@ -628,6 +632,7 @@ export const usePlayerStore = defineStore("playerStore", () => {
     addAmmo,
     consumeAmmo,
     fillAmmo,
+    fillArmor,
     addArmor,
     reduceShield,
     canShoot,

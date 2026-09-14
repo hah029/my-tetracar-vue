@@ -12,6 +12,7 @@ import type { useGame } from "./useGame";
 export function useControls(game: ReturnType<typeof useGame>) {
   const gameStore = useGameState();
   const playerStore = usePlayerStore();
+  const isDevMode = import.meta.env.DEV;
 
   const processedKeys = new Set<string>();
 
@@ -37,6 +38,8 @@ export function useControls(game: ReturnType<typeof useGame>) {
 
     NITRO = "KeyN",
     MAGNET = "KeyM",
+    REFILL_AMMO = "KeyB",
+    REFILL_ARMOR = "KeyV",
 
     ESCAPE = "Escape",
 
@@ -164,6 +167,7 @@ export function useControls(game: ReturnType<typeof useGame>) {
         break;
 
       case controlKeys.NITRO:
+        if (!isDevMode) return;
         if (processedKeys.has(e.code)) return;
         processedKeys.add(e.code);
         playerStore.enableNitro();
@@ -172,9 +176,22 @@ export function useControls(game: ReturnType<typeof useGame>) {
         break;
 
       case controlKeys.MAGNET:
+        if (!isDevMode) return;
         if (processedKeys.has(e.code)) return;
         processedKeys.add(e.code);
         playerStore.enableMagnet([BaseItem]);
+        break;
+
+      case controlKeys.REFILL_AMMO:
+        if (!isDevMode || processedKeys.has(e.code)) return;
+        processedKeys.add(e.code);
+        playerStore.fillAmmo();
+        break;
+
+      case controlKeys.REFILL_ARMOR:
+        if (!isDevMode || processedKeys.has(e.code)) return;
+        processedKeys.add(e.code);
+        playerStore.fillArmor();
         break;
 
       case controlKeys.ESCAPE:
@@ -205,6 +222,7 @@ export function useControls(game: ReturnType<typeof useGame>) {
 
     switch (e.code) {
       case controlKeys.NITRO:
+        if (!isDevMode) return;
         playerStore.disableNitro();
         CarManager.getInstance().disableNitro();
         break;

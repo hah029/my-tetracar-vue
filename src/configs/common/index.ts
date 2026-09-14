@@ -50,12 +50,12 @@ export default {
   // Дроп при разрушении
   allowCorruptedBoostDrops: true,
   destroyedRolldropWeights: {
-    golden_coin: 20,
-    bullet: 20,
+    golden_coin: 1000,
+    bullet: 10,
     shield_booster: 10,
-    energon_coin: 20,
-    nitro_booster: 1,
-    magnet_booster: 1,
+    energon_coin: 1,
+    nitro_booster: 10,
+    magnet_booster: 10,
   },
 
   // Опасная дистанция
