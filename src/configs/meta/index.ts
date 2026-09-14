@@ -144,7 +144,7 @@ export const BOOST_SPECIAL_MODES = {
     piercing: { maxHits: 3 },
     explosive: { radius: 7 },
     fan: { laneOffsets: [-1, 0, 1] as const, lateralSpeedStep: 0.055 },
-    railgun: { length: 100, lifetimeMs: 150 },
+    railgun: { length: 100, lifetimeMs: 360 },
   },
 } as const;
 

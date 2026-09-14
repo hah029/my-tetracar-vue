@@ -83,7 +83,7 @@ export class BulletSystem {
         }
         continue;
       }
-      this.bulletBox.setFromObject(bullet);
+      bullet.setCollisionBox(this.bulletBox);
 
       // дополнительно увеличиваем бокс коллайдера в два раза
       // (чтобы уменьшить шанс пролета пули сквозь препятствие)
