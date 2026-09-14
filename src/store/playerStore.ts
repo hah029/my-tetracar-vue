@@ -474,8 +474,35 @@ export const usePlayerStore = defineStore("playerStore", () => {
     return ammoStack.value.pop() ?? "normal";
   }
 
-  function fillAmmo(): void {
-    while (ammo.value < maxAmmo.value) addAmmo();
+  function getRandomSpawnedBulletVariant(): BulletVariant {
+    const gameplay = levelStore.currentGameplay;
+
+    if (Math.random() > gameplay.specialBoostChance) return "normal";
+
+    const entries = Object.entries(gameplay.specialBoostWeights.bullet);
+    const totalWeight = entries.reduce(
+      (sum, [, weight]) => sum + Math.max(0, weight),
+      0,
+    );
+    if (totalWeight <= 0) return "normal";
+
+    let roll = Math.random() * totalWeight;
+    for (const [variant, weight] of entries) {
+      roll -= Math.max(0, weight);
+      if (roll <= 0) {
+        return variant === "blankBullet"
+          ? "blank"
+          : variant as BulletVariant;
+      }
+    }
+
+    return "normal";
+  }
+
+  function fillAmmo(randomizeVariants = false): void {
+    while (ammo.value < maxAmmo.value) {
+      addAmmo(randomizeVariants ? getRandomSpawnedBulletVariant() : "normal");
+    }
   }
 
   function fillArmor(): void {

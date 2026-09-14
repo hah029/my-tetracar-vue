@@ -142,7 +142,7 @@ export const BOOST_SPECIAL_MODES = {
   shield: { super: { waveRadius: 70 }, corrupted: { blindnessMs: 450 } },
   bullet: {
     piercing: { maxHits: 3 },
-    explosive: { radius: 7 },
+    explosive: { radius: 18 },
     fan: { laneOffsets: [-1, 0, 1] as const, lateralSpeedStep: 0.055 },
     railgun: { length: 100, lifetimeMs: 360 },
   },

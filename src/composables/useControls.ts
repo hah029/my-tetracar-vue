@@ -185,7 +185,7 @@ export function useControls(game: ReturnType<typeof useGame>) {
       case controlKeys.REFILL_AMMO:
         if (!isDevMode || processedKeys.has(e.code)) return;
         processedKeys.add(e.code);
-        playerStore.fillAmmo();
+        playerStore.fillAmmo(true);
         break;
 
       case controlKeys.REFILL_ARMOR:

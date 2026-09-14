@@ -112,6 +112,7 @@ export class FlashEffectManager {
     position: THREE.Vector3,
     size = useCommonStore().config.explosionSizeDefault,
     duration = useCommonStore().config.explosionDurationDefault,
+    intensity = 1,
   ) {
     if (!this.scene) return;
 
@@ -123,6 +124,7 @@ export class FlashEffectManager {
       uniforms: {
         uTime: { value: 0 },
         uColor: { value: this.getColor(type) },
+        uIntensity: { value: intensity },
       },
 
       vertexShader: explosionVertexShader,
@@ -141,6 +143,21 @@ export class FlashEffectManager {
       createdAt: performance.now(),
       duration,
       billboard: true,
+    });
+  }
+
+  spawnExplosiveBulletImpact(position: THREE.Vector3, radius: number) {
+    const explosionRadius = Math.max(9, radius * 0.9);
+
+    this.spawnExplosion("bullet", position, explosionRadius, 680, 2.4);
+    this.spawnExplosion("golden", position, explosionRadius * 0.52, 420, 2.8);
+    this.spawnGroundWave(position, radius * 2, 560, {
+      color: new THREE.Color("#ff482c"),
+      intensity: 2.1,
+      thickness: 0.022,
+      trailLength: 0.075,
+      arcAngle: Math.PI * 2,
+      animateScale: true,
     });
   }
 

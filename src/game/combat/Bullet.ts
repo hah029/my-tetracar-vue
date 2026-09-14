@@ -4,6 +4,7 @@ import type { BulletVariant } from "./BulletVariant";
 import { BOOST_SPECIAL_MODES } from "@/configs/meta";
 import railgunVertexShader from "@/game/shaders/railgun/vertex.glsl";
 import railgunFragmentShader from "@/game/shaders/railgun/fragment.glsl";
+import { CameraSystem } from "@/game/camera/CameraSystem";
 
 export class Bullet extends THREE.Mesh {
   protected lane: number;
@@ -21,10 +22,14 @@ export class Bullet extends THREE.Mesh {
     private readonly lateralSpeed = 0,
   ) {
     const geometry = useCommonStore().getBulletGeometry();
+    const railgunWidth = geometry[0] * 16;
+    const railgunHeight = geometry[1] * 3.2;
+    const railgunLength = BOOST_SPECIAL_MODES.bullet.railgun.length;
     const geo = variant === "railgun"
-      ? new THREE.PlaneGeometry(
-        geometry[0] * 16,
-        BOOST_SPECIAL_MODES.bullet.railgun.length,
+      ? new THREE.BoxGeometry(
+        railgunWidth,
+        railgunHeight,
+        railgunLength,
       )
       : new THREE.BoxGeometry(...geometry);
 
@@ -37,7 +42,16 @@ export class Bullet extends THREE.Mesh {
           uTime: { value: 0 },
           uLife: { value: 0 },
           uColor: { value: new THREE.Color("#ff3028") },
+          uCameraLocalPosition: { value: new THREE.Vector3() },
+          uBounds: {
+            value: new THREE.Vector3(
+              railgunWidth / 2,
+              railgunHeight / 2,
+              railgunLength / 2,
+            ),
+          },
         },
+        side: THREE.FrontSide,
         vertexShader: railgunVertexShader,
         fragmentShader: railgunFragmentShader,
         toneMapped: false,
@@ -53,7 +67,6 @@ export class Bullet extends THREE.Mesh {
     this.remainingHits = variant === "piercing" ? BOOST_SPECIAL_MODES.bullet.piercing.maxHits : variant === "railgun" ? Number.POSITIVE_INFINITY : 1;
 
     if (variant === "railgun") {
-      this.rotation.x = -Math.PI / 2;
       this.frustumCulled = false;
       this.renderOrder = 12;
     }
@@ -68,6 +81,12 @@ export class Bullet extends THREE.Mesh {
         elapsed / BOOST_SPECIAL_MODES.bullet.railgun.lifetimeMs,
         1,
       );
+      const camera = CameraSystem.getCamera();
+      if (camera) {
+        material.uniforms.uCameraLocalPosition.value
+          .copy(camera.position)
+          .sub(this.position);
+      }
       return;
     }
 

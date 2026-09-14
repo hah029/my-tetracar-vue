@@ -117,10 +117,17 @@ export class BulletSystem {
             this.bullets.splice(i, 1);
             removed = true;
           }
-          FlashEffectManager.getInstance().spawnExplosion(
-            "bullet",
-            bullet.position,
-          );
+          if (bullet.variant === "explosive") {
+            FlashEffectManager.getInstance().spawnExplosiveBulletImpact(
+              bullet.position,
+              BOOST_SPECIAL_MODES.bullet.explosive.radius,
+            );
+          } else {
+            FlashEffectManager.getInstance().spawnExplosion(
+              "bullet",
+              bullet.position,
+            );
+          }
           break;
         }
       }

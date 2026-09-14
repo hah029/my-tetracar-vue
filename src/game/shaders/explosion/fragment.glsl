@@ -1,5 +1,6 @@
 uniform float uTime;
 uniform vec3 uColor;
+uniform float uIntensity;
 
 varying vec2 vUv;
 
@@ -26,7 +27,7 @@ void main() {
 
     float alpha = plasma * (1.0 - uTime);
 
-    vec3 color = uColor * alpha * 3.0;
+    vec3 color = uColor * alpha * 3.0 * uIntensity;
 
     gl_FragColor = vec4(color, alpha);
 }
