@@ -78,9 +78,10 @@
                         </div>
                     </div>
 
-                    <div v-if="day == 7" class="level_value">
-                        <span class="level_value_1">1</span>
-                        <span class="level_value_2">ур.</span>
+                    <div v-if="day % 7 == 0" class="level_value" :style="setLevelValueStyle(day)">
+                        <span v-if="i18next.resolvedLanguage == 'en'" class="level_value_2 lvl_en">{{ t("dailyGift.levelText") }}</span>
+                        <span class="level_value_1">{{ getSkinLevelValue(day) }}</span>
+                        <span v-if="i18next.resolvedLanguage == 'ru'" class="level_value_2">{{ t("dailyGift.levelText") }}</span>
                     </div>
 
                     <!-- Галочка (бонус взят) -->
@@ -257,6 +258,11 @@
         return newString;
     };
 
+    // получаем значение уровня скина машинки
+    function getSkinLevelValue(day_) {
+        return day_ / 7;
+    };
+
     // 
     function setRewardsWrapperStyle(day_) {
         const calcMarginTop = day_ == 2 ? 0 : 30;
@@ -378,6 +384,7 @@
         // назначаем стиль подписи под иконками наград
         function setGiftValueStyle(reward_) {
             let newColor = '';
+            let textStyle = '';
             
             if (reward_.type == 'currency') {
                 newColor = reward_.effect.currency == 'golden' ? 'FFF5AD' : 'D7FBFF';
@@ -400,10 +407,16 @@
                 } else if (skinId == 'premium2') {
                     newColor = 'F477FF';
                 };
+            } else if (reward_.type == 'upgrade') {
+                // newColor = 'F477FF';
+                newColor = 'ffffff';
             };
+
+            textStyle = reward_.type != 'upgrade' ? 'uppercase' : 'auto';
 
             return {
                 color: `#${newColor}`,
+                textTransform: textStyle,
             };
         };
 
@@ -445,6 +458,26 @@
                 } else if (skinId == 'premium2') {
                     return 'background_glow_pink';
                 };
+            };
+        };
+
+        // назначаем цвет значения уровня скина машинки (в зависимости от номера недели)
+        function setLevelValueStyle(day_) {
+            const weekNumber = day_ / 7;
+            let textColor = '';
+
+            if (weekNumber == 1) {
+                textColor = '79BEFF';
+            } else if (weekNumber == 2) {
+                textColor = 'FF6E6E';
+            } else if (weekNumber == 3) {
+                textColor = 'FFF080';
+            } else if (weekNumber == 4) {
+                textColor = 'F477FF';
+            };
+
+            return {
+                color: `#${textColor}`,
             };
         };
     // #endregion
@@ -642,7 +675,6 @@
         .daily_gift_reward_value {
             @include text-info-size-m;
             text-align: center;
-            text-transform: uppercase;
             line-height: 1;
         }
 
@@ -775,7 +807,11 @@
 
         .level_value_2 {
             @include text-info-size-s;
-            line-height: 1;
+            line-height: 0.8;
+        }
+
+        .lvl_en::first-letter {
+            text-transform: uppercase;
         }
         // #endregion
 
@@ -847,15 +883,13 @@
     // #endregion
 
         
-
-
-        .timer {
-            position: absolute;
-            top: 20px;
-            left: 20px;
-            color: white;
-            @include text-info-size-m;
-        }
+    .timer {
+        position: absolute;
+        top: 20px;
+        left: 20px;
+        color: white;
+        @include text-info-size-m;
+    }
 
     .daily-gift {
         justify-content: flex-start;
