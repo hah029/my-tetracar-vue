@@ -78,8 +78,7 @@ const nightCity = {
         scale: [1.75, 1.4, 1.75],
       },
       lampPosts: {
-        // enabled: true,
-        enabled: false,
+        enabled: true,
         color: "#4CAAFF",
         opacity: 0.55,
         emissiveIntensity: 5,

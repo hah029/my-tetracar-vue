@@ -1,5 +1,6 @@
 import * as THREE from "three";
 import { useCommonStore } from "@/store/commonStore";
+import { useGraphicsStore } from "@/store/graphicsStore";
 import type { RoadLampPostsConfig } from "./types";
 
 /**
@@ -105,7 +106,6 @@ export class LampPostsInstanced {
     for (let i = 0; i < this.count; i++) {
       this.positions.push(new THREE.Vector3(x, 0, startZ - i * config.spacing));
     }
-    this.createSpotLightPool();
     this.updateInstances();
   }
 
@@ -196,6 +196,17 @@ export class LampPostsInstanced {
   }
 
   private updateSpotLightPool(armX: number, armY: number): void {
+    const graphics = useGraphicsStore();
+    const realLightsEnabled = graphics.vfxEnabled && graphics.bloomEnabled;
+
+    if (!realLightsEnabled) {
+      for (const light of this.spotLights) light.visible = false;
+      return;
+    }
+
+    // Do not allocate lights for players who keep glow disabled. Once created,
+    // the small pool is reused when the setting is turned on again.
+    if (this.spotLights.length === 0) this.createSpotLightPool();
     if (this.spotLights.length === 0) return;
 
     const closest = [...this.positions]
