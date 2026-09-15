@@ -105,6 +105,14 @@ export const useGameState = defineStore("gameState", () => {
         break;
 
       case GameStates.Menu:
+        const shouldClearRunInventory =
+          prev === GameStates.Gameover || prev === GameStates.Pause;
+
+        if (shouldClearRunInventory) {
+          playerStore.clearCombatInventory();
+          resetCallback?.();
+        }
+
         if (levelStore.currentMusic.menuTrack) {
           sound.playMusicSequence(
             levelStore.currentMusic.menuTrack,
@@ -125,9 +133,6 @@ export const useGameState = defineStore("gameState", () => {
             );
         }
 
-        if (prev === GameStates.Gameover || prev === GameStates.Pause) {
-          resetCallback?.();
-        }
         break;
 
       case GameStates.LevelSelect:
@@ -183,6 +188,7 @@ export const useGameState = defineStore("gameState", () => {
         break;
 
       case GameStates.Gameover:
+        playerStore.clearCombatInventory();
         if (Telemetry.getRunId()) {
           Telemetry.emit({
             type: "run.finished",
@@ -241,12 +247,14 @@ export const useGameState = defineStore("gameState", () => {
       case GameStates.Play: {
         console.log("⬅️ Exit Play");
         // Сохраняем прогресс при выходе из игры (в т.ч. при переходе в меню)
-        const progress = useProgressStore();
-        progress
-          .saveProgress()
-          .catch((err) =>
-            console.error("Failed to save progress on exit play:", err),
-          );
+        if (next !== GameStates.Gameover) {
+          const progress = useProgressStore();
+          progress
+            .saveProgress()
+            .catch((err) =>
+              console.error("Failed to save progress on exit play:", err),
+            );
+        }
 
         platform.gameStop();
         break;

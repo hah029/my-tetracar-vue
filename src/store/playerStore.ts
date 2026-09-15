@@ -370,6 +370,14 @@ export const usePlayerStore = defineStore("playerStore", () => {
     currentLane.value = 1;
   }
 
+  function clearCombatInventory() {
+    armor.value = 0;
+    armorStack.value = [];
+    ammo.value = 0;
+    ammoStack.value = [];
+    disableShield();
+  }
+
   function addMass(amount: number) {
     extraTemporaryMass.value = getClampedTemporaryMass(
       extraTemporaryMass.value + amount,
@@ -649,6 +657,7 @@ export const usePlayerStore = defineStore("playerStore", () => {
     getRuleOptions,
     getJumpOptions,
     resetGameData,
+    clearCombatInventory,
     applyGameplayConfig,
     getCurrentSpeed,
     getCurrentSpeedInCubesPerHour,
