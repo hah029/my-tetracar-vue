@@ -1,28 +1,36 @@
 <template>
     <div class="container daily-gift">
-        <div class="header_block" @click="startTimer()">
-            <div class="header_text">
-                <!-- {{ t("dailyGift.title") }} | {{ t("dailyGift.cycle", { cycle: dailyGift.status.cycleNumber }) }} -->
-                {{ t("dailyGift.title") }}
+        <Transition name="header_footer_block_anim">
+            <div v-if="isHeaderShown" class="header_block" @click="startTimer()">
+                <div class="header_text">
+                    <!-- {{ t("dailyGift.title") }} | {{ t("dailyGift.cycle", { cycle: dailyGift.status.cycleNumber }) }} -->
+                    {{ t("dailyGift.title") }}
+                </div>
+                <div class="header_image"><img class="image" src="@/assets/images/title_line_image.svg" /></div>
             </div>
-            <div class="header_image"><img class="image" src="@/assets/images/title_line_image.svg" /></div>
-        </div>
+        </Transition>
 
         <div class="daily_gift_content">
             <!-- Блок с карточками -->
-            <div class="daily_gift_cards_block">
+            <TransitionGroup name="buttons_group_showing" tag="div" class="daily_gift_cards_block">
+            <!-- <TransitionGroup name="business_tab_showing" tag="div" class="daily_gift_cards_block"> -->
                 <!-- Стрелки переключения недель (по бокам) -->
-                <div v-if="selectedWeek > 1" class="arrow_big_image_container left_arrow" @click="selectWeek(-1)">
+                <div v-if="selectedWeek > 1 && areTipsShown" class="arrow_big_image_container left_arrow" @click="selectWeek(-1)">
                     <img class='arrow_big_image' src="@/assets/images/arrow_big.svg" />
                 </div>
 
-                <div v-if="selectedWeek < 4" class="arrow_big_image_container right_arrow" @click="selectWeek(1)">
+                <div v-if="selectedWeek < 4 && areTipsShown" class="arrow_big_image_container right_arrow" @click="selectWeek(1)">
                     <img class='arrow_big_image' src="@/assets/images/arrow_big.svg" />
                 </div>
 
                 <!-- Сами карточки -->
                 <div v-for="(day, index) in weekDays" :key="day" class="daily_gift_card" :class="getDayClass(day)"
-                    :aria-current="day === selectedDay ? 'true' : undefined" role="button" tabindex="0" @click="selectDay(day)"
+                    v-if="isGiftCardShown"
+                    :aria-current="day === selectedDay ? 'true' : undefined" 
+                    :style="{ animationDelay: `${index * switchingDelay}s` }"
+                    role="button" 
+                    tabindex="0" 
+                    @click="selectDay(day)"
                     @keydown.enter="selectDay(day)"
                 >
                     <!-- Свечение за иконками -->
@@ -92,17 +100,22 @@
                     <div class="daily_gift_card_corner corner_bottom_left"></div>
                     <div class="daily_gift_card_corner corner_bottom_right"></div>
                 </div>
-            </div>
+            </TransitionGroup>
 
             <!-- Блок с подсказками (под карточками) -->
-            <div class="daily_gift_tips_block">
-                <div class="text_claimed">{{ t("dailyGift.claimed") }}</div>
-                <div class="text_week_caption">
-                    <!-- {{ t("dailyGift.cycle", { cycle: dailyGift.status.cycleNumber }) }} · {{ selectedWeek }} / {{ weeks.length }} -->
-                    {{ weekName }}
+            <Transition name="header_footer_block_anim">
+                <div v-if="areTipsShown" class="daily_gift_tips_block">
+                    <div class="text_claimed">{{ t("dailyGift.claimed") }}</div>
+                    <div class="text_week_caption">
+                        <!-- {{ t("dailyGift.cycle", { cycle: dailyGift.status.cycleNumber }) }} · {{ selectedWeek }} / {{ weeks.length }} -->
+                        {{ weekName }}
+                    </div>
                 </div>
-            </div>
+            </Transition>
 
+
+
+            <!-- (позже доделать) -->
             <div v-if="dailyGift.recovery.available || dailyGift.state.pendingRecovery" class="daily-gift__recovery">
                 <p>
                     {{ t("dailyGift.recoveryInfo", {
@@ -125,7 +138,6 @@
                 t("dailyGift.claiming") : dailyGift.recovery.available ? t("dailyGift.restart") : t("dailyGift.claim") }}
             </button>
             
-
             <button v-if="dailyGift.canDouble" class="menu_btn daily-gift__double"
                 :disabled="!dailyGift.isReady || dailyGift.isClaiming || dailyGift.isRecovering || !!dailyGift.state.pendingRecovery || selectedDay !== currentDay"
                 @click="claimDouble">
@@ -133,7 +145,16 @@
             </button>
         </div>
 
-        <button class="menu_btn daily-gift__back" :disabled="dailyGift.isClaiming || dailyGift.isRecovering || !!dailyGift.state.pendingRecovery" @click="gameState.closeOverlay()">{{ t("mainMenu.goBack") }}</button>
+        <Transition name="header_footer_block_anim">
+            <button 
+                v-if="isBackButtonShown"
+                class="menu_btn daily-gift__back" 
+                :disabled="dailyGift.isClaiming || dailyGift.isRecovering || !!dailyGift.state.pendingRecovery" 
+                @click="backButtonClick"
+            >
+                {{ t("mainMenu.goBack") }}
+            </button>
+        </Transition>
     </div>
 </template>
 
@@ -170,6 +191,12 @@
     const days = Array.from({ length: DAILY_GIFT_CYCLE_LENGTH }, (_, index) => index + 1);
     const weeks = Array.from({ length: DAILY_GIFT_CYCLE_LENGTH / DAILY_GIFT_WEEK_LENGTH }, (_, index) => index + 1);
     const rewardsList = ref([] as any[]);
+
+    const isHeaderShown = ref(false);
+    const isGiftCardShown = ref(false);
+    const isBackButtonShown = ref(false);
+    const areTipsShown = ref(false);
+    const switchingDelay = ref(0.05);
 
     const errorKey = computed(() => {
         switch (dailyGift.error) {
@@ -536,6 +563,25 @@
     // #endregion
     // -----------------
 
+    // ===== BACK =====
+    function backButtonClick() {
+        SoundManager.getInstance().playCue("uiSelect");
+        switchingDelay.value = 0.03;
+        isBackButtonShown.value = false;
+        setTimeout(() => {
+            areTipsShown.value = false;
+        }, 100);
+        setTimeout(() => {
+            isGiftCardShown.value = false;
+        }, 200);
+        setTimeout(() => {
+            isHeaderShown.value = false;
+        }, 450);
+        setTimeout(() => {
+            gameState.closeOverlay();
+        }, 750);
+    };
+
     async function recover() {
         const recovered = await dailyGift.recover();
         SoundManager.getInstance().playCue(recovered ? "uiSelect" : "actionRejected");
@@ -552,6 +598,17 @@
     };
 
     onMounted(async () => {
+        isHeaderShown.value = true;
+        setTimeout(() => {
+            isGiftCardShown.value = true;
+        }, 200);
+        setTimeout(() => {
+            areTipsShown.value = true;
+        }, 700);
+        setTimeout(() => {
+            isBackButtonShown.value = true;
+        }, 800);
+
         refreshTimer = setInterval(() => dailyGift.refreshStatus(), 60_000);
         window.addEventListener("keydown", handleKeydown);
     });
@@ -565,6 +622,7 @@
 
 <style scoped lang="scss">
     @use "@/styles/menu.scss";
+    @use "@/styles/animations.scss";
     @use "@/styles/typography" as *;
     @use "@/styles/colors" as *;
 
@@ -747,12 +805,27 @@
         }
 
         .flying_img_1 {
-            animation: img_levitation_1 5s ease-in-out infinite;
+            animation: img_levitation_1 2.5s ease-in-out infinite;
         }
 
         .flying_img_2 {
-            animation: img_levitation_2 5s ease-in-out infinite;
+            animation: img_levitation_2 2.5s ease-in-out infinite;
         }
+
+        // @keyframes img_levitation_1 {
+        //     0% {
+        //         transform: translateY(0px);
+        //     }
+        //     25% {
+        //         transform: translateY(-5px);
+        //     }
+        //     75% {
+        //         transform: translateY(5px);
+        //     }
+        //     100% {
+        //         transform: translateY(0px);
+        //     }
+        // }
 
         @keyframes img_levitation_1 {
             0% {

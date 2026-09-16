@@ -104,304 +104,304 @@
 
 
 <script setup lang="ts">
-import { watch, ref, computed, onMounted, onUnmounted } from "vue";
-import { createNewText } from "@/helpers/functions";
-import { SoundManager } from "@/game/sound/SoundManager";
+    import { watch, ref, computed, onMounted, onUnmounted } from "vue";
+    import { createNewText } from "@/helpers/functions";
+    import { SoundManager } from "@/game/sound/SoundManager";
 
-import { useGameState } from "@/store/gameState";
-import { useDailyGiftStore } from "@/store/dailyGiftStore";
-import { useFortuneWheelStore } from "@/store/fortuneWheelStore";
-import { useObjectivesStore } from "@/store/objectivesStore";
-import { usePlayerStore } from "@/store/playerStore";
+    import { useGameState } from "@/store/gameState";
+    import { useDailyGiftStore } from "@/store/dailyGiftStore";
+    import { useFortuneWheelStore } from "@/store/fortuneWheelStore";
+    import { useObjectivesStore } from "@/store/objectivesStore";
+    import { usePlayerStore } from "@/store/playerStore";
 
-import ShopRoot from "./shop/ShopRoot.vue";
-import SettingsRoot from "./settings/SettingsRoot.vue";
-import LeaderBoardsRoot from "./leaderboards/LeaderBoardsRoot.vue";
+    import ShopRoot from "./shop/ShopRoot.vue";
+    import SettingsRoot from "./settings/SettingsRoot.vue";
+    import LeaderBoardsRoot from "./leaderboards/LeaderBoardsRoot.vue";
 
-import FortuneWheelRoot from "@/components/business/FortuneWheelRoot.vue";
-import DailyGiftRoot from "@/components/business/DailyGiftRoot.vue";
-import ObjectivesRoot from "@/components/business/ObjectivesRoot.vue"
+    import FortuneWheelRoot from "@/components/business/FortuneWheelRoot.vue";
+    import DailyGiftRoot from "@/components/business/DailyGiftRoot.vue";
+    import ObjectivesRoot from "@/components/business/ObjectivesRoot.vue"
 
-const dailyGiftStore = useDailyGiftStore();
-const fortuneWheelStore = useFortuneWheelStore();
-const objectivesStore = useObjectivesStore();
-const playerStore = usePlayerStore();
-const foo = createNewText();
-const gameStore = useGameState();
-const isMainMenuEnabled = ref(false);
-const soundManager = SoundManager.getInstance();
+    const dailyGiftStore = useDailyGiftStore();
+    const fortuneWheelStore = useFortuneWheelStore();
+    const objectivesStore = useObjectivesStore();
+    const playerStore = usePlayerStore();
+    const foo = createNewText();
+    const gameStore = useGameState();
+    const isMainMenuEnabled = ref(false);
+    const soundManager = SoundManager.getInstance();
 
-// переменные для напоминаний
-const showFortuneReminder = ref(false);
-const showDailyReminder = ref(false);
-const showQuestsReminder = ref(false);
-const showAchievementsReminder = ref(false);
+    // переменные для напоминаний
+    const showFortuneReminder = ref(false);
+    const showDailyReminder = ref(false);
+    const showQuestsReminder = ref(false);
+    const showAchievementsReminder = ref(false);
 
-const fortuneTimer = ref<ReturnType<typeof setTimeout> | null>(null);
-const dailyTimer = ref<ReturnType<typeof setTimeout> | null>(null);
-const questsTimer = ref<ReturnType<typeof setTimeout> | null>(null);
-const achievementsTimer = ref<ReturnType<typeof setTimeout> | null>(null);
+    const fortuneTimer = ref<ReturnType<typeof setTimeout> | null>(null);
+    const dailyTimer = ref<ReturnType<typeof setTimeout> | null>(null);
+    const questsTimer = ref<ReturnType<typeof setTimeout> | null>(null);
+    const achievementsTimer = ref<ReturnType<typeof setTimeout> | null>(null);
 
-const fortuneInterval = ref<ReturnType<typeof setInterval> | null>(null);
-const dailyInterval = ref<ReturnType<typeof setInterval> | null>(null);
-const questsInterval = ref<ReturnType<typeof setInterval> | null>(null);
-const achievementsInterval = ref<ReturnType<typeof setInterval> | null>(null);
+    const fortuneInterval = ref<ReturnType<typeof setInterval> | null>(null);
+    const dailyInterval = ref<ReturnType<typeof setInterval> | null>(null);
+    const questsInterval = ref<ReturnType<typeof setInterval> | null>(null);
+    const achievementsInterval = ref<ReturnType<typeof setInterval> | null>(null);
 
-const REMINDER_DURATION = 2500; // сколько показывается подсказка
-const REMINDER_INTERVAL = 8000; // интервал между напоминаниями (для каждого независимо)
+    const REMINDER_DURATION = 2500; // сколько показывается подсказка
+    const REMINDER_INTERVAL = 8000; // интервал между напоминаниями (для каждого независимо)
 
-// --- проверки для каждой кнопки ---
-const hasFortuneReward = computed(() => fortuneWheelStore.totalSpins > 0);
-const hasDailyReward = computed(() => false); // у награды дня нет маркера
-const hasQuestsReward = computed(() => objectivesStore.hasClaimableDaily);
-const hasAchievementsReward = computed(() => objectivesStore.hasClaimableAchievement);
+    // --- проверки для каждой кнопки ---
+    const hasFortuneReward = computed(() => fortuneWheelStore.totalSpins > 0);
+    const hasDailyReward = computed(() => false); // у награды дня нет маркера
+    const hasQuestsReward = computed(() => objectivesStore.hasClaimableDaily);
+    const hasAchievementsReward = computed(() => objectivesStore.hasClaimableAchievement);
 
-const menuButtons = computed(() => [
-    { id: 1, text: foo.makeText("mainMenu.startGame"), action: startGame },
-    { id: 2, text: foo.makeText("mainMenu.shop"), action: goToShop },
-    { id: 3, text: foo.makeText("mainMenu.settings"), action: goToSettings },
-    { id: 4, text: foo.makeText("mainMenu.leaderboards"), action: goToLeaderBoards },
-]);
+    const menuButtons = computed(() => [
+        { id: 1, text: foo.makeText("mainMenu.startGame"), action: startGame },
+        { id: 2, text: foo.makeText("mainMenu.shop"), action: goToShop },
+        { id: 3, text: foo.makeText("mainMenu.settings"), action: goToSettings },
+        { id: 4, text: foo.makeText("mainMenu.leaderboards"), action: goToLeaderBoards },
+    ]);
 
-const businessButtons = computed(() => [
-    {
-        id: 1,
-        text: foo.makeText("businessMenu.namesList.luckySpin", 'empty'),
-        reminder: foo.makeText("businessMenu.remindersList.luckySpin", 'empty'),
-        action: goToFortuneWheel
-    },
-    {
-        id: 2,
-        text: foo.makeText("businessMenu.namesList.dailyGift", 'empty'),
-        reminder: foo.makeText("businessMenu.remindersList.dailyGift", 'empty'),
-        action: goToDailyGift
-    },
-    {
-        id: 3,
-        text: foo.makeText("businessMenu.namesList.quests", 'empty'),
-        reminder: foo.makeText("businessMenu.remindersList.quests", 'empty'),
-        action: goToDailyTasks
-    },
-    {
-        id: 4,
-        text: foo.makeText("businessMenu.namesList.achievements", 'empty'),
-        reminder: foo.makeText("businessMenu.remindersList.achievements", 'empty'),
-        action: goToAchievements
-    },
-]);
+    const businessButtons = computed(() => [
+        {
+            id: 1,
+            text: foo.makeText("businessMenu.namesList.luckySpin", 'empty'),
+            reminder: foo.makeText("businessMenu.remindersList.luckySpin", 'empty'),
+            action: goToFortuneWheel
+        },
+        {
+            id: 2,
+            text: foo.makeText("businessMenu.namesList.dailyGift", 'empty'),
+            reminder: foo.makeText("businessMenu.remindersList.dailyGift", 'empty'),
+            action: goToDailyGift
+        },
+        {
+            id: 3,
+            text: foo.makeText("businessMenu.namesList.quests", 'empty'),
+            reminder: foo.makeText("businessMenu.remindersList.quests", 'empty'),
+            action: goToDailyTasks
+        },
+        {
+            id: 4,
+            text: foo.makeText("businessMenu.namesList.achievements", 'empty'),
+            reminder: foo.makeText("businessMenu.remindersList.achievements", 'empty'),
+            action: goToAchievements
+        },
+    ]);
 
-// расчет количества выполненных заданий, которые можно забрать
-const reachedQuests = computed(() => {
-    return objectivesStore.dailyObjectives.filter((objective) =>
-        objectivesStore.isClaimable(objective, true)
-    ).length;
-});
-
-// расчет количества полученных достижений, которые можно забрать
-const reachedAchievements = computed(() => {
-    return objectivesStore.achievements.filter((objective) =>
-        objectivesStore.isClaimable(objective, false)
-    ).length;
-});
-
-// #region - действия по кнопкам главного меню 
-function startGame() {
-    soundManager.playCue("uiSelect");
-    gameStore.startGame();
-};
-
-function goToShop() {
-    soundManager.playCue("uiSelect");
-    isMainMenuEnabled.value = false;
-    setTimeout(() => {
-        gameStore.openShop();
-    }, 300);
-};
-
-function goToSettings() {
-    soundManager.playCue("uiSelect");
-    isMainMenuEnabled.value = false;
-    setTimeout(() => {
-        gameStore.openSettings('main');
-    }, 300);
-};
-
-function goToLeaderBoards() {
-    soundManager.playCue("uiSelect");
-    isMainMenuEnabled.value = false;
-    setTimeout(() => {
-        gameStore.openLeaderBoards();
-    }, 300);
-};
-// #endregion
-
-// #region - действия по кнопкам бизнес-панели (в левой части экрана)
-function goToFortuneWheel() {
-    soundManager.playCue("uiSelect");
-    isMainMenuEnabled.value = false;
-    setTimeout(() => gameStore.openFortuneWheel(), 300);
-};
-
-function goToDailyGift() {
-    soundManager.playCue("uiSelect");
-    isMainMenuEnabled.value = false;
-    setTimeout(() => gameStore.openDailyGift(), 300);
-};
-
-function goToDailyTasks() {
-    soundManager.playCue("uiSelect");
-    isMainMenuEnabled.value = false;
-    setTimeout(() => gameStore.openObjectives("daily"), 300);
-};
-
-function goToAchievements() {
-    soundManager.playCue("uiSelect");
-    isMainMenuEnabled.value = false;
-    setTimeout(() => gameStore.openObjectives("achievements"), 300);
-};
-// #endregion
-
-// #region - периодические напоминания о наградах
-// --- Функции триггера для каждой кнопки ---
-function triggerFortuneReminder() {
-    if (!hasFortuneReward.value || !isMainMenuEnabled.value) return;
-    showFortuneReminder.value = true;
-    if (fortuneTimer.value) clearTimeout(fortuneTimer.value);
-    fortuneTimer.value = setTimeout(() => {
-        showFortuneReminder.value = false;
-    }, REMINDER_DURATION);
-}
-
-function triggerDailyReminder() {
-    if (!hasDailyReward.value || !isMainMenuEnabled.value) return;
-    showDailyReminder.value = true;
-    if (dailyTimer.value) clearTimeout(dailyTimer.value);
-    dailyTimer.value = setTimeout(() => {
-        showDailyReminder.value = false;
-    }, REMINDER_DURATION);
-}
-
-function triggerQuestsReminder() {
-    if (!hasQuestsReward.value || !isMainMenuEnabled.value) return;
-    showQuestsReminder.value = true;
-    if (questsTimer.value) clearTimeout(questsTimer.value);
-    questsTimer.value = setTimeout(() => {
-        showQuestsReminder.value = false;
-    }, REMINDER_DURATION);
-}
-
-function triggerAchievementsReminder() {
-    if (!hasAchievementsReward.value || !isMainMenuEnabled.value) return;
-    showAchievementsReminder.value = true;
-    if (achievementsTimer.value) clearTimeout(achievementsTimer.value);
-    achievementsTimer.value = setTimeout(() => {
-        showAchievementsReminder.value = false;
-    }, REMINDER_DURATION);
-}
-
-// --- Запуск интервалов для каждой кнопки ---
-function startFortuneLoop() {
-    if (fortuneInterval.value) clearInterval(fortuneInterval.value);
-    setTimeout(() => triggerFortuneReminder(), 1000);
-    fortuneInterval.value = setInterval(triggerFortuneReminder, REMINDER_INTERVAL);
-}
-
-function startDailyLoop() {
-    if (dailyInterval.value) clearInterval(dailyInterval.value);
-    setTimeout(() => triggerDailyReminder(), 2000);
-    dailyInterval.value = setInterval(triggerDailyReminder, REMINDER_INTERVAL);
-}
-
-function startQuestsLoop() {
-    if (questsInterval.value) clearInterval(questsInterval.value);
-    setTimeout(() => triggerQuestsReminder(), 3000);
-    questsInterval.value = setInterval(triggerQuestsReminder, REMINDER_INTERVAL);
-}
-
-function startAchievementsLoop() {
-    if (achievementsInterval.value) clearInterval(achievementsInterval.value);
-    setTimeout(() => triggerAchievementsReminder(), 4000);
-    achievementsInterval.value = setInterval(triggerAchievementsReminder, REMINDER_INTERVAL);
-}
-
-// --- Остановка всех циклов ---
-function stopAllReminderLoops() {
-    const intervals = [fortuneInterval, dailyInterval, questsInterval, achievementsInterval];
-    const timers = [fortuneTimer, dailyTimer, questsTimer, achievementsTimer];
-
-    intervals.forEach((interval) => {
-        if (interval.value) {
-            clearInterval(interval.value);
-            interval.value = null;
-        }
-    });
-    timers.forEach((timer) => {
-        if (timer.value) {
-            clearTimeout(timer.value);
-            timer.value = null;
-        }
+    // расчет количества выполненных заданий, которые можно забрать
+    const reachedQuests = computed(() => {
+        return objectivesStore.dailyObjectives.filter((objective) =>
+            objectivesStore.isClaimable(objective, true)
+        ).length;
     });
 
-    showFortuneReminder.value = false;
-    showDailyReminder.value = false;
-    showQuestsReminder.value = false;
-    showAchievementsReminder.value = false;
-}
+    // расчет количества полученных достижений, которые можно забрать
+    const reachedAchievements = computed(() => {
+        return objectivesStore.achievements.filter((objective) =>
+            objectivesStore.isClaimable(objective, false)
+        ).length;
+    });
 
-// --- Запуск всех активных циклов ---
-function startAllReminderLoops() {
-    stopAllReminderLoops();
-
-    if (hasFortuneReward.value && isMainMenuEnabled.value) startFortuneLoop();
-    if (hasDailyReward.value && isMainMenuEnabled.value) startDailyLoop();
-    if (hasQuestsReward.value && isMainMenuEnabled.value) startQuestsLoop();
-    if (hasAchievementsReward.value && isMainMenuEnabled.value) startAchievementsLoop();
-}
-// #endregion
-
-watch(
-    () => gameStore.activeOverlay,
-    (newState) => {
-        if (["settings", "leaderBoards", "shop", "dailyGift", "fortuneWheel", "objectives"].includes(newState as string)) {
-            isMainMenuEnabled.value = false;
-        } else {
-            isMainMenuEnabled.value = true;
-        };
-    },
-);
-
-// следим за появлением наград и запускаем / останавливаем цикл
-watch(
-    [
-        () => hasFortuneReward.value,
-        () => hasDailyReward.value,
-        () => hasQuestsReward.value,
-        () => hasAchievementsReward.value,
-        () => isMainMenuEnabled.value
-    ],
-    () => {
-        if (isMainMenuEnabled.value) {
-            startAllReminderLoops();
-        } else {
-            stopAllReminderLoops();
-        }
-    },
-    { immediate: true }
-);
-
-onMounted(async () => {
-    setTimeout(() => {
-        isMainMenuEnabled.value = true;
-    }, 400);
-
-    if (dailyGiftStore.isReady && dailyGiftStore.status.canClaim) {
-        setTimeout(() => gameStore.openDailyGift(), 450);
+    // #region - действия по кнопкам главного меню 
+    function startGame() {
+        soundManager.playCue("uiSelect");
+        gameStore.startGame();
     };
-});
 
-onUnmounted(() => {
-    stopAllReminderLoops();
-});
+    function goToShop() {
+        soundManager.playCue("uiSelect");
+        isMainMenuEnabled.value = false;
+        setTimeout(() => {
+            gameStore.openShop();
+        }, 300);
+    };
+
+    function goToSettings() {
+        soundManager.playCue("uiSelect");
+        isMainMenuEnabled.value = false;
+        setTimeout(() => {
+            gameStore.openSettings('main');
+        }, 300);
+    };
+
+    function goToLeaderBoards() {
+        soundManager.playCue("uiSelect");
+        isMainMenuEnabled.value = false;
+        setTimeout(() => {
+            gameStore.openLeaderBoards();
+        }, 300);
+    };
+    // #endregion
+
+    // #region - действия по кнопкам бизнес-панели (в левой части экрана)
+    function goToFortuneWheel() {
+        soundManager.playCue("uiSelect");
+        isMainMenuEnabled.value = false;
+        setTimeout(() => gameStore.openFortuneWheel(), 300);
+    };
+
+    function goToDailyGift() {
+        soundManager.playCue("uiSelect");
+        isMainMenuEnabled.value = false;
+        setTimeout(() => gameStore.openDailyGift(), 300);
+    };
+
+    function goToDailyTasks() {
+        soundManager.playCue("uiSelect");
+        isMainMenuEnabled.value = false;
+        setTimeout(() => gameStore.openObjectives("daily"), 300);
+    };
+
+    function goToAchievements() {
+        soundManager.playCue("uiSelect");
+        isMainMenuEnabled.value = false;
+        setTimeout(() => gameStore.openObjectives("achievements"), 300);
+    };
+    // #endregion
+
+    // #region - периодические напоминания о наградах
+    // --- Функции триггера для каждой кнопки ---
+    function triggerFortuneReminder() {
+        if (!hasFortuneReward.value || !isMainMenuEnabled.value) return;
+        showFortuneReminder.value = true;
+        if (fortuneTimer.value) clearTimeout(fortuneTimer.value);
+        fortuneTimer.value = setTimeout(() => {
+            showFortuneReminder.value = false;
+        }, REMINDER_DURATION);
+    };
+
+    function triggerDailyReminder() {
+        if (!hasDailyReward.value || !isMainMenuEnabled.value) return;
+        showDailyReminder.value = true;
+        if (dailyTimer.value) clearTimeout(dailyTimer.value);
+        dailyTimer.value = setTimeout(() => {
+            showDailyReminder.value = false;
+        }, REMINDER_DURATION);
+    };
+
+    function triggerQuestsReminder() {
+        if (!hasQuestsReward.value || !isMainMenuEnabled.value) return;
+        showQuestsReminder.value = true;
+        if (questsTimer.value) clearTimeout(questsTimer.value);
+        questsTimer.value = setTimeout(() => {
+            showQuestsReminder.value = false;
+        }, REMINDER_DURATION);
+    };
+
+    function triggerAchievementsReminder() {
+        if (!hasAchievementsReward.value || !isMainMenuEnabled.value) return;
+        showAchievementsReminder.value = true;
+        if (achievementsTimer.value) clearTimeout(achievementsTimer.value);
+        achievementsTimer.value = setTimeout(() => {
+            showAchievementsReminder.value = false;
+        }, REMINDER_DURATION);
+    };
+
+    // --- Запуск интервалов для каждой кнопки ---
+    function startFortuneLoop() {
+        if (fortuneInterval.value) clearInterval(fortuneInterval.value);
+        setTimeout(() => triggerFortuneReminder(), 1000);
+        fortuneInterval.value = setInterval(triggerFortuneReminder, REMINDER_INTERVAL);
+    };
+
+    function startDailyLoop() {
+        if (dailyInterval.value) clearInterval(dailyInterval.value);
+        setTimeout(() => triggerDailyReminder(), 2000);
+        dailyInterval.value = setInterval(triggerDailyReminder, REMINDER_INTERVAL);
+    };
+
+    function startQuestsLoop() {
+        if (questsInterval.value) clearInterval(questsInterval.value);
+        setTimeout(() => triggerQuestsReminder(), 3000);
+        questsInterval.value = setInterval(triggerQuestsReminder, REMINDER_INTERVAL);
+    };
+
+    function startAchievementsLoop() {
+        if (achievementsInterval.value) clearInterval(achievementsInterval.value);
+        setTimeout(() => triggerAchievementsReminder(), 4000);
+        achievementsInterval.value = setInterval(triggerAchievementsReminder, REMINDER_INTERVAL);
+    };
+
+    // --- Остановка всех циклов ---
+    function stopAllReminderLoops() {
+        const intervals = [fortuneInterval, dailyInterval, questsInterval, achievementsInterval];
+        const timers = [fortuneTimer, dailyTimer, questsTimer, achievementsTimer];
+
+        intervals.forEach((interval) => {
+            if (interval.value) {
+                clearInterval(interval.value);
+                interval.value = null;
+            }
+        });
+        timers.forEach((timer) => {
+            if (timer.value) {
+                clearTimeout(timer.value);
+                timer.value = null;
+            }
+        });
+
+        showFortuneReminder.value = false;
+        showDailyReminder.value = false;
+        showQuestsReminder.value = false;
+        showAchievementsReminder.value = false;
+    };
+
+    // --- Запуск всех активных циклов ---
+    function startAllReminderLoops() {
+        stopAllReminderLoops();
+
+        if (hasFortuneReward.value && isMainMenuEnabled.value) startFortuneLoop();
+        if (hasDailyReward.value && isMainMenuEnabled.value) startDailyLoop();
+        if (hasQuestsReward.value && isMainMenuEnabled.value) startQuestsLoop();
+        if (hasAchievementsReward.value && isMainMenuEnabled.value) startAchievementsLoop();
+    };
+    // #endregion
+
+    watch(
+        () => gameStore.activeOverlay,
+        (newState) => {
+            if (["settings", "leaderBoards", "shop", "dailyGift", "fortuneWheel", "objectives"].includes(newState as string)) {
+                isMainMenuEnabled.value = false;
+            } else {
+                isMainMenuEnabled.value = true;
+            };
+        },
+    );
+
+    // следим за появлением наград и запускаем / останавливаем цикл
+    watch(
+        [
+            () => hasFortuneReward.value,
+            () => hasDailyReward.value,
+            () => hasQuestsReward.value,
+            () => hasAchievementsReward.value,
+            () => isMainMenuEnabled.value
+        ],
+        () => {
+            if (isMainMenuEnabled.value) {
+                startAllReminderLoops();
+            } else {
+                stopAllReminderLoops();
+            }
+        },
+        { immediate: true }
+    );
+
+    onMounted(async () => {
+        setTimeout(() => {
+            isMainMenuEnabled.value = true;
+        }, 400);
+
+        if (dailyGiftStore.isReady && dailyGiftStore.status.canClaim) {
+            setTimeout(() => gameStore.openDailyGift(), 450);
+        };
+    });
+
+    onUnmounted(() => {
+        stopAllReminderLoops();
+    });
 </script>
 
 
@@ -455,50 +455,38 @@ onUnmounted(() => {
     align-items: center;
     justify-content: flex-start;
     position: fixed;
-    top: 50%;
-    bottom: auto;
-    gap: 4.5vh;
-    transform: translateY(-50%);
-
-    @media (min-width: $breakpoint-mobile-small) and (max-width: $breakpoint-mobile - 1) and (orientation: portrait) {
-        gap: 4vh;
-    }
+    
+    // #region - bottom and gap
+    bottom: 11.111vh;
+    gap: 5.56vh;
 
     @media (min-width: $breakpoint-mobile) and (orientation: landscape) and (hover: none) and (pointer: coarse) {
+        bottom: 11.111vh;
         gap: 5.56vh;
     }
 
+    // позже расчитать:
+    // @media (min-width: $breakpoint-tablet) and (orientation: landscape) and (hover: none) and (pointer: coarse) { 
+    //     bottom: 9.722vw;
+    //     gap: 1.736vw; 
+    // }  
+
     @media (min-width: $breakpoint-laptop) and (orientation: landscape) {
+        bottom: 9.722vw;
         gap: 1.736vw;
     }
 
     @media (min-width: $breakpoint-desktop) and (orientation: landscape) {
+        bottom: 10.677vw;
         gap: 1.667vw;
     }
+    // #endregion
 }
 
 .btn_correction {
     @include text-button-size-m;
     color: $color-yellow-super-light;
-    font-size: 4vw;
-
-    @media (min-width: $breakpoint-mobile-small) and (max-width: $breakpoint-mobile - 1) and (orientation: portrait) {
-        font-size: 6vw;
-    }
-
-    @media (min-width: $breakpoint-mobile) and (orientation: landscape) and (hover: none) and (pointer: coarse) {
-        font-size: 5.56vh;
-    }
-
-    @media (min-width: $breakpoint-laptop) and (orientation: landscape) {
-        font-size: 1.944vw;
-    }
-
-    @media (min-width: $breakpoint-desktop) and (orientation: landscape) {
-        font-size: 1.823vw;
-    }
 }
-
 // #endregion
 
 // #region - элементы бизнес-панели (в левой части экрана)
@@ -520,7 +508,7 @@ onUnmounted(() => {
 
 .icon_container {
     position: relative;
-    width: 60px;
+    width: 68px;
     cursor: pointer;
     pointer-events: auto;
     transition: all 0.2s cubic-bezier(0.25, 0.1, 0.25, 1);
@@ -635,10 +623,6 @@ onUnmounted(() => {
     white-space: nowrap;
     animation: reminderSlideIn 2.5s ease-out forwards;
     margin-left: 16px;
-
-    @media (max-width: $breakpoint-mobile - 1) {
-        display: none;
-    }
 }
 
 @keyframes reminderSlideIn {

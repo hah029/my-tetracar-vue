@@ -9,7 +9,7 @@ $z-layers: (
     "logo": 3,
     "game_logo__root": 5,
     "ui_component": 10,
-    "rights_and_logo": 9,
+    "rights_and_logo": 100,
     "modal": 1000,
 );
 
@@ -90,7 +90,7 @@ $z-layers: (
         -moz-user-select: none;
         -ms-user-select: none;
 
-        margin-bottom: 4vh;   // позже расчитать (для мини-мобил)
+        margin-bottom: 4.6vh;   // позже расчитать (для мини-мобил)
 
         @media (min-width: $breakpoint-mobile) and (orientation: landscape) and (hover: none) and (pointer: coarse) { 
             margin-bottom: 4.6vh;
@@ -258,13 +258,11 @@ $z-layers: (
     }
 
     .menu_btn {
-        font-family: 'vla_shu';
         background: none;
         border: none;
         filter: drop-shadow(0 0 0.9375rem rgba(255, 246, 25, 0.4));
         cursor: pointer;
         transition: all 0.1s ease-in-out;
-        color: gray;
 
         &:hover {
             color: $color-blue;
