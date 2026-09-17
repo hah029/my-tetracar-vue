@@ -132,6 +132,10 @@
         animation: slideIn 0.5s cubic-bezier(0.25, 0.1, 0.25, 1) backwards;
     }
 
+    .buttons_group_showing-leave-active {
+        animation: slideOut 0.5s cubic-bezier(0.25, 0.1, 0.25, 1) forwards;
+    }
+
     @keyframes slideIn {
         0% {
             opacity: 0;
@@ -143,11 +147,6 @@
         }
     }
 
-    // Для исчезновения
-    .buttons_group_showing-leave-active {
-        animation: slideOut 0.5s cubic-bezier(0.25, 0.1, 0.25, 1) forwards;
-    }
-
     @keyframes slideOut {
         0% {
             opacity: 1;
@@ -157,6 +156,92 @@
             opacity: 0;
             transform: translateY(-25px);
         }
+    }
+
+    // Переопределяем для стрелок (через дополнительный класс)
+    .arrow_anim.buttons_group_showing-enter-active {
+        animation: arrowSlideIn 0.4s ease-out backwards;
+    }
+
+    .arrow_anim.buttons_group_showing-leave-active {
+        animation: arrowSlideOut 0.4s ease-in forwards;
+    }
+
+    @keyframes arrowSlideIn {
+        0% {
+            opacity: 0;
+        }
+        100% {
+            opacity: 1;
+        }
+    }
+    
+    @keyframes arrowSlideOut {
+        0% {
+            opacity: 1;
+        }
+        100% {
+            opacity: 0;
+        }
+    }
+// #endregion
+
+// #region - блок анимаций переключения недель
+    .week_switching-enter-active,
+    .week_switching-leave-active {
+        transition: transform 0.4s cubic-bezier(0.25, 0.1, 0.25, 1),
+        opacity 0.4s ease-out;
+    }
+
+    // По умолчанию (не используется при переключении, но нужен для сборки)
+    .week_switching-enter-from {
+        opacity: 0;
+        transform: translateX(-100px);
+    }
+    .week_switching-leave-to {
+        opacity: 0;
+        transform: translateX(100px);
+    }
+
+    // При переключении ВЛЕВО: карточки уходят вправо, приходят слева
+    .daily_gift_cards_container.switch-left {
+        .week_switching-enter-from {
+            opacity: 0;
+            transform: translateX(100px);
+        }
+        .week_switching-leave-to {
+            opacity: 0;
+            transform: translateX(-100px);
+        }
+    }
+
+    // При переключении ВПРАВО: карточки уходят влево, приходят справа
+    .daily_gift_cards_container.switch-right {
+        .week_switching-enter-from {
+            opacity: 0;
+            transform: translateX(-100px);
+        }
+        .week_switching-leave-to {
+            opacity: 0;
+            transform: translateX(100px);
+        }
+    }
+    // #endregion
+
+    // #region - анимации стрелок (отдельный Transition)
+    .arrow_anim-enter-active {
+        transition: opacity 0.35s ease-out, transform 0.35s ease-out;
+    }
+    .arrow_anim-leave-active {
+        transition: opacity 0.35s ease-in, transform 0.35s ease-in;
+    }
+    .arrow_anim-enter-from {
+        opacity: 0;
+        transform: scale(0.7);
+    }
+    .arrow_anim-leave-to {
+        opacity: 0;
+        transform: scale(0.7);
     }
 // #endregion
 

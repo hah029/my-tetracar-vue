@@ -3,7 +3,6 @@
         <Transition name="header_footer_block_anim">
             <div v-if="isHeaderShown" class="header_block" @click="startTimer()">
                 <div class="header_text">
-                    <!-- {{ t("dailyGift.title") }} | {{ t("dailyGift.cycle", { cycle: dailyGift.status.cycleNumber }) }} -->
                     {{ t("dailyGift.title") }}
                 </div>
                 <div class="header_image"><img class="image" src="@/assets/images/title_line_image.svg" /></div>
@@ -12,108 +11,122 @@
 
         <div class="daily_gift_content">
             <!-- Блок с карточками -->
-            <TransitionGroup name="buttons_group_showing" tag="div" class="daily_gift_cards_block">
-            <!-- <TransitionGroup name="business_tab_showing" tag="div" class="daily_gift_cards_block"> -->
-                <!-- Стрелки переключения недель (по бокам) -->
-                <div v-if="selectedWeek > 1 && areTipsShown" class="arrow_big_image_container left_arrow" @click="selectWeek(-1)">
-                    <img class='arrow_big_image' src="@/assets/images/arrow_big.svg" />
-                </div>
-
-                <div v-if="selectedWeek < 4 && areTipsShown" class="arrow_big_image_container right_arrow" @click="selectWeek(1)">
-                    <img class='arrow_big_image' src="@/assets/images/arrow_big.svg" />
-                </div>
-
-                <!-- Сами карточки -->
-                <div v-for="(day, index) in weekDays" :key="day" class="daily_gift_card" :class="getDayClass(day)"
-                    v-if="isGiftCardShown"
-                    :aria-current="day === selectedDay ? 'true' : undefined" 
-                    :style="{ animationDelay: `${index * switchingDelay}s` }"
-                    role="button" 
-                    tabindex="0" 
-                    @click="selectDay(day)"
-                    @keydown.enter="selectDay(day)"
-                >
-                    <!-- Свечение за иконками -->
-                    <div class="card_background_glow" :class="setBgGlow(index)"></div>
-
-                    <!-- Лучи за иконками -->
-                    <div v-if="checkDayPrize(index)" class="rays_image_container">
-                        <img v-if="checkRaysType(day) == 1" class='rays_image' src="@/assets/images/business/gift_rays1.svg" />
-                        <img v-else-if="checkRaysType(day) == 2" class='rays_image' src="@/assets/images/business/gift_rays2.svg" />
-                        <img v-else-if="checkRaysType(day) == 3" class='rays_image' src="@/assets/images/business/gift_rays3.svg" />
-                        <img v-else-if="checkRaysType(day) == 4" class='rays_image' src="@/assets/images/business/gift_rays4.svg" />
+            <div class="daily_gift_cards_block">
+                <!-- Стрелки переключения недель (по бокам) — обёрнуты в свой Transition -->
+                <Transition name="arrow_anim">
+                    <div 
+                        v-if="selectedWeek > 1 && areTipsShown" 
+                        class="arrow_big_image_container left_arrow"
+                        @click="selectWeek(-1)"
+                    >
+                        <img class='arrow_big_image' src="@/assets/images/arrow_big.svg" />
                     </div>
+                </Transition>
 
-                    <!-- Титул -->
-                    <div class="daily_gift_title_block">
-                        <span class="daily_gift_title">{{ t("dailyGift.day", { day }) }}</span>
-                        <span class="daily_gift_separator"></span>
+                <Transition name="arrow_anim">
+                    <div 
+                        v-if="selectedWeek < 4 && areTipsShown"
+                        class="arrow_big_image_container right_arrow"
+                        @click="selectWeek(1)"
+                    >
+                        <img class='arrow_big_image' src="@/assets/images/arrow_big.svg" />
                     </div>
+                </Transition>
 
-                    <!-- Блок с иконками и числами наград -->
-                    <div class="daily_gift_rewards_block_wrapper" :style="setRewardsWrapperStyle(day)">
-                        
-                        <div class="daily_gift_rewards_block">
-                            <div v-for="(reward, rewardIndex) in rewardsList[index]" :key="rewardIndex" class="daily_gift_reward">
-                                
-                                <div 
-                                    class="daily_gift_reward_icon_container" 
-                                    :class="setGiftIconSize(reward, rewardsList[index].length)"
-                                    :style="setRewardIconGlow(reward)"
-                                >
-                                    <EnergonIcon v-if="reward.effect?.currency === 'energon'"/>
-                                    <img v-else class="reward_img" :class="setImgLevitation(reward)" :src="getRewardIcon(reward)" />
-                                </div>
-    
-                                <span v-if="reward.type != 'fortune_spin'" class="daily_gift_reward_value" :style="setGiftValueStyle(reward)">
-                                    {{ getRewardAmount(reward) }}
-                                </span>
-                                
+                <!-- Обёртка фиксированной высоты для карточек -->
+                <div class="daily_gift_cards_wrapper">
+                    <TransitionGroup 
+                        :name="transitionMode === 'initial' ? 'buttons_group_showing' : 'week_switching'" 
+                        tag="div" 
+                        class="daily_gift_cards_container"
+                        :class="{ 'switch-left': transitionMode === 'switch-left', 'switch-right': transitionMode === 'switch-right' }"
+                    >
+                        <!-- Сами карточки -->
+                        <div v-for="(day, index) in weekDays" :key="day" class="daily_gift_card" :class="getDayClass(day)"
+                            v-if="isGiftCardShown"
+                            :aria-current="day === selectedDay ? 'true' : undefined" 
+                            :style="{ animationDelay: `${index * switchingDelay}s` }"
+                            role="button" 
+                            tabindex="0" 
+                            @click="selectDay(day)"
+                            @keydown.enter="selectDay(day)"
+                        >
+                            <!-- Свечение за иконками -->
+                            <div class="card_background_glow" :class="setBgGlow(index)"></div>
+
+                            <!-- Лучи за иконками -->
+                            <div v-if="checkDayPrize(index)" class="rays_image_container">
+                                <img v-if="checkRaysType(day) == 1" class='rays_image' src="@/assets/images/business/gift_rays1.svg" />
+                                <img v-else-if="checkRaysType(day) == 2" class='rays_image' src="@/assets/images/business/gift_rays2.svg" />
+                                <img v-else-if="checkRaysType(day) == 3" class='rays_image' src="@/assets/images/business/gift_rays3.svg" />
+                                <img v-else-if="checkRaysType(day) == 4" class='rays_image' src="@/assets/images/business/gift_rays4.svg" />
                             </div>
+
+                            <!-- Титул -->
+                            <div class="daily_gift_title_block">
+                                <span class="daily_gift_title">{{ t("dailyGift.day", { day }) }}</span>
+                                <span class="daily_gift_separator"></span>
+                            </div>
+
+                            <!-- Блок с иконками и числами наград -->
+                            <div class="daily_gift_rewards_block_wrapper" :style="setRewardsWrapperStyle(day)">
+                                <div class="daily_gift_rewards_block">
+                                    <div v-for="(reward, rewardIndex) in rewardsList[index]" :key="rewardIndex" class="daily_gift_reward">
+                                        <div 
+                                            class="daily_gift_reward_icon_container" 
+                                            :class="setGiftIconSize(reward, rewardsList[index].length)"
+                                            :style="setRewardIconGlow(reward)"
+                                        >
+                                            <EnergonIcon v-if="reward.effect?.currency === 'energon'"/>
+                                            <img v-else class="reward_img" :class="setImgLevitation(reward)" :src="getRewardIcon(reward)" />
+                                        </div>
+            
+                                        <span v-if="reward.type != 'fortune_spin'" class="daily_gift_reward_value" :style="setGiftValueStyle(reward)">
+                                            {{ getRewardAmount(reward) }}
+                                        </span>
+                                    </div>
+                                </div>
+
+                                <!-- Таймер обратного отсчета -->
+                                <div v-if="day == 2" class="countdown_timer">{{ timerTestStroke }}</div>
+                            </div>
+
+                            <!-- Рекламный бонус (x2) -->
+                            <div v-if="canDoubleDailyGift(day)" class="advertisement_block">
+                                <span class="advertisement_text">×2</span>
+                                <div class="advertisement_image_container">
+                                    <img class='adv_image' src="@/assets/images/business/advertisement_icon.svg" />
+                                </div>
+                            </div>
+
+                            <div v-if="day % 7 == 0" class="level_value" :style="setLevelValueStyle(day)">
+                                <span v-if="i18next.resolvedLanguage == 'en'" class="level_value_2 lvl_en">{{ t("dailyGift.levelText") }}</span>
+                                <span class="level_value_1">{{ getSkinLevelValue(day) }}</span>
+                                <span v-if="i18next.resolvedLanguage == 'ru'" class="level_value_2">{{ t("dailyGift.levelText") }}</span>
+                            </div>
+
+                            <!-- Галочка (бонус взят) -->
+                            <span v-if="getDayClass(day).claimed" class="daily-gift__status daily-gift__status--claimed">✓</span>
+
+                            <!-- Рамки -->
+                            <div class="daily_gift_card_corner corner_top_left"></div>
+                            <div class="daily_gift_card_corner corner_top_right"></div>
+                            <div class="daily_gift_card_corner corner_bottom_left"></div>
+                            <div class="daily_gift_card_corner corner_bottom_right"></div>
                         </div>
-
-                        <!-- Таймер обратного отсчета -->
-                        <div v-if="day == 2" class="countdown_timer">{{ timerTestStroke }}</div>
-
-                    </div>
-
-                    <!-- Рекламный бонус (x2) -->
-                    <div v-if="canDoubleDailyGift(day)" class="advertisement_block">
-                        <span class="advertisement_text">×2</span>
-                        <div class="advertisement_image_container">
-                            <img class='adv_image' src="@/assets/images/business/advertisement_icon.svg" />
-                        </div>
-                    </div>
-
-                    <div v-if="day % 7 == 0" class="level_value" :style="setLevelValueStyle(day)">
-                        <span v-if="i18next.resolvedLanguage == 'en'" class="level_value_2 lvl_en">{{ t("dailyGift.levelText") }}</span>
-                        <span class="level_value_1">{{ getSkinLevelValue(day) }}</span>
-                        <span v-if="i18next.resolvedLanguage == 'ru'" class="level_value_2">{{ t("dailyGift.levelText") }}</span>
-                    </div>
-
-                    <!-- Галочка (бонус взят) -->
-                    <span v-if="getDayClass(day).claimed" class="daily-gift__status daily-gift__status--claimed">✓</span>
-
-                    <!-- Рамки -->
-                    <div class="daily_gift_card_corner corner_top_left"></div>
-                    <div class="daily_gift_card_corner corner_top_right"></div>
-                    <div class="daily_gift_card_corner corner_bottom_left"></div>
-                    <div class="daily_gift_card_corner corner_bottom_right"></div>
+                    </TransitionGroup>
                 </div>
-            </TransitionGroup>
+            </div>
 
             <!-- Блок с подсказками (под карточками) -->
             <Transition name="header_footer_block_anim">
                 <div v-if="areTipsShown" class="daily_gift_tips_block">
                     <div class="text_claimed">{{ t("dailyGift.claimed") }}</div>
                     <div class="text_week_caption">
-                        <!-- {{ t("dailyGift.cycle", { cycle: dailyGift.status.cycleNumber }) }} · {{ selectedWeek }} / {{ weeks.length }} -->
                         {{ weekName }}
                     </div>
                 </div>
             </Transition>
-
-
 
             <!-- (позже доделать) -->
             <div v-if="dailyGift.recovery.available || dailyGift.state.pendingRecovery" class="daily-gift__recovery">
@@ -197,6 +210,8 @@
     const isBackButtonShown = ref(false);
     const areTipsShown = ref(false);
     const switchingDelay = ref(0.05);
+    const transitionMode = ref<'initial' | 'switch-left' | 'switch-right'>('initial');
+    const isSwitchingWeek = ref(false);
 
     const errorKey = computed(() => {
         switch (dailyGift.error) {
@@ -246,18 +261,15 @@
         };
     };
 
-    // получаем коллекцию доступных наград за текущую неделю
     function getRewardsList() {
         const newArr = weekDays.value.map((day) => {
             const rewards = getRewards(day);
 
-            // глубокая копия: копируем и сам reward, и вложенный effect
             const copy = rewards.map((reward) => ({
                 ...reward,
                 effect: reward.effect ? { ...reward.effect } : reward.effect,
             }));
 
-            // склейка задвоенных наград внутри одной карточки
             if (copy.length > 1) {
                 const [a, b] = copy;
                 if (a.type === b.type && a.effect?.amount === b.effect?.amount) {
@@ -274,21 +286,16 @@
         rewardsList.value = newArr;
     };
 
-    // получаем массив доступных наград за конкретный день
     function getRewards(day: number) {
         return dailyGift.getDisplayRewards(day);
     };
 
-    // проверяем на тип приза: Колесо фортуны или Скин (если да, то показываем лучи)
     function checkDayPrize(index_) {
         const gift = rewardsList.value[index_][0];
         const prizeType = gift.type;
-
-        // const prizeType = getRewards(day_)[0].type;
         return (prizeType == 'fortune_spin' || prizeType == 'cosmetic') ? true : false;
     };
 
-    // проверяем на тип приза: Колесо фортуны или Скин (если да, то показываем лучи)
     function checkRaysType(day_) {
         const prizeType = getRewards(day_)[0].type;
 
@@ -308,38 +315,28 @@
         };
     };
 
-    // получаем текст под иконкой награды (или число в формате выбранного языка)
     function getRewardAmount(reward: RewardDefinition): string {
         let newString = '';
         if (reward.type === "cosmetic") {
             newString = t("dailyGift.skin");
-
         } else if (reward.type === "upgrade") {
             newString = t("dailyGift.upgrade");
-
         } else {
             newString = String(reward.effect?.amount ?? 1);
             newString = formatScore(Number(newString));
         };
-        
         return newString;
     };
 
-    // получаем значение уровня скина машинки
     function getSkinLevelValue(day_) {
         return day_ / 7;
     };
 
-    // 
     function setRewardsWrapperStyle(day_) {
         const calcMarginTop = day_ == 2 ? 0 : 30;
-
-        return {
-            marginTop: `${calcMarginTop}px`,
-        }
+        return { marginTop: `${calcMarginTop}px` };
     };
 
-    // загружаем нужное изображение для иконки награды
     function getRewardIcon(reward_) {
         if (reward_.type == 'currency') {
             return goldenIcon;
@@ -350,15 +347,10 @@
         } else if (reward_.type == 'fortune_spin') {
             return wheelIcon;
         } else if (reward_.type == 'cosmetic') {
-            if (reward_.effect.skinId == 'basic1') {
-                return skinIcon1;
-            } else if (reward_.effect.skinId == 'basic2') {
-                return skinIcon2;
-            } else if (reward_.effect.skinId == 'premium1') {
-                return skinIcon3;
-            } else if (reward_.effect.skinId == 'premium2') {
-                return skinIcon4;
-            };
+            if (reward_.effect.skinId == 'basic1') return skinIcon1;
+            else if (reward_.effect.skinId == 'basic2') return skinIcon2;
+            else if (reward_.effect.skinId == 'premium1') return skinIcon3;
+            else if (reward_.effect.skinId == 'premium2') return skinIcon4;
         } else if (reward_.type == 'upgrade') {
             return dailyIcon;
         } else {
@@ -366,21 +358,32 @@
         };
     };
 
-    // приводим в нужный формат очки игрока (с учетом его страны) 
-    // (дублируется с такой же функцией в LeaderBoarsRoot.vue - позже вынести как универсальную)
     function formatScore(score: number) {
         const locale = i18next.language || "ru-RU";
         return Math.floor(score).toLocaleString(locale);
     };
 
-    // переключаем недели (клики по стрелкам Вправо / Влево)
+    // 🔥 Переключение недель с анимацией
     function selectWeek(direction_: number) {
-        let newWeek = selectedWeek.value + direction_;
-        const day = (newWeek - 1) * DAILY_GIFT_WEEK_LENGTH + 1;
-        selectDay(day);
+        if (isSwitchingWeek.value) return;
+        isSwitchingWeek.value = true;
+        
+        transitionMode.value = direction_ > 0 ? 'switch-left' : 'switch-right';
+        isGiftCardShown.value = false;
+        
+        setTimeout(() => {
+            let newWeek = selectedWeek.value + direction_;
+            const day = (newWeek - 1) * DAILY_GIFT_WEEK_LENGTH + 1;
+            selectDay(day);
+            
+            setTimeout(() => {
+                isGiftCardShown.value = true;
+                isSwitchingWeek.value = false;
+                transitionMode.value = 'initial';
+            }, 50);
+        }, 100);
     };
 
-    // переключаем день
     function selectDay(day: number) {
         if (day < 1 || day > DAILY_GIFT_CYCLE_LENGTH) return;
         selectedDay.value = day;
@@ -410,13 +413,12 @@
             countDownTimer();
         };
 
-        // функция таймера обратного отсчета (при улучшении или ремонте узла)
         function countDownTimer() {
-            timerTestStroke.value = getTimerStroke();   // преобразуем число с секундами в строковое значение
+            timerTestStroke.value = getTimerStroke();
             
             if (timerTest.value > 0) {
                 setTimeout(() => {
-                    timerTest.value -=1;
+                    timerTest.value -= 1;
                     countDownTimer();
                 }, 1000);
             } else {
@@ -424,7 +426,6 @@
             };
         };
 
-        // преобразуем число с секундами в строковое значение
         function getTimerStroke() {
             const total = timerTest.value;
             const hours   = Math.floor(total / 3600);
@@ -436,9 +437,7 @@
         };
     // #endregion
 
-    // -----------------
     // #region - стили
-        // назначаем габариты иконкам наград
         function setGiftIconSize(reward_, rewardsCount_) {
             if (reward_.type == 'cosmetic') {
                 return 'icon_skin_size';
@@ -451,34 +450,23 @@
             };
         };
 
-        // назначаем стиль подписи под иконками наград
         function setGiftValueStyle(reward_) {
             let newColor = '';
             let textStyle = '';
 
             if (reward_.type == 'currency') {
                 newColor = reward_.effect.currency == 'golden' ? 'FFF5AD' : 'D7FBFF';
-
             } else if (reward_.type == 'ammo') {
                 newColor = 'FFC3C5';
-
             } else if (reward_.type == 'armor') {
                 newColor = 'FFFFFF';
-
             } else if (reward_.type == 'cosmetic') {
                 const skinId = reward_.effect.skinId;
-
-                if (skinId == 'basic1') {
-                    newColor = '79BEFF';
-                } else if (skinId == 'basic2') {
-                    newColor = 'FF6E6E';
-                } else if (skinId == 'premium1') {
-                    newColor = 'FFF080';
-                } else if (skinId == 'premium2') {
-                    newColor = 'F477FF';
-                };
+                if (skinId == 'basic1') newColor = '79BEFF';
+                else if (skinId == 'basic2') newColor = 'FF6E6E';
+                else if (skinId == 'premium1') newColor = 'FFF080';
+                else if (skinId == 'premium2') newColor = 'F477FF';
             } else if (reward_.type == 'upgrade') {
-                // newColor = 'F477FF';
                 newColor = 'ffffff';
             };
 
@@ -490,7 +478,6 @@
             };
         };
 
-        // придаем свечение иконкам наград
         function setRewardIconGlow (reward_) {
             let filterColor = '';
 
@@ -498,10 +485,8 @@
                 if (reward_.effect.currency == 'golden') {
                     filterColor = '255, 220, 20';
                 };
-
             } else if (reward_.type == 'ammo') {
                 filterColor = '255, 116, 121';
-
             } else if (reward_.type == 'armor') {
                 filterColor = '255, 255, 255';
             };
@@ -511,7 +496,6 @@
             };
         };
 
-        // меняем цвет свечения заднего плана карточки
         function setBgGlow(index_) {
             const gift = rewardsList.value[index_][0];
             const prizeType = gift.type;
@@ -520,39 +504,25 @@
                 return 'background_glow_blue';
             } else {
                 const skinId = gift.effect.skinId;
-                if (skinId == 'basic1') {
-                    return 'background_glow_blue';
-                } else if (skinId == 'basic2') {
-                    return 'background_glow_red';
-                } else if (skinId == 'premium1') {
-                    return 'background_glow_yellow';
-                } else if (skinId == 'premium2') {
-                    return 'background_glow_pink';
-                };
+                if (skinId == 'basic1') return 'background_glow_blue';
+                else if (skinId == 'basic2') return 'background_glow_red';
+                else if (skinId == 'premium1') return 'background_glow_yellow';
+                else if (skinId == 'premium2') return 'background_glow_pink';
             };
         };
 
-        // назначаем цвет значения уровня скина машинки (в зависимости от номера недели)
         function setLevelValueStyle(day_) {
             const weekNumber = day_ / 7;
             let textColor = '';
 
-            if (weekNumber == 1) {
-                textColor = '79BEFF';
-            } else if (weekNumber == 2) {
-                textColor = 'FF6E6E';
-            } else if (weekNumber == 3) {
-                textColor = 'FFF080';
-            } else if (weekNumber == 4) {
-                textColor = 'F477FF';
-            };
+            if (weekNumber == 1) textColor = '79BEFF';
+            else if (weekNumber == 2) textColor = 'FF6E6E';
+            else if (weekNumber == 3) textColor = 'FFF080';
+            else if (weekNumber == 4) textColor = 'F477FF';
 
-            return {
-                color: `#${textColor}`,
-            };
+            return { color: `#${textColor}` };
         };
 
-        // заставляем некоторые иконки (Колесо фортуны и Скин) левитировать
         function setImgLevitation(reward_) {
             if (reward_.type == 'cosmetic') {
                 return 'flying_img_1';
@@ -561,25 +531,16 @@
             };
         };
     // #endregion
-    // -----------------
 
     // ===== BACK =====
     function backButtonClick() {
         SoundManager.getInstance().playCue("uiSelect");
         switchingDelay.value = 0.03;
         isBackButtonShown.value = false;
-        setTimeout(() => {
-            areTipsShown.value = false;
-        }, 100);
-        setTimeout(() => {
-            isGiftCardShown.value = false;
-        }, 200);
-        setTimeout(() => {
-            isHeaderShown.value = false;
-        }, 450);
-        setTimeout(() => {
-            gameState.closeOverlay();
-        }, 750);
+        setTimeout(() => { areTipsShown.value = false; }, 100);
+        setTimeout(() => { isGiftCardShown.value = false; }, 200);
+        setTimeout(() => { isHeaderShown.value = false; }, 450);
+        setTimeout(() => { gameState.closeOverlay(); }, 750);
     };
 
     async function recover() {
@@ -599,15 +560,9 @@
 
     onMounted(async () => {
         isHeaderShown.value = true;
-        setTimeout(() => {
-            isGiftCardShown.value = true;
-        }, 200);
-        setTimeout(() => {
-            areTipsShown.value = true;
-        }, 700);
-        setTimeout(() => {
-            isBackButtonShown.value = true;
-        }, 800);
+        setTimeout(() => { isGiftCardShown.value = true; }, 200);
+        setTimeout(() => { areTipsShown.value = true; }, 700);
+        setTimeout(() => { isBackButtonShown.value = true; }, 800);
 
         refreshTimer = setInterval(() => dailyGift.refreshStatus(), 60_000);
         window.addEventListener("keydown", handleKeydown);
@@ -639,6 +594,28 @@
             position: relative;
             display: flex;
             gap: 24px;
+            min-height: 280px;
+            width: 1544px;
+            justify-content: center;
+        }
+
+        // 🔥 Обёртка для карточек — держит высоту и центрирует их
+        .daily_gift_cards_wrapper {
+            height: 280px;
+            width: 1544px;                 // ← фиксируем ширину
+            display: flex;
+            justify-content: center;
+            position: relative;
+            overflow: visible;
+            flex-shrink: 0;               // запрещаем сжатие
+        }
+
+        .daily_gift_cards_container {
+            display: flex;
+            gap: 24px;
+            position: relative;
+            justify-content: center;
+            width: 100%;    
         }
 
         .header_block {
@@ -647,11 +624,9 @@
     // #endregion
 
     // #region - карточки наград
-        
-        // #region - тело карточки    
         .daily_gift_card {
             position: relative;
-            width: 200px;
+            min-width: 200px;
             height: 280px;
             display: flex;
             flex-direction: column;
@@ -659,13 +634,11 @@
             justify-content: flex-start;
             padding: 26px 25px;
             box-sizing: border-box;
-            // overflow: hidden;
 
             border: 1px solid rgba(121, 190, 255, 0.6);
             background-color: rgba($color: #000000, $alpha: 0.5);
             color: $color-gray;
             cursor: pointer;
-            transition: 0.2s ease;
 
             user-select: none;
             -webkit-user-select: none;
@@ -690,9 +663,7 @@
             opacity: .38;
             filter: saturate(.45);
         }
-        // #endregion
 
-        // #region - рамки
         .daily_gift_card_corner {
             position: absolute;
             width: 15px;
@@ -700,40 +671,11 @@
             pointer-events: none;
         }
 
-        .corner_top_left {
-            top: -2px;
-            left: -2px;
-            border-top: 3px solid;
-            border-left: 3px solid;
-            border-color: $color-blue;
-        }
+        .corner_top_left { top: -2px; left: -2px; border-top: 3px solid; border-left: 3px solid; border-color: $color-blue; }
+        .corner_top_right { top: -2px; right: -2px; border-top: 3px solid; border-right: 3px solid; border-color: $color-blue; }
+        .corner_bottom_left { left: -2px; bottom: -2px; border-left: 3px solid; border-bottom: 3px solid; border-color: $color-blue; }
+        .corner_bottom_right { right: -2px; bottom: -2px; border-right: 3px solid; border-bottom: 3px solid; border-color: $color-blue; }
 
-        .corner_top_right {
-            top: -2px;
-            right: -2px;
-            border-top: 3px solid;
-            border-right: 3px solid;
-            border-color: $color-blue;
-        }
-
-        .corner_bottom_left {
-            left: -2px;
-            bottom: -2px;
-            border-left: 3px solid;
-            border-bottom: 3px solid;
-            border-color: $color-blue;
-        }
-
-        .corner_bottom_right {
-            right: -2px;
-            bottom: -2px;
-            border-right: 3px solid;
-            border-bottom: 3px solid;
-            border-color: $color-blue;
-        }
-        // #endregion
-
-        // #region - титул
         .daily_gift_title_block {
             width: 100%;
             display: flex;
@@ -760,9 +702,7 @@
                 rgba(121, 190, 255, 0) 100%
             );
         }
-        // #endregion
-        
-        // #region - блок с иконками и числами наград
+
         .daily_gift_rewards_block_wrapper {
             width: 100%;
             height: 100%;
@@ -812,80 +752,23 @@
             animation: img_levitation_2 2.5s ease-in-out infinite;
         }
 
-        // @keyframes img_levitation_1 {
-        //     0% {
-        //         transform: translateY(0px);
-        //     }
-        //     25% {
-        //         transform: translateY(-5px);
-        //     }
-        //     75% {
-        //         transform: translateY(5px);
-        //     }
-        //     100% {
-        //         transform: translateY(0px);
-        //     }
-        // }
-
         @keyframes img_levitation_1 {
-            0% {
-                transform: translateY(5px);
-            }
-            50% {
-                transform: translateY(-5px);
-            }
-            100% {
-                transform: translateY(5px);
-            }
+            0% { transform: translateY(5px); }
+            50% { transform: translateY(-5px); }
+            100% { transform: translateY(5px); }
         }
 
         @keyframes img_levitation_2 {
-            0% {
-                transform: translateY(-5px);
-            }
-            50% {
-                transform: translateY(5px);
-            }
-            100% {
-                transform: translateY(-5px);
-            }
+            0% { transform: translateY(-5px); }
+            50% { transform: translateY(5px); }
+            100% { transform: translateY(-5px); }
         }
 
-        .icon_normal_size {
-            width: 66px;
-            height: 66px;
-            margin-bottom: 5px;
-        }
+        .icon_normal_size { width: 66px; height: 66px; margin-bottom: 5px; }
+        .icon_small_size { width: 52px; height: 52px; margin-bottom: 5px; }
+        .icon_fortune_size { width: 123px; height: 125px; }
+        .icon_skin_size { width: 103px; height: 120px; margin-bottom: -15px; }
 
-        .icon_small_size {
-            width: 52px;
-            height: 52px;
-            margin-bottom: 5px;
-        }
-
-        .icon_fortune_size {
-            width: 123px;
-            height: 125px;
-        }
-
-        .icon_skin_size {
-            width: 103px;
-            height: 120px;
-            margin-bottom: -15px;
-        }
-
-        // .daily_gift_reward_icon--currency { 
-        //     filter: drop-shadow(0 0 .75rem rgba(255, 215, 73, .48)); 
-        // }
-
-        // .daily_gift_reward_icon--fortune_spin,
-        // .daily_gift_reward_icon--cosmetic,
-        // .daily_gift_reward_icon--upgrade { 
-        //     filter: drop-shadow(0 0 .8rem rgba(93, 183, 255, .55)); 
-        // }
-        // #endregion
-        
-        // #region - изображения на фоне карточки
         .card_background_glow {
             position: absolute;
             bottom: 0;
@@ -894,39 +777,16 @@
         }
 
         .background_glow_blue {
-            background: radial-gradient(
-                circle at center,
-                rgba(121, 190, 255, 0.45) 0%,
-                rgba(121, 190, 255, 0.25) 30%,
-                rgba(121, 190, 255, 0) 65%
-            );
+            background: radial-gradient(circle at center, rgba(121, 190, 255, 0.45) 0%, rgba(121, 190, 255, 0.25) 30%, rgba(121, 190, 255, 0) 65%);
         }
-
         .background_glow_red {
-            background: radial-gradient(
-                circle at center,
-                rgba(255, 121, 121, 0.45) 0%,
-                rgba(255, 121, 121, 0.25) 30%,
-                rgba(255, 121, 121, 0) 65%
-            );
+            background: radial-gradient(circle at center, rgba(255, 121, 121, 0.45) 0%, rgba(255, 121, 121, 0.25) 30%, rgba(255, 121, 121, 0) 65%);
         }
-
         .background_glow_yellow {
-            background: radial-gradient(
-                circle at center,
-                rgba(255, 228, 121, 0.45) 0%,
-                rgba(255, 228, 121, 0.25) 30%,
-                rgba(255, 228, 121, 0) 65%
-            );
+            background: radial-gradient(circle at center, rgba(255, 228, 121, 0.45) 0%, rgba(255, 228, 121, 0.25) 30%, rgba(255, 228, 121, 0) 65%);
         }
-
         .background_glow_pink {
-            background: radial-gradient(
-                circle at center,
-                rgba(253, 151, 255, 0.45) 0%,
-                rgba(253, 151, 255, 0.25) 30%,
-                rgba(253, 151, 255, 0) 65%
-            );
+            background: radial-gradient(circle at center, rgba(253, 151, 255, 0.45) 0%, rgba(253, 151, 255, 0.25) 30%, rgba(253, 151, 255, 0) 65%);
         }
 
         .rays_image_container {
@@ -934,24 +794,22 @@
             top: 40px;
             width: 270px;
             height: 270px;
-            pointer-events: none; // чтобы не мешал кликам по карточке
+            pointer-events: none;
         }
 
         .rays_image {
             width: 100%;
             height: 100%;
-            transform-origin: 50% 50%;         // центр вращения — центр иконки
+            transform-origin: 50% 50%;
             animation: rays-rotate 40s linear infinite;
-            will-change: transform;            // подсказка браузеру для плавности
+            will-change: transform;
         }
 
         @keyframes rays-rotate {
             from { transform: rotate(0deg); }
             to   { transform: rotate(360deg); }
         }
-        // #endregion
 
-        // #region - текст с уровнем скина на карточке
         .level_value {
             position: absolute;
             top: 98px;
@@ -977,9 +835,7 @@
         .lvl_en::first-letter {
             text-transform: uppercase;
         }
-        // #endregion
 
-        // #region - таймер
         .countdown_timer {
             display: flex;
             justify-content: center;
@@ -987,13 +843,10 @@
             color: $color-pink;
             line-height: 1;
             filter: drop-shadow(0 0 10px rgba(247, 156, 255, 1));
-
             font-variant-numeric: tabular-nums;
             font-feature-settings: "tnum" 1;
         }
-        // #endregion
 
-        // #region - значок с рекламой
         .advertisement_block {
             position: absolute;
             bottom: 16px;
@@ -1020,8 +873,6 @@
             width: 100%;
             height: 100%;
         }
-        // #endregion
-
     // #endregion
 
     // #region - блок с подсказками (под карточками)
@@ -1059,6 +910,7 @@
         -moz-user-select: none;
         -ms-user-select: none;
         transition: all 0.2s linear;
+        z-index: 5;
 
         &:hover {
             scale: 1.1;
@@ -1087,25 +939,10 @@
         transition: all 0.2s linear;
     }
     // #endregion
-    
-    
-
-
-    .timer {
-        position: absolute;
-        top: 20px;
-        left: 20px;
-        color: white;
-        @include text-info-size-m;
-    }
 
     .daily-gift {
         justify-content: flex-start;
         padding-top: clamp(14rem, 40vh, 29rem);
-        // background: radial-gradient(ellipse at 50% 55%, rgba(40, 75, 105, .2), transparent 45%), rgba(0, 0, 0, .72);
-    }
-
-    .daily-gift {
         position: static;
         margin: 0 0 clamp(.7rem, 1.6vh, 1.25rem);
     }
@@ -1119,47 +956,14 @@
 
     .daily-gift__status {
         color: $color-blue-light;
+        position: absolute;
+        top: .5rem;
+        right: .55rem;
     }
 
     .daily-gift__error {
         color: $color-red-light;
         margin-top: 1rem;
-    }
-
-    .daily-gift__week-tabs {
-        display: flex;
-        gap: .55rem;
-        margin-bottom: clamp(.8rem, 2vh, 1.4rem);
-    }
-
-    .daily-gift__week-tab {
-        min-width: 2.25rem;
-        padding: .35rem .65rem;
-        border: 1px solid rgba(114, 179, 238, .35);
-        background: rgba(3, 12, 22, .55);
-        color: $color-gray;
-        cursor: pointer;
-        font-family: 'vla_shu';
-    }
-
-    .daily-gift__week-tab.active {
-        color: $color-blue-light;
-        border-color: $color-blue-light;
-        box-shadow: 0 0 .9rem rgba(80, 170, 255, .35);
-    }
-
-    .daily_gift_card.available {
-        border-color: $color-blue-light;
-        filter: drop-shadow(0 0 .3rem $color-blue-light);
-    }
-
-    
-
-    .daily-gift__status {
-        position: absolute;
-        top: .5rem;
-        right: .55rem;
-        color: $color-blue-light;
     }
 
     .daily-gift__status--claimed {
@@ -1204,7 +1008,7 @@
         margin-top: 1rem;
         color: $color-blue-light;
         text-align: center;
-
-        p { margin: 0.5rem 0; }
     }
+
+    .daily-gift__recovery p { margin: 0.5rem 0; }
 </style>
