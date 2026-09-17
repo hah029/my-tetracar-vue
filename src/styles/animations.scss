@@ -203,27 +203,27 @@
         transform: translateX(100px);
     }
 
-    // При переключении ВЛЕВО: карточки уходят вправо, приходят слева
+    // При переключении ВПРАВО (direction_ > 0): старые уходят влево, новые приходят справа
     .daily_gift_cards_container.switch-left {
         .week_switching-enter-from {
             opacity: 0;
-            transform: translateX(100px);
+            transform: translateX(100px); // приходят справа
         }
         .week_switching-leave-to {
             opacity: 0;
-            transform: translateX(-100px);
+            transform: translateX(-100px); // уходят влево
         }
     }
 
-    // При переключении ВПРАВО: карточки уходят влево, приходят справа
+    // При переключении ВЛЕВО (direction_ < 0): старые уходят вправо, новые приходят слева
     .daily_gift_cards_container.switch-right {
         .week_switching-enter-from {
             opacity: 0;
-            transform: translateX(-100px);
+            transform: translateX(-100px); // приходят слева
         }
         .week_switching-leave-to {
             opacity: 0;
-            transform: translateX(100px);
+            transform: translateX(100px); // уходят вправо
         }
     }
     // #endregion

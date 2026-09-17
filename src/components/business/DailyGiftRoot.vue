@@ -367,21 +367,31 @@
     function selectWeek(direction_: number) {
         if (isSwitchingWeek.value) return;
         isSwitchingWeek.value = true;
-        
+
+        // Указываем направление
         transitionMode.value = direction_ > 0 ? 'switch-left' : 'switch-right';
+
+        // 1. Запускаем leave-анимацию
         isGiftCardShown.value = false;
-        
+
+        // 2. Ждём полного завершения leave-анимации (400ms + запас)
         setTimeout(() => {
             let newWeek = selectedWeek.value + direction_;
             const day = (newWeek - 1) * DAILY_GIFT_WEEK_LENGTH + 1;
             selectDay(day);
-            
+
+            // 3. Небольшая задержка, чтобы Vue обновил DOM с новыми ключами
             setTimeout(() => {
+                // 4. Запускаем enter-анимацию
                 isGiftCardShown.value = true;
-                isSwitchingWeek.value = false;
-                transitionMode.value = 'initial';
+
+                // 5. Сбрасываем режим только ПОСЛЕ завершения enter-анимации
+                setTimeout(() => {
+                    isSwitchingWeek.value = false;
+                    transitionMode.value = 'initial';
+                }, 300); // длительность enter-анимации + запас
             }, 50);
-        }, 100);
+        }, 300); // длительность leave-анимации + запас
     };
 
     function selectDay(day: number) {
