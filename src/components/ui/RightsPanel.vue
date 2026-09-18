@@ -1,6 +1,10 @@
 <template>
     <Transition name="rights_panel_showing">
-        <div v-show="isRightPanelShown" class="rights_root">
+        <div 
+            v-show="isRightPanelShown" 
+            class="rights_root"
+            :style="setBlockOpacity()"
+        >
             <DeviceInfo />
             <span>{{ APP_NAME }} v{{ APP_VERSION }}</span>
             <span>© {{ CURRENT_YEAR }} {{ randomRightsPhrase }}</span>
@@ -28,6 +32,13 @@
     const randomRightsPhrase = computed(() => {
         return foo.getRandomFromArray('rightsList');
     });
+
+    // делаем блок с правами более прозрачным при входе в экраны бизнес-механик
+    function setBlockOpacity() {
+        return {
+            opacity: gameState.activeOverlay != 'dailyGift' ? 1 : 0.4,
+        };
+    };
 </script>
 
 
@@ -67,6 +78,7 @@
         align-items: flex-start;
         justify-content: flex-end;
         opacity: 0.55;
+        transition: all 0.2s linear;
         
         @include text-info-size-xs;
         color: $color_white;

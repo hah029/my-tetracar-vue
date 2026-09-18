@@ -1,6 +1,11 @@
 <template>
     <Transition name="team_logo_showing">
-        <div v-show="isRightPanelShown" @click="rightsClickingAction()" class="team_logo_group">
+        <div 
+            v-show="isRightPanelShown" 
+            @click="rightsClickingAction()" 
+            class="team_logo_group"
+            :style="setBlockOpacity()"
+        >
             <div class="team_name_text_group">
                 <span class="wicked">{{ getTeamNamePart(0) }}</span>
                 <span class="team">{{ getTeamNamePart(1) }}</span>
@@ -37,6 +42,13 @@
         setTimeout(() => {
             gameState.setSettingsSection('about');
         }, 50);
+    };
+
+    // делаем блок с лого более прозрачным при входе в экраны бизнес-механик
+    function setBlockOpacity() {
+        return {
+            opacity: gameState.activeOverlay != 'dailyGift' ? 1 : 0.5,
+        };
     };
 </script>
 
@@ -78,6 +90,7 @@
         
         z-index: z("rights_and_logo");
         cursor: pointer;
+        transition: all 0.2s linear;
 
         &:hover .logo_container {
             opacity: 1;
