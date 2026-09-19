@@ -64,15 +64,18 @@ test('new skins unlock once; owned skins pay the configured fallback', async () 
   assert.equal(state.golden, 750);
 });
 
-test('every daily unique reward has a currency fallback and placeholders never unlock', async () => {
+test('every daily unique reward has a currency fallback and configured skins unlock once', async () => {
   const state = setup();
   for (const reward of DAILY_GIFT_REWARDS.flatMap(day => day.rewards).filter(r => ['upgrade', 'cosmetic'].includes(r.type))) {
     assert.equal(reward.fallback.type, 'currency');
     assert.ok(reward.onceKey);
-    if (reward.type === 'cosmetic') await RewardProcessor.apply(reward);
+    if (reward.type === 'cosmetic') {
+      assert.notEqual(reward.effect.skinId, '???');
+      await RewardProcessor.apply(reward);
+    }
   }
-  assert.deepEqual(state.ownedSkins, []);
-  assert.equal(state.golden, 18500);
+  assert.deepEqual(state.ownedSkins, ['basic1', 'basic2', 'premium1', 'premium2']);
+  assert.equal(state.golden, 0);
 });
 
 test('reward receipts describe the replacement currency instead of the original skin', async () => {
