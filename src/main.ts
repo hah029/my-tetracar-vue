@@ -73,7 +73,6 @@ async function init() {
       );
     });
 
-    platform.gameReady();
   }
 
   i18next.init({

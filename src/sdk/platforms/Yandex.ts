@@ -26,10 +26,10 @@ export class YandexPlatform implements IGamePlatform {
   private player: Player | null = null;
   private playerDataCache: PlayerDataSet | null = null;
   private isPlayerDataCacheComplete = false;
+  private isGameReady = false;
 
   async init(): Promise<void> {
     this.sdk = await YaGames.init();
-    this.sdk.features.LoadingAPI?.ready();
   }
 
   // ------------------------------------------------------------------
@@ -328,6 +328,8 @@ export class YandexPlatform implements IGamePlatform {
   }
 
   gameReady(): void {
+    if (this.isGameReady) return;
+    this.isGameReady = true;
     this.sdk?.features.LoadingAPI.ready();
   }
 
