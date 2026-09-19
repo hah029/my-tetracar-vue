@@ -8,13 +8,13 @@
     <component :is="getUIComponent" class="ui_components_root" />
     <RightsPanel />
     <TeamLogo />
-    <DebugPanel />
+    <component :is="DebugPanel" v-if="DebugPanel" />
     <div class="blindness_overlay" :style="{ opacity: playerStore.shieldBlindnessTimer > 0 ? 0.35 : 0 }" />
 </template>
 
 
 <script setup lang="ts">
-    import { ref, onMounted, onUnmounted, computed } from "vue";
+    import { ref, onMounted, onUnmounted, computed, defineAsyncComponent } from "vue";
     // composable
     import { useThree } from "./composables/useThree";
     import { useGame } from "./composables/useGame";
@@ -35,10 +35,8 @@
     // managers
     import { CameraSystem } from "@/game/camera/CameraSystem";
     import { SoundManager } from "./game/sound/SoundManager";
-    import { DebugColliderVisualizer } from "./helpers/debug/DebugColliderVisualizer";
     import { GameStates } from "./game/core/GameState";
     import { provide } from 'vue';
-    import DebugPanel from '@/components/hud/panels/DebugPanel.vue';
     import { usePlayerStore } from "./store/playerStore";
     // import { useProgressStore } from "./store/progressStore";
 
@@ -48,6 +46,11 @@
     const gameState = useGameState();
     const playerStore = usePlayerStore();
     const controls = useControls(game);
+    // Инструменты диагностики не должны попадать в production-версию игры.
+    // Vite заменяет DEV на false при production-сборке и исключает этот chunk.
+    const DebugPanel = import.meta.env.DEV
+        ? defineAsyncComponent(() => import("@/components/hud/panels/DebugPanel.vue"))
+        : null;
 
     // Добавляем controls в объект game для доступа из HUD
     const gameWithControls = {
@@ -89,34 +92,12 @@
     let loop: ReturnType<typeof GameLoop>;
     let soundManager: SoundManager;
 
-    onMounted(() => {
+    onMounted(async () => {
         const scene = threeInstance.getScene();
         const camera = threeInstance.getCamera();
         const composer = threeInstance.getComposer();
 
         playerStore.renderInstance = threeInstance;
-
-
-        // console.log('🔍 App: Got scene:', !!scene);
-        // console.log('🔍 App: Got composer:', !!composer);
-        // console.log('🔍 App: Got renderer:', !!composer?.renderer);
-
-        // регистрация ThreeJS объектов для дебаг панели
-        if (scene && composer?.renderer) {
-            (window as any).__THREE_DEBUG__ = {
-                scene: scene,
-                renderer: composer.renderer
-            };
-            console.log('✅ ThreeJS debug panel registered');
-
-            // Проверка - есть ли объекты в сцене
-            let objectCount = 0;
-            scene.traverse(() => objectCount++);
-            console.log(`📊 Scene has ${objectCount} objects`);
-        } else {
-            console.error('❌ Failed to register debug panel');
-        };
-
         // game init
         game.init(scene);
 
@@ -128,30 +109,28 @@
         soundManager.initialize(camera);
 
         // main loop initialize
-        const debugCollider = new DebugColliderVisualizer(scene);
+        let debugCollider;
+        if (import.meta.env.DEV && scene && composer?.renderer) {
+            const { DebugColliderVisualizer } = await import("./helpers/debug/DebugColliderVisualizer");
+            (window as any).__THREE_DEBUG__ = { scene, renderer: composer.renderer };
+            debugCollider = new DebugColliderVisualizer(scene);
+        }
         loop = GameLoop(game, composer, debugCollider, threeInstance.setRGBShiftAmount);
-        loop.setupEventListeners();
         loop.start();
 
         gameState.setResetCallback(() => {
-            console.log("🔄 FSM reset");
-
             game.reset();
 
             const carMesh = game.car.value.mesh;
             if (carMesh) {
                 CameraSystem.reset(carMesh.position.clone());
             };
-
-            console.log("✅ Game reset complete");
         });
     });
 
     onUnmounted(() => {
-        loop?.cleanupEventListeners();
         loop?.stop();
         game.dispose();
-        console.log('onUnmounted');
     });
 </script>
 
@@ -286,4 +265,3 @@
         transition: opacity 220ms ease-out;
     }
 </style>
-

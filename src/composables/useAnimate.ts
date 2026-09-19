@@ -1,13 +1,12 @@
 // src/composables/useAnimate.ts
 import * as THREE from "three";
-import Stats from "three/examples/jsm/libs/stats.module.js";
 import { EffectComposer } from "three/examples/jsm/postprocessing/EffectComposer.js";
 import { useGameState } from "@/store/gameState";
 import { usePlayerStore } from "@/store/playerStore";
 import { useProgressStore } from "@/store/progressStore";
 import { useGame } from "./useGame";
 import { CameraSystem } from "@/game/camera/CameraSystem";
-import { DebugColliderVisualizer } from "@/helpers/debug/DebugColliderVisualizer";
+import type { DebugColliderVisualizer } from "@/helpers/debug/DebugColliderVisualizer";
 import { UpdateMode } from "@/game/core/UpdateMode";
 import { BulletSystem } from "@/game/combat/BulletSystem";
 import { GameStates } from "@/game/core/GameState";
@@ -28,23 +27,6 @@ export function GameLoop(
   const playerStore = usePlayerStore();
   const progressStore = useProgressStore();
 
-  const stats = new Stats();
-  document.body.appendChild(stats.dom);
-  let isDevPanelVisible = false;
-  const el = document.body.appendChild(stats.dom);
-  el.style.visibility = isDevPanelVisible ? "visible" : "hidden";
-
-  function handleKeyDown(event: KeyboardEvent) {
-    switch (event.key) {
-      case "keyQ":
-        if (event.ctrlKey) {
-          isDevPanelVisible = !isDevPanelVisible;
-          el.style.visibility = isDevPanelVisible ? "visible" : "hidden";
-        }
-        break;
-    }
-  }
-
   function updateDestruction(
     deltaTime: number,
     speed: number,
@@ -62,21 +44,15 @@ export function GameLoop(
 
     if (lastTime === 0) {
       lastTime = time;
-      stats.begin();
-      // 👇 ВОЗВРАЩАЕМ РЕНДЕР
       if (composer) composer.render();
-      stats.end();
       return;
     }
 
     const deltaTime = time - lastTime;
     lastTime = time;
 
-    stats.begin();
-
     const currentState = gameState.currentState;
     if (currentState === GameStates.Pause) {
-      stats.end();
       return;
     }
 
@@ -209,9 +185,7 @@ export function GameLoop(
       game.updateCity(deltaTime, currentSpeed);
     }
 
-    // 👇 ВОЗВРАЩАЕМ РЕНДЕР
     if (composer) composer.render();
-    stats.end();
   }
 
   function start() {
@@ -229,11 +203,5 @@ export function GameLoop(
   return {
     start,
     stop,
-    setupEventListeners: () => {
-      window.addEventListener("keydown", handleKeyDown);
-    },
-    cleanupEventListeners: () => {
-      window.removeEventListener("keydown", handleKeyDown);
-    },
   };
 }
