@@ -7,6 +7,11 @@ export type PlatformAdCallbacks = {
   onError?: (error: unknown) => void;
 };
 
+export type PlatformPurchase = {
+  productID: string;
+  purchaseToken: string;
+};
+
 export interface IGamePlatform {
   init(): Promise<void>;
 
@@ -60,11 +65,13 @@ export interface IGamePlatform {
   // #endregion
 
   // #region - shop
-  consumePrevPurchases(consumePurchaseCallback: Function): Promise<any>;
+  getPendingPurchases(): Promise<PlatformPurchase[]>;
+
+  consumePurchase(purchaseToken: string): Promise<void>;
 
   getShopCatalog(): Promise<Product[] | null>;
 
-  buyShopItem(productId: string, consumePurchase: Function): Promise<any>;
+  buyShopItem(productId: string): Promise<PlatformPurchase>;
   // #endregion
 
   gameReady(); // дёргаем, когда всё загрузилось и игра полностью готова к геймплею

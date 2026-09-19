@@ -15,6 +15,13 @@ export interface TimedEffect {
   expiresAt: number; // timestamp ms
 }
 
+export type IapReceiptStatus = "granted" | "consumed";
+
+export type IapReceipt = {
+  productId: string;
+  status: IapReceiptStatus;
+};
+
 export const useMetaStore = defineStore("metaStore", () => {
   const platform = Platform.getInstance();
   const commonStore = useCommonStore();
@@ -44,6 +51,7 @@ export const useMetaStore = defineStore("metaStore", () => {
 
   // Временные эффекты
   const activeTimedEffects = ref<TimedEffect[]>([]);
+  const iapReceipts = ref<Record<string, IapReceipt>>({});
 
   // ===== COMPUTED (формулы из shop.md п.8) =====
   const ammoUpgrade = computed(() => getUpgradeState("ammoLevel", upgrades.value.ammoLevel)!);
@@ -234,6 +242,19 @@ export const useMetaStore = defineStore("metaStore", () => {
     return getActiveTimedEffects().find((e) => e.feature === feature) || null;
   }
 
+  function getIapReceipt(purchaseToken: string): IapReceipt | null {
+    return iapReceipts.value[purchaseToken] ?? null;
+  }
+
+  function setIapReceipt(
+    purchaseToken: string,
+    productId: string,
+    status: IapReceiptStatus,
+  ) {
+    if (!purchaseToken || !productId) throw new Error("Invalid IAP receipt");
+    iapReceipts.value[purchaseToken] = { productId, status };
+  }
+
   // ===== СОХРАНЕНИЕ / ЗАГРУЗКА =====
 
   async function saveProgress(): Promise<void> {
@@ -250,6 +271,7 @@ export const useMetaStore = defineStore("metaStore", () => {
       permanentFeatures: JSON.stringify(permanentFeatures.value),
       activeTimedEffects: JSON.stringify(activeTimedEffects.value),
       fortuneSpins: JSON.stringify(fortuneSpins.value),
+      iapReceipts: JSON.stringify(iapReceipts.value),
     });
   }
 
@@ -344,6 +366,28 @@ export const useMetaStore = defineStore("metaStore", () => {
         }
       }
 
+      const receipts = data?.iapReceipts;
+      if (receipts != null) {
+        try {
+          const parsed = JSON.parse(String(receipts));
+          if (parsed && typeof parsed === "object" && !Array.isArray(parsed)) {
+            iapReceipts.value = Object.fromEntries(
+              Object.entries(parsed).filter(
+                ([token, receipt]) =>
+                  typeof token === "string" &&
+                  typeof receipt === "object" &&
+                  receipt !== null &&
+                  typeof (receipt as IapReceipt).productId === "string" &&
+                  ((receipt as IapReceipt).status === "granted" ||
+                    (receipt as IapReceipt).status === "consumed"),
+              ),
+            ) as Record<string, IapReceipt>;
+          }
+        } catch {
+          // Keep defaults if persisted IAP receipts are malformed.
+        }
+      }
+
       // Очищаем истёкшие эффекты после загрузки
       cleanupExpiredEffects();
     } catch (err) {
@@ -362,6 +406,7 @@ export const useMetaStore = defineStore("metaStore", () => {
     upgrades,
     permanentFeatures,
     activeTimedEffects,
+    iapReceipts,
 
     // computed
     maxAmmo,
@@ -408,6 +453,8 @@ export const useMetaStore = defineStore("metaStore", () => {
     isFeatureActive,
     cleanupExpiredEffects,
     getTimedEffect,
+    getIapReceipt,
+    setIapReceipt,
 
     // сохранение
     saveProgress,

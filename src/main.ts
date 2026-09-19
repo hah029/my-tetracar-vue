@@ -14,6 +14,7 @@ import { useDailyGiftStore } from "./store/dailyGiftStore";
 import { useObjectivesStore } from "./store/objectivesStore";
 import { useAudioStore } from "./store/audioStore";
 import { useGameState } from "./store/gameState";
+import { PurchaseService } from "./purchase/PurchaseService";
 import {
   AnalyticsReporter,
   AdCoordinator,
@@ -66,13 +67,6 @@ async function init() {
           ? { kind: "platform", id: playerId }
           : undefined,
     });
-    platform.consumePrevPurchases((purchase) => {
-      console.log(
-        "дозавершаем покупку, purchase = " +
-          (purchase ? JSON.stringify(purchase) : "null"),
-      );
-    });
-
   }
 
   i18next.init({
@@ -120,6 +114,7 @@ async function init() {
 
   await useAudioStore(pinia).ready;
   await useProgressStore(pinia).restoreProgress();
+  await new PurchaseService().recoverPendingPurchases();
   await useDailyGiftStore(pinia).restore();
   await useObjectivesStore(pinia).restore();
   Telemetry.recoverAbandonedRun();

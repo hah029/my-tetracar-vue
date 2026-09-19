@@ -3,7 +3,11 @@ import type {
   LeaderboardEntry,
   LeaderboardEntriesData,
 } from "ysdk";
-import type { IGamePlatform, PlatformAdCallbacks } from "../IGamePlatform";
+import type {
+  IGamePlatform,
+  PlatformAdCallbacks,
+  PlatformPurchase,
+} from "../IGamePlatform";
 const DEFAULT_AVATAR = [
   "/src/assets/images/avatars/awatar_anonymous_1.jpg",
   "/src/assets/images/avatars/awatar_anonymous_2.jpg",
@@ -73,6 +77,7 @@ interface ILeaderboardEntries {
 export class LocalStoragePlatform implements IGamePlatform {
   private storage: Storage | null = null;
   private stickyBanner: HTMLDivElement | null = null;
+  private pendingPurchases = new Map<string, PlatformPurchase>();
 
   private readonly PLAYER_KEY = "dev_player";
   private readonly LEADERBOARD_KEY = "dev_leaderboards";
@@ -443,15 +448,21 @@ export class LocalStoragePlatform implements IGamePlatform {
   // ------------------------------------------------------------------
   // Платежи (не поддерживаются в локальной версии)
   // ------------------------------------------------------------------
-  async consumePrevPurchases(consumePurchase: Function): Promise<void> {
-    // Ничего не делаем
+  async getPendingPurchases(): Promise<PlatformPurchase[]> {
+    return [...this.pendingPurchases.values()];
   }
 
-  async buyShopItem(
-    productId: string,
-    consumePurchase: Function,
-  ): Promise<void> {
-    console.log(`DEV покупка "${productId}" симулирована`);
+  async consumePurchase(purchaseToken: string): Promise<void> {
+    this.pendingPurchases.delete(purchaseToken);
+  }
+
+  async buyShopItem(productId: string): Promise<PlatformPurchase> {
+    const purchase = {
+      productID: productId,
+      purchaseToken: `local-${crypto.randomUUID()}`,
+    };
+    this.pendingPurchases.set(purchase.purchaseToken, purchase);
+    return purchase;
   }
 
   async getShopCatalog(): Promise<null> {

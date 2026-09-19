@@ -1,21 +1,20 @@
 // src/purchase/PurchaseService.ts
 import { Platform } from "@/sdk/Platform";
+import type { PlatformPurchase } from "@/sdk/IGamePlatform";
 
 import { WalletService } from "./services/WalletService";
 import { RewardProcessor } from "./RewardProcessor";
 import { useMetaStore } from "@/store/metaStore";
 
-import type { Product, PurchaseTransaction } from "./types";
+import currencyProducts from "@/configs/in_apps/currency.json";
+import stuffProducts from "@/configs/in_apps/stuff.json";
+import visualProducts from "@/configs/in_apps/visual.json";
+import type { Product } from "./types";
 import { useProgressStore } from "@/store/progressStore";
 import { Telemetry } from "@/telemetry";
 
 export class PurchaseService {
   private platform = Platform.getInstance();
-
-  /**
-   * Защита от повторной обработки
-   */
-  private processedTransactions = new Set<string>();
 
   /**
    * Главная точка покупки
@@ -43,33 +42,15 @@ export class PurchaseService {
       }
 
       // 1. Оплата
-      const transaction = await this.processPayment(product);
-
-      // 2. Защита от дублей
-      if (this.processedTransactions.has(transaction.id)) {
-        return {
-          success: true,
-          duplicate: true,
-        };
-      }
-
-      // 3. Применяем награду
-      await RewardProcessor.apply(product);
-
-      // 4. Помечаем transaction
-      this.processedTransactions.add(transaction.id);
-
-      // 5. consume для SDK purchases
       if (this.isExternalCurrency(product.price.currency)) {
-        await this.platform.consumePrevPurchases(() => {
-          console.log(`[PurchaseService] Consumed purchase: ${transaction.id}`);
-        });
+        const receipt = await this.platform.buyShopItem(product.id);
+        await this.fulfillExternalPurchase(product, receipt);
+      } else {
+        const success = WalletService.spendCurrency(product.price.currency, product.price.value);
+        if (!success) throw new Error("Not enough currency");
+        await RewardProcessor.apply(product);
+        await this.persistReward();
       }
-
-      // 6. Сохраняем прогресс
-      const meta = useMetaStore();
-      await meta.saveProgress();
-      await useProgressStore().saveArmorAndAmmo();
 
       Telemetry.emit({ type: "economy.purchase_completed", productId: product.id, currency: product.price.currency, amount: product.price.value });
 
@@ -89,6 +70,65 @@ export class PurchaseService {
         error: err,
       };
     }
+  }
+
+  async recoverPendingPurchases(): Promise<void> {
+    let purchases: PlatformPurchase[];
+    try {
+      purchases = await this.platform.getPendingPurchases();
+    } catch (error) {
+      console.error("[PurchaseService] Failed to load pending purchases:", error);
+      return;
+    }
+
+    for (const receipt of purchases) {
+      const product = this.findProduct(receipt.productID);
+      if (!product) {
+        console.error(`[PurchaseService] Unknown pending product: ${receipt.productID}`);
+        continue;
+      }
+      try {
+        await this.fulfillExternalPurchase(product, receipt);
+      } catch (error) {
+        console.error(`[PurchaseService] Failed to recover ${receipt.purchaseToken}:`, error);
+      }
+    }
+  }
+
+  private async fulfillExternalPurchase(
+    product: Product,
+    receipt: PlatformPurchase,
+  ): Promise<void> {
+    const meta = useMetaStore();
+    const existing = meta.getIapReceipt(receipt.purchaseToken);
+
+    if (existing && existing.productId !== product.id) {
+      throw new Error("Purchase token belongs to another product");
+    }
+
+    if (!existing) {
+      await RewardProcessor.apply(product);
+      await this.persistReward();
+      meta.setIapReceipt(receipt.purchaseToken, product.id, "granted");
+      await meta.saveProgress();
+    }
+
+    if (meta.getIapReceipt(receipt.purchaseToken)?.status === "consumed") return;
+
+    await this.platform.consumePurchase(receipt.purchaseToken);
+    meta.setIapReceipt(receipt.purchaseToken, product.id, "consumed");
+    await meta.saveProgress();
+  }
+
+  private async persistReward(): Promise<void> {
+    await useProgressStore().saveArmorAndAmmo();
+    await useMetaStore().saveProgress();
+  }
+
+  private findProduct(productId: string): Product | undefined {
+    return ([...currencyProducts, ...stuffProducts, ...visualProducts] as Product[]).find(
+      (product) => product.id === productId,
+    );
   }
 
   /**
@@ -159,52 +199,6 @@ export class PurchaseService {
     }
 
     return { available: true };
-  }
-
-  /**
-   * Оплата товара
-   */
-  private async processPayment(product: Product): Promise<PurchaseTransaction> {
-    const currency = product.price.currency;
-
-    // External platform purchase
-    if (this.isExternalCurrency(currency)) {
-      const sdkTransaction = await this.platform.buyShopItem(
-        product.id,
-        (purchase: any) => {
-          console.log(
-            `[PurchaseService] Purchase callback: ${JSON.stringify(purchase)}`,
-          );
-        },
-      );
-
-      return {
-        id: sdkTransaction?.transactionId ?? crypto.randomUUID(),
-
-        productId: product.id,
-
-        status: "completed",
-
-        createdAt: Date.now(),
-      };
-    }
-
-    // Internal currency purchase
-    const success = WalletService.spendCurrency(currency, product.price.value);
-
-    if (!success) {
-      throw new Error("Not enough currency");
-    }
-
-    return {
-      id: crypto.randomUUID(),
-
-      productId: product.id,
-
-      status: "completed",
-
-      createdAt: Date.now(),
-    };
   }
 
   private isExternalCurrency(currency: Product["price"]["currency"]): boolean {
