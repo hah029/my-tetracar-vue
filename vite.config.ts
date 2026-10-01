@@ -61,6 +61,11 @@ export default defineConfig(({ command }) => {
     base: "./",
     plugins: [vue(), glsl(), ...(command === "serve" ? [devTelemetryLog] : [])],
     assetsInclude: ["**/*.glb", "**/*.ogg"],
+    server: {
+      host: "127.0.0.1",
+      port: 5173,
+      strictPort: true,
+    },
     resolve: {
       alias: {
         "@": resolve(__dirname, "src"), // @ указывает на папку src
