@@ -38,7 +38,7 @@
                         <!-- Карточка -->
                         <div v-for="(day, index) in weekDays" :key="day" 
                             v-if="isGiftCardShown"
-                            class="daily_gift_card" :class="getDayClass(day)"
+                            class="daily_gift_card" :class="cardStates[index]"
                             :aria-current="day === selectedDay ? 'true' : undefined" 
                             :style="{ animationDelay: `${index * switchingDelay}s` }"
                             role="button" 
@@ -47,21 +47,19 @@
                             @keydown.enter="selectDay(day)"
                         >
                             <!-- Свечение за иконками -->
-                            <div class="card_background_glow" :class="setBgGlow(index)"></div>
+                            <div class="card_background_glow" :class="setBgGlow(index, day)"></div>
 
                             <!-- Лучи за иконками -->
-                            <div v-if="checkDayPrize(index)" class="rays_image_container">
+                            <div v-if="checkDayPrize(index, day)" class="rays_image_container">
                                 <img v-if="checkRaysType(day) == 1" class='rays_image' src="@/assets/images/business/gift_rays1.svg" />
                                 <img v-else-if="checkRaysType(day) == 2" class='rays_image' src="@/assets/images/business/gift_rays2.svg" />
                                 <img v-else-if="checkRaysType(day) == 3" class='rays_image' src="@/assets/images/business/gift_rays3.svg" />
                                 <img v-else-if="checkRaysType(day) == 4" class='rays_image' src="@/assets/images/business/gift_rays4.svg" />
+                                <img v-else class='rays_image' src="@/assets/images/business/gift_rays5.svg" />
                             </div>
 
                             <!-- Титул -->
-                            <div class="daily_gift_title_block">
-                                <span class="daily_gift_title">{{ t("dailyGift.day", { day }) }}</span>
-                                <span class="daily_gift_separator"></span>
-                            </div>
+                            <div class="daily_gift_title" :class="cardStates[index]">{{ t("dailyGift.day", { day }) }}</div>
 
                             <!-- Блок с иконками и числами наград -->
                             <div class="daily_gift_rewards_block_wrapper" :style="setRewardsWrapperStyle(day)">
@@ -70,10 +68,10 @@
                                         <div 
                                             class="daily_gift_reward_icon_container" 
                                             :class="setGiftIconSize(reward, rewardsList[index].length)"
-                                            :style="setRewardIconGlow(reward)"
+                                            :style="setRewardIconGlow(reward, day)"
                                         >
                                             <EnergonIcon v-if="reward.effect?.currency === 'energon'"/>
-                                            <img v-else class="reward_img" :class="setImgLevitation(reward)" :src="getRewardIcon(reward)" />
+                                            <img v-else class="reward_img" :class="setImgLevitation(reward, day)" :src="getRewardIcon(reward)" />
                                         </div>
             
                                         <span v-if="reward.type != 'fortune_spin'" class="daily_gift_reward_value" :style="setGiftValueStyle(reward)">
@@ -88,9 +86,9 @@
 
                             <!-- Рекламный бонус (x2) -->
                             <div v-if="canDoubleDailyGift(day)" class="advertisement_block">
-                                <span class="advertisement_text">×2</span>
+                                <span class="advertisement_text" :class="cardStates[index]">×2</span>
                                 <div class="advertisement_image_container">
-                                    <img class='adv_image' src="@/assets/images/business/advertisement_icon.svg" />
+                                    <img class='adv_image' :class="cardStates[index]" src="@/assets/images/business/advertisement_icon.svg" />
                                 </div>
                             </div>
 
@@ -101,13 +99,17 @@
                             </div>
 
                             <!-- Галочка (бонус взят) -->
-                            <span v-if="getDayClass(day).claimed" class="daily_gift__status daily_gift__status--claimed">✓</span>
+                            <div v-if="cardStates[index] === 'claimed'" class="checker_image_container">
+                                <img class="checker_img" src="@/assets/images/checker.svg" />
+                            </div>
 
                             <!-- Рамки -->
-                            <div class="daily_gift_card_corner corner_top_left"></div>
-                            <div class="daily_gift_card_corner corner_top_right"></div>
-                            <div class="daily_gift_card_corner corner_bottom_left"></div>
-                            <div class="daily_gift_card_corner corner_bottom_right"></div>
+                            <div v-else class="daily_gift_card_corners_group">
+                                <div class="daily_gift_card_corner corner_top_left" :class="cardStates[index]"></div>
+                                <div class="daily_gift_card_corner corner_top_right" :class="cardStates[index]"></div>
+                                <div class="daily_gift_card_corner corner_bottom_left" :class="cardStates[index]"></div>
+                                <div class="daily_gift_card_corner corner_bottom_right" :class="cardStates[index]"></div>
+                            </div>
                         </div>
                     </TransitionGroup>
                 </div>
@@ -116,7 +118,7 @@
             <!-- Блок с подсказками (под карточками) -->
             <Transition name="header_footer_block_anim">
                 <div v-if="areTipsShown" class="daily_gift_tips_block">
-                    <div class="text_claimed">{{ t("dailyGift.claimed") }}</div>
+                    <div :class="['text_claimed', { 'text_claimed_hidden': isAvailableRewardOnCurrentWeek }]">{{ t("dailyGift.claimed") }}</div>
                     <div class="text_week_caption">
                         {{ weekName }}
                     </div>
@@ -235,6 +237,19 @@
             const start = (selectedWeek.value - 1) * DAILY_GIFT_WEEK_LENGTH;
             return days.slice(start, start + DAILY_GIFT_WEEK_LENGTH);
         });
+
+        // доступна ли награда, которую можно взять (ещё не взята)
+        const isRewardAvailable = computed(() => dailyGift.status.canClaim);
+
+        // неделя, в которой находится доступная награда
+        const availableRewardWeek = computed(() => 
+            Math.ceil(dailyGift.status.day / DAILY_GIFT_WEEK_LENGTH)
+        );
+
+        // игрок находится на неделе с доступной наградой?
+        const isAvailableRewardOnCurrentWeek = computed(() => 
+            isRewardAvailable.value && selectedWeek.value === availableRewardWeek.value
+        );
     // #endregion
 
     getRewardsList();
@@ -254,20 +269,6 @@
             getRewardsList();
         },
     );
-
-    // назначаем статус карточке с наградой:
-    //      - active - был клик по карточке (активная) 
-    //      - available - доступная для получения (еще не взята)
-    //      - clamed - награда уже получена 
-    function getDayClass(day: number) {
-        const { canClaim, day: availableDay } = dailyGift.status;
-
-        return {
-            active: day === selectedDay.value,
-            available: canClaim && day === availableDay,
-            claimed: day < availableDay || (!canClaim && day === availableDay), 
-        };
-    };
 
     // получаем коллекцию доступных наград за текущую неделю
     function getRewardsList() {
@@ -293,7 +294,7 @@
 
             return copy;
         });
-
+        
         rewardsList.value = newArr;
     };
 
@@ -303,10 +304,19 @@
     };
 
     // проверяем на тип приза: Колесо фортуны или Скин (если да, то показываем лучи)
-    function checkDayPrize(index_) {
-        const gift = rewardsList.value[index_][0];
-        const prizeType = gift.type;
-        return (prizeType == 'fortune_spin' || prizeType == 'cosmetic') ? true : false;
+    function checkDayPrize(index_, day_) {
+        const { canClaim, day: availableDay } = dailyGift.status;
+
+        if (day_ < availableDay || (!canClaim && day_ === availableDay)) {
+            return;
+        } else if (canClaim && day_ === availableDay) {
+        // включаем лучи если награда готова к получению
+            return true;
+        } else {
+        // включаем лучи если награда еще не была получена (только Колесо фортуны и Скин)
+            const prizeType = rewardsList.value[index_][0].type;
+            return (prizeType == 'fortune_spin' || prizeType == 'cosmetic') ? true : false;
+        };
     };
 
     // проверяем на тип приза: Колесо фортуны или Скин (если да, то показываем лучи)
@@ -350,15 +360,6 @@
     // получаем значение уровня скина машинки
     function getSkinLevelValue(day_) {
         return day_ / 7;
-    };
-
-    // 
-    function setRewardsWrapperStyle(day_) {
-        const calcMarginTop = day_ == 2 ? 0 : 30;
-
-        return { 
-            marginTop: `${calcMarginTop}px`,
-        };
     };
 
     // загружаем нужное изображение для иконки награды
@@ -427,6 +428,7 @@
         selectedDay.value = day;
     };
 
+    // обработчик клавиш
     function handleKeydown(event: KeyboardEvent) {
         const key = event.key.toLowerCase();
 
@@ -477,7 +479,20 @@
         };
     // #endregion
 
-    // #region - стили
+    // #region - стили и классы
+        // назначаем стили элементам (через computed вместо функции):
+            //      1. подписям и линиям подчеркивания в титуле карточки
+            //      2. надписи "x2" в рекламном блоке
+            //      3. иконке в рекламном блоке    
+        const cardStates = computed(() => {
+            const { canClaim, day: availableDay } = dailyGift.status;
+            return weekDays.value.map((day) => {
+                if (canClaim && day === availableDay) return 'available';
+                if (day < availableDay || (!canClaim && day === availableDay)) return 'claimed';
+                return 'ordinary';
+            });
+        });
+
         // назначаем габариты иконкам наград
         function setGiftIconSize(reward_, rewardsCount_) {
             if (reward_.type == 'cosmetic') {
@@ -529,43 +544,53 @@
         };
 
         // придаем свечение иконкам наград
-        function setRewardIconGlow (reward_) {
+        function setRewardIconGlow(reward_, day_) {
+            const { canClaim, day: availableDay } = dailyGift.status;
             let filterColor = '';
 
-            if (reward_.type == 'currency') {
-                if (reward_.effect.currency == 'golden') {
-                    filterColor = '255, 220, 20';
+            if (day_ < availableDay || (!canClaim && day_ === availableDay)) {
+                return;
+            } else {
+                if (reward_.type == 'currency') {
+                    if (reward_.effect.currency == 'golden') {
+                        filterColor = '255, 220, 20';
+                    };
+    
+                } else if (reward_.type == 'ammo') {
+                    filterColor = '255, 116, 121';
+    
+                } else if (reward_.type == 'armor') {
+                    filterColor = '255, 255, 255';
                 };
-
-            } else if (reward_.type == 'ammo') {
-                filterColor = '255, 116, 121';
-
-            } else if (reward_.type == 'armor') {
-                filterColor = '255, 255, 255';
-            };
-            
-            return {
-                filter: `drop-shadow(0 0 10px rgba(${filterColor}, 0.3))`
-            };
+                
+                return {
+                    filter: `drop-shadow(0 0 10px rgba(${filterColor}, 0.3))`
+                };
+            }
         };
 
         // меняем цвет свечения заднего плана карточки
-        function setBgGlow(index_) {
+        function setBgGlow(index_, day_) {
+            const { canClaim, day: availableDay } = dailyGift.status;
             const gift = rewardsList.value[index_][0];
             const prizeType = gift.type;
-
-            if (prizeType != 'cosmetic') {
+            
+            if (day_ < availableDay || (!canClaim && day_ === availableDay)) {
+                return 'background_glow_none';
+            } else if (canClaim && day_ === availableDay) {
+                return 'background_glow_yellow';
+            } else if (prizeType != 'cosmetic') {
                 return 'background_glow_blue';
             } else {
                 const skinId = gift.effect.skinId;
                 if (skinId == 'basic1') return 'background_glow_blue';
                 else if (skinId == 'basic2') return 'background_glow_red';
-                else if (skinId == 'premium1') return 'background_glow_yellow';
+                else if (skinId == 'premium1') return 'background_glow_light_yellow';
                 else if (skinId == 'premium2') return 'background_glow_pink';
             };
         };
 
-        // назначаем цвет значения уровня скина машинки (в зависимости от номера недели)
+        // назначаем цвет уровня скина машинки (в зависимости от номера недели)
         function setLevelValueStyle(day_) {
             const weekNumber = day_ / 7;
             let textColor = '';
@@ -580,12 +605,34 @@
             };
         };
 
-        // заставляем некоторые иконки (Колесо фортуны и Скин) левитировать
-        function setImgLevitation(reward_) {
-            if (reward_.type == 'cosmetic') {
-                return 'flying_img_1';
-            } else if (reward_.type == 'fortune_spin') {
-                return 'flying_img_2';
+        // заставляем некоторые иконки левитировать (Колесо фортуны и Скин)
+        function setImgLevitation(reward_, day_) {
+            const { canClaim, day: availableDay } = dailyGift.status;
+
+            if (day_ < availableDay || (!canClaim && day_ === availableDay)) {
+                return;
+            } else {
+            // включаем левитацию если только награда еще не была получена
+                if (reward_.type == 'cosmetic') {
+                    return 'flying_img_1';
+                } else if (reward_.type == 'fortune_spin') {
+                    return 'flying_img_2';
+                };
+            };
+        };
+
+        // назначение стилей блоку с иконками
+        //      1. приподнимаем блок с иконками, если в этом дне имеется таймер (скоро будет получена награда)  - ДОДЕЛАТЬ (сейчас на жесткую (срабатывает на второй день))
+        //      2. делаем блок прозрачным, если награда уже была получена
+        function setRewardsWrapperStyle(day_) {
+            const { canClaim, day: availableDay } = dailyGift.status;
+            const calcMarginTop = day_ == 2 ? 0 : 30;
+
+            let newOpacity = (day_ < availableDay || (!canClaim && day_ === availableDay)) ? 0.4 : 1;
+
+            return { 
+                marginTop: `${calcMarginTop}px`,
+                opacity: newOpacity,
             };
         };
     // #endregion
@@ -620,8 +667,8 @@
     onMounted(async () => {
         isHeaderShown.value = true;
         setTimeout(() => { isGiftCardShown.value = true; }, 200);
-        setTimeout(() => { areTipsShown.value = true; }, 700);
-        setTimeout(() => { isBackButtonShown.value = true; }, 800);
+        setTimeout(() => { areTipsShown.value = true; }, 600);
+        setTimeout(() => { isBackButtonShown.value = true; }, 700);
 
         refreshTimer = setInterval(() => dailyGift.refreshStatus(), 60_000);
         window.addEventListener("keydown", handleKeydown);
@@ -639,6 +686,7 @@
     @use "@/styles/animations.scss";
     @use "@/styles/typography" as *;
     @use "@/styles/colors" as *;
+    @use "@/styles/mixins" as *;
 
     // #region - основное
         .daily_gift_content {
@@ -662,18 +710,16 @@
         .daily_gift_cards_wrapper {
             height: 280px;
             width: 1544px;                  // фиксируем ширину
-            display: flex;
-            justify-content: center;
+            @include flex-c;
             position: relative;
             overflow: visible;
             flex-shrink: 0;                 // запрещаем сжатие
         }
 
         .daily_gift_cards_container {
-            display: flex;
             gap: 24px;
             position: relative;
-            justify-content: center;
+            @include flex-c;
             width: 100%;    
         }
 
@@ -710,89 +756,122 @@
         .daily_gift_card:hover,
         .daily_gift_card.active {
             transform: translateY(-.25rem);
-            border-color: rgba(132, 210, 255, .8);
+            border-color: rgba(132, 210, 255, 0.8);
             box-shadow: 0 .5rem 1.8rem rgba(58, 150, 225, .16), inset 0 0 2rem rgba(74, 159, 220, .08);
         }
-
         .daily_gift_card.available {
-            border-color: $color-blue-light;
-            box-shadow: 0 0 1.6rem rgba(71, 171, 255, .36), inset 0 0 2rem rgba(57, 148, 225, .13);
+            min-width: 220px;
+            height: 320px;
+            border-color: $color-yellow-light;
+            background-color: rgba($color: #5B573B, $alpha: 0.15);
+            box-shadow: 0 0 30px rgba(255, 250, 212, 0.35);
         }
-
-        // награда уже получена
         .daily_gift_card.claimed {
-            background-color: rgba($color: #CCCCCC, $alpha: 0.1);
-            border: 1px solid rgba(61, 61, 61, 1);
+            background-color: none;
+            border: 1px solid rgba(60, 60, 60, 1);
         }
         // #endregion
 
         // #region - рамки
         .daily_gift_card_corner {
             position: absolute;
-            width: 15px;
-            height: 15px;
+            width: var(--body-width);
+            height: var(--body-width);
             pointer-events: none;
+            border-style: solid;
+            border-width: 0;
+            border-color: var(--corner-color);
         }
 
         .corner_top_left { 
-            top: -2px; 
-            left: -2px; 
-            border-top: 3px solid; 
-            border-left: 3px solid; 
-            border-color: $color-blue; 
+            top: var(--body-offset); 
+            left: var(--body-offset); 
+            border-top-width: var(--corner-width);
+            border-left-width: var(--corner-width);
         }
 
         .corner_top_right { 
-            top: -2px; 
-            right: -2px; 
-            border-top: 3px solid; 
-            border-right: 3px solid; 
-            border-color: $color-blue; 
+            top: var(--body-offset); 
+            right: var(--body-offset); 
+            border-top-width: var(--corner-width);
+            border-right-width: var(--corner-width);
         }
-        
+
         .corner_bottom_left { 
-            left: -2px; 
-            bottom: -2px; 
-            border-left: 3px solid; 
-            border-bottom: 3px solid; 
-            border-color: $color-blue; 
+            left: var(--body-offset); 
+            bottom: var(--body-offset); 
+            border-left-width: var(--corner-width);
+            border-bottom-width: var(--corner-width);
         }
-       
+
         .corner_bottom_right { 
-            right: -2px; 
-            bottom: -2px; 
-            border-right: 3px solid; 
-            border-bottom: 3px solid; 
-            border-color: $color-blue; 
+            right: var(--body-offset); 
+            bottom: var(--body-offset); 
+            border-right-width: var(--corner-width);
+            border-bottom-width: var(--corner-width);
+        }
+
+        // модификаторы задают ширину и цвет
+        .daily_gift_card.ordinary {
+            --body-width: 15px;
+            --body-offset: -2px;
+            --corner-width: 3px;
+            --corner-color: #{$color-blue};
+        }
+
+        .daily_gift_card.available {
+            --body-width: 20px;
+            --body-offset: -3px;
+            --corner-width: 5px;
+            --corner-color: #{$color-yellow-light};
         }
         // #endregion
 
         // #region - титул
-        .daily_gift_title_block {
-            width: 100%;
-            display: flex;
-            flex-direction: column;
-            justify-content: flex-start;
-            align-items: center;
-            gap: 26px;
-        }
-
         .daily_gift_title {
+            position: relative;
+            width: 100%;
+            min-height: 47px;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            border-bottom: 1px solid;
+
             @include text-info-size-m;
-            color: $color-yellow-super-light;
             text-transform: uppercase;
             line-height: 1;
         }
 
-        .daily_gift_separator {
-            width: 100%;
-            height: 2px;
-            background: linear-gradient(to right,
+        .daily_gift_title.ordinary {
+            color: $color-yellow-super-light;
+            border-image: linear-gradient(
+                to right,
                 rgba(121, 190, 255, 0) 5%,
                 rgba(121, 190, 255, 1) 40%,
                 rgba(121, 190, 255, 1) 60%,
                 rgba(121, 190, 255, 0) 100%
-            );
+            ) 1;
+        }
+        .daily_gift_title.claimed {
+            color: $color-gray;
+            border-image: linear-gradient(
+                to right,
+                rgba(94, 94, 94, 0) 5%,
+                rgba(94, 94, 94, 1) 40%,
+                rgba(94, 94, 94, 1) 60%,
+                rgba(94, 94, 94, 0) 100%
+            ) 1;
+        }
+        .daily_gift_title.available {
+            @include text-info-size-l;
+            color: $color-yellow-light;
+            border-image: linear-gradient(
+                to right,
+                rgba(253, 255, 227, 0) 5%,
+                rgba(253, 255, 227, 1) 40%,
+                rgba(253, 255, 227, 1) 60%,
+                rgba(253, 255, 227, 0) 100%
+            ) 1;
         }
         // #endregion
 
@@ -907,12 +986,18 @@
             height: 120px; 
             margin-bottom: -15px; 
         }
+        // #endregion
 
+        // #region - свечения
         .card_background_glow {
             position: absolute;
             bottom: 0;
             width: 100%;
             height: 82.14%;
+        }
+
+        .background_glow_none {
+            background: none;
         }
 
         .background_glow_blue {
@@ -924,7 +1009,30 @@
         }
 
         .background_glow_yellow {
-            background: radial-gradient(circle at center, rgba(255, 228, 121, 0.45) 0%, rgba(255, 228, 121, 0.25) 30%, rgba(255, 228, 121, 0) 65%);
+            width: 100%;
+            height: 106.25%;
+            bottom: -6.25%;
+            background: radial-gradient(
+                circle at center,
+                rgba(255, 250, 212, 0.9)  0%,    /* #FFFAD4, 100% */
+                rgba(255, 250, 212, 0.30) 21%,   /* #FFFAD4, 29%  */
+                rgba(255, 250, 212, 0.14) 38%,   /* #FFFAD4, 29%  */
+                rgba(255, 250, 212, 0) 70%,   /* #FFFAD4, 6%   */
+                rgba(255, 245, 173, 0)    100%   /* #FFF5AD, 0%   */
+            );
+            
+            // background: radial-gradient(
+            //     circle at center,
+            //     rgba(255, 250, 212, 1)    0%,
+            //     rgba(255, 250, 212, 0.55)  15%,
+            //     rgba(255, 250, 212, 0.32) 33%,
+            //     rgba(255, 250, 212, 0.06) 70%,
+            //     rgba(255, 245, 173, 0)    100%
+            // );
+        }
+
+        .background_glow_light_yellow {
+            background: radial-gradient(circle at center, rgba(255, 250, 212, 0.45) 0%, rgba(255, 250, 212, 0.25) 30%, rgba(255, 250, 212, 0) 65%);
         }
 
         .background_glow_pink {
@@ -1012,9 +1120,11 @@
         
         .advertisement_text {
             @include text-info-size-s;
-            color: $color-hard-blue;
             line-height: 0.7;
         }
+        .advertisement_text.ordinary { color: $color-hard-blue; }
+        .advertisement_text.available { color: $color-yellow-light; }
+        .advertisement_text.claimed { color: $color-gray; }
 
         .advertisement_image_container {
             width: 20px;
@@ -1025,6 +1135,9 @@
             width: 100%;
             height: 100%;
         }
+        .adv_image.ordinary { filter: invert(63%) sepia(61%) saturate(1006%) hue-rotate(186deg) brightness(105%) contrast(111%); }
+        .adv_image.available { filter: invert(90%) sepia(3%) saturate(3727%) hue-rotate(347deg) brightness(110%) contrast(100%); }
+        .adv_image.claimed { filter: invert(47%) sepia(10%) saturate(17%) hue-rotate(323deg) brightness(93%) contrast(95%); }
         // #endregion
 
     // #endregion
@@ -1035,13 +1148,20 @@
             display: flex;
             justify-content: space-between;
             align-items: flex-start;
+            @include unselectable;  
         }
-
+        
         .text_claimed {
             @include text-info-size-s;
             color: $color-yellow-super-light;
             text-transform: uppercase;
             white-space: pre-line;
+            transition: all 0.2s linear;
+            transition-delay: 0.2s;
+        }
+
+        .text_claimed_hidden {
+            opacity: 0;
         }
         
         .text_week_caption {
@@ -1094,29 +1214,33 @@
         }
     // #endregion
 
-
-
-
-
-    .daily-gift {
-        justify-content: flex-start;
-        padding-top: clamp(14rem, 40vh, 29rem);
-        position: static;
-        margin: 0 0 clamp(.7rem, 1.6vh, 1.25rem);
+    // #region - иконки
+    .checker_image_container {
+        position: absolute;
+        top: 25px;
+        right: 20px;
+        width: 24px;
+        height: 24px;
     }
 
-    .daily-gift__error,
-    .daily_gift__status {
+    .checker_image_container.claimed {
+
+    }
+    
+    .checker_img {
+        width: 100%;
+        height: 100%;
+    }
+    // #endregion
+
+    .daily-gift {
+        padding-top: 18.75vw;   // позже сделать через адаптив
+    }
+
+    .daily-gift__error {
         @include text-info-size-s;
         margin: 0;
         text-transform: uppercase;
-    }
-
-    .daily_gift__status {
-        color: $color-blue-light;
-        position: absolute;
-        top: .5rem;
-        right: .55rem;
     }
 
     .daily-gift__error {
@@ -1124,11 +1248,7 @@
         margin-top: 1rem;
     }
 
-    .daily_gift__status--claimed {
-        color: $color-green-light;
-        font-weight: 700;
-        font-size: 1.35em;
-    }
+
 
     .daily-gift__claim,
     .daily-gift__double,
