@@ -1,5 +1,5 @@
 <template>
-    <div class="container daily-gift">
+    <div class="container daily_gift">
         <Transition name="header_footer_block_anim">
             <div v-if="isHeaderShown" class="header_block" @click="startTimer()">
                 <div class="header_text">
@@ -125,8 +125,10 @@
                 </div>
             </Transition>
 
-            <!-- (позже доделать) -->
-            <div v-if="dailyGift.recovery.available || dailyGift.state.pendingRecovery" class="daily-gift__recovery">
+<!-- (позже доделать) -->
+<!-- ---------------- -->
+            <!-- Блок платного восстановления пропущенных дней, если игрок пропустил 1–3 дня -->
+            <div v-if="dailyGift.recovery.available || dailyGift.state.pendingRecovery" class="daily_gift__recovery">
                 <p>
                     {{ t("dailyGift.recoveryInfo", {
                         missed: dailyGift.recovery.missedDays,
@@ -134,35 +136,39 @@
                         day: dailyGift.state.pendingRecovery?.day ?? dailyGift.recovery.day,
                     }) }}
                 </p>
-                <button class="menu_btn daily-gift__recover" :disabled="!dailyGift.canRecover" @click="recover">
+                <button class="menu_btn daily_gift__recover" :disabled="!dailyGift.canRecover" @click="recover">
                 {{ dailyGift.isRecovering ? t("dailyGift.recovering") : dailyGift.state.pendingRecovery
                     ? t("dailyGift.retryRecovery") : t("dailyGift.recover", { cost: dailyGift.recovery.cost }) }}
                 </button>
                 <p v-if="!dailyGift.state.pendingRecovery && meta.energons < dailyGift.recovery.cost">{{ t("dailyGift.notEnoughEnergons") }}</p>
             </div>
 
-            <p v-if="dailyGift.error" class="daily-gift__error">{{ t(errorKey) }}</p>
+            <!-- Блок с ошибкой (если кнопка «Забрать» не сработает) -->
+            <p v-if="dailyGift.error" class="daily_gift__error">{{ t(errorKey) }}</p>
 
+            <!-- Кнопка "Забрать" -->
             <button 
-                v-if="dailyGift.status.canClaim" class="menu_btn daily-gift__claim"
+                v-if="dailyGift.status.canClaim" class="menu_btn daily_gift__claim"
                 :disabled="!dailyGift.isReady || dailyGift.isClaiming || dailyGift.isRecovering || !!dailyGift.state.pendingRecovery || selectedDay !== currentDay" 
                 @click="claim"
             >
                 {{ dailyGift.isClaiming ? t("dailyGift.claiming") : dailyGift.recovery.available ? t("dailyGift.restart") : t("dailyGift.claim") }}
             </button>
             
-            <button v-if="dailyGift.canDouble" class="menu_btn daily-gift__double"
+            <!-- Кнопка "Забрать х2" -->
+            <button v-if="dailyGift.canDouble" class="menu_btn daily_gift__double"
                 :disabled="!dailyGift.isReady || dailyGift.isClaiming || dailyGift.isRecovering || !!dailyGift.state.pendingRecovery || selectedDay !== currentDay"
                 @click="claimDouble">
                 {{ dailyGift.isWatchingAd ? t("dailyGift.watchingAd") : t("dailyGift.claimDouble") }}
             </button>
 
         </div>
+<!-- ---------------- -->
 
         <Transition name="header_footer_block_anim">
             <button 
                 v-if="isBackButtonShown"
-                class="menu_btn daily-gift__back" 
+                class="menu_btn daily_gift__back" 
                 :disabled="dailyGift.isClaiming || dailyGift.isRecovering || !!dailyGift.state.pendingRecovery" 
                 @click="backButtonClick"
             >
@@ -689,6 +695,10 @@
     @use "@/styles/mixins" as *;
 
     // #region - основное
+        .daily_gift {
+            padding-top: 18.75vw;   // позже сделать через адаптив
+        }
+        
         .daily_gift_content {
             display: flex;
             flex-direction: column;
@@ -1222,10 +1232,6 @@
         width: 24px;
         height: 24px;
     }
-
-    .checker_image_container.claimed {
-
-    }
     
     .checker_img {
         width: 100%;
@@ -1233,54 +1239,52 @@
     }
     // #endregion
 
-    .daily-gift {
-        padding-top: 18.75vw;   // позже сделать через адаптив
-    }
+    
 
-    .daily-gift__error {
+    .daily_gift__error {
         @include text-info-size-s;
         margin: 0;
         text-transform: uppercase;
     }
 
-    .daily-gift__error {
+    .daily_gift__error {
         color: $color-red-light;
         margin-top: 1rem;
     }
 
 
 
-    .daily-gift__claim,
-    .daily-gift__double,
-    .daily-gift__recover,
-    .daily-gift__back {
+    .daily_gift__claim,
+    .daily_gift__double,
+    .daily_gift__recover,
+    .daily_gift__back {
         @include text-button-size-s;
         color: $color-yellow-super-light;
     }
 
-    .daily-gift__claim {
+    .daily_gift__claim {
         margin-top: 1.8rem;
     }
 
-    .daily-gift__back {
+    .daily_gift__back {
         position: absolute;
         bottom: 5.556vh;
         color: $color-blue-light;
     }
 
-    .daily-gift__double:disabled,
-    .daily-gift__claim:disabled,
-    .daily-gift__recover:disabled,
-    .daily-gift__back:disabled {
+    .daily_gift__double:disabled,
+    .daily_gift__claim:disabled,
+    .daily_gift__recover:disabled,
+    .daily_gift__back:disabled {
         opacity: 0.45;
         cursor: default;
     }
 
-    .daily-gift__double { 
+    .daily_gift__double { 
         margin-top: 0.7rem; 
     }
 
-    .daily-gift__recovery {
+    .daily_gift__recovery {
         @include text-info-size-s;
         max-width: min(36rem, 90vw);
         margin-top: 1rem;
@@ -1288,5 +1292,5 @@
         text-align: center;
     }
 
-    .daily-gift__recovery p { margin: 0.5rem 0; }
+    .daily_gift__recovery p { margin: 0.5rem 0; }
 </style>
