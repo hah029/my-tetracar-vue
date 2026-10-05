@@ -62,7 +62,7 @@
                             <div class="daily_gift_title" :class="cardStates[index]">{{ t("dailyGift.day", { day }) }}</div>
 
                             <!-- Блок с иконками и числами наград -->
-                            <div class="daily_gift_rewards_block_wrapper" :style="setRewardsWrapperStyle(day)">
+                            <div class="daily_gift_rewards_block_wrapper" :class="cardStates[index]">
                                 <div class="daily_gift_rewards_block">
                                     <div v-for="(reward, rewardIndex) in rewardsList[index]" :key="rewardIndex" class="daily_gift_reward">
                                         <div 
@@ -81,11 +81,11 @@
                                 </div>
 
                                 <!-- Таймер обратного отсчета -->
-                                <div v-if="day == 2" class="countdown_timer">{{ timerTestStroke }}</div>
+                                <div v-if="cardStates[index] === 'next'" class="countdown_timer">{{ timerTestStroke }}</div>
                             </div>
 
                             <!-- Рекламный бонус (x2) -->
-                            <div v-if="canDoubleDailyGift(day)" class="advertisement_block">
+                            <div v-if="canDoubleDailyGift(day) && cardStates[index] !== 'available'" class="advertisement_block">
                                 <span class="advertisement_text" :class="cardStates[index]">×2</span>
                                 <div class="advertisement_image_container">
                                     <img class='adv_image' :class="cardStates[index]" src="@/assets/images/business/advertisement_icon.svg" />
@@ -103,8 +103,30 @@
                                 <img class="checker_img" src="@/assets/images/checker.svg" />
                             </div>
 
+                            <!-- Блок кнопок "Забрать" ("Забрать x2") -->
+                            <div v-if="cardStates[index] === 'available'" class="claim_buttons_block">
+                                <!-- Кнопка х2 -->
+                                <div v-if="canDoubleDailyGift(day)" class="claim_double_button">
+                                    <span class="menu_btn claim_button small">-</span>
+                                    <button class="menu_btn claim_button small" @click="claimDouble()">
+                                        {{ foo.makeText("dailyGift.claim", 'empty') }} ×2
+                                    </button>
+                                    <div class="advertisement_image_container">
+                                        <img class='adv_image' :class="cardStates[index]" src="@/assets/images/business/advertisement_icon.svg" />
+                                    </div>
+                                    <span class="menu_btn claim_button small">-</span>
+                                </div>
+                                <!-- {{ dailyGift.isWatchingAd ? t("dailyGift.watchingAd") : t("dailyGift.claimDouble") }} -->
+                                
+                                <!-- Обычная кнопка -->
+                                <button :class="['menu_btn claim_button', { 'small pink': canDoubleDailyGift(day) }]" @click="claim()">
+                                    {{ foo.makeText("dailyGift.claim") }}
+                                </button>
+                                <!-- :disabled="!dailyGift.isReady || dailyGift.isClaiming || dailyGift.isRecovering || !!dailyGift.state.pendingRecovery || selectedDay !== currentDay"  -->
+                            </div>
+
                             <!-- Рамки -->
-                            <div v-else class="daily_gift_card_corners_group">
+                            <div v-if="cardStates[index] !== 'claimed'" class="daily_gift_card_corners_group">
                                 <div class="daily_gift_card_corner corner_top_left" :class="cardStates[index]"></div>
                                 <div class="daily_gift_card_corner corner_top_right" :class="cardStates[index]"></div>
                                 <div class="daily_gift_card_corner corner_bottom_left" :class="cardStates[index]"></div>
@@ -118,7 +140,9 @@
             <!-- Блок с подсказками (под карточками) -->
             <Transition name="header_footer_block_anim">
                 <div v-if="areTipsShown" class="daily_gift_tips_block">
-                    <div :class="['text_claimed', { 'text_claimed_hidden': isAvailableRewardOnCurrentWeek }]">{{ t("dailyGift.claimed") }}</div>
+                    <div :class="['text_claimed', { 'text_claimed_hidden': isAvailableRewardOnCurrentWeek }]">
+                        {{ tipsText }}
+                    </div>
                     <div class="text_week_caption">
                         {{ weekName }}
                     </div>
@@ -147,32 +171,27 @@
             <p v-if="dailyGift.error" class="daily_gift__error">{{ t(errorKey) }}</p>
 
             <!-- Кнопка "Забрать" -->
-            <button 
+            <!-- <button 
                 v-if="dailyGift.status.canClaim" class="menu_btn daily_gift__claim"
                 :disabled="!dailyGift.isReady || dailyGift.isClaiming || dailyGift.isRecovering || !!dailyGift.state.pendingRecovery || selectedDay !== currentDay" 
                 @click="claim"
             >
                 {{ dailyGift.isClaiming ? t("dailyGift.claiming") : dailyGift.recovery.available ? t("dailyGift.restart") : t("dailyGift.claim") }}
-            </button>
+            </button> -->
             
             <!-- Кнопка "Забрать х2" -->
-            <button v-if="dailyGift.canDouble" class="menu_btn daily_gift__double"
+            <!-- <button v-if="dailyGift.canDouble" class="menu_btn daily_gift__double"
                 :disabled="!dailyGift.isReady || dailyGift.isClaiming || dailyGift.isRecovering || !!dailyGift.state.pendingRecovery || selectedDay !== currentDay"
                 @click="claimDouble">
                 {{ dailyGift.isWatchingAd ? t("dailyGift.watchingAd") : t("dailyGift.claimDouble") }}
-            </button>
+            </button> -->
 
         </div>
 <!-- ---------------- -->
 
         <Transition name="header_footer_block_anim">
-            <button 
-                v-if="isBackButtonShown"
-                class="menu_btn daily_gift__back" 
-                :disabled="dailyGift.isClaiming || dailyGift.isRecovering || !!dailyGift.state.pendingRecovery" 
-                @click="backButtonClick"
-            >
-                {{ t("mainMenu.goBack") }}
+            <button v-if="isBackButtonShown" class="menu_btn btn_correction back_button_menu" @click="backButtonClick">
+                {{ foo.makeText("mainMenu.goBack") }}
             </button>
         </Transition>
     </div>
@@ -256,6 +275,13 @@
         const isAvailableRewardOnCurrentWeek = computed(() => 
             isRewardAvailable.value && selectedWeek.value === availableRewardWeek.value
         );
+
+        // выбор фразы-подсказки (в левом-нижнем углу экрана) при разных сценариях
+        const tipsText = computed(() => {
+            if (isAvailableRewardOnCurrentWeek.value) return '';
+            if (isRewardAvailable.value) return t('dailyGift.claimPrompt');
+            return t('dailyGift.claimed');
+        });
     // #endregion
 
     getRewardsList();
@@ -495,6 +521,7 @@
             return weekDays.value.map((day) => {
                 if (canClaim && day === availableDay) return 'available';
                 if (day < availableDay || (!canClaim && day === availableDay)) return 'claimed';
+                if (!canClaim && day === availableDay + 1) return 'next';
                 return 'ordinary';
             });
         });
@@ -626,21 +653,6 @@
                 };
             };
         };
-
-        // назначение стилей блоку с иконками
-        //      1. приподнимаем блок с иконками, если в этом дне имеется таймер (скоро будет получена награда)  - ДОДЕЛАТЬ (сейчас на жесткую (срабатывает на второй день))
-        //      2. делаем блок прозрачным, если награда уже была получена
-        function setRewardsWrapperStyle(day_) {
-            const { canClaim, day: availableDay } = dailyGift.status;
-            const calcMarginTop = day_ == 2 ? 0 : 30;
-
-            let newOpacity = (day_ < availableDay || (!canClaim && day_ === availableDay)) ? 0.4 : 1;
-
-            return { 
-                marginTop: `${calcMarginTop}px`,
-                opacity: newOpacity,
-            };
-        };
     // #endregion
 
     // ===== BACK =====
@@ -659,14 +671,15 @@
         SoundManager.getInstance().playCue(recovered ? "uiSelect" : "actionRejected");
     };
 
-    async function claimDouble() {
-        const claimed = await dailyGift.claim(true);
+    // клик по кнопке "Забрать!"
+    async function claim() {
+        const claimed = await dailyGift.claim();
         SoundManager.getInstance().playCue(claimed ? "goldenPickup" : "actionRejected");
     };
 
-    async function claim() {
-        console.log('claim');
-        const claimed = await dailyGift.claim();
+    // клик по кнопке "Забрать х2!"
+    async function claimDouble() {
+        const claimed = await dailyGift.claim(true);
         SoundManager.getInstance().playCue(claimed ? "goldenPickup" : "actionRejected");
     };
 
@@ -736,6 +749,11 @@
         .header_block {
             margin-bottom: 38px;
         }
+
+        .btn_correction {
+            @include text-button-size-s;
+            color: $color-yellow-super-light;
+        }
     // #endregion
 
     // #region - карточки наград
@@ -763,8 +781,9 @@
             transition: all 0.2s linear;
         }
 
-        .daily_gift_card:hover,
-        .daily_gift_card.active {
+        .daily_gift_card:hover {
+        // .daily_gift_card:hover, 
+        // .daily_gift_card.active {
             transform: translateY(-.25rem);
             border-color: rgba(132, 210, 255, 0.8);
             box-shadow: 0 .5rem 1.8rem rgba(58, 150, 225, .16), inset 0 0 2rem rgba(74, 159, 220, .08);
@@ -822,14 +841,15 @@
         }
 
         // модификаторы задают ширину и цвет
-        .daily_gift_card.ordinary {
+        .daily_gift_card_corner.ordinary,
+        .daily_gift_card_corner.next {
             --body-width: 15px;
             --body-offset: -2px;
             --corner-width: 3px;
             --corner-color: #{$color-blue};
         }
 
-        .daily_gift_card.available {
+        .daily_gift_card_corner.available {
             --body-width: 20px;
             --body-offset: -3px;
             --corner-width: 5px;
@@ -893,7 +913,10 @@
             flex-direction: column;
             justify-content: space-between;
             align-items: center;
+            margin-top: 30px;
         }
+        .daily_gift_rewards_block_wrapper.available, .daily_gift_rewards_block_wrapper.available.next { margin-top: -15px; }
+        .daily_gift_rewards_block_wrapper.claimed { opacity: 0.3; }
 
         .daily_gift_rewards_block {
             width: 100%;
@@ -909,7 +932,7 @@
             flex-direction: column;
             justify-content: flex-start;
             align-items: center;
-            gap: 15px;
+            gap: 12px;
         }
 
         .daily_gift_reward_value {
@@ -1020,8 +1043,8 @@
 
         .background_glow_yellow {
             width: 100%;
-            height: 106.25%;
-            bottom: -6.25%;
+            height: 104%;
+            bottom: -4%;
             background: radial-gradient(
                 circle at center,
                 rgba(255, 250, 212, 0.9)  0%,    /* #FFFAD4, 100% */
@@ -1051,7 +1074,7 @@
 
         .rays_image_container {
             position: absolute;
-            top: 40px;
+            top: 30px;
             width: 270px;
             height: 270px;
             pointer-events: none;   // чтобы не мешал кликам по карточке
@@ -1146,10 +1169,60 @@
             height: 100%;
         }
         .adv_image.ordinary { filter: invert(63%) sepia(61%) saturate(1006%) hue-rotate(186deg) brightness(105%) contrast(111%); }
-        .adv_image.available { filter: invert(90%) sepia(3%) saturate(3727%) hue-rotate(347deg) brightness(110%) contrast(100%); }
+        .adv_image.available { filter: invert(87%) sepia(30%) saturate(401%) hue-rotate(356deg) brightness(104%) contrast(102%); }
         .adv_image.claimed { filter: invert(47%) sepia(10%) saturate(17%) hue-rotate(323deg) brightness(93%) contrast(95%); }
         // #endregion
 
+        // #region - 
+        .claim_buttons_block {
+            position: absolute;
+            bottom: 0;
+            width: 100%;
+            height: 90px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .claim_button {
+            @include text-info-size-l;
+            color: $color-yellow-light;
+            text-transform: uppercase;
+            line-height: 1;
+            padding: 0;
+            transition: all 0.1s ease-in-out;
+        }
+        .claim_button.small { @include text-info-size-m; }
+        .claim_button.pink { 
+            color: $color-pink; 
+
+            &:hover {
+                color: $color-blue;
+                filter: drop-shadow(0 0 1.25rem rgb(140, 186, 229));
+                transition: all 0.1s ease-in-out;
+            }
+        }
+
+        .claim_double_button {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 8px;
+
+            &:hover .claim_button, 
+            &:hover .small {
+                color: $color-blue;
+                filter: drop-shadow(0 0 1.25rem rgb(140, 186, 229));
+                transition: all 0.1s ease-in-out;
+            }
+             &:hover .adv_image {
+                filter: invert(63%) sepia(61%) saturate(1006%) hue-rotate(186deg) brightness(105%) contrast(111%);
+                transition: all 0.1s ease-in-out;
+            }
+        }
+        // #endregion
     // #endregion
 
     // #region - блок с подсказками (под карточками)

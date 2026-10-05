@@ -250,6 +250,7 @@
     "dailyGift": {
         "title": "daily gift",
         "claimed": "today's gift is claimed!\ncome back tomorrow.",
+        "claimPrompt": "claim your gift!",
         "weekName": [
             "week 1: basic rewards",
             "week 2: enhanced rewards",
