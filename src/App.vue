@@ -9,6 +9,17 @@
     <RightsPanel />
     <TeamLogo />
     <component :is="DebugPanel" v-if="DebugPanel" />
+
+    <!-- 🔥 Глобальные оверлеи — доступны из любого состояния -->
+    <div class="overlays_root">
+        <ShopRoot v-if="gameState.activeOverlay === 'shop'" />
+        <SettingsRoot v-if="gameState.activeOverlay === 'settings'" />
+        <LeaderBoardsRoot v-if="gameState.activeOverlay === 'leaderBoards'" />
+        <DailyGiftRoot v-if="gameState.activeOverlay === 'dailyGift'" />
+        <FortuneWheelRoot v-if="gameState.activeOverlay === 'fortuneWheel'" />
+        <ObjectivesRoot v-if="gameState.activeOverlay === 'objectives'" />
+    </div>
+
     <div class="blindness_overlay" :style="{ opacity: playerStore.shieldBlindnessTimer > 0 ? 0.35 : 0 }" />
 </template>
 
@@ -32,13 +43,18 @@
     import GameLogo from "@/components/ui/GameLogo.vue";
     import RightsPanel from "@/components/ui/RightsPanel.vue";
     import TeamLogo from "@/components/ui/TeamLogo.vue";
+    import ShopRoot from "./components/shop/ShopRoot.vue";
+    import SettingsRoot from "./components/settings/SettingsRoot.vue";
+    import LeaderBoardsRoot from "./components/leaderboards/LeaderBoardsRoot.vue";
+    import FortuneWheelRoot from "@/components/business/FortuneWheelRoot.vue";
+    import DailyGiftRoot from "@/components/business/DailyGiftRoot.vue";
+    import ObjectivesRoot from "@/components/business/ObjectivesRoot.vue";
     // managers
     import { CameraSystem } from "@/game/camera/CameraSystem";
     import { SoundManager } from "./game/sound/SoundManager";
     import { GameStates } from "./game/core/GameState";
     import { provide } from 'vue';
     import { usePlayerStore } from "./store/playerStore";
-    // import { useProgressStore } from "./store/progressStore";
 
     const threeRoot = ref<HTMLDivElement | null>(null);
     const threeInstance = useThree(threeRoot);
@@ -263,5 +279,16 @@
         pointer-events: none;
         background: #ffffff;
         transition: opacity 220ms ease-out;
+    }
+
+    .overlays_root {
+        position: absolute;
+        inset: 0;
+        z-index: z("modal");   // = 1000
+        pointer-events: none;  // чтобы не блокировать клики вне оверлеев
+    }
+
+    .overlays_root > * {
+        pointer-events: auto;  // но сами оверлеи кликаются
     }
 </style>

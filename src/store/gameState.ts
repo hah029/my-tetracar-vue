@@ -99,6 +99,7 @@ export const useGameState = defineStore("gameState", () => {
     const progress = useProgressStore();
     const levelStore = useLevelStore();
     const sound = SoundManager.getInstance();
+    const dailyGift = useDailyGiftStore();
 
     switch (state) {
       case GameStates.Preloader:
@@ -188,7 +189,7 @@ export const useGameState = defineStore("gameState", () => {
         }
         break;
 
-      case GameStates.Gameover:
+      case GameStates.Gameover: {
         playerStore.clearCombatInventory();
         if (Telemetry.getRunId()) {
           Telemetry.emit({
@@ -212,13 +213,28 @@ export const useGameState = defineStore("gameState", () => {
           .saveProgress()
           .catch((err) =>
             console.error("Failed to save progress on gameover:", err),
-        );
+          );
+
         sound.playMusic("music_gameover");
 
         // отмечаем, что игрок впервые увидел экран проигрыша
-        const dailyGift = useDailyGiftStore();
         dailyGift.markFirstGameCompleted();
+
+        // 🔥 автопоказ ежедневного подарка поверх экрана Game Over
+        if (dailyGift.shouldAutoShowGift) {
+          setTimeout(() => {
+            // показываем только если игрок всё ещё на Game Over и не открыл другой оверлей
+            if (
+              currentState.value === GameStates.Gameover &&
+              activeOverlay.value === null
+            ) {
+              dailyGift.markGiftAutoShown();
+              activeOverlay.value = "dailyGift";
+            }
+          }, 2500);
+        }
         break;
+      }
 
       case GameStates.QuitConfirm:
         // При входе в состояние подтверждения выхода

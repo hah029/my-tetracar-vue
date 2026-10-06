@@ -59,6 +59,10 @@
                 {{ btn.text }}
             </button>
         </TransitionGroup>
+
+        <Transition name="game_logo_whole_menu_showing">
+            <div v-if="gameState.activeOverlay == 'dailyGift'" class="blured_layer"></div>
+        </Transition>
     </div>
 </template>
 
@@ -139,6 +143,17 @@ onMounted(() => {
     backdrop-filter: blur(2px);
     gap: clamp(0.75rem, 3.4vh, 2.5rem);
     overflow-y: auto;
+}
+
+.blured_layer {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.8);
+    backdrop-filter: blur(6px);
+    z-index: 4;
 }
 
 .header_correction {

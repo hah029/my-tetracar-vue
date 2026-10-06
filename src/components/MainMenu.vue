@@ -78,24 +78,6 @@
                 <div class="btn_hint combat_inventory__value">{{ playerStore.armor }}/{{ playerStore.maxArmor }}</div>
             </div>
         </TransitionGroup>
-
-        <!-- SHOP -->
-        <ShopRoot v-if="gameStore.activeOverlay === 'shop'" />
-
-        <!-- SETTINGS -->
-        <SettingsRoot v-if="gameStore.activeOverlay === 'settings'" />
-
-        <!-- LEADERBOARDS -->
-        <LeaderBoardsRoot v-if="gameStore.activeOverlay === 'leaderBoards'" />
-
-        <!-- DAILY GIFT -->
-        <DailyGiftRoot v-if="gameStore.activeOverlay === 'dailyGift'" />
-
-        <!-- FORTUNE WHEEL -->
-        <FortuneWheelRoot v-if="gameStore.activeOverlay === 'fortuneWheel'" />
-
-        <!-- DAILY TASKS AND ACHIEVEMENTS -->
-        <ObjectivesRoot v-if="gameStore.activeOverlay === 'objectives'" />
     </div>
 </template>
 
@@ -104,20 +86,11 @@
     import { watch, ref, computed, onMounted, onUnmounted } from "vue";
     import { createNewText } from "@/helpers/functions";
     import { SoundManager } from "@/game/sound/SoundManager";
-
     import { useGameState } from "@/store/gameState";
     import { useDailyGiftStore } from "@/store/dailyGiftStore";
     import { useFortuneWheelStore } from "@/store/fortuneWheelStore";
     import { useObjectivesStore } from "@/store/objectivesStore";
     import { usePlayerStore } from "@/store/playerStore";
-
-    import ShopRoot from "./shop/ShopRoot.vue";
-    import SettingsRoot from "./settings/SettingsRoot.vue";
-    import LeaderBoardsRoot from "./leaderboards/LeaderBoardsRoot.vue";
-
-    import FortuneWheelRoot from "@/components/business/FortuneWheelRoot.vue";
-    import DailyGiftRoot from "@/components/business/DailyGiftRoot.vue";
-    import ObjectivesRoot from "@/components/business/ObjectivesRoot.vue"
 
     const dailyGiftStore = useDailyGiftStore();
     const fortuneWheelStore = useFortuneWheelStore();
