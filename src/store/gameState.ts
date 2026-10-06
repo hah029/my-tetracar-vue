@@ -45,6 +45,7 @@ export const useGameState = defineStore("gameState", () => {
   const isPreloaderShown = ref(true);
   const isFirstGame = ref(false);
   const activeOverlay = ref<UIOverlay>(null);
+  const overlayCloseRequestId = ref(0);
   const previousState = ref<GameStates>(GameStates.Preloader); // Запоминаем предыдущее состояние
   
   const settingsSection = ref<SettingsSection>(null);
@@ -446,6 +447,11 @@ export const useGameState = defineStore("gameState", () => {
     settingsSection.value = null; // 🔥 Сбрасываем секцию
   }
 
+  // ← новое: попросить активный оверлей закрыться «красиво»
+  function requestOverlayClose() {
+    overlayCloseRequestId.value += 1;
+  }
+
   return {
     currentState,
     isDebug,
@@ -454,6 +460,7 @@ export const useGameState = defineStore("gameState", () => {
     activeOverlay,
     settingsSection,
     objectivesSection,
+    overlayCloseRequestId,
 
     // FSM
     setState,
@@ -481,6 +488,7 @@ export const useGameState = defineStore("gameState", () => {
     confirmQuit,
     cancelQuit,
     closeOverlay,
+    requestOverlayClose,
 
     toggleDebug,
   };

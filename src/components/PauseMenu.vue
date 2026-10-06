@@ -1,9 +1,6 @@
 <template>
     <div class="container container_blur">
         <div class="container" :class="setContainerClass()">
-            <!-- SETTINGS OVERLAY -->
-            <SettingsRoot v-if="gameStore.activeOverlay === 'settings'" :key="'settings'" />
-
             <!-- PAUSE MENU -->
             <div v-if="gameStore.activeOverlay !== 'settings'" :key="'pause'" class="container">
                 <!-- HEADER с анимацией -->
@@ -47,7 +44,6 @@
 import { onMounted, watch, computed, ref } from "vue";
 import { useGameState } from "@/store/gameState";
 import { useDevice } from '@/composables/useDevice';
-import SettingsRoot from "./settings/SettingsRoot.vue";
 import { GameStates } from "@/game/core/GameState";
 import { createNewText } from '@/helpers/functions';
 import { useProgressStore } from "@/store/progressStore";

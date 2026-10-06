@@ -60,7 +60,7 @@
 
 
 <script setup lang="ts">
-    import { onMounted, computed, ref } from "vue";
+    import { onMounted, computed, ref, watch } from "vue";
     import { createNewText } from '@/helpers/functions';
     import { useGameState } from "@/store/gameState";
     import { useTranslation } from "i18next-vue";
@@ -97,6 +97,7 @@
     const currentPlayerId = ref<string | null>(null);
     const { i18next } = useTranslation();
     const foo = createNewText();
+    const isClosing = ref(false);   // защита от повторного вызова, пока идёт закрытие окна
 
     // ===== TITLE =====
     const dynamicTitleName = computed(() => {
@@ -239,6 +240,16 @@
         // если результат пустой или undefined, возвращаем дефолт
         return src || fallback;
     };
+
+    // следим за закрытием окна оверлея
+    watch(
+        () => gameState.overlayCloseRequestId,
+        () => {
+            if (isClosing.value) return;
+            isClosing.value = true;
+            backButtonClick();
+        },
+    );
 
     onMounted(() => {
         loadLeaderboards();

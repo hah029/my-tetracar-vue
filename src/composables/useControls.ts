@@ -53,6 +53,10 @@ export function useControls(game: ReturnType<typeof useGame>) {
         gameStore.pauseGame();
         break;
 
+      case GameStates.LevelSelect:
+        gameStore.goToMenu();
+        break;
+
       case GameStates.Pause:
         if (
           gameStore.activeOverlay === "settings" ||
@@ -67,7 +71,16 @@ export function useControls(game: ReturnType<typeof useGame>) {
       case GameStates.Menu:
         if (
           gameStore.activeOverlay === "settings" ||
-          gameStore.activeOverlay === "leaderBoards"
+          gameStore.activeOverlay === "leaderBoards" || 
+          gameStore.activeOverlay === "dailyGift"
+        ) {
+          // красиво закрываем окно (с каскадом анимаций)
+          gameStore.requestOverlayClose();
+        } else if (
+          // пока просто (по старинке) быстро закрываем окно (без каскада анимаций)
+          gameStore.activeOverlay === "shop" ||
+          gameStore.activeOverlay === "fortuneWheel" ||
+          gameStore.activeOverlay === "objectives"
         ) {
           gameStore.activeOverlay = null;
         }

@@ -232,6 +232,7 @@
 
         const transitionMode = ref<'initial' | 'switch-left' | 'switch-right'>('initial');
         const isSwitchingWeek = ref(false);
+        const isClosing = ref(false);   // защита от повторного вызова, пока идёт закрытие окна
 
         const errorKey = computed(() => {
             switch (dailyGift.error) {
@@ -700,6 +701,16 @@
         SoundManager.getInstance().playCue(claimed ? "goldenPickup" : "actionRejected");
     };
 
+    // следим за закрытием окна оверлея
+    watch(
+        () => gameState.overlayCloseRequestId,
+        () => {
+            if (isClosing.value) return;
+            isClosing.value = true;
+            backButtonClick();
+        },
+    );
+
     onMounted(async () => {
         isHeaderShown.value = true;
         setTimeout(() => { isGiftCardShown.value = true; }, 200);
@@ -816,7 +827,7 @@
         .daily_gift_card.claimed {
             // background-color: none;
             // background-color: transparent;
-            border: 1px solid rgba(60, 60, 60, 1);
+            border: 1px solid rgba(60, 60, 60, 0.6);
         }
         // #endregion
 
@@ -891,7 +902,8 @@
             line-height: 1;
         }
 
-        .daily_gift_title.ordinary {
+        .daily_gift_title.ordinary,
+        .daily_gift_title.next {
             color: $color-yellow-super-light;
             border-image: linear-gradient(
                 to right,
@@ -935,8 +947,8 @@
             margin-top: 30px;
         }
         .daily_gift_rewards_block_wrapper.available, 
-        .daily_gift_rewards_block_wrapper.available,
-        .daily_gift_rewards_block_wrapper.next { margin-top: -15px; }
+        .daily_gift_rewards_block_wrapper.available { margin-top: -15px; } 
+        .daily_gift_rewards_block_wrapper.next { margin-top: 10px; }
 
         .daily_gift_rewards_block_wrapper.claimed { opacity: 0.3; }
 
@@ -1152,6 +1164,7 @@
         .countdown_timer {
             display: flex;
             justify-content: center;
+            margin-bottom: 10px;
             @include text-info-size-m;
             color: $color-pink;
             line-height: 1;
@@ -1177,7 +1190,8 @@
             @include text-info-size-s;
             line-height: 0.7;
         }
-        .advertisement_text.ordinary { color: $color-hard-blue; }
+        .advertisement_text.ordinary,
+        .advertisement_text.next { color: $color-hard-blue; }
         .advertisement_text.available { color: $color-yellow-light; }
         .advertisement_text.claimed { color: $color-gray; }
 
@@ -1190,12 +1204,13 @@
             width: 100%;
             height: 100%;
         }
-        .adv_image.ordinary { filter: invert(63%) sepia(61%) saturate(1006%) hue-rotate(186deg) brightness(105%) contrast(111%); }
+        .adv_image.ordinary,
+        .adv_image.next { filter: invert(63%) sepia(61%) saturate(1006%) hue-rotate(186deg) brightness(105%) contrast(111%); }
         .adv_image.available { filter: invert(87%) sepia(30%) saturate(401%) hue-rotate(356deg) brightness(104%) contrast(102%); }
         .adv_image.claimed { filter: invert(47%) sepia(10%) saturate(17%) hue-rotate(323deg) brightness(93%) contrast(95%); }
         // #endregion
 
-        // #region - 
+        // #region - кнопки: "Забрать" и "Забрать х2"
         .claim_buttons_block {
             position: absolute;
             bottom: 0;
