@@ -1,7 +1,7 @@
 <template>
     <div class="container daily_gift">
         <Transition name="header_footer_block_anim">
-            <div v-if="isHeaderShown" class="header_block" @click="startTimer()">
+            <div v-if="isHeaderShown" class="header_block">
                 <div class="header_text">
                     {{ t("dailyGift.title") }}
                 </div>
@@ -81,7 +81,7 @@
                                 </div>
 
                                 <!-- Таймер обратного отсчета -->
-                                <div v-if="cardStates[index] === 'next'" class="countdown_timer">{{ timerTestStroke }}</div>
+                                <div v-if="cardStates[index] === 'next'" class="countdown_timer">{{ timerText }}</div>
                             </div>
 
                             <!-- Рекламный бонус (x2) -->
@@ -108,7 +108,11 @@
                                 <!-- Кнопка х2 -->
                                 <div v-if="canDoubleDailyGift(day)" class="claim_double_button">
                                     <span class="menu_btn claim_button small">-</span>
-                                    <button class="menu_btn claim_button small" @click="claimDouble()">
+                                    <button 
+                                        class="menu_btn claim_button small" 
+                                        :disabled="!dailyGift.isReady || dailyGift.isClaiming || dailyGift.isRecovering || !!dailyGift.state.pendingRecovery || selectedDay !== currentDay" 
+                                        @click="claimDouble()"
+                                    >
                                         {{ foo.makeText("dailyGift.claim", 'empty') }} ×2
                                     </button>
                                     <div class="advertisement_image_container">
@@ -119,10 +123,14 @@
                                 <!-- {{ dailyGift.isWatchingAd ? t("dailyGift.watchingAd") : t("dailyGift.claimDouble") }} -->
                                 
                                 <!-- Обычная кнопка -->
-                                <button :class="['menu_btn claim_button', { 'small pink': canDoubleDailyGift(day) }]" @click="claim()">
+                                <button 
+                                    :class="['menu_btn claim_button', { 'small pink': canDoubleDailyGift(day) }]" 
+                                    :disabled="!dailyGift.isReady || dailyGift.isClaiming || dailyGift.isRecovering || !!dailyGift.state.pendingRecovery || selectedDay !== currentDay" 
+                                    @click="claim()"
+                                >
                                     {{ foo.makeText("dailyGift.claim") }}
                                 </button>
-                                <!-- :disabled="!dailyGift.isReady || dailyGift.isClaiming || dailyGift.isRecovering || !!dailyGift.state.pendingRecovery || selectedDay !== currentDay"  -->
+                                
                             </div>
 
                             <!-- Рамки -->
@@ -169,23 +177,6 @@
 
             <!-- Блок с ошибкой (если кнопка «Забрать» не сработает) -->
             <p v-if="dailyGift.error" class="daily_gift__error">{{ t(errorKey) }}</p>
-
-            <!-- Кнопка "Забрать" -->
-            <!-- <button 
-                v-if="dailyGift.status.canClaim" class="menu_btn daily_gift__claim"
-                :disabled="!dailyGift.isReady || dailyGift.isClaiming || dailyGift.isRecovering || !!dailyGift.state.pendingRecovery || selectedDay !== currentDay" 
-                @click="claim"
-            >
-                {{ dailyGift.isClaiming ? t("dailyGift.claiming") : dailyGift.recovery.available ? t("dailyGift.restart") : t("dailyGift.claim") }}
-            </button> -->
-            
-            <!-- Кнопка "Забрать х2" -->
-            <!-- <button v-if="dailyGift.canDouble" class="menu_btn daily_gift__double"
-                :disabled="!dailyGift.isReady || dailyGift.isClaiming || dailyGift.isRecovering || !!dailyGift.state.pendingRecovery || selectedDay !== currentDay"
-                @click="claimDouble">
-                {{ dailyGift.isWatchingAd ? t("dailyGift.watchingAd") : t("dailyGift.claimDouble") }}
-            </button> -->
-
         </div>
 <!-- ---------------- -->
 
@@ -231,7 +222,6 @@
         const gameState = useGameState();
         const meta = useMetaStore();
         const days = Array.from({ length: DAILY_GIFT_CYCLE_LENGTH }, (_, index) => index + 1);
-        const weeks = Array.from({ length: DAILY_GIFT_CYCLE_LENGTH / DAILY_GIFT_WEEK_LENGTH }, (_, index) => index + 1);
         const rewardsList = ref([] as any[]);
 
         const isHeaderShown = ref(false);
@@ -476,32 +466,50 @@
     };
 
     // #region - функции таймера
-        const timerStartValue = 3650;
-        const timerTest = ref(0);
-        const timerTestStroke = ref('');
+        const secondsLeft = ref(0);
+        const timerText = ref('');
+        let timerInterval: ReturnType<typeof setInterval> | null = null;
 
-        function startTimer() {
-            timerTest.value = timerStartValue;
-            countDownTimer();
+        // вычисление остатка секунд до ближайшей полуночи UTC
+        function calcSecondsUntilUtcMidnight(): number {
+            const now = new Date();
+            const tomorrow = Date.UTC(
+                now.getUTCFullYear(),
+                now.getUTCMonth(),
+                now.getUTCDate() + 1,
+                0, 0, 0, 0
+            );
+            return Math.max(0, Math.floor((tomorrow - now.getTime()) / 1000));
         };
 
-        // функция таймера обратного отсчета (при улучшении или ремонте узла)
-        function countDownTimer() {
-            timerTestStroke.value = getTimerStroke(); // преобразуем число с секундами в строковое значение
-            
-            if (timerTest.value > 0) {
-                setTimeout(() => {
-                    timerTest.value -= 1;
-                    countDownTimer();
-                }, 1000);
-            } else {
-                console.log('Таймер окончился!');
+        // запуск таймера
+        function startNextTimer() {
+            stopNextTimer();
+            secondsLeft.value = calcSecondsUntilUtcMidnight();
+            timerText.value = formatTimer(secondsLeft.value);
+
+            timerInterval = setInterval(() => {
+                secondsLeft.value = Math.max(0, secondsLeft.value - 1);
+                timerText.value = formatTimer(secondsLeft.value);
+
+                if (secondsLeft.value <= 0) {
+                    stopNextTimer();
+                    // сброс дня наступил — обновляем статус, чтобы карточки пересчитались
+                    dailyGift.refreshStatus();
+                };
+            }, 1000);
+        };
+
+        // оставнока таймера
+        function stopNextTimer() {
+            if (timerInterval) {
+                clearInterval(timerInterval);
+                timerInterval = null;
             };
         };
 
         // преобразуем число с секундами в строковое значение
-        function getTimerStroke() {
-            const total = timerTest.value;
+        function formatTimer(total: number): string {
             const hours   = Math.floor(total / 3600);
             const minutes = Math.floor((total % 3600) / 60);
             const seconds = total % 60;
@@ -525,6 +533,15 @@
                 return 'ordinary';
             });
         });
+
+        watch(
+            () => cardStates.value.some((s) => s === 'next'),
+            (hasNext) => {
+                if (hasNext) startNextTimer();
+                else stopNextTimer();
+            },
+            { immediate: true }
+        );
 
         // назначаем габариты иконкам наград
         function setGiftIconSize(reward_, rewardsCount_) {
@@ -694,6 +711,7 @@
     });
 
     onUnmounted(() => {
+        stopNextTimer();
         if (refreshTimer) clearInterval(refreshTimer);
         window.removeEventListener("keydown", handleKeydown);
     });
@@ -796,7 +814,8 @@
             box-shadow: 0 0 30px rgba(255, 250, 212, 0.35);
         }
         .daily_gift_card.claimed {
-            background-color: none;
+            // background-color: none;
+            // background-color: transparent;
             border: 1px solid rgba(60, 60, 60, 1);
         }
         // #endregion
@@ -915,7 +934,10 @@
             align-items: center;
             margin-top: 30px;
         }
-        .daily_gift_rewards_block_wrapper.available, .daily_gift_rewards_block_wrapper.available.next { margin-top: -15px; }
+        .daily_gift_rewards_block_wrapper.available, 
+        .daily_gift_rewards_block_wrapper.available,
+        .daily_gift_rewards_block_wrapper.next { margin-top: -15px; }
+
         .daily_gift_rewards_block_wrapper.claimed { opacity: 0.3; }
 
         .daily_gift_rewards_block {
