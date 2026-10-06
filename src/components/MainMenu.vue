@@ -20,8 +20,7 @@
                     <div v-if="fortuneWheelStore.totalSpins > 0" class="btn_marker">{{ fortuneWheelStore.totalSpins }}
                     </div>
                 </div>
-                <div v-if="hasFortuneReward && showFortuneReminder" class="btn_reminder hint_yellow">{{
-                    businessButtons[0].reminder }}</div>
+                <div v-if="hasFortuneReward && showFortuneReminder" class="btn_reminder hint_yellow">{{ businessButtons[0].reminder }}</div>
                 <div class="btn_hint hint_pink">{{ businessButtons[0].text }}</div>
             </div>
 
@@ -29,9 +28,9 @@
                 <div class="icon_container" :class="{ 'icon_container--pulse': hasDailyReward && showDailyReminder }"
                     @click="businessButtons[1].action">
                     <img class="icon icon_daily" src="@/assets/images/cube_buttons/btn_desktop_daily_bonus.svg" />
+                    <div v-if="hasDailyReward" class="btn_marker">1</div>
                 </div>
-                <div v-if="hasDailyReward && showDailyReminder" class="btn_reminder hint_yellow">{{
-                    businessButtons[1].reminder }}</div>
+                <div v-if="hasDailyReward && showDailyReminder" class="btn_reminder hint_yellow">{{ businessButtons[1].reminder }}</div>
                 <div class="btn_hint hint_yellow_light">{{ businessButtons[1].text }}</div>
             </div>
 
@@ -42,8 +41,7 @@
                     <img class="icon icon_quests" src="@/assets/images/cube_buttons/btn_desktop_quests.svg" />
                     <div v-if="objectivesStore.hasClaimableDaily" class="btn_marker">{{ reachedQuests }}</div>
                 </div>
-                <div v-if="hasQuestsReward && showQuestsReminder" class="btn_reminder hint_yellow">{{
-                    businessButtons[2].reminder }}</div>
+                <div v-if="hasQuestsReward && showQuestsReminder" class="btn_reminder hint_yellow">{{ businessButtons[2].reminder }}</div>
                 <div class="btn_hint hint_blue">{{ businessButtons[2].text }}</div>
             </div>
 
@@ -57,8 +55,7 @@
                     <div v-if="objectivesStore.hasClaimableAchievement" class="btn_marker">{{ reachedAchievements }}
                     </div>
                 </div>
-                <div v-if="hasAchievementsReward && showAchievementsReminder" class="btn_reminder hint_yellow">{{
-                    businessButtons[3].reminder }}</div>
+                <div v-if="hasAchievementsReward && showAchievementsReminder" class="btn_reminder hint_yellow">{{ businessButtons[3].reminder }}</div>
                 <div class="btn_hint hint_green">{{ businessButtons[3].text }}</div>
             </div>
 
@@ -152,7 +149,7 @@
 
     // --- проверки для каждой кнопки ---
     const hasFortuneReward = computed(() => fortuneWheelStore.totalSpins > 0);
-    const hasDailyReward = computed(() => false); // у награды дня нет маркера
+    const hasDailyReward = computed(() => dailyGiftStore.isReady && dailyGiftStore.status.canClaim);
     const hasQuestsReward = computed(() => objectivesStore.hasClaimableDaily);
     const hasAchievementsReward = computed(() => objectivesStore.hasClaimableAchievement);
 
@@ -394,7 +391,12 @@
             isMainMenuEnabled.value = true;
         }, 400);
 
-        if (dailyGiftStore.isReady && dailyGiftStore.status.canClaim) {
+        // показываем подарок, если:
+        //  - игрок уже играл хотя бы раз
+        //  - есть что забрать
+        //  - сегодня ещё не показывали автоматически
+        if (dailyGiftStore.shouldAutoShowGift) {
+            dailyGiftStore.markGiftAutoShown();
             setTimeout(() => gameStore.openDailyGift(), 450);
         };
     });

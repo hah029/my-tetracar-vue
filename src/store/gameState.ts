@@ -5,6 +5,7 @@ import { ref, watch } from "vue";
 import { usePlayerStore } from "@/store/playerStore";
 import { useProgressStore } from "./progressStore";
 import { useLevelStore } from "@/store/levelStore";
+import { useDailyGiftStore } from "@/store/dailyGiftStore";
 import { GameStates } from "@/game/core/GameState";
 import { SoundManager } from "@/game/sound/SoundManager";
 import { Platform } from "@/sdk";
@@ -213,6 +214,10 @@ export const useGameState = defineStore("gameState", () => {
             console.error("Failed to save progress on gameover:", err),
         );
         sound.playMusic("music_gameover");
+
+        // отмечаем, что игрок впервые увидел экран проигрыша
+        const dailyGift = useDailyGiftStore();
+        dailyGift.markFirstGameCompleted();
         break;
 
       case GameStates.QuitConfirm:

@@ -31,12 +31,16 @@ export type DailyGiftState = {
     balanceBefore: number;
     balanceAfter: number;
   };
+  hasPlayedFirstGame?: boolean;   // сыграл ли первую игру (был ли на экране Gameover)
+  lastAutoShownDay?: string;      // день, когда мы последний раз автоматически открывали подарок
 };
 
 const defaultState = (): DailyGiftState => ({
   version: 1,
   cycleNumber: 1,
   totalClaims: 0,
+  hasPlayedFirstGame: false,
+  lastAutoShownDay: undefined,
 });
 
 function getLocalDay(date = new Date()): string {
@@ -113,15 +117,15 @@ export const useDailyGiftStore = defineStore("dailyGiftStore", () => {
       const resolved = RewardProcessor.resolve(reward);
       return resolved ? [resolved] : [];
     });
-  }
+  };
 
   function refreshStatus() {
     currentDay.value = getLocalDay();
-  }
+  };
 
   async function persist(value = state.value) {
     await platform.setPlayerDataByKey(STORAGE_KEY, JSON.stringify(value));
-  }
+  };
 
   async function restore() {
     try {
@@ -145,7 +149,7 @@ export const useDailyGiftStore = defineStore("dailyGiftStore", () => {
     } finally {
       isReady.value = true;
     }
-  }
+  };
 
   async function recover(): Promise<boolean> {
     refreshStatus();
@@ -192,7 +196,7 @@ export const useDailyGiftStore = defineStore("dailyGiftStore", () => {
     } finally {
       isRecovering.value = false;
     }
-  }
+  };
 
   async function claim(doubleReward = false): Promise<boolean> {
     refreshStatus();
@@ -250,7 +254,26 @@ export const useDailyGiftStore = defineStore("dailyGiftStore", () => {
       isWatchingAd.value = false;
       isClaiming.value = false;
     }
-  }
+  };
+
+  function markFirstGameCompleted() {
+    if (!state.value.hasPlayedFirstGame) {
+      state.value.hasPlayedFirstGame = true;
+    };
+  };
+
+  function markGiftAutoShown() {
+    state.value.lastAutoShownDay = getLocalDay();
+  };
+
+  // стоит ли автоматически открывать окно подарка при входе в меню
+  const shouldAutoShowGift = computed(() => {
+    if (!isReady.value) return false;                      // данные ещё не загружены
+    if (!status.value.canClaim) return false;              // нечего забирать (уже взял сегодня)
+    if (!state.value.hasPlayedFirstGame) return false;     // игрок ещё не играл — не навязываемся
+    if (state.value.lastAutoShownDay === getLocalDay()) return false; // сегодня уже показывали
+    return true;
+  });
 
   return {
     state,
@@ -269,5 +292,8 @@ export const useDailyGiftStore = defineStore("dailyGiftStore", () => {
     refreshStatus,
     restore,
     claim,
+    shouldAutoShowGift,
+    markFirstGameCompleted,
+    markGiftAutoShown,
   };
 });
