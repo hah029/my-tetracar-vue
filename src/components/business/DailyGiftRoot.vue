@@ -470,22 +470,22 @@
         const timerText = ref('');
         let timerInterval: ReturnType<typeof setInterval> | null = null;
 
-        // вычисление остатка секунд до ближайшей полуночи UTC
-        function calcSecondsUntilUtcMidnight(): number {
+        // вычисление остатка секунд до ближайшей полуночи
+        function calcSecondsUntilLocalMidnight(): number {
             const now = new Date();
-            const tomorrow = Date.UTC(
-                now.getUTCFullYear(),
-                now.getUTCMonth(),
-                now.getUTCDate() + 1,
+            const tomorrow = new Date(
+                now.getFullYear(),
+                now.getMonth(),
+                now.getDate() + 1,
                 0, 0, 0, 0
             );
-            return Math.max(0, Math.floor((tomorrow - now.getTime()) / 1000));
+            return Math.max(0, Math.floor((tomorrow.getTime() - now.getTime()) / 1000));
         };
 
         // запуск таймера
         function startNextTimer() {
             stopNextTimer();
-            secondsLeft.value = calcSecondsUntilUtcMidnight();
+            secondsLeft.value = calcSecondsUntilLocalMidnight();
             timerText.value = formatTimer(secondsLeft.value);
 
             timerInterval = setInterval(() => {

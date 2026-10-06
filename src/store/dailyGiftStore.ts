@@ -39,23 +39,26 @@ const defaultState = (): DailyGiftState => ({
   totalClaims: 0,
 });
 
-function getUtcDay(date = new Date()): string {
-  return date.toISOString().slice(0, 10);
-}
+function getLocalDay(date = new Date()): string {
+  const y = date.getFullYear();
+  const m = String(date.getMonth() + 1).padStart(2, "0");
+  const d = String(date.getDate()).padStart(2, "0");
+  return `${y}-${m}-${d}`;
+};
 
-function getUtcDayDifference(from: string, to: string): number {
+function getDayDifference(from: string, to: string): number {
   return Math.round(
-    (Date.parse(`${to}T00:00:00Z`) - Date.parse(`${from}T00:00:00Z`)) /
+    (Date.parse(`${to}T00:00:00`) - Date.parse(`${from}T00:00:00`)) /
       86_400_000,
   );
-}
+};
 
 export const useDailyGiftStore = defineStore("dailyGiftStore", () => {
   const platform = Platform.getInstance();
   const progressStore = useProgressStore();
   const meta = useMetaStore();
   const state = ref<DailyGiftState>(defaultState());
-  const currentUtcDay = ref(getUtcDay());
+  const currentDay = ref(getLocalDay());
   const isReady = ref(false);
   const isClaiming = ref(false);
   const isWatchingAd = ref(false);
@@ -65,7 +68,7 @@ export const useDailyGiftStore = defineStore("dailyGiftStore", () => {
   const recovery = computed(() => {
     const saved = state.value;
     const lastDate = saved.recovered?.utcDay ?? saved.lastClaimedUtcDay;
-    const difference = lastDate ? getUtcDayDifference(lastDate, currentUtcDay.value) : 0;
+    const difference = lastDate ? getDayDifference(lastDate, currentDay.value) : 0;
     const missedDays = Math.max(0, difference - (saved.recovered ? 0 : 1));
     const stoppedDay = saved.recovered?.day ?? saved.lastClaimedDay ?? 1;
     const day = Math.floor((stoppedDay - 1) / DAILY_GIFT_WEEK_LENGTH) * DAILY_GIFT_WEEK_LENGTH + 1;
@@ -80,7 +83,7 @@ export const useDailyGiftStore = defineStore("dailyGiftStore", () => {
     && (!!state.value.pendingRecovery || (recovery.value.available && meta.energons >= recovery.value.cost)));
 
   const status = computed(() => {
-    if (state.value.recovered && state.value.recovered.utcDay === currentUtcDay.value) {
+    if (state.value.recovered && state.value.recovered.utcDay === currentDay.value) {
       return { day: state.value.recovered.day, cycleNumber: state.value.recovered.cycleNumber, canClaim: true };
     }
     if (state.value.recovered) return { day: 1, cycleNumber: state.value.recovered.cycleNumber, canClaim: true };
@@ -89,7 +92,7 @@ export const useDailyGiftStore = defineStore("dailyGiftStore", () => {
     const cycleNumber = Math.max(1, state.value.cycleNumber);
     if (!lastDay || !lastDate) return { day: 1, cycleNumber, canClaim: true };
 
-    const difference = getUtcDayDifference(lastDate, currentUtcDay.value);
+    const difference = getDayDifference(lastDate, currentDay.value);
     if (difference <= 0) return { day: lastDay, cycleNumber, canClaim: false };
     if (difference === 1) {
       return lastDay === DAILY_GIFT_CYCLE_LENGTH
@@ -113,7 +116,7 @@ export const useDailyGiftStore = defineStore("dailyGiftStore", () => {
   }
 
   function refreshStatus() {
-    currentUtcDay.value = getUtcDay();
+    currentDay.value = getLocalDay();
   }
 
   async function persist(value = state.value) {
@@ -154,7 +157,7 @@ export const useDailyGiftStore = defineStore("dailyGiftStore", () => {
     try {
       const transaction = pending ?? {
         day: recovery.value.day,
-        utcDay: currentUtcDay.value,
+        utcDay: currentDay.value,
         cycleNumber: state.value.cycleNumber,
         balanceBefore: meta.energons,
         balanceAfter: meta.energons - recovery.value.cost,
@@ -175,7 +178,7 @@ export const useDailyGiftStore = defineStore("dailyGiftStore", () => {
       const nextState: DailyGiftState = {
         ...state.value,
         pendingRecovery: undefined,
-        recovered: { day: transaction.day, utcDay: getUtcDay(), cycleNumber: transaction.cycleNumber },
+        recovered: { day: transaction.day, utcDay: getLocalDay(), cycleNumber: transaction.cycleNumber },
       };
       await persist(nextState);
       state.value = nextState;
@@ -199,7 +202,7 @@ export const useDailyGiftStore = defineStore("dailyGiftStore", () => {
     isClaiming.value = true;
     error.value = null;
     const claimStatus = { ...status.value };
-    const claimDate = currentUtcDay.value;
+    const claimDate = currentDay.value;
     const rewards = currentRewards.value.map((reward) => doubleReward && reward.type === "currency"
       ? { ...reward, effect: { ...reward.effect, amount: reward.effect.amount * 2 } }
       : reward);
