@@ -32,24 +32,7 @@
             </div>
 
             <div class="buttons_right_group">
-                <div class="currency_block">
-                    <div class="currency_subblock">
-                        <div class="currency_value currency_goldens font_adaptation">{{ goldens }}</div>
-                        <div class="currency_image_container">
-                            <img class="icon" src="@/assets/images/hud/cube_golden.svg" />
-                        </div>
-                    </div>
-                    <div class="currency_subblock">
-                        <div class="currency_value currency_energons font_adaptation">{{ energons }}</div>
-                        <div class="currency_image_container energon_glow_general">
-                            <img class="icon icon_abs" src="@/assets/images/hud/cube_energon_grid_backward.svg" />
-                            <img class="icon icon_abs energon_glow_core"
-                                src="@/assets/images/hud/cube_energon_core.svg" />
-                            <img class="icon icon_abs energon_glow_grid"
-                                src="@/assets/images/hud/cube_energon_grid_frontal.svg" />
-                        </div>
-                    </div>
-                </div>
+                <CurrencyPanel variant="hud" />
             </div>
 
             <div class="notifications_panel">
@@ -118,6 +101,7 @@ import { SoundManager } from '@/game/sound/SoundManager';
 import TouchZone from './panels/TouchZone.vue';
 import HudNotifications from './panels/HudNotifications.vue';
 import HudEffects from './panels/HudEffects.vue';
+import CurrencyPanel from "@/components/ui/CurrencyPanel.vue";
 
 const gameStore = useGameState();
 const game = inject<any>('game');
@@ -154,10 +138,7 @@ function shoot() {
 }
 
 // Валюты
-const goldens = computed(() => metaStore.goldens);
-const energons = computed(() => metaStore.energons);
 const score = computed(() => Math.floor(progressStore.score));
-const currentMultiplier = computed(() => progressStore.currentMultiplier);
 const currentSpeed = computed(() => (playerStore.getCurrentSpeed() * 100).toFixed(1));
 const currentMass = computed(() => playerStore.mass.toFixed(1));
 const hasAmmo = computed(() => playerStore.ammo > 0);
@@ -452,60 +433,6 @@ $booster-icon-size: 1.875rem;
     gap: clamp(0.5rem, 1.6vmin, 1.067rem);
     min-width: 0;
 }
-
-.currency_block {
-    display: flex;
-    justify-content: flex-end;
-    flex-direction: column;
-    align-items: flex-end;
-    gap: clamp(0.4rem, 1.5vmin, 1rem);
-    font-size: clamp(1rem, 2vmin, 1.5rem);
-}
-
-.currency_subblock {
-    display: flex;
-    justify-content: flex-end;
-    align-items: center;
-    gap: clamp(0.35rem, 1.4vmin, 0.625rem);
-    min-width: 0;
-}
-
-.currency_value {
-    text-align: right;
-    @include text-info-size-m;
-}
-
-.currency_goldens {
-    color: $color-yellow-light;
-}
-
-.currency_energons {
-    color: $color-blue-light;
-}
-
-.currency_image_container {
-    width: clamp(1.625rem, 4vmin, $icon-size);
-    height: clamp(1.625rem, 4vmin, $icon-size);
-    position: relative;
-    flex: 0 0 auto;
-}
-
-.energon_glow_general {
-    filter: drop-shadow(0 0 0.44rem rgb(43, 157, 229));
-}
-
-.energon_glow_grid {
-    filter: drop-shadow(0 0 1.25rem rgb(20, 212, 255));
-}
-
-.energon_glow_core {
-    filter: drop-shadow(0 0 0.625rem rgb(20, 212, 255));
-}
-
-.x_sign {
-    text-transform: lowercase;
-}
-
 // #endregion
 
 // #region - central_panel

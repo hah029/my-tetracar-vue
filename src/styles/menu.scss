@@ -10,6 +10,8 @@ $z-layers: (
     "game_logo__root": 5,
     "ui_component": 10,
     "rights_and_logo": 100,
+    "overlays": 500,
+    "currency": 750,
     "modal": 1000,
 );
 
@@ -305,7 +307,8 @@ $z-layers: (
             bottom: 18.194vw;
         }  
         @media (min-width: $breakpoint-desktop) and (orientation: landscape) {
-            bottom: 22.188vw;
+            // bottom: 22.188vw;
+            bottom: 3.125vw;
         }
     }
 // #endregion

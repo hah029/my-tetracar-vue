@@ -83,10 +83,10 @@ function getRewardLabel(reward: RewardDefinition): string {
     const amount = reward.effect?.amount ?? 1;
     switch (reward.type) {
         case "currency": return `${amount} ${t(`currency.${reward.effect.currency}`)}`;
-        case "ammo": return `${amount} ${t("dailyGift.ammo")}`;
-        case "armor": return `${amount} ${t("dailyGift.armor")}`;
+        case "ammo": return `${amount} ${t("items.ammo")}`;
+        case "armor": return `${amount} ${t("items.armor")}`;
         case "fortune_spin": return `${amount} ${t("fortuneWheel.spinUnit")} (${t(FORTUNE_WHEEL_PRESETS[reward.effect.presetId].nameKey)})`;
-        default: return t("dailyGift.reward");
+        default: return t("items.reward");
     };
 };
 

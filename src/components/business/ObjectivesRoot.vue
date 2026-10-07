@@ -71,9 +71,9 @@ function rewardLabel(objective: DisplayObjective) {
     const amount = reward.effect?.amount ?? 1;
     if (reward.type === "currency") return `+${amount} ${t(`currency.${reward.effect.currency}`)}`;
     if (reward.type === "fortune_spin") return `+${amount} ${t("fortuneWheel.spinUnit")} (${t(FORTUNE_WHEEL_PRESETS[reward.effect.presetId].nameKey)})`;
-    if (reward.type === "ammo") return `+${amount} ${t("dailyGift.ammo")}`;
-    if (reward.type === "armor") return `+${amount} ${t("dailyGift.armor")}`;
-    return t("dailyGift.reward");
+    if (reward.type === "ammo") return `+${amount} ${t("items.ammo")}`;
+    if (reward.type === "armor") return `+${amount} ${t("items.armor")}`;
+    return t("items.reward");
   }).join(" · ");
 }
 

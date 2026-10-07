@@ -43,7 +43,7 @@
                             :style="{ animationDelay: `${index * switchingDelay}s` }"
                             role="button" 
                             tabindex="0" 
-                            @click="selectDay(day)"
+                            @click="handleCardClick(day, index)"
                             @keydown.enter="selectDay(day)"
                         >
                             <!-- Свечение за иконками -->
@@ -93,9 +93,9 @@
                             </div>
 
                             <div v-if="day % 7 == 0" class="level_value" :style="setLevelValueStyle(day)">
-                                <span v-if="i18next.resolvedLanguage == 'en'" class="level_value_2 lvl_en">{{ t("dailyGift.levelText") }}</span>
+                                <span v-if="i18next.resolvedLanguage == 'en'" class="level_value_2 lvl_en">{{ t("items.level") }}</span>
                                 <span class="level_value_1">{{ getSkinLevelValue(day) }}</span>
-                                <span v-if="i18next.resolvedLanguage == 'ru'" class="level_value_2">{{ t("dailyGift.levelText") }}</span>
+                                <span v-if="i18next.resolvedLanguage == 'ru'" class="level_value_2">{{ t("items.level") }}</span>
                             </div>
 
                             <!-- Галочка (бонус взят) -->
@@ -111,9 +111,9 @@
                                     <button 
                                         class="menu_btn claim_button small" 
                                         :disabled="!dailyGift.isReady || dailyGift.isClaiming || dailyGift.isRecovering || !!dailyGift.state.pendingRecovery || selectedDay !== currentDay" 
-                                        @click="claimDouble()"
+                                        @click.stop="claimDouble()"
                                     >
-                                        {{ foo.makeText("dailyGift.claim", 'empty') }} ×2
+                                        {{ foo.makeText("dailyGift.claimButton", 'empty') }} ×2
                                     </button>
                                     <div class="advertisement_image_container">
                                         <img class='adv_image' :class="cardStates[index]" src="@/assets/images/business/advertisement_icon.svg" />
@@ -126,9 +126,9 @@
                                 <button 
                                     :class="['menu_btn claim_button', { 'small pink': canDoubleDailyGift(day) }]" 
                                     :disabled="!dailyGift.isReady || dailyGift.isClaiming || dailyGift.isRecovering || !!dailyGift.state.pendingRecovery || selectedDay !== currentDay" 
-                                    @click="claim()"
+                                    @click.stop="claim()"
                                 >
-                                    {{ foo.makeText("dailyGift.claim") }}
+                                    {{ foo.makeText("dailyGift.claimButton") }}
                                 </button>
                                 
                             </div>
@@ -197,6 +197,8 @@
         import { useDailyGiftStore } from "@/store/dailyGiftStore";
         import { useMetaStore } from "@/store/metaStore";
         import { useGameState } from "@/store/gameState";
+        import { useModalMessageStore } from "@/store/modalMessageStore";
+
         import type { RewardDefinition } from "@/purchase/types";
         import { SoundManager } from "@/game/sound/SoundManager";
         import { createNewText } from '@/helpers/functions';
@@ -229,6 +231,7 @@
         const isBackButtonShown = ref(false);
         const areTipsShown = ref(false);
         const switchingDelay = ref(0.05);
+        const modal = useModalMessageStore();
 
         const transitionMode = ref<'initial' | 'switch-left' | 'switch-right'>('initial');
         const isSwitchingWeek = ref(false);
@@ -237,8 +240,8 @@
         const errorKey = computed(() => {
             switch (dailyGift.error) {
                 case "recovery_failed": return "dailyGift.recoveryError";
-                case "ad_failed": return "dailyGift.adError";
-                case "ad_not_completed": return "dailyGift.adNotCompleted";
+                case "ad_failed": return "dailyGift.otherEventsList.adError";
+                case "ad_not_completed": return "dailyGift.otherEventsList.adNotCompleted";
                 default: return "dailyGift.claimError";
             }
         });
@@ -270,8 +273,8 @@
         // выбор фразы-подсказки (в левом-нижнем углу экрана) при разных сценариях
         const tipsText = computed(() => {
             if (isAvailableRewardOnCurrentWeek.value) return '';
-            if (isRewardAvailable.value) return t('dailyGift.claimPrompt');
-            return t('dailyGift.claimed');
+            if (isRewardAvailable.value) return t('dailyGift.tipsList.availableGift');
+            return t('dailyGift.tipsList.todaysClaimed');
         });
     // #endregion
 
@@ -367,10 +370,10 @@
         let newString = '';
 
         if (reward.type === "cosmetic") {
-            newString = t("dailyGift.skin");
+            newString = t("items.skin");
 
         } else if (reward.type === "upgrade") {
-            newString = t("dailyGift.upgrade");
+            newString = t("items.upgrade");
 
         } else {
             newString = String(reward.effect?.amount ?? 1);
@@ -449,6 +452,29 @@
     function selectDay(day: number) {
         if (day < 1 || day > DAILY_GIFT_CYCLE_LENGTH) return;
         selectedDay.value = day;
+    };
+
+    // клик по плашкам с подарками
+    function handleCardClick(day: number, index: number) {
+        selectDay(day);
+
+        switch (cardStates.value[index]) {
+            case "next":
+                modal.show(t("dailyGift.cardClickingList.notTime"));
+                break;
+
+            case "claimed":
+                modal.show(t("dailyGift.cardClickingList.alreadyClaimed"));
+                break;
+
+            case "ordinary":
+                modal.show(t("dailyGift.cardClickingList.locked"));
+                break;
+
+            case "available":
+                modal.show(t("dailyGift.cardClickingList.missedButton"));
+                break;
+        };
     };
 
     // обработчик клавиш
@@ -802,20 +828,17 @@
             border: 1px solid rgba(121, 190, 255, 0.6);
             color: $color-gray;
             cursor: pointer;
-
-            user-select: none;
-            -webkit-user-select: none;
-            -moz-user-select: none;
-            -ms-user-select: none;
+            @include unselectable;
             transition: all 0.2s linear;
         }
 
         .daily_gift_card:hover {
-        // .daily_gift_card:hover, 
-        // .daily_gift_card.active {
             transform: translateY(-.25rem);
             border-color: rgba(132, 210, 255, 0.8);
             box-shadow: 0 .5rem 1.8rem rgba(58, 150, 225, .16), inset 0 0 2rem rgba(74, 159, 220, .08);
+        }
+        .daily_gift_card:focus {
+            outline: none;
         }
         .daily_gift_card.available {
             min-width: 220px;
@@ -1268,7 +1291,7 @@
             display: flex;
             justify-content: space-between;
             align-items: flex-start;
-            @include unselectable;  
+            @include unselectable;
         }
         
         .text_claimed {
@@ -1298,11 +1321,7 @@
             width: 40px;
             height: 80px;
             cursor: pointer;
-
-            user-select: none;
-            -webkit-user-select: none;
-            -moz-user-select: none;
-            -ms-user-select: none;
+            @include unselectable;
             transition: all 0.2s linear;
             z-index: 5;
 

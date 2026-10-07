@@ -3,10 +3,12 @@
 import { onMounted, onUnmounted } from "vue";
 import { useGameState } from "@/store/gameState";
 import { usePlayerStore } from "@/store/playerStore";
+import { useModalMessageStore } from "@/store/modalMessageStore";
 import { CarManager } from "@/game/car";
 import { CameraSystem } from "@/game/camera/CameraSystem";
 import { BaseItem } from "@/game/interactive/items/BaseItem";
 import { GameStates } from "@/game/core/GameState";
+import { SoundManager } from "@/game/sound/SoundManager";
 import type { useGame } from "./useGame";
 
 export function useControls(game: ReturnType<typeof useGame>) {
@@ -140,6 +142,25 @@ export function useControls(game: ReturnType<typeof useGame>) {
   function handleKeyDown(e: KeyboardEvent) {
     if ((e.ctrlKey || e.metaKey) && e.code === "KeyQ") {
       return;
+    }
+
+    // 🔥 если открыто модальное сообщение — блокируем весь остальной ввод,
+    //    но разрешаем Enter (центральный и правый) и Esc закрыть его
+    const modal = useModalMessageStore();
+    if (modal.isVisible) {
+        if (
+            e.code === controlKeys.ESCAPE ||
+            e.code === controlKeys.ENTER ||
+            e.code === controlKeys.ENTER_NUMPAD
+        ) {
+            e.preventDefault();
+            if (processedKeys.has(e.code)) return;
+            processedKeys.add(e.code);
+
+            SoundManager.getInstance().playCue("uiSelect");
+            modal.hide();
+        }
+        return;  // всё остальное — игнорируем
     }
 
     if (e.key !== controlKeys.ESCAPE) {

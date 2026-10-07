@@ -10,7 +10,7 @@
     <TeamLogo />
     <component :is="DebugPanel" v-if="DebugPanel" />
 
-    <!-- 🔥 Глобальные оверлеи — доступны из любого состояния -->
+    <!-- Глобальные оверлеи — доступны из любого состояния -->
     <div class="overlays_root">
         <ShopRoot v-if="gameState.activeOverlay === 'shop'" />
         <SettingsRoot v-if="gameState.activeOverlay === 'settings'" />
@@ -19,6 +19,11 @@
         <FortuneWheelRoot v-if="gameState.activeOverlay === 'fortuneWheel'" />
         <ObjectivesRoot v-if="gameState.activeOverlay === 'objectives'" />
     </div>
+
+    <CurrencyPanel />
+
+    <!-- Универсальное модальное сообщение -->
+    <ModalMessage />
 
     <div class="blindness_overlay" :style="{ opacity: playerStore.shieldBlindnessTimer > 0 ? 0.35 : 0 }" />
 </template>
@@ -32,6 +37,7 @@
     import { useGameState } from "./store/gameState";
     import { useControls } from "./composables/useControls";
     import { GameLoop } from "./composables/useAnimate";
+
     // components
     import MainMenu from "./components/MainMenu.vue";
     import LevelSelect from "./components/LevelSelect.vue";
@@ -49,6 +55,9 @@
     import FortuneWheelRoot from "@/components/business/FortuneWheelRoot.vue";
     import DailyGiftRoot from "@/components/business/DailyGiftRoot.vue";
     import ObjectivesRoot from "@/components/business/ObjectivesRoot.vue";
+    import ModalMessage from "@/components/ui/ModalMessage.vue";
+    import CurrencyPanel from "@/components/ui/CurrencyPanel.vue";
+
     // managers
     import { CameraSystem } from "@/game/camera/CameraSystem";
     import { SoundManager } from "./game/sound/SoundManager";
@@ -62,6 +71,7 @@
     const gameState = useGameState();
     const playerStore = usePlayerStore();
     const controls = useControls(game);
+
     // Инструменты диагностики не должны попадать в production-версию игры.
     // Vite заменяет DEV на false при production-сборке и исключает этот chunk.
     const DebugPanel = import.meta.env.DEV
@@ -284,7 +294,7 @@
     .overlays_root {
         position: absolute;
         inset: 0;
-        z-index: z("modal");   // = 1000
+        z-index: z("overlays");
         pointer-events: none;  // чтобы не блокировать клики вне оверлеев
     }
 
