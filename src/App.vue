@@ -20,7 +20,7 @@
         <ObjectivesRoot v-if="gameState.activeOverlay === 'objectives'" />
     </div>
 
-    <CurrencyPanel />
+    <CurrencyPanel v-if="currencyPanelVariant" :variant="currencyPanelVariant" />
 
     <!-- Универсальное модальное сообщение -->
     <ModalMessage />
@@ -103,6 +103,7 @@
                 return Countdown;
         };
     });
+
     const showHUD = computed(() => {
         switch (gameState.currentState) {
             case GameStates.Play:
@@ -117,6 +118,29 @@
 
     let loop: ReturnType<typeof GameLoop>;
     let soundManager: SoundManager;
+
+    // определяем: показать панель (и в каком варианте) или скрыть
+    const currencyPanelVariant = computed<"hud" | "menu" | null>(() => {
+        // скрываем на обучающем экране (первый вход)
+        if (gameState.isFirstGame) return null;
+        
+        switch (gameState.currentState) {
+
+            // показываем НЕкликабельную версию (с коэф-том умножения очков)
+            case GameStates.Play:
+            case GameStates.Countdown:
+                return "hud";
+
+            // показываем кликабельную версию (с плюсиком)
+            case GameStates.Menu:
+            case GameStates.LevelSelect:
+                return "menu";
+
+            // не показываем в: Preloader, Pause, Gameover и других любых новых state
+            default:
+                return null;
+        };
+    });
 
     onMounted(async () => {
         const scene = threeInstance.getScene();

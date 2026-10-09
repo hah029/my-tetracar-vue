@@ -3,7 +3,7 @@
 
     <div class="game_hud" :class="{ 'game_hud--light-bg': hasLightBackground }">
         <!-- Верхняя панель -->
-        <div class="top_panel">
+        <div v-if="showGameplayPanels" class="top_panel">
             <div class="buttons_left_group">
                 <div class="pause_btn_container" @click="goToPause()">
                     <img class="icon is_clickable" src="@/assets/images/cube_buttons/btn_pause.svg" />
@@ -31,9 +31,9 @@
                 </div>
             </div>
 
-            <div class="buttons_right_group">
+            <!-- <div class="buttons_right_group">
                 <CurrencyPanel variant="hud" />
-            </div>
+            </div> -->
 
             <div class="notifications_panel">
                 <HudNotifications />
@@ -41,7 +41,7 @@
         </div>
 
         <!-- Нижняя панель (бустеры) -->
-        <div class="bottom_panel">
+        <div v-if="showGameplayPanels" class="bottom_panel">
             <div class="bottom_subpanel">
                 <template v-for="(group, groupIndex) in boosterGroups" :key="group.key">
                     <div class="booster_group" :class="`booster_group--${group.key}`">
@@ -78,7 +78,7 @@
             </div>
         </div>
 
-        <button class="mobile_fire_button" :class="{ 'mobile_fire_button--ready': hasAmmo }" aria-label="Выстрел"
+        <button v-if="showGameplayPanels" class="mobile_fire_button" :class="{ 'mobile_fire_button--ready': hasAmmo }" aria-label="Выстрел"
             :disabled="!hasAmmo" @pointerdown.stop.prevent="shoot">
             <img class="mobile_fire_button__icon" src="@/assets/images/hud/cube_bullet.svg" alt="" />
         </button>
@@ -97,11 +97,12 @@ import { useProgressStore } from '@/store/progressStore';
 import { useMetaStore } from '@/store/metaStore';
 import { useEnvironmentStore } from '@/store/environmentStore';
 import { createNewText } from '@/helpers/functions';
+import { GameStates } from "@/game/core/GameState";
 import { SoundManager } from '@/game/sound/SoundManager';
 import TouchZone from './panels/TouchZone.vue';
 import HudNotifications from './panels/HudNotifications.vue';
 import HudEffects from './panels/HudEffects.vue';
-import CurrencyPanel from "@/components/ui/CurrencyPanel.vue";
+// import CurrencyPanel from "@/components/ui/CurrencyPanel.vue";
 
 const gameStore = useGameState();
 const game = inject<any>('game');
@@ -207,6 +208,14 @@ const boosters = computed(() => {
     ];
     return items;
 });
+
+// показываем top_panel и bottom_panel только во время геймплея (в Pause и GameOver скрываем)
+const showGameplayPanels = computed(() =>
+    !gameStore.isFirstGame && (
+        gameStore.currentState === GameStates.Play ||
+        gameStore.currentState === GameStates.Countdown
+    )
+)
 
 const ammoRounds = computed(() => playerStore.ammoStack);
 
@@ -422,17 +431,17 @@ $booster-icon-size: 1.875rem;
 // #endregion
 
 // #region - top_panel_right_group
-.buttons_right_group {
-    grid-column: 3;
-    grid-row: 1;
-    align-self: start;
-    display: flex;
-    flex-direction: column;
-    align-items: flex-end;
-    justify-content: flex-start;
-    gap: clamp(0.5rem, 1.6vmin, 1.067rem);
-    min-width: 0;
-}
+// .buttons_right_group {
+//     grid-column: 3;
+//     grid-row: 1;
+//     align-self: start;
+//     display: flex;
+//     flex-direction: column;
+//     align-items: flex-end;
+//     justify-content: flex-start;
+//     gap: clamp(0.5rem, 1.6vmin, 1.067rem);
+//     min-width: 0;
+// }
 // #endregion
 
 // #region - central_panel

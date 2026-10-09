@@ -60,15 +60,17 @@
 
     const isClickable = computed(() => props.variant === "menu");
 
-    function handleClick() {
+    function handleClick(e: MouseEvent) {
         if (!isClickable.value) return;
 
         SoundManager.getInstance().playCue("uiSelect");
 
-        // Сначала переводим магазин на вкладку "Валюта" — до открытия оверлея,
-        // чтобы ShopRoot монтировался уже с нужным currentView.
         shopStore.setView("currency");
         gameState.openShop();
+
+        // снимаем фокус, чтобы при нажатии физических клавиш
+        // браузер не подсвечивал панель через :focus-visible
+        (e.currentTarget as HTMLElement | null)?.blur();
     };
 </script>
 
