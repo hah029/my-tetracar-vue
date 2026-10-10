@@ -47,7 +47,7 @@
     // делаем блок с лого более прозрачным при входе в экраны бизнес-механик
     function setBlockOpacity() {
         return {
-            opacity: gameState.activeOverlay != 'dailyGift' ? 1 : 0.5,
+            opacity: gameState.activeOverlay != 'dailyGift' ? 1 : 0.3,
         };
     };
 </script>

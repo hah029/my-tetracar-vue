@@ -36,7 +36,7 @@
     // делаем блок с правами более прозрачным при входе в экраны бизнес-механик
     function setBlockOpacity() {
         return {
-            opacity: gameState.activeOverlay != 'dailyGift' ? 1 : 0.4,
+            opacity: gameState.activeOverlay != 'dailyGift' ? 0.45 : 0.2,
         };
     };
 </script>
