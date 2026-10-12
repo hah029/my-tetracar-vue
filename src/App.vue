@@ -20,7 +20,11 @@
         <ObjectivesRoot v-if="gameState.activeOverlay === 'objectives'" />
     </div>
 
+    <!-- Панель с валютами -->
     <CurrencyPanel v-if="currencyPanelVariant" :variant="currencyPanelVariant" />
+
+    <!-- Анимируемый полет спрайтов (валюты и бустеров к currencyPanel)  -->
+    <FlyingRewards />
 
     <!-- Универсальное модальное сообщение -->
     <ModalMessage />
@@ -57,6 +61,7 @@
     import ObjectivesRoot from "@/components/business/ObjectivesRoot.vue";
     import ModalMessage from "@/components/ui/ModalMessage.vue";
     import CurrencyPanel from "@/components/ui/CurrencyPanel.vue";
+    import FlyingRewards from "@/components/ui/FlyingRewards.vue";
 
     // managers
     import { CameraSystem } from "@/game/camera/CameraSystem";

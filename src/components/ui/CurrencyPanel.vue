@@ -1,5 +1,6 @@
 <template>
     <div
+        ref="rootRef"
         class="currency_block"
         :class="[ `currency_block--${variant}`, { 'currency_block--clickable': isClickable }, ]"
         :role="isClickable ? 'button' : undefined"
@@ -7,15 +8,15 @@
         @click="handleClick"
         @keydown.enter.prevent="handleClick"
     >
-        <div class="currency_subblock">
-            <div class="currency_value goldens ">{{ metaStore.goldens }}</div>
+        <div class="currency_subblock" :class="{ 'currency_subblock--pulse': pulseGoldens }">
+            <div class="currency_value goldens">{{ displayedGoldens }}</div>
             <div class="currency_image_container">
                 <img class="icon" src="@/assets/images/hud/cube_golden.svg" />
             </div>
         </div>
 
-        <div class="currency_subblock">
-            <div class="currency_value energons ">{{ metaStore.energons }}</div>
+        <div class="currency_subblock" :class="{ 'currency_subblock--pulse': pulseEnergons }">
+            <div class="currency_value energons">{{ displayedEnergons }}</div>
             <div class="currency_image_container energon_glow_general">
                 <img class="icon icon_abs" src="@/assets/images/hud/cube_energon_grid_backward.svg" />
                 <img class="icon icon_abs energon_glow_core" src="@/assets/images/hud/cube_energon_core.svg" />
@@ -39,11 +40,12 @@
 
 
 <script setup lang="ts">
-    import { computed } from "vue";
-
+    import { computed, nextTick, onMounted, onUnmounted, ref } from "vue";
     import { useMetaStore } from "@/store/metaStore";
     import { useGameState } from "@/store/gameState";
     import { useShopStore } from "@/store/shopStore";
+    import { useFlyingRewardsStore, type FlyingRewardType } from "@/store/flyingRewardsStore";
+    import { useAnimatedNumber } from "@/composables/useAnimatedNumber";
     import { SoundManager } from "@/game/sound/SoundManager";
 
     type CurrencyPanelVariant = "hud" | "menu";
@@ -56,9 +58,53 @@
     const metaStore = useMetaStore();
     const gameState = useGameState();
     const shopStore = useShopStore();
-    // const currentMultiplier = computed(() => progressStore.currentMultiplier);
-
     const isClickable = computed(() => props.variant === "menu");
+
+    const flyingStore = useFlyingRewardsStore();
+    const rootRef = ref<HTMLDivElement | null>(null);
+    const pulseGoldens = ref(false);
+    const pulseEnergons = ref(false);
+
+    // Счётчики: пока летит хотя бы одна награда данного типа — держим,
+    //      (по прилёту анимируем скачок к актуальному значению)
+    const { displayed: displayedGoldens, release: releaseGoldens } = useAnimatedNumber(
+        computed(() => metaStore.goldens),
+        { shouldHold: () => flyingStore.isPending("golden") },
+    );
+
+    const { displayed: displayedEnergons, release: releaseEnergons } = useAnimatedNumber(
+        computed(() => metaStore.energons),
+        { shouldHold: () => flyingStore.isPending("energon") },
+    );
+
+    // Троттлинг пульсации: в игровом режиме монеты подбираются часто,
+    //      (пульс на каждую монету был бы слишком навязчивым)
+    let lastPulseGoldens = 0;
+    let lastPulseEnergons = 0;
+
+    function triggerPulse(type: FlyingRewardType) {
+        const now = performance.now();
+        if (type === "golden") {
+            if (now - lastPulseGoldens < 200) return;
+            lastPulseGoldens = now;
+            pulseGoldens.value = false;
+            nextTick(() => {
+                pulseGoldens.value = true;
+                setTimeout(() => { pulseGoldens.value = false; }, 700);
+            });
+        } else {
+            if (now - lastPulseEnergons < 200) return;
+            lastPulseEnergons = now;
+            pulseEnergons.value = false;
+            nextTick(() => {
+                pulseEnergons.value = true;
+                setTimeout(() => { pulseEnergons.value = false; }, 700);
+            });
+        };
+    };
+
+    // Подписка на прилёт спрайтов.
+    let unsubscribeLanded: (() => void) | null = null;
 
     function handleClick(e: MouseEvent) {
         if (!isClickable.value) return;
@@ -72,6 +118,27 @@
         // браузер не подсвечивал панель через :focus-visible
         (e.currentTarget as HTMLElement | null)?.blur();
     };
+
+    onMounted(() => {
+        if (rootRef.value) flyingStore.setTarget(rootRef.value);
+
+        unsubscribeLanded = flyingStore.onLanded((type) => {
+            if (type === "golden") {
+                releaseGoldens();
+                triggerPulse("golden");
+            } else {
+                releaseEnergons();
+                triggerPulse("energon");
+            };
+        });
+    });
+
+    onUnmounted(() => {
+        if (unsubscribeLanded) unsubscribeLanded();
+        if (flyingStore.targetElement === rootRef.value) {
+            flyingStore.setTarget(null);
+        };
+    });
 </script>
 
 
@@ -121,6 +188,18 @@
         justify-content: flex-end;
         align-items: center;
         gap: 10px;
+        transform-origin: right center;
+    }
+
+    .currency_subblock--pulse {
+        animation: currency_subblock_pulse 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    }
+
+    @keyframes currency_subblock_pulse {
+        0%   { transform: scale(1);     filter: brightness(1); }
+        18%  { transform: scale(1.18);  filter: brightness(1.75) drop-shadow(0 0 14px rgba(255, 245, 173, 0.95)); }
+        55%  { transform: scale(1.05);  filter: brightness(1.3)  drop-shadow(0 0 8px  rgba(255, 245, 173, 0.55)); }
+        100% { transform: scale(1);     filter: brightness(1); }
     }
 
     .currency_value {

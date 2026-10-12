@@ -130,7 +130,7 @@
                                 <button 
                                     :class="['menu_btn claim_button', { 'small pink': canDoubleDailyGift(day) }]" 
                                     :disabled="!dailyGift.isReady || dailyGift.isClaiming || dailyGift.isRecovering || !!dailyGift.state.pendingRecovery || selectedDay !== currentDay" 
-                                    @click.stop="claim()"
+                                    @click.stop="claim($event)"
                                 >
                                     {{ foo.makeText("dailyGift.claimButton") }}
                                 </button>
@@ -202,6 +202,7 @@
         import { useMetaStore } from "@/store/metaStore";
         import { useGameState } from "@/store/gameState";
         import { useModalMessageStore } from "@/store/modalMessageStore";
+        import { useFlyingRewardsStore } from "@/store/flyingRewardsStore";
 
         import type { RewardDefinition } from "@/purchase/types";
         import { SoundManager } from "@/game/sound/SoundManager";
@@ -238,6 +239,7 @@
         const switchingDelay = ref(0.05);
         const claimBurstDay = ref<number | null>(null);      // весь эффект (анимация взятия подарка)
         const claimStateLockDay = ref<number | null>(null);  // фиксация состояния 'available'
+        const flyingStore = useFlyingRewardsStore();
 
         const modal = useModalMessageStore();
 
@@ -739,7 +741,7 @@
         SoundManager.getInstance().playCue(recovered ? "uiSelect" : "actionRejected");
     };
 
-    // Запуск эффекта получения награды
+    // запуск эффекта получения награды
     function triggerClaimEffect() {
         const day = currentDay.value;
         claimBurstDay.value = day;
@@ -756,11 +758,58 @@
         }, 300);
     };
 
+    // собираем «летящие» награды для текущего дня (пока только голдены и энергоны)
+    function getFlyingRewardsForCurrentDay(): Array<{ type: "golden" | "energon"; amount: number }> {
+        const index = weekDays.value.indexOf(currentDay.value);
+        if (index === -1) return [];
+
+        const rewards = rewardsList.value[index] ?? [];
+        const out: Array<{ type: "golden" | "energon"; amount: number }> = [];
+
+        for (const r of rewards) {
+            if (r.type !== "currency") continue;
+            const currency = r.effect?.currency;
+            const amount = r.effect?.amount ?? 0;
+            if (currency === "golden") out.push({ type: "golden", amount });
+            else if (currency === "energon") out.push({ type: "energon", amount });
+        };
+
+        return out;
+    };
+
     // клик по кнопке "Забрать!"
-    async function claim() {
+    async function claim(event: MouseEvent) {
+        const cardEl = (event.currentTarget as HTMLElement)
+            .closest(".daily_gift_card") as HTMLElement | null;
+        const rect = cardEl?.getBoundingClientRect();
+        const items = getFlyingRewardsForCurrentDay();
+
+        // Блокируем панель заранее — ДО того как store обновится.
+        // Иначе счётчик анимировался бы ещё пока спрайты в полёте.
+        const typesToLock = Array.from(new Set(items.map((i) => i.type)));
+        for (const t of typesToLock) flyingStore.lock(t);
+
         const claimed = await dailyGift.claim();
         SoundManager.getInstance().playCue(claimed ? "goldenPickup" : "actionRejected");
-        if (claimed) triggerClaimEffect();
+
+        if (!claimed) {
+            // Откатываем блокировку, если API отказал.
+            for (const t of typesToLock) flyingStore.unlock(t);
+            return;
+        };
+
+        triggerClaimEffect();
+
+        // Запускаем полёт от центра карточки к CurrencyPanel.
+        if (rect && items.length > 0) {
+            flyingStore.launch({
+                from: { x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 },
+                items,
+            });
+        } else {
+            // Нечего лететь — просто отпускаем блокировку, чтобы счётчик догнал.
+            for (const t of typesToLock) flyingStore.unlock(t);
+        };
     };
 
     // клик по кнопке "Забрать х2!"
