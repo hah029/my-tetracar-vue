@@ -28,6 +28,13 @@
 <script setup lang="ts">
     import { ref, watch, nextTick, onUnmounted } from "vue";
 
+    // ЧАВО:
+    //     - duration: 1.2 + Math.random() * 0.6 в generateSparks() — реальное время жизни искры (1.2–1.8s)
+    //     - TOTAL_DURATION_MS = 2000 — только таймер эмита complete, всегда должен быть ≥ максимального duration + delay
+    //     - PER_SIDE = 20 — плотность (80 искр всего)
+    //     - HUES в спарках --color-cream / --color-gold — цвета из палитры проекта
+    //     - @keyframes spark_fade — где держать яркость, а где гасить (сейчас: 25% ярко, 75% плавное затухание)
+
     type Side = "top" | "right" | "bottom" | "left";
     type SparkColor = "cream" | "gold";
 
@@ -78,7 +85,7 @@
                     pos,
                     distance: 40 + Math.random() * 90,
                     drift: (Math.random() - 0.5) * 40,
-                    duration: 0.6 + Math.random() * 0.3,
+                    duration: 1.2 + Math.random() * 0.6,   // было 0.6 + 0.3, стало 1.2 + 0.6 (1.2–1.8s)
                     delay: Math.random() * 0.12,
                     size,
                     color: Math.random() < 0.55 ? "cream" : "gold",

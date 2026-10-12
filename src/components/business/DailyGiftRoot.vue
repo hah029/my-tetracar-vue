@@ -881,7 +881,7 @@
             color: $color-gray;
             cursor: pointer;
             @include unselectable;
-            transition: all 0.2s linear;
+            transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
         }
 
         .daily_gift_card:hover {
@@ -977,9 +977,9 @@
             line-height: 1;
 
             transition:
-            color 0.2s linear,
-            font-size 0.2s linear,
-            min-height 0.2s linear;
+                color 0.35s cubic-bezier(0.25, 0.46, 0.45, 0.94),
+                font-size 0.35s cubic-bezier(0.25, 0.46, 0.45, 0.94),
+                min-height 0.35s cubic-bezier(0.25, 0.46, 0.45, 0.94);
         }
 
         .daily_gift_title.ordinary,
@@ -1027,8 +1027,8 @@
             margin-top: 30px;
 
             transition:
-            opacity 0.2s linear,
-            margin-top 0.2s linear;
+                opacity 0.35s cubic-bezier(0.25, 0.46, 0.45, 0.94),
+                margin-top 0.35s cubic-bezier(0.25, 0.46, 0.45, 0.94);
         }
         .daily_gift_rewards_block_wrapper.available, 
         .daily_gift_rewards_block_wrapper.available { margin-top: -15px; } 
@@ -1269,7 +1269,7 @@
             gap: 4px;
             opacity: 0.5;
 
-            animation: adv_appear 0.22s ease-out;
+            animation: adv_appear 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
         }
 
         @keyframes adv_appear {
