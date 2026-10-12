@@ -38,7 +38,8 @@
                         <!-- Карточка -->
                         <div v-for="(day, index) in weekDays" :key="day" 
                             v-if="isGiftCardShown"
-                            class="daily_gift_card" :class="cardStates[index]"
+                            class="daily_gift_card" 
+                            :class="[ displayCardStates[index], { 'card_shake': claimBurstDay === day } ]"
                             :aria-current="day === selectedDay ? 'true' : undefined" 
                             :style="{ animationDelay: `${index * switchingDelay}s` }"
                             role="button" 
@@ -46,6 +47,9 @@
                             @click="handleCardClick(day, index)"
                             @keydown.enter="selectDay(day)"
                         >
+                            <!-- Вспышка при получении награды -->
+                            <ClaimNeonBurst :key="`burst-${day}`" :active="claimBurstDay === day" @complete="onBurstComplete" />    
+                        
                             <!-- Свечение за иконками -->
                             <div class="card_background_glow" :class="setBgGlow(index, day)"></div>
 
@@ -59,10 +63,10 @@
                             </div>
 
                             <!-- Титул -->
-                            <div class="daily_gift_title" :class="cardStates[index]">{{ t("dailyGift.day", { day }) }}</div>
+                            <div class="daily_gift_title" :class="displayCardStates[index]">{{ t("dailyGift.day", { day }) }}</div>
 
                             <!-- Блок с иконками и числами наград -->
-                            <div class="daily_gift_rewards_block_wrapper" :class="cardStates[index]">
+                            <div class="daily_gift_rewards_block_wrapper" :class="displayCardStates[index]">
                                 <div class="daily_gift_rewards_block">
                                     <div v-for="(reward, rewardIndex) in rewardsList[index]" :key="rewardIndex" class="daily_gift_reward">
                                         <div 
@@ -81,14 +85,14 @@
                                 </div>
 
                                 <!-- Таймер обратного отсчета -->
-                                <div v-if="cardStates[index] === 'next'" class="countdown_timer">{{ timerText }}</div>
+                                <div v-if="displayCardStates[index] === 'next'" class="countdown_timer">{{ timerText }}</div>
                             </div>
 
                             <!-- Рекламный бонус (x2) -->
-                            <div v-if="canDoubleDailyGift(day) && cardStates[index] !== 'available'" class="advertisement_block">
-                                <span class="advertisement_text" :class="cardStates[index]">×2</span>
+                            <div v-if="canDoubleDailyGift(day) && displayCardStates[index] !== 'available'" class="advertisement_block">
+                                <span class="advertisement_text" :class="displayCardStates[index]">×2</span>
                                 <div class="advertisement_image_container">
-                                    <img class='adv_image' :class="cardStates[index]" src="@/assets/images/business/advertisement_icon.svg" />
+                                    <img class='adv_image' :class="displayCardStates[index]" src="@/assets/images/business/advertisement_icon.svg" />
                                 </div>
                             </div>
 
@@ -99,12 +103,12 @@
                             </div>
 
                             <!-- Галочка (бонус взят) -->
-                            <div v-if="cardStates[index] === 'claimed'" class="checker_image_container">
+                            <div v-if="displayCardStates[index] === 'claimed'" class="checker_image_container">
                                 <img class="checker_img" src="@/assets/images/checker.svg" />
                             </div>
 
                             <!-- Блок кнопок "Забрать" ("Забрать x2") -->
-                            <div v-if="cardStates[index] === 'available'" class="claim_buttons_block">
+                            <div v-if="displayCardStates[index] === 'available' && claimBurstDay !== day" class="claim_buttons_block">
                                 <!-- Кнопка х2 -->
                                 <div v-if="canDoubleDailyGift(day)" class="claim_double_button">
                                     <span class="menu_btn claim_button small">-</span>
@@ -116,7 +120,7 @@
                                         {{ foo.makeText("dailyGift.claimButton", 'empty') }} ×2
                                     </button>
                                     <div class="advertisement_image_container">
-                                        <img class='adv_image' :class="cardStates[index]" src="@/assets/images/business/advertisement_icon.svg" />
+                                        <img class='adv_image' :class="displayCardStates[index]" src="@/assets/images/business/advertisement_icon.svg" />
                                     </div>
                                     <span class="menu_btn claim_button small">-</span>
                                 </div>
@@ -134,11 +138,11 @@
                             </div>
 
                             <!-- Рамки -->
-                            <div v-if="cardStates[index] !== 'claimed'" class="daily_gift_card_corners_group">
-                                <div class="daily_gift_card_corner corner_top_left" :class="cardStates[index]"></div>
-                                <div class="daily_gift_card_corner corner_top_right" :class="cardStates[index]"></div>
-                                <div class="daily_gift_card_corner corner_bottom_left" :class="cardStates[index]"></div>
-                                <div class="daily_gift_card_corner corner_bottom_right" :class="cardStates[index]"></div>
+                            <div v-if="displayCardStates[index] !== 'claimed'" class="daily_gift_card_corners_group">
+                                <div class="daily_gift_card_corner corner_top_left" :class="displayCardStates[index]"></div>
+                                <div class="daily_gift_card_corner corner_top_right" :class="displayCardStates[index]"></div>
+                                <div class="daily_gift_card_corner corner_bottom_left" :class="displayCardStates[index]"></div>
+                                <div class="daily_gift_card_corner corner_bottom_right" :class="displayCardStates[index]"></div>
                             </div>
                         </div>
                     </TransitionGroup>
@@ -204,6 +208,7 @@
         import { createNewText } from '@/helpers/functions';
 
         import EnergonIcon from "@/components/icons/EnergonIcon.vue";
+        import ClaimNeonBurst from "@/components/ui/ClaimNeonBurst.vue";
 
         import goldenIcon from "@/assets/images/hud/cube_golden.svg";
         import ammoIcon from "@/assets/images/hud/cube_bullet.svg";
@@ -224,13 +229,16 @@
         const gameState = useGameState();
         const meta = useMetaStore();
         const days = Array.from({ length: DAILY_GIFT_CYCLE_LENGTH }, (_, index) => index + 1);
-        const rewardsList = ref([] as any[]);
 
+        const rewardsList = ref([] as any[]);
         const isHeaderShown = ref(false);
         const isGiftCardShown = ref(false);
         const isBackButtonShown = ref(false);
         const areTipsShown = ref(false);
         const switchingDelay = ref(0.05);
+        const claimBurstDay = ref<number | null>(null);      // весь эффект (анимация взятия подарка)
+        const claimStateLockDay = ref<number | null>(null);  // фиксация состояния 'available'
+
         const modal = useModalMessageStore();
 
         const transitionMode = ref<'initial' | 'switch-left' | 'switch-right'>('initial');
@@ -456,6 +464,9 @@
 
     // клик по плашкам с подарками
     function handleCardClick(day: number, index: number) {
+        // во время анимации получения — игнорируем клики по этой же карточке
+        if (claimBurstDay.value === day) return;
+
         selectDay(day);
 
         switch (cardStates.value[index]) {
@@ -558,6 +569,19 @@
                 if (day < availableDay || (!canClaim && day === availableDay)) return 'claimed';
                 if (!canClaim && day === availableDay + 1) return 'next';
                 return 'ordinary';
+            });
+        });
+
+        // Отображаемые состояния: во время анимации получения награды держим карточку
+        // в состоянии "available", чтобы не было резкого перехода в "claimed"
+        // (не дёргалась высота, не пропадало свечение) до окончания вспышки.
+        const displayCardStates = computed(() => {
+            return cardStates.value.map((state, index) => {
+                const day = weekDays.value[index];
+                if (day !== undefined && claimStateLockDay.value === day) {
+                    return 'available';
+                }
+                return state;
             });
         });
 
@@ -715,16 +739,44 @@
         SoundManager.getInstance().playCue(recovered ? "uiSelect" : "actionRejected");
     };
 
+    // Запуск эффекта получения награды
+    function triggerClaimEffect() {
+        const day = currentDay.value;
+        claimBurstDay.value = day;
+        claimStateLockDay.value = day;
+
+        // Отпускаем фиксацию состояния раньше, чем погаснут искры:
+        // карточка начнёт свой transition (available → claimed),
+        // пока частицы ещё летят наружу. Через 300мс после клика
+        // пользователь уже видит сжимающуюся карточку, а искры всё ещё летят.
+        setTimeout(() => {
+            if (claimStateLockDay.value === day) {
+                claimStateLockDay.value = null;
+            }
+        }, 300);
+    };
+
     // клик по кнопке "Забрать!"
     async function claim() {
         const claimed = await dailyGift.claim();
         SoundManager.getInstance().playCue(claimed ? "goldenPickup" : "actionRejected");
+        if (claimed) triggerClaimEffect();
     };
 
     // клик по кнопке "Забрать х2!"
     async function claimDouble() {
         const claimed = await dailyGift.claim(true);
         SoundManager.getInstance().playCue(claimed ? "goldenPickup" : "actionRejected");
+         // if (claimed) triggerClaimEffect();        // решить когда показывать эффект (до или после показа рекламы)
+    };
+
+    // обработчик завершения эффекта
+    function onBurstComplete() {
+        claimBurstDay.value = null;
+        // страховка: если по какой-то причине фиксация ещё висит — снимаем
+        if (claimStateLockDay.value !== null) {
+            claimStateLockDay.value = null;
+        }
     };
 
     // следим за закрытием окна оверлея
@@ -923,6 +975,11 @@
             @include text-info-size-m;
             text-transform: uppercase;
             line-height: 1;
+
+            transition:
+            color 0.2s linear,
+            font-size 0.2s linear,
+            min-height 0.2s linear;
         }
 
         .daily_gift_title.ordinary,
@@ -968,6 +1025,10 @@
             justify-content: space-between;
             align-items: center;
             margin-top: 30px;
+
+            transition:
+            opacity 0.2s linear,
+            margin-top 0.2s linear;
         }
         .daily_gift_rewards_block_wrapper.available, 
         .daily_gift_rewards_block_wrapper.available { margin-top: -15px; } 
@@ -1207,6 +1268,13 @@
             align-items: flex-end;
             gap: 4px;
             opacity: 0.5;
+
+            animation: adv_appear 0.22s ease-out;
+        }
+
+        @keyframes adv_appear {
+            from { opacity: 0; }
+            to   { opacity: 0.5; }
         }
         
         .advertisement_text {
