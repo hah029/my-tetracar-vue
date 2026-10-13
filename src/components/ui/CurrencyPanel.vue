@@ -1,6 +1,5 @@
 <template>
     <div
-        ref="rootRef"
         class="currency_block"
         :class="[ `currency_block--${variant}`, { 'currency_block--clickable': isClickable }, ]"
         :role="isClickable ? 'button' : undefined"
@@ -10,14 +9,14 @@
     >
         <div class="currency_subblock" :class="{ 'currency_subblock--pulse': pulseGoldens }">
             <div class="currency_value goldens">{{ displayedGoldens }}</div>
-            <div class="currency_image_container">
+            <div ref="goldensIconRef" class="currency_image_container">
                 <img class="icon" src="@/assets/images/hud/cube_golden.svg" />
             </div>
         </div>
 
         <div class="currency_subblock" :class="{ 'currency_subblock--pulse': pulseEnergons }">
             <div class="currency_value energons">{{ displayedEnergons }}</div>
-            <div class="currency_image_container energon_glow_general">
+            <div ref="energonsIconRef" class="currency_image_container energon_glow_general">
                 <img class="icon icon_abs" src="@/assets/images/hud/cube_energon_grid_backward.svg" />
                 <img class="icon icon_abs energon_glow_core" src="@/assets/images/hud/cube_energon_core.svg" />
                 <img class="icon icon_abs energon_glow_grid" src="@/assets/images/hud/cube_energon_grid_frontal.svg" />
@@ -61,9 +60,10 @@
     const isClickable = computed(() => props.variant === "menu");
 
     const flyingStore = useFlyingRewardsStore();
-    const rootRef = ref<HTMLDivElement | null>(null);
     const pulseGoldens = ref(false);
     const pulseEnergons = ref(false);
+    const goldensIconRef = ref<HTMLDivElement | null>(null);
+    const energonsIconRef = ref<HTMLDivElement | null>(null);
 
     // Счётчики: пока летит хотя бы одна награда данного типа — держим,
     //      (по прилёту анимируем скачок к актуальному значению)
@@ -120,7 +120,8 @@
     };
 
     onMounted(() => {
-        if (rootRef.value) flyingStore.setTarget(rootRef.value);
+        if (goldensIconRef.value)  flyingStore.setTarget("golden",  goldensIconRef.value);
+        if (energonsIconRef.value) flyingStore.setTarget("energon", energonsIconRef.value);
 
         unsubscribeLanded = flyingStore.onLanded((type) => {
             if (type === "golden") {
@@ -135,9 +136,8 @@
 
     onUnmounted(() => {
         if (unsubscribeLanded) unsubscribeLanded();
-        if (flyingStore.targetElement === rootRef.value) {
-            flyingStore.setTarget(null);
-        };
+        if (flyingStore.targetElements.golden  === goldensIconRef.value)  flyingStore.setTarget("golden",  null);
+        if (flyingStore.targetElements.energon === energonsIconRef.value) flyingStore.setTarget("energon", null);
     });
 </script>
 

@@ -258,13 +258,15 @@
         "tipsList": {
             "availableGift": "claim your gift!",
             "firstGift": "grab your first gift!",
-            "todaysClaimed": "today's gift is claimed!\ncome back tomorrow."
+            "todaysClaimed": "today's gift is claimed!\ncome back tomorrow.",
+            "allClaimed": "all done!\nyou've reached the end!"
         },
         "cardClickingList": {
             "notTime": "not yet!\nkeep an eye on the timer...",
             "locked": "hang tight!\ncome back later for your gift.",
             "alreadyClaimed": "empty.\nlooks like someone already grabbed it...",
-            "missedButton": "you're almost there — hit \"claim\"!"
+            "missedButton": "you're almost there — hit \"claim\"!",
+            "allClaimed": "well done!\nyou've reached the end!\ncheck back later — we're already preparing new rewards."
         },
         "otherEventsList": {
             "adError": "ad unavailable.\ntry again or claim the regular reward.",

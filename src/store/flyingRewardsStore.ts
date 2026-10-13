@@ -44,18 +44,26 @@ export const useFlyingRewardsStore = defineStore("flyingRewards", () => {
     let batchIdCounter = 0;
 
     // ===== Настройка количества спрайтов =====
-    const SPRITE_COUNT_DIVISOR = { golden: 60, energon: 2 } as const;   // ← плотность
-    const SPRITE_COUNT_MIN = 5;     // ← минимум монеток
-    const SPRITE_COUNT_MAX = 16;    // ← максимум (потолок «толпы»)
+    const SPRITE_COUNT_DIVISOR = { golden: 60, energon: 2 } as const;   // плотность
+    const SPRITE_COUNT_MIN = 5;     // минимум монеток
+    const SPRITE_COUNT_MAX = 16;    // максимум (потолок «толпы»)
+    const SPRITE_COUNT_DIRECT_LIMIT = 5;
 
     // ===== Настройка длительности полёта =====
-    const FLIGHT_DURATION_BASE = 1300;      // мс, базовая длительность полета
-    const FLIGHT_DURATION_JITTER = 500;     // мс, разброс (добавляется к базовой)
+    const FLIGHT_DURATION_BASE = 1400;      // мс, базовая длительность полета
+    const FLIGHT_DURATION_JITTER = 300;     // мс, разброс (добавляется к базовой)
     const INITIAL_DELAY_MS = 500;           // мс, стартовая пауза перед стартом полета
     const STAGGER_MS = 70;                  // мс, частота вылета (пауза между спавнами в батче)
 
-    function setTarget(el: HTMLElement | null) {
-        targetElement.value = el;
+    // Якоря: CurrencyPanel регистрирует DOM-элементы иконок.
+    // Целимся в свою иконку для каждого типа валюты.
+    const targetElements = ref<Record<FlyingRewardType, HTMLElement | null>>({
+        golden: null,
+        energon: null,
+    });
+
+    function setTarget(type: FlyingRewardType, el: HTMLElement | null) {
+        targetElements.value[type] = el;
     };
 
     function isPending(type: FlyingRewardType): boolean {
@@ -71,15 +79,24 @@ export const useFlyingRewardsStore = defineStore("flyingRewards", () => {
         for (const cb of landedCallbacks) cb(type);
     };
 
-    function getTargetCenter() {
-        const el = targetElement.value;
+    function getTargetCenter(type: FlyingRewardType) {
+        const el = targetElements.value[type];
         if (!el) return { x: window.innerWidth - 80, y: 40 };
         const r = el.getBoundingClientRect();
         return { x: r.left + r.width / 2, y: r.top + r.height / 2 };
     };
 
-    // Сколько спрайтов спавнить: 3..10 в зависимости от суммы.
+    // Сколько спрайтов спавнить: 3..10 в зависимости от суммы:
+    //      - порог, до которого количество спрайтов = количеству награды;
+    //      - если игрок получает 1 энергон — летит 1 спрайт, а не толпа.
     function spriteCountFor(item: FlyingRewardItem): number {
+        // Малое количество: одна монетка = один спрайт.
+        // Это касается и голденов (100 не сработает — их >5), и энергонов (1-5 в основном).
+        if (item.amount <= SPRITE_COUNT_DIRECT_LIMIT) {
+            return Math.max(1, item.amount);
+        };
+
+        // Большое количество: считаем по делителю, клампим в разумный диапазон.
         const divisor = SPRITE_COUNT_DIVISOR[item.type];
         const raw = Math.ceil(item.amount / divisor);
         return Math.max(SPRITE_COUNT_MIN, Math.min(SPRITE_COUNT_MAX, raw));
@@ -92,18 +109,18 @@ export const useFlyingRewardsStore = defineStore("flyingRewards", () => {
         return 40;
     };
 
-        function launch(request: LaunchRequest) {
-        const target = getTargetCenter();
+    function launch(request: LaunchRequest) {
         const batchId = batchIdCounter++;
 
         const allSprites: FlyingSprite[] = [];
         const typesInBatch = new Set<FlyingRewardType>();
-        let stagger = INITIAL_DELAY_MS;   // стартовая задержка сохранена
+        let stagger = INITIAL_DELAY_MS;
 
         for (const item of request.items) {
             typesInBatch.add(item.type);
             const count = spriteCountFor(item);
             const size = spriteSizeFor(item.amount);
+            const target = getTargetCenter(item.type);   // ← своя цель под каждый тип
 
             for (let i = 0; i < count; i++) {
                 allSprites.push({
@@ -149,7 +166,7 @@ export const useFlyingRewardsStore = defineStore("flyingRewards", () => {
 
     return {
         sprites,
-        targetElement,
+        targetElements,
         setTarget,
         isPending,
         onLanded,

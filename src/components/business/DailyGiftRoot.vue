@@ -114,7 +114,7 @@
                                     <span class="menu_btn claim_button small">-</span>
                                     <button 
                                         class="menu_btn claim_button small" 
-                                        :disabled="!dailyGift.isReady || dailyGift.isClaiming || dailyGift.isRecovering || !!dailyGift.state.pendingRecovery || selectedDay !== currentDay" 
+                                        :disabled="!dailyGift.isReady || dailyGift.isClaiming || dailyGift.isRecovering || !!dailyGift.state.pendingRecovery" 
                                         @click.stop="claimDouble()"
                                     >
                                         {{ foo.makeText("dailyGift.claimButton", 'empty') }} ×2
@@ -129,7 +129,7 @@
                                 <!-- Обычная кнопка -->
                                 <button 
                                     :class="['menu_btn claim_button', { 'small pink': canDoubleDailyGift(day) }]" 
-                                    :disabled="!dailyGift.isReady || dailyGift.isClaiming || dailyGift.isRecovering || !!dailyGift.state.pendingRecovery || selectedDay !== currentDay" 
+                                    :disabled="!dailyGift.isReady || dailyGift.isClaiming || dailyGift.isRecovering || !!dailyGift.state.pendingRecovery" 
                                     @click.stop="claim($event)"
                                 >
                                     {{ foo.makeText("dailyGift.claimButton") }}
@@ -183,6 +183,16 @@
             <p v-if="dailyGift.error" class="daily_gift__error">{{ t(errorKey) }}</p>
         </div>
 <!-- ---------------- -->
+        <!-- DEBUG: имитация перехода на следующий день -->
+        <Transition name="header_footer_block_anim">
+            <button 
+                v-if="DEBUG_ADVANCE_BUTTON && isBackButtonShown && !isAllClaimed"
+                class="menu_btn debug_advance_btn" 
+                @click="debugAdvanceDay"
+            >
+                debug: следующий день
+            </button>
+        </Transition>
 
         <Transition name="header_footer_block_anim">
             <button v-if="isBackButtonShown" class="menu_btn btn_correction back_button_menu" @click="backButtonClick">
@@ -243,25 +253,139 @@
 
         const modal = useModalMessageStore();
 
+        // ===== DEBUG =====
+        // кнопка «следующий день» — для отладки подарков всех дней/недель (оставить false или удалить после отладки)
+        const DEBUG_ADVANCE_BUTTON = true;
+
+        // Пауза перед автопереходом на следующую неделю после забора подарка:
+        //      - нужна, чтобы игрок увидел анимацию взятия (частицы, угасание карточки).
+        //      - позже, когда появятся кастомные анимации (карусель, скин) — значение можно будет делать зависимым от типа последнего приза недели
+        const WEEK_TRANSITION_DELAY_MS = 1500;
+        // =================
+
         const transitionMode = ref<'initial' | 'switch-left' | 'switch-right'>('initial');
         const isSwitchingWeek = ref(false);
         const isClosing = ref(false);   // защита от повторного вызова, пока идёт закрытие окна
 
-        const errorKey = computed(() => {
-            switch (dailyGift.error) {
-                case "recovery_failed": return "dailyGift.recoveryError";
-                case "ad_failed": return "dailyGift.otherEventsList.adError";
-                case "ad_not_completed": return "dailyGift.otherEventsList.adNotCompleted";
-                default: return "dailyGift.claimError";
-            }
+        // «Сегодня», по данным стора — то, что можно забрать прямо сейчас.
+        const currentDay = computed(() => dailyGift.status.day);
+
+        // Актуальный день — то, на какой день недели смотреть при открытии:
+        //   - если canClaim — это день, который забираем сейчас;
+        //   - иначе — следующий день (на нём висит таймер).
+        const activeDay = computed<number>(() => {
+            const { day, canClaim } = dailyGift.status;
+            if (canClaim) return day;
+            // Всё собрано — держим последний день цикла, никакого wrap.
+            if (day >= DAILY_GIFT_CYCLE_LENGTH) return DAILY_GIFT_CYCLE_LENGTH;
+            return day + 1;
         });
 
-        const currentDay = computed(() => dailyGift.status.day);
-        const selectedDay = ref(currentDay.value);
-        const selectedWeek = computed(() => Math.ceil(selectedDay.value / DAILY_GIFT_WEEK_LENGTH));
+        // Игрок забрал все дни цикла, и сегодня больше нечего взять.
+        // Держится до наступления нового дня (тогда стор сам вернёт день 1 нового цикла).
+        const isAllClaimed = computed<boolean>(() =>
+            dailyGift.status.day === DAILY_GIFT_CYCLE_LENGTH && !dailyGift.status.canClaim
+        );
+
+        // Отображаемый «актуальный день». Обычно совпадает с activeDay,
+        // но после забора подарка «замораживается» на WEEK_TRANSITION_DELAY_MS —
+        // чтобы неделя переключалась с задержкой (игрок успел увидеть анимацию).
+        const displayActiveDay = ref<number>(activeDay.value);
+        let holdWeekTimer: ReturnType<typeof setTimeout> | null = null;
+
+        watch(activeDay, (newDay) => {
+            // Если идёт удержание — не применяем изменение сейчас,
+            // таймер сам применит актуальное значение, когда истечёт.
+            if (holdWeekTimer !== null) return;
+            displayActiveDay.value = newDay;
+        }, { flush: "sync" });
+
+        // Плавный автопереход на новую неделю после удержания.
+        // Проигрывает ту же leave/enter-анимацию, что и ручное переключение,
+        // чтобы карточки не «прыгали» мгновенно.
+        function animateWeekChangeIfNeeded() {
+            // Когда игрок забрал подарок за последний день цикла — не переключаем
+            // неделю. Экран остаётся на последней неделе в состоянии «всё собрано».
+            if (isAllClaimed.value) return;
+
+            const prevWeek = Math.ceil(displayActiveDay.value / DAILY_GIFT_WEEK_LENGTH);
+            const nextWeek = Math.ceil(activeDay.value / DAILY_GIFT_WEEK_LENGTH);
+
+            if (prevWeek === nextWeek) {
+                // Неделя не меняется (обычный день) — просто подтягиваем день.
+                displayActiveDay.value = activeDay.value;
+                return;
+            };
+
+            // Направление — чтобы switch-left / switch-right сработали как надо.
+            transitionMode.value = nextWeek > prevWeek ? 'switch-left' : 'switch-right';
+            isSwitchingWeek.value = true;
+            isGiftCardShown.value = false;
+
+            setTimeout(() => {
+                displayActiveDay.value = activeDay.value;
+                setTimeout(() => {
+                    isGiftCardShown.value = true;
+                    setTimeout(() => {
+                        isSwitchingWeek.value = false;
+                        transitionMode.value = 'initial';
+                    }, 300);
+                }, 50);
+            }, 300);
+        };
+
+        function holdWeekBeforeTransition() {
+            if (holdWeekTimer) clearTimeout(holdWeekTimer);
+            holdWeekTimer = setTimeout(() => {
+                holdWeekTimer = null;
+                animateWeekChangeIfNeeded();
+            }, WEEK_TRANSITION_DELAY_MS);
+        };
+
+        function cancelHold() {
+            if (holdWeekTimer) {
+                clearTimeout(holdWeekTimer);
+                holdWeekTimer = null;
+                // На случай, если activeDay успел измениться — синхронизируем.
+                displayActiveDay.value = activeDay.value;
+            };
+        };
+
+        // Ручной override недели — только когда игрок кликает стрелки или карточки.
+        // По умолчанию null → неделя всегда определяется по activeDay.
+        const manualWeek = ref<number | null>(null);
+
+        // При смене activeDay (debug, полночь, клейм) — сбрасываем ручной override,
+        // чтобы экран автоматически переключился на неделю с актуальным днём.
+        watch(activeDay, () => { manualWeek.value = null; }, { flush: "sync" });
+
+        // При заборе подарка за последний день цикла — автоматически показываем
+        // финальное модальное сообщение после того, как отработает анимация.
+        watch(isAllClaimed, (claimed) => {
+            if (!claimed) return;
+            setTimeout(() => {
+                modal.show(t("dailyGift.cardClickingList.allClaimed"));
+            }, WEEK_TRANSITION_DELAY_MS);
+        });
+
+        const selectedWeek = computed(() => {
+            if (manualWeek.value !== null) return manualWeek.value;
+            // Когда весь цикл собран — держим последнюю неделю, чтобы карточки
+            // оставались визуально заполненными (все claimed), а не пустыми.
+            if (isAllClaimed.value) return Math.ceil(DAILY_GIFT_CYCLE_LENGTH / DAILY_GIFT_WEEK_LENGTH);
+            return Math.ceil(displayActiveDay.value / DAILY_GIFT_WEEK_LENGTH);
+        });
+
+        const selectedDay = computed<number>(() => {
+            const weekStart = (selectedWeek.value - 1) * DAILY_GIFT_WEEK_LENGTH + 1;
+            const weekEnd = weekStart + DAILY_GIFT_WEEK_LENGTH - 1;
+            return (displayActiveDay.value >= weekStart && displayActiveDay.value <= weekEnd)
+                ? displayActiveDay.value
+                : weekStart;
+        });
 
         const weekName = computed(() => foo.getElementFromArray('dailyGift.weekName', selectedWeek.value - 1));
-        
+
         const weekDays = computed(() => {
             const start = (selectedWeek.value - 1) * DAILY_GIFT_WEEK_LENGTH;
             return days.slice(start, start + DAILY_GIFT_WEEK_LENGTH);
@@ -271,20 +395,30 @@
         const isRewardAvailable = computed(() => dailyGift.status.canClaim);
 
         // неделя, в которой находится доступная награда
-        const availableRewardWeek = computed(() => 
+        const availableRewardWeek = computed(() =>
             Math.ceil(dailyGift.status.day / DAILY_GIFT_WEEK_LENGTH)
         );
 
         // игрок находится на неделе с доступной наградой?
-        const isAvailableRewardOnCurrentWeek = computed(() => 
+        const isAvailableRewardOnCurrentWeek = computed(() =>
             isRewardAvailable.value && selectedWeek.value === availableRewardWeek.value
         );
 
         // выбор фразы-подсказки (в левом-нижнем углу экрана) при разных сценариях
         const tipsText = computed(() => {
+            if (isAllClaimed.value) return t('dailyGift.tipsList.allClaimed');
             if (isAvailableRewardOnCurrentWeek.value) return '';
             if (isRewardAvailable.value) return t('dailyGift.tipsList.availableGift');
             return t('dailyGift.tipsList.todaysClaimed');
+        });
+
+        const errorKey = computed(() => {
+            switch (dailyGift.error) {
+                case "recovery_failed": return "dailyGift.recoveryError";
+                case "ad_failed": return "dailyGift.otherEventsList.adError";
+                case "ad_not_completed": return "dailyGift.otherEventsList.adNotCompleted";
+                default: return "dailyGift.claimError";
+            }
         });
     // #endregion
 
@@ -293,17 +427,8 @@
     let refreshTimer: ReturnType<typeof setInterval> | null = null;
 
     watch(
-        currentDay, 
-        (day) => { 
-            selectedDay.value = day; 
-        },
-    );
-
-    watch(
-        weekDays, 
-        (days) => { 
-            getRewardsList();
-        },
+        weekDays,
+        (days) => { getRewardsList(); },
     );
 
     // получаем коллекцию доступных наград за текущую неделю
@@ -330,7 +455,7 @@
 
             return copy;
         });
-        
+
         rewardsList.value = newArr;
     };
 
@@ -346,10 +471,8 @@
         if (day_ < availableDay || (!canClaim && day_ === availableDay)) {
             return;
         } else if (canClaim && day_ === availableDay) {
-        // включаем лучи если награда готова к получению
             return true;
         } else {
-        // включаем лучи если награда еще не была получена (только Колесо фортуны и Скин)
             const prizeType = rewardsList.value[index_][0].type;
             return (prizeType == 'fortune_spin' || prizeType == 'cosmetic') ? true : false;
         };
@@ -363,15 +486,10 @@
             return 1;
         } else {
             const skinId = getRewards(day_)[0].effect.skinId;
-            if (skinId == 'basic1') {
-                return 1;
-            } else if (skinId == 'basic2') {
-                return 2;
-            } else if (skinId == 'premium1') {
-                return 3;
-            } else if (skinId == 'premium2') {
-                return 4;
-            };
+            if (skinId == 'basic1') return 1;
+            else if (skinId == 'basic2') return 2;
+            else if (skinId == 'premium1') return 3;
+            else if (skinId == 'premium2') return 4;
         };
     };
 
@@ -381,10 +499,8 @@
 
         if (reward.type === "cosmetic") {
             newString = t("items.skin");
-
         } else if (reward.type === "upgrade") {
             newString = t("items.upgrade");
-
         } else {
             newString = String(reward.effect?.amount ?? 1);
             newString = formatScore(Number(newString));
@@ -420,7 +536,7 @@
         };
     };
 
-    // приводим в нужный формат очки игрока (с учетом его страны) 
+    // приводим в нужный формат очки игрока (с учетом его страны)
     // (дублируется с такой же функцией в LeaderBoarsRoot.vue - позже вынести как универсальную)
     function formatScore(score: number) {
         const locale = i18next.language || "ru-RU";
@@ -430,60 +546,57 @@
     // переключаем недели (клики по стрелкам Вправо / Влево)
     function selectWeek(direction_: number) {
         if (isSwitchingWeek.value) return;
+
+        const maxWeek = Math.ceil(DAILY_GIFT_CYCLE_LENGTH / DAILY_GIFT_WEEK_LENGTH);
+        const newWeek = selectedWeek.value + direction_;
+        if (newWeek < 1 || newWeek > maxWeek) return;
+
         isSwitchingWeek.value = true;
-
-        // указываем направление
         transitionMode.value = direction_ > 0 ? 'switch-left' : 'switch-right';
-
-        // запускаем leave-анимацию
         isGiftCardShown.value = false;
 
-        // ждём полного завершения leave-анимации (400ms + запас)
         setTimeout(() => {
-            let newWeek = selectedWeek.value + direction_;
-            const day = (newWeek - 1) * DAILY_GIFT_WEEK_LENGTH + 1;
-            selectDay(day);
-
-            // небольшая задержка, чтобы Vue обновил DOM с новыми ключами
+            manualWeek.value = newWeek;
             setTimeout(() => {
-                // запускаем enter-анимацию
                 isGiftCardShown.value = true;
-
-                // сбрасываем режим только ПОСЛЕ завершения enter-анимации
                 setTimeout(() => {
                     isSwitchingWeek.value = false;
                     transitionMode.value = 'initial';
-                }, 300); // длительность enter-анимации + запас
+                }, 300);
             }, 50);
-        }, 300); // длительность leave-анимации + запас
+        }, 300);
     };
 
-    // переключаем день
+    // переключаем день (фиксирует неделю, в которой этот день находится)
     function selectDay(day: number) {
         if (day < 1 || day > DAILY_GIFT_CYCLE_LENGTH) return;
-        selectedDay.value = day;
+        // Во время автопереключения/ручного переключения недели — игнорируем выбор дня, чтобы не сбить анимацию
+        if (isSwitchingWeek.value) return;
+        manualWeek.value = Math.ceil(day / DAILY_GIFT_WEEK_LENGTH);
     };
 
     // клик по плашкам с подарками
     function handleCardClick(day: number, index: number) {
-        // во время анимации получения — игнорируем клики по этой же карточке
         if (claimBurstDay.value === day) return;
 
         selectDay(day);
+
+        // Когда весь цикл собран — любая карточка показывает финальное сообщение.
+        if (isAllClaimed.value) {
+            modal.show(t("dailyGift.cardClickingList.allClaimed"));
+            return;
+        };
 
         switch (cardStates.value[index]) {
             case "next":
                 modal.show(t("dailyGift.cardClickingList.notTime"));
                 break;
-
             case "claimed":
                 modal.show(t("dailyGift.cardClickingList.alreadyClaimed"));
                 break;
-
             case "ordinary":
                 modal.show(t("dailyGift.cardClickingList.locked"));
                 break;
-
             case "available":
                 modal.show(t("dailyGift.cardClickingList.missedButton"));
                 break;
@@ -510,19 +623,15 @@
         const timerText = ref('');
         let timerInterval: ReturnType<typeof setInterval> | null = null;
 
-        // вычисление остатка секунд до ближайшей полуночи
         function calcSecondsUntilLocalMidnight(): number {
             const now = new Date();
             const tomorrow = new Date(
-                now.getFullYear(),
-                now.getMonth(),
-                now.getDate() + 1,
+                now.getFullYear(), now.getMonth(), now.getDate() + 1,
                 0, 0, 0, 0
             );
             return Math.max(0, Math.floor((tomorrow.getTime() - now.getTime()) / 1000));
         };
 
-        // запуск таймера
         function startNextTimer() {
             stopNextTimer();
             secondsLeft.value = calcSecondsUntilLocalMidnight();
@@ -534,13 +643,11 @@
 
                 if (secondsLeft.value <= 0) {
                     stopNextTimer();
-                    // сброс дня наступил — обновляем статус, чтобы карточки пересчитались
                     dailyGift.refreshStatus();
                 };
             }, 1000);
         };
 
-        // оставнока таймера
         function stopNextTimer() {
             if (timerInterval) {
                 clearInterval(timerInterval);
@@ -548,22 +655,16 @@
             };
         };
 
-        // преобразуем число с секундами в строковое значение
         function formatTimer(total: number): string {
             const hours   = Math.floor(total / 3600);
             const minutes = Math.floor((total % 3600) / 60);
             const seconds = total % 60;
             const pad = (n: number) => (n < 10 ? "0" + n : String(n));
-
             return `${pad(hours)} : ${pad(minutes)} : ${pad(seconds)}`;
         };
     // #endregion
 
     // #region - стили и классы
-        // назначаем стили элементам (через computed вместо функции):
-            //      1. подписям и линиям подчеркивания в титуле карточки
-            //      2. надписи "x2" в рекламном блоке
-            //      3. иконке в рекламном блоке    
         const cardStates = computed(() => {
             const { canClaim, day: availableDay } = dailyGift.status;
             return weekDays.value.map((day) => {
@@ -576,7 +677,6 @@
 
         // Отображаемые состояния: во время анимации получения награды держим карточку
         // в состоянии "available", чтобы не было резкого перехода в "claimed"
-        // (не дёргалась высота, не пропадало свечение) до окончания вспышки.
         const displayCardStates = computed(() => {
             return cardStates.value.map((state, index) => {
                 const day = weekDays.value[index];
@@ -596,45 +696,30 @@
             { immediate: true }
         );
 
-        // назначаем габариты иконкам наград
         function setGiftIconSize(reward_, rewardsCount_) {
-            if (reward_.type == 'cosmetic') {
-                return 'icon_skin_size';
-
-            } else if (reward_.type == 'fortune_spin') {
-                return 'icon_fortune_size';
-
-            } else if (rewardsCount_ == 1) {
-                return 'icon_normal_size';
-
-            } else {
-                return 'icon_small_size';
-            };
+            if (reward_.type == 'cosmetic') return 'icon_skin_size';
+            else if (reward_.type == 'fortune_spin') return 'icon_fortune_size';
+            else if (rewardsCount_ == 1) return 'icon_normal_size';
+            else return 'icon_small_size';
         };
 
-        // назначаем стиль подписи под иконками наград
         function setGiftValueStyle(reward_) {
             let newColor = '';
             let textStyle = '';
 
             if (reward_.type == 'currency') {
                 newColor = reward_.effect.currency == 'golden' ? 'FFF5AD' : 'D7FBFF';
-
             } else if (reward_.type == 'ammo') {
                 newColor = 'FFC3C5';
-
             } else if (reward_.type == 'armor') {
                 newColor = 'FFFFFF';
-
             } else if (reward_.type == 'cosmetic') {
                 const skinId = reward_.effect.skinId;
                 if (skinId == 'basic1') newColor = '79BEFF';
                 else if (skinId == 'basic2') newColor = 'FF6E6E';
                 else if (skinId == 'premium1') newColor = 'FFF080';
                 else if (skinId == 'premium2') newColor = 'F477FF';
-
             } else if (reward_.type == 'upgrade') {
-                // newColor = 'F477FF';
                 newColor = 'ffffff';
             };
 
@@ -646,7 +731,6 @@
             };
         };
 
-        // придаем свечение иконкам наград
         function setRewardIconGlow(reward_, day_) {
             const { canClaim, day: availableDay } = dailyGift.status;
             let filterColor = '';
@@ -655,29 +739,24 @@
                 return;
             } else {
                 if (reward_.type == 'currency') {
-                    if (reward_.effect.currency == 'golden') {
-                        filterColor = '255, 220, 20';
-                    };
-    
+                    if (reward_.effect.currency == 'golden') filterColor = '255, 220, 20';
                 } else if (reward_.type == 'ammo') {
                     filterColor = '255, 116, 121';
-    
                 } else if (reward_.type == 'armor') {
                     filterColor = '255, 255, 255';
                 };
-                
+
                 return {
                     filter: `drop-shadow(0 0 10px rgba(${filterColor}, 0.3))`
                 };
             }
         };
 
-        // меняем цвет свечения заднего плана карточки
         function setBgGlow(index_, day_) {
             const { canClaim, day: availableDay } = dailyGift.status;
             const gift = rewardsList.value[index_][0];
             const prizeType = gift.type;
-            
+
             if (day_ < availableDay || (!canClaim && day_ === availableDay)) {
                 return 'background_glow_none';
             } else if (canClaim && day_ === availableDay) {
@@ -693,7 +772,6 @@
             };
         };
 
-        // назначаем цвет уровня скина машинки (в зависимости от номера недели)
         function setLevelValueStyle(day_) {
             const weekNumber = day_ / 7;
             let textColor = '';
@@ -703,24 +781,17 @@
             else if (weekNumber == 3) textColor = 'FFF080';
             else if (weekNumber == 4) textColor = 'F477FF';
 
-            return { 
-                color: `#${textColor}`,
-            };
+            return { color: `#${textColor}` };
         };
 
-        // заставляем некоторые иконки левитировать (Колесо фортуны и Скин)
         function setImgLevitation(reward_, day_) {
             const { canClaim, day: availableDay } = dailyGift.status;
 
             if (day_ < availableDay || (!canClaim && day_ === availableDay)) {
                 return;
             } else {
-            // включаем левитацию если только награда еще не была получена
-                if (reward_.type == 'cosmetic') {
-                    return 'flying_img_1';
-                } else if (reward_.type == 'fortune_spin') {
-                    return 'flying_img_2';
-                };
+                if (reward_.type == 'cosmetic') return 'flying_img_1';
+                else if (reward_.type == 'fortune_spin') return 'flying_img_2';
             };
         };
     // #endregion
@@ -736,6 +807,12 @@
         setTimeout(() => { gameState.closeOverlay(); }, 750);
     };
 
+    // DEBUG: симулируем переход на следующий день
+    function debugAdvanceDay() {
+        SoundManager.getInstance().playCue("uiSelect");
+        dailyGift.debugAdvanceDay();
+    };
+
     async function recover() {
         const recovered = await dailyGift.recover();
         SoundManager.getInstance().playCue(recovered ? "uiSelect" : "actionRejected");
@@ -747,10 +824,6 @@
         claimBurstDay.value = day;
         claimStateLockDay.value = day;
 
-        // Отпускаем фиксацию состояния раньше, чем погаснут искры:
-        // карточка начнёт свой transition (available → claimed),
-        // пока частицы ещё летят наружу. Через 300мс после клика
-        // пользователь уже видит сжимающуюся карточку, а искры всё ещё летят.
         setTimeout(() => {
             if (claimStateLockDay.value === day) {
                 claimStateLockDay.value = null;
@@ -778,36 +851,39 @@
     };
 
     // клик по кнопке "Забрать!"
-    async function claim(event: MouseEvent) {
+        async function claim(event: MouseEvent) {
         const cardEl = (event.currentTarget as HTMLElement)
             .closest(".daily_gift_card") as HTMLElement | null;
         const rect = cardEl?.getBoundingClientRect();
         const items = getFlyingRewardsForCurrentDay();
 
-        // Блокируем панель заранее — ДО того как store обновится.
-        // Иначе счётчик анимировался бы ещё пока спрайты в полёте.
         const typesToLock = Array.from(new Set(items.map((i) => i.type)));
         for (const t of typesToLock) flyingStore.lock(t);
+
+        // Ставим удержание ДО запроса к API. Иначе за время await'а
+        // activeDay успеет измениться (7 → 8), watcher применит это в
+        // displayActiveDay, и неделя переключится мгновенно — таймер
+        // запустится уже после того, как всё "перескочило".
+        holdWeekBeforeTransition();
 
         const claimed = await dailyGift.claim();
         SoundManager.getInstance().playCue(claimed ? "goldenPickup" : "actionRejected");
 
         if (!claimed) {
-            // Откатываем блокировку, если API отказал.
+            // API отказал — снимаем удержание, неделя остаётся на месте.
+            cancelHold();
             for (const t of typesToLock) flyingStore.unlock(t);
             return;
         };
 
         triggerClaimEffect();
 
-        // Запускаем полёт от центра карточки к CurrencyPanel.
         if (rect && items.length > 0) {
             flyingStore.launch({
                 from: { x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 },
                 items,
             });
         } else {
-            // Нечего лететь — просто отпускаем блокировку, чтобы счётчик догнал.
             for (const t of typesToLock) flyingStore.unlock(t);
         };
     };
@@ -816,13 +892,12 @@
     async function claimDouble() {
         const claimed = await dailyGift.claim(true);
         SoundManager.getInstance().playCue(claimed ? "goldenPickup" : "actionRejected");
-         // if (claimed) triggerClaimEffect();        // решить когда показывать эффект (до или после показа рекламы)
+        // if (claimed) triggerClaimEffect(); — решить когда показывать эффект (до или после показа рекламы)
     };
 
     // обработчик завершения эффекта
     function onBurstComplete() {
         claimBurstDay.value = null;
-        // страховка: если по какой-то причине фиксация ещё висит — снимаем
         if (claimStateLockDay.value !== null) {
             claimStateLockDay.value = null;
         }
@@ -839,6 +914,9 @@
     );
 
     onMounted(async () => {
+        // обновляем статус — на случай, если день перескочил, пока окно было закрыто
+        dailyGift.refreshStatus();
+
         isHeaderShown.value = true;
         setTimeout(() => { isGiftCardShown.value = true; }, 200);
         setTimeout(() => { areTipsShown.value = true; }, 600);
@@ -851,6 +929,7 @@
     onUnmounted(() => {
         stopNextTimer();
         if (refreshTimer) clearInterval(refreshTimer);
+        if (holdWeekTimer) clearTimeout(holdWeekTimer);
         window.removeEventListener("keydown", handleKeydown);
     });
 </script>
@@ -1485,7 +1564,28 @@
     }
     // #endregion
 
-    
+    .debug_advance_btn {
+        position: fixed;
+        top: 20px;
+        left: 20px;
+        z-index: 100;
+        padding: 8px 14px;
+        color: #FF6E6E;
+        border: 1px dashed #FF6E6E;
+        background-color: rgba(0, 0, 0, 0.55);
+        @include text-info-size-s;
+        text-transform: uppercase;
+        letter-spacing: 0;
+        cursor: pointer;
+        pointer-events: auto;
+        transition: all 0.2s ease-out;
+
+        &:hover {
+            color: #FFFFFF;
+            border-color: #FFFFFF;
+            background-color: rgba(255, 110, 110, 0.25);
+        }
+    }
 
     .daily_gift__error {
         @include text-info-size-s;

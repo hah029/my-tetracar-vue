@@ -77,9 +77,12 @@ export const useDailyGiftStore = defineStore("dailyGiftStore", () => {
     const stoppedDay = saved.recovered?.day ?? saved.lastClaimedDay ?? 1;
     const day = Math.floor((stoppedDay - 1) / DAILY_GIFT_WEEK_LENGTH) * DAILY_GIFT_WEEK_LENGTH + 1;
     const config = DAILY_GIFT_RECOVERY;
+
     const available = config.enabled && Number.isSafeInteger(config.energonCost) && config.energonCost > 0
       && missedDays >= Math.max(1, config.minMissedDays) && missedDays <= config.maxMissedDays
-      && day > 1 && day <= DAILY_GIFT_CYCLE_LENGTH;
+      && day > 1 && day <= DAILY_GIFT_CYCLE_LENGTH
+      && stoppedDay < DAILY_GIFT_CYCLE_LENGTH;   // ← цикл не завершён
+
     return { missedDays, day, week: Math.ceil(day / DAILY_GIFT_WEEK_LENGTH),
       cost: config.energonCost, available };
   });
@@ -96,13 +99,17 @@ export const useDailyGiftStore = defineStore("dailyGiftStore", () => {
     const cycleNumber = Math.max(1, state.value.cycleNumber);
     if (!lastDay || !lastDate) return { day: 1, cycleNumber, canClaim: true };
 
+    // Игрок забрал последний день цикла — состояние фиксируется навсегда.
+    // Никакого wrap на день 1: ждём, пока в конфиг добавятся новые дни.
+    // Когда DAILY_GIFT_CYCLE_LENGTH вырастет, lastDay < CYCLE_LENGTH снова
+    // станет true, и обычная логика продолжит работать.
+    if (lastDay >= DAILY_GIFT_CYCLE_LENGTH) {
+      return { day: DAILY_GIFT_CYCLE_LENGTH, cycleNumber, canClaim: false };
+    }
+
     const difference = getDayDifference(lastDate, currentDay.value);
     if (difference <= 0) return { day: lastDay, cycleNumber, canClaim: false };
-    if (difference === 1) {
-      return lastDay === DAILY_GIFT_CYCLE_LENGTH
-        ? { day: 1, cycleNumber: cycleNumber + 1, canClaim: true }
-        : { day: lastDay + 1, cycleNumber, canClaim: true };
-    }
+    if (difference === 1) return { day: lastDay + 1, cycleNumber, canClaim: true };
     return { day: 1, cycleNumber, canClaim: true };
   });
 
@@ -121,6 +128,24 @@ export const useDailyGiftStore = defineStore("dailyGiftStore", () => {
 
   function refreshStatus() {
     currentDay.value = getLocalDay();
+  };
+
+  // отладочная функция переключения дня
+  function debugAdvanceDay(): void {
+    // DEBUG: имитируем «игрок забрал текущий день и наступил следующий».
+    // Сдвигаем дату последнего клейма на вчера — status computed
+    // посчитает следующий день как доступный (difference === 1).
+    const day = status.value.day;
+    const cycleNumber = status.value.cycleNumber;
+    state.value = {
+      ...state.value,
+      lastClaimedDay: day,
+      lastClaimedUtcDay: getLocalDay(new Date(Date.now() - 86_400_000)),
+      cycleNumber,
+      recovered: undefined,
+    };
+    refreshStatus();
+    void persist();
   };
 
   async function persist(value = state.value) {
@@ -295,5 +320,6 @@ export const useDailyGiftStore = defineStore("dailyGiftStore", () => {
     shouldAutoShowGift,
     markFirstGameCompleted,
     markGiftAutoShown,
+    debugAdvanceDay
   };
 });

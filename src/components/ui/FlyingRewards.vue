@@ -55,15 +55,23 @@
         left: 0;
         width: var(--sprite-size);
         height: var(--sprite-size);
+        opacity: 0;
 
-        // X и Y анимируем разными CSS-свойствами (transform и translate),
-        // чтобы они работали независимо и создавали «дугу».
-        // translate применяется до transform, но в нашем случае они
-        // складываются в нужный итог (xAnim, yAnim).
+        // fill-mode: both — применяет "from"-кадр во время delay
+        // и удерживает "to"-кадр после завершения.
+        // Без этого спрайт стоял бы в top: 0 / left: 0 пока ждёт своей очереди.
         animation:
-            fly_x var(--duration) var(--delay) cubic-bezier(0.22, 0.61, 0.36, 1) forwards,
-            fly_y var(--duration) var(--delay) cubic-bezier(0.45, 0.05, 0.55, 0.95) forwards;
-        will-change: transform, translate;
+            fly_x var(--duration) var(--delay) cubic-bezier(0.33, 1, 0.68, 1) both,
+            fly_y var(--duration) var(--delay) cubic-bezier(0.45, 0.05, 0.55, 0.95) both,
+            fly_fade var(--duration) var(--delay) ease-out both;
+        will-change: transform, translate, opacity;
+    }
+
+    @keyframes fly_fade {
+        0%   { opacity: 0; }
+        6%   { opacity: 1; }
+        85%  { opacity: 1; }
+        100% { opacity: 0; }
     }
 
     .flying_sprite__inner {
