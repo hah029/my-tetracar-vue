@@ -220,10 +220,56 @@
     ],
     "shop": {
         "title": "shop",
+        "common": {
+            "stat": "stat",
+            "bestPrice": "best price"
+        },
         "tabList": {
             "currency": "currency",
+            "upgrades": "upgrades",
+            "skins": "skins",
+            "comfort": "comfort",
+
             "stuff": "stuff",
             "visual": "visual"
+        },
+        "purchaseList": {
+            "title": "buy",
+            "unit": {
+                "golden": "goldens",
+                "energon": "energons"
+            }
+        },
+        "upgradesList": {
+            "title": "upgrade",
+            "ammo": {
+                "title": "ammo",
+                "statsList": [
+                    "ammo per clip",
+                    "fire rate"
+                ]
+            },
+            "armor": {
+                "title": "armor",
+                "statsList": [
+                    "armor slots",
+                    "shield size"
+                ]
+            },
+            "magnet": {
+                "title": "magnet",
+                "statsList": [
+                    "strength",
+                    "pickup radius"
+                ]
+            },
+            "nitro": {
+                "title": "nitro",
+                "statsList": [
+                    "duration",
+                    "score & currency gain"
+                ]
+            }
         },
         "product": {
             "owned": "owned",
@@ -353,7 +399,8 @@
         "skin": "skin",
         "reward": "reward",
         "level": "lv",
-        "upgrade": "+1 Lv"
+        "upgrade": "+1 Lv",
+        "now": "now"
     },
     "currency": {
         "golden": "golden",
@@ -364,6 +411,8 @@
         "yan": "yan"
     },
     "modalMessage": {
-        "ok": "ok"
+        "ok": "ok",
+        "yes": "yes",
+        "no": "no"
     }
 }

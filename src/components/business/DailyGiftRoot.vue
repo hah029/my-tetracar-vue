@@ -1564,6 +1564,7 @@
     }
     // #endregion
 
+    // #region - разное (раскидать позже)
     .debug_advance_btn {
         position: fixed;
         top: 20px;
@@ -1638,5 +1639,8 @@
         text-align: center;
     }
 
-    .daily_gift__recovery p { margin: 0.5rem 0; }
+    .daily_gift__recovery p { 
+        margin: 0.5rem 0; 
+    }
+    // #endregion
 </style>
