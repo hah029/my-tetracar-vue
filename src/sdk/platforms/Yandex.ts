@@ -5,16 +5,15 @@ import type {
   Product,
   Serializable,
 } from "ysdk";
-import type { IGamePlatform } from "../IGamePlatform";
+import type {
+  IGamePlatform,
+  PlatformAdCallbacks,
+  PlatformPurchase,
+} from "../IGamePlatform";
 
 type Stats = Record<string | number, number>;
 type PlayerData = Serializable | undefined;
 type PlayerDataSet = Record<string, PlayerData>;
-
-type Purchase = {
-  productID: string;
-  purchaseToken: string;
-};
 
 type Payments = Awaited<ReturnType<SDK["getPayments"]>>;
 
@@ -26,10 +25,10 @@ export class YandexPlatform implements IGamePlatform {
   private player: Player | null = null;
   private playerDataCache: PlayerDataSet | null = null;
   private isPlayerDataCacheComplete = false;
+  private isGameReady = false;
 
   async init(): Promise<void> {
     this.sdk = await YaGames.init();
-    this.sdk.features.LoadingAPI?.ready();
   }
 
   // ------------------------------------------------------------------
@@ -99,58 +98,72 @@ export class YandexPlatform implements IGamePlatform {
   // Ads
   // ------------------------------------------------------------------
 
-  showFullscreenAd(
-    callbackObject: any,
-    openCallbackMethod?: Function,
-    closeCallbackMethod?: Function,
-  ): void {
+  showFullscreenAd(callbacks: PlatformAdCallbacks): void {
     this.ensureSDK().adv.showFullscreenAdv({
       callbacks: {
         onOpen: () => {
           console.log("Fullscreen Ad opened");
-          openCallbackMethod?.(callbackObject);
+          callbacks.onOpen?.();
         },
 
         onClose: () => {
           console.log("Fullscreen Ad closed");
-          closeCallbackMethod?.(callbackObject);
+          callbacks.onClose?.();
         },
 
         onError: (err) => {
           console.error("Fullscreen Ad error:", err);
-          closeCallbackMethod?.(callbackObject);
+          callbacks.onError?.(err);
         },
       },
     });
   }
 
-  showRewardedVideoAd(
-    callbackObject: any,
-    openCallbackMethod?: Function,
-    rewardCallbackMethod?: Function,
-    closeCallbackMethod?: Function,
-  ): void {
+  showRewardedVideoAd(callbacks: PlatformAdCallbacks): void {
     this.ensureSDK().adv.showRewardedVideo({
       callbacks: {
         onOpen: () => {
           console.log("Rewarded Ad opened");
-          openCallbackMethod?.(callbackObject);
+          callbacks.onOpen?.();
         },
 
         onRewarded: () => {
-          rewardCallbackMethod?.(callbackObject);
+          callbacks.onRewarded?.();
         },
 
         onClose: () => {
           console.log("Rewarded Ad closed");
+          callbacks.onClose?.();
         },
 
         onError: (err) => {
           console.error("Rewarded Ad error:", err);
-          closeCallbackMethod?.(callbackObject);
+          callbacks.onError?.(err);
         },
       },
     });
+  }
+
+  showStickyBannerAd(): void {
+    const adv = this.ensureSDK().adv as unknown as {
+      show_banner_adv: () => void;
+    };
+    adv.show_banner_adv();
+  }
+
+  hideStickyBannerAd(): void {
+    const adv = this.ensureSDK().adv as unknown as {
+      hide_banner_adv: () => void;
+    };
+    adv.hide_banner_adv();
+  }
+
+  getStickyBannerAdStatus(): "shown" | "hidden" | "unknown" {
+    const adv = this.ensureSDK().adv as unknown as {
+      get_banner_adv_status: () => unknown;
+    };
+    const status = adv.get_banner_adv_status();
+    return status === "shown" || status === "hidden" ? status : "unknown";
   }
 
   // ------------------------------------------------------------------
@@ -205,6 +218,7 @@ export class YandexPlatform implements IGamePlatform {
       await player.setStats(stats);
     } catch (err) {
       console.error("[YandexPlatform.setPlayerStats]", err);
+      throw err;
     }
   }
 
@@ -313,6 +327,8 @@ export class YandexPlatform implements IGamePlatform {
   }
 
   gameReady(): void {
+    if (this.isGameReady) return;
+    this.isGameReady = true;
     this.sdk?.features.LoadingAPI.ready();
   }
 
@@ -328,36 +344,14 @@ export class YandexPlatform implements IGamePlatform {
   // Payments
   // ------------------------------------------------------------------
 
-  async consumePrevPurchases(
-    consumePurchaseCallback: (purchase: Purchase) => void,
-  ): Promise<void> {
+  async getPendingPurchases(): Promise<PlatformPurchase[]> {
     const payments = await this.requirePayments();
-
-    const purchases = (await payments.getPurchases()) as Purchase[];
-
-    console.log("Purchases to consume:", purchases);
-
-    for (const purchase of purchases) {
-      await this.consumePurchaseCore(
-        payments,
-        purchase,
-        consumePurchaseCallback,
-      );
-    }
+    return (await payments.getPurchases()) as PlatformPurchase[];
   }
 
-  private async consumePurchaseCore(
-    payments: Payments,
-    purchase: Purchase,
-    callback?: (purchase: Purchase) => void,
-  ): Promise<void> {
-    console.log("consumePurchase:", purchase);
-
-    callback?.(purchase);
-
-    await payments.consumePurchase(purchase.purchaseToken);
-
-    console.log("consumePurchase completed:", purchase.purchaseToken);
+  async consumePurchase(purchaseToken: string): Promise<void> {
+    const payments = await this.requirePayments();
+    await payments.consumePurchase(purchaseToken);
   }
 
   async getShopCatalog(): Promise<Product[] | null> {
@@ -370,18 +364,13 @@ export class YandexPlatform implements IGamePlatform {
     return catalog;
   }
 
-  async buyShopItem(
-    productId: string,
-    consumePurchase: (purchase: Purchase) => void,
-  ): Promise<void> {
+  async buyShopItem(productId: string): Promise<PlatformPurchase> {
     const payments = await this.requirePayments();
 
     try {
-      const purchase = (await payments.purchase({
+      return (await payments.purchase({
         id: productId,
-      })) as Purchase;
-
-      await this.consumePurchaseCore(payments, purchase, consumePurchase);
+      })) as PlatformPurchase;
     } catch (err) {
       console.error("Purchase error:", err);
       throw err;

@@ -1,21 +1,30 @@
 import type { Product } from "ysdk";
 
+export type PlatformAdCallbacks = {
+  onOpen?: () => void;
+  onClose?: () => void;
+  onRewarded?: () => void;
+  onError?: (error: unknown) => void;
+};
+
+export type PlatformPurchase = {
+  productID: string;
+  purchaseToken: string;
+};
+
 export interface IGamePlatform {
   init(): Promise<void>;
 
   // #region - работа с рекламой
-  showFullscreenAd(
-    object: any,
-    openCallbackMethod: Function,
-    closeCallback: Function,
-  ): void;
+  showFullscreenAd(callbacks: PlatformAdCallbacks): void;
 
-  showRewardedVideoAd(
-    object: any,
-    openCallbackMethod: Function,
-    rewardCallback: Function,
-    closeCallback: Function,
-  ): void;
+  showRewardedVideoAd(callbacks: PlatformAdCallbacks): void;
+
+  showStickyBannerAd(): void;
+
+  hideStickyBannerAd(): void;
+
+  getStickyBannerAdStatus(): "shown" | "hidden" | "unknown";
   // #endregion
 
   // #region - работа с Player
@@ -56,11 +65,13 @@ export interface IGamePlatform {
   // #endregion
 
   // #region - shop
-  consumePrevPurchases(consumePurchaseCallback: Function): Promise<any>;
+  getPendingPurchases(): Promise<PlatformPurchase[]>;
+
+  consumePurchase(purchaseToken: string): Promise<void>;
 
   getShopCatalog(): Promise<Product[] | null>;
 
-  buyShopItem(productId: string, consumePurchase: Function): Promise<any>;
+  buyShopItem(productId: string): Promise<PlatformPurchase>;
   // #endregion
 
   gameReady(); // дёргаем, когда всё загрузилось и игра полностью готова к геймплею

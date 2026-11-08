@@ -4,6 +4,7 @@ import type { GeometryConfig, CubeUserData, MaterialConfig } from "./types";
 import { loadTexture } from "@/helpers/loaders";
 import { useCommonStore } from "@/store/commonStore";
 import { applyAtlasSpriteUV, applyCubeSpriteUV } from "@/helpers/applyAtlasUV";
+import { MaterialPool } from "@/helpers/MaterialPool";
 
 export class CubeBuilder {
   private static modelCache = new Map<string, THREE.Group>();
@@ -14,7 +15,7 @@ export class CubeBuilder {
     geomConfig: GeometryConfig;
     useTexture?: boolean;
     materialConfig?: MaterialConfig;
-    existingMaterial?: THREE.Material; // 👈 НОВЫЙ ПАРАМЕТР
+    existingMaterial?: THREE.Material;
   }): Promise<THREE.Object3D> {
     const {
       index,
@@ -46,7 +47,6 @@ export class CubeBuilder {
 
     if (useGLB && geomConfig.modelUrl) {
       const model = await CubeBuilder.loadModel(geomConfig.modelUrl);
-
       cube = CubeBuilder.createCubeFromGLB(model, geomConfig);
 
       //
@@ -61,47 +61,30 @@ export class CubeBuilder {
         });
       }
       //
-      // ATLAS
+      // ATLAS — используем MaterialPool
       //
       else if (_materialConfig.atlas && _materialConfig.atlasSprite) {
+        const sprite = _materialConfig.atlas.getSprite(_materialConfig.atlasSprite);
         const atlasTexture = _materialConfig.atlas.getAtlasTexture();
 
-        const sprite = _materialConfig.atlas.getSprite(
-          _materialConfig.atlasSprite,
-        );
-
         if (atlasTexture && sprite) {
+          // Используем MaterialPool для материала
+          const material = MaterialPool.getMaterial({
+            type: 'atlas',
+            key: `cube_${_materialConfig.atlasSprite}`,
+            atlasSprite: _materialConfig.atlasSprite,
+            color: _materialConfig.color ?? 0xffffff,
+            emissive: _materialConfig.emissive ?? 0x000000,
+            emissiveIntensity: _materialConfig.emissiveIntensity ?? 1,
+            transparent: true,
+          });
+
           cube.traverse((child) => {
             if ((child as THREE.Mesh).isMesh) {
               const mesh = child as THREE.Mesh;
-
-              //
-              // CLONE GEOMETRY
-              //
-
               mesh.geometry = mesh.geometry.clone();
-
-              //
-              // APPLY UV
-              //
-
               applyAtlasSpriteUV(mesh.geometry, sprite);
-
-              //
-              // MATERIAL
-              //
-
-              mesh.material = new THREE.MeshStandardMaterial({
-                map: atlasTexture,
-
-                color: _materialConfig.color ?? 0xffffff,
-
-                emissive: _materialConfig.emissive ?? 0x000000,
-
-                emissiveIntensity: _materialConfig.emissiveIntensity ?? 1,
-
-                transparent: true,
-              });
+              mesh.material = material;
             }
           });
         }
@@ -111,28 +94,21 @@ export class CubeBuilder {
       //
       else if (useTexture && _materialConfig.textureUrl) {
         const texture = loadTexture(_materialConfig.textureUrl);
-
         texture.flipY = false;
 
         cube.traverse((child) => {
           if ((child as THREE.Mesh).isMesh) {
             const mesh = child as THREE.Mesh;
-
             mesh.material = new THREE.MeshStandardMaterial({
               map: texture,
-
               color: _materialConfig.color ?? 0xffffff,
-
               emissive: _materialConfig.emissive ?? 0x000000,
-
               emissiveIntensity: _materialConfig.emissiveIntensity ?? 1,
-
               transparent: true,
             });
           }
         });
       }
-
       //
       // PRIMITIVE
       //
@@ -144,20 +120,16 @@ export class CubeBuilder {
         material = existingMaterial;
       }
       //
-      // ATLAS
+      // ATLAS — используем MaterialPool
       //
       else if (_materialConfig.atlas && _materialConfig.atlasSprite) {
-        const atlasTexture = _materialConfig.atlas.getAtlasTexture();
-
-        material = new THREE.MeshStandardMaterial({
-          map: atlasTexture ?? null,
-
-          color: _materialConfig.color,
-
-          emissive: _materialConfig.emissive,
-
-          emissiveIntensity: _materialConfig.emissiveIntensity,
-
+        material = MaterialPool.getMaterial({
+          type: 'atlas',
+          key: `cube_${_materialConfig.atlasSprite}`,
+          atlasSprite: _materialConfig.atlasSprite,
+          color: _materialConfig.color ?? 0xffffff,
+          emissive: _materialConfig.emissive ?? 0x000000,
+          emissiveIntensity: _materialConfig.emissiveIntensity ?? 1,
           transparent: true,
         });
       }
@@ -166,16 +138,11 @@ export class CubeBuilder {
       //
       else if (useTexture && _materialConfig.textureUrl) {
         const texture = loadTexture(_materialConfig.textureUrl);
-
         material = new THREE.MeshStandardMaterial({
           map: texture,
-
           color: _materialConfig.color,
-
           emissive: _materialConfig.emissive,
-
           emissiveIntensity: _materialConfig.emissiveIntensity,
-
           transparent: true,
         });
       }
@@ -185,29 +152,14 @@ export class CubeBuilder {
       else {
         material = new THREE.MeshStandardMaterial({
           color: _materialConfig.color ?? 0xffffff,
-
           emissive: _materialConfig.emissive ?? 0x000000,
-
           emissiveIntensity: _materialConfig.emissiveIntensity ?? 1,
-
           transparent: true,
         });
       }
 
-      //
-      // CREATE PRIMITIVE
-      //
-
-      cube = CubeBuilder.createPrimitiveCube(
-        geomConfig,
-        material,
-        _materialConfig,
-      );
+      cube = CubeBuilder.createPrimitiveCube(geomConfig, material, _materialConfig);
     }
-
-    //
-    // USER DATA
-    //
 
     if (index !== undefined) {
       cube.userData = CubeBuilder.createCubeUserData(geomConfig, index);
@@ -223,9 +175,7 @@ export class CubeBuilder {
     }
 
     const model = await loadCubeModel(url);
-
     CubeBuilder.modelCache.set(url, model);
-
     return model.clone();
   }
 
@@ -234,17 +184,13 @@ export class CubeBuilder {
     config: GeometryConfig,
   ): THREE.Object3D {
     const cube = model.clone();
-
     const pos = config.pos ?? [0, 0, 0];
-
     cube.position.set(pos[0], pos[1], pos[2]);
-
     cube.scale.set(config.scale[0], config.scale[1], config.scale[2]);
 
     cube.traverse((child) => {
       if ((child as THREE.Mesh).isMesh) {
         const mesh = child as THREE.Mesh;
-
         mesh.castShadow = true;
         mesh.receiveShadow = true;
       }
@@ -260,26 +206,17 @@ export class CubeBuilder {
   ): THREE.Mesh {
     let geometry = new THREE.BoxGeometry(1, 1, 1);
 
-    //
-    // APPLY ATLAS UV
-    //
-
     if (materialConfig?.atlas && materialConfig.atlasSprite) {
       const sprite = materialConfig.atlas.getSprite(materialConfig.atlasSprite);
-
       if (sprite) {
         applyCubeSpriteUV(geometry, sprite);
       }
     }
 
     const cube = new THREE.Mesh(geometry, material);
-
     const pos = config.pos ?? [0, 0, 0];
-
     cube.position.set(pos[0], pos[1], pos[2]);
-
     cube.scale.set(config.scale[0], config.scale[1], config.scale[2]);
-
     cube.castShadow = true;
     cube.receiveShadow = true;
 
@@ -291,18 +228,12 @@ export class CubeBuilder {
     index: number,
   ): CubeUserData {
     const pos = config.pos ?? [0, 0, 0];
-
     return {
       originalPos: [...pos],
-
       originalScale: [...config.scale],
-
       configIndex: index,
-
       velocity: new THREE.Vector3(0, 0, 0),
-
       rotationSpeed: new THREE.Vector3(0, 0, 0),
-
       name: config.name ?? "default",
     };
   }

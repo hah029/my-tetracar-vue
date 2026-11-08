@@ -1,13 +1,9 @@
+import type { RewardType } from "./Reward";
+
 export type Product = {
   id: string;
 
-  type:
-    | "currency"
-    | "consumable"
-    | "upgrade"
-    | "cosmetic"
-    | "timed_feature"
-    | "permanent_feature";
+  type: RewardType;
 
   title: string;
 

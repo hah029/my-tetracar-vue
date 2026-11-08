@@ -4,8 +4,6 @@ import { atlas } from "@/assets/textures/TextureAtlas";
 import { ATLAS_SPRITES } from "@/assets/textures/atlasSprites";
 import { applyCubeSpriteUV } from "@/helpers/applyAtlasUV";
 import type { RoadSideObjectsConfig } from "./types";
-// /game/road/SideObjectsInstanced.ts
-// import { loadCubeModel } from "@/game/cube/loadCube";
 
 type SideObjectOcclusionInterval = {
   back: number;
@@ -53,54 +51,64 @@ export class SideObjectsInstanced {
   private async init(startZ: number) {
     if (this.disposed) return;
 
-    // GEOMETRY
-    const geometry = new THREE.BoxGeometry(1, 1, 1);
-
-    // APPLY ATLAS UV
     const sprite = atlas.getSprite(ATLAS_SPRITES.cube.base);
-    if (!sprite) throw new Error("Atlas sprite not found");
-    applyCubeSpriteUV(geometry, sprite);
-
-    // TEXTURE
     const atlasTexture = atlas.getAtlasTexture();
-    if (!atlasTexture) throw new Error("Atlas texture not loaded");
-    atlasTexture.flipY = false;
-    atlasTexture.colorSpace = THREE.SRGBColorSpace;
-
-    // MATERIAL
-    const material = new THREE.MeshStandardMaterial({
-      map: atlasTexture,
-      color: this.config.color,
-      emissive: this.config.emissive ?? 0x000000,
-      emissiveIntensity: this.config.emissiveIntensity ?? 0,
-      transparent: (this.config.opacity ?? 1) < 1,
-      opacity: this.config.opacity ?? 1,
-    });
-
-    if (this.disposed) {
-      geometry.dispose();
-      material.dispose();
-      return;
+    
+    const geometry = new THREE.BoxGeometry(1, 1, 1);
+    
+    if (sprite) {
+        // `cube_base` contains separate subregions for the top and side faces.
+        // A generic sprite mapping would stretch the whole 64×64 sprite over
+        // every face of the box.
+        applyCubeSpriteUV(geometry, sprite);
+    }
+    
+    let material: THREE.Material;
+    
+    if (sprite && atlasTexture) {
+        material = new THREE.MeshStandardMaterial({
+            map: atlasTexture,
+            color: this.config.color,
+            emissive: this.config.emissive ?? 0x000000,
+            emissiveIntensity: this.config.emissiveIntensity ?? 0,
+            transparent: (this.config.opacity ?? 1) < 1,
+            opacity: this.config.opacity ?? 1,
+            roughness: 0.7,
+            metalness: 0.1,
+        });
+    } else {
+        material = new THREE.MeshStandardMaterial({
+            color: this.config.color,
+            emissive: this.config.emissive ?? 0x000000,
+            emissiveIntensity: this.config.emissiveIntensity ?? 0,
+            transparent: (this.config.opacity ?? 1) < 1,
+            opacity: this.config.opacity ?? 1,
+            roughness: 0.7,
+            metalness: 0.1,
+        });
     }
 
-    // INSTANCED MESH
+    if (this.disposed) {
+        geometry.dispose();
+        material.dispose();
+        return;
+    }
+
     this.mesh = new THREE.InstancedMesh(geometry, material, this.count);
     this.mesh.castShadow = true;
     this.mesh.receiveShadow = true;
     this.scene.add(this.mesh);
 
-    // SCALE
     const scale = new THREE.Vector3(...this.config.scale);
 
-    // CREATE INSTANCES
     for (let i = 0; i < this.count; i++) {
-      const z = startZ - i * this.spacing;
-      const pos = new THREE.Vector3(this.x, this.config.y, z);
-      this.positions.push(pos);
-      this.dummy.position.copy(pos);
-      this.dummy.scale.copy(scale);
-      this.dummy.updateMatrix();
-      this.mesh.setMatrixAt(i, this.dummy.matrix);
+        const z = startZ - i * this.spacing;
+        const pos = new THREE.Vector3(this.x, this.config.y, z);
+        this.positions.push(pos);
+        this.dummy.position.copy(pos);
+        this.dummy.scale.copy(scale);
+        this.dummy.updateMatrix();
+        this.mesh.setMatrixAt(i, this.dummy.matrix);
     }
 
     this.mesh.instanceMatrix.needsUpdate = true;
@@ -113,14 +121,11 @@ export class SideObjectsInstanced {
 
     for (let i = 0; i < this.count; i++) {
       const pos = this.positions[i];
-
       if (!pos) continue;
       pos.z += move;
-
       if (pos.z > useCommonStore().config.itemsRemovingZpos) {
         pos.z -= this.count * this.spacing;
       }
-
       const visible = !this.isOccluded(pos.z, occlusionIntervals);
       this.dummy.position.copy(pos);
       this.dummy.scale.copy(visible ? this.visibleScale : this.hiddenScale);
@@ -147,10 +152,8 @@ export class SideObjectsInstanced {
   dispose() {
     this.disposed = true;
     if (!this.mesh) return;
-
     this.scene.remove(this.mesh);
     this.mesh.geometry.dispose();
-
     if (Array.isArray(this.mesh.material)) {
       this.mesh.material.forEach((m) => m.dispose());
     } else {

@@ -1,4 +1,5 @@
 import * as THREE from "three";
+import { RunTelemetry } from "@/telemetry";
 import { cameraTarget } from "@/game/camera/cameraTarget.js";
 import { RoadManager } from "@/game/environment/road";
 import { type CarState, type CarConfig } from "./types";
@@ -11,6 +12,7 @@ import { CarPhysics } from "./CarPhysics.js";
 import { FlashEffectManager } from "../effects/FlashEffectManager.js";
 import { useCommonStore } from "@/store/commonStore.js";
 import { CameraSystem } from "@/game/camera/CameraSystem.js";
+import { SoundManager } from "@/game/sound/SoundManager";
 
 export class Car extends THREE.Group {
   private static readonly LANE_HEIGHT_BLOCK_EPSILON = 0.35;
@@ -85,28 +87,29 @@ export class Car extends THREE.Group {
     this.currentLane = Math.max(0, Math.min(lane, maxLane));
   }
 
-  public moveLeft(): void {
-    this.tryMoveToLane(this.currentLane - 1);
+  public moveLeft(): boolean {
+    return this.tryMoveToLane(this.currentLane - 1);
   }
 
-  public moveRight(): void {
-    this.tryMoveToLane(this.currentLane + 1);
+  public moveRight(): boolean {
+    return this.tryMoveToLane(this.currentLane + 1);
   }
 
-  private tryMoveToLane(targetLane: number): void {
-    if (this.state.isDestroyed || this.offRoadVelocity) return;
+  private tryMoveToLane(targetLane: number): boolean {
+    if (this.state.isDestroyed || this.offRoadVelocity) return false;
 
     const roadManager = RoadManager.getInstance();
     const maxLane = roadManager.getLanesCount() - 1;
 
     if (targetLane < 0 || targetLane > maxLane) {
       this.handleOutOfRoadMove(targetLane < 0 ? -1 : 1);
-      return;
+      return false;
     }
 
-    if (!this.canMoveToLane(targetLane)) return;
+    if (!this.canMoveToLane(targetLane)) return false;
 
     this.currentLane = targetLane;
+    return true;
   }
 
   private canMoveToLane(targetLane: number): boolean {
@@ -154,6 +157,7 @@ export class Car extends THREE.Group {
       -Car.OFF_ROAD_FORWARD_SPEED,
     );
     this.offRoadGameOverTimer = Car.OFF_ROAD_GAMEOVER_DELAY;
+    SoundManager.getInstance().playCue("offRoadFall");
     this.rotation.z -= direction * 0.25;
     this.collider.disableDebug(this.scene);
   }
@@ -161,18 +165,21 @@ export class Car extends THREE.Group {
   private startEdgeBump(direction: -1 | 1): void {
     this.edgeBumpDirection = direction;
     this.edgeBumpTimer = Car.EDGE_BUMP_DURATION;
+    SoundManager.getInstance().playCue("edgeBump");
     CameraSystem.triggerImpactShake(0.28, 0.16);
   }
 
   // Прыжок
-  public jump(): void {
+  public jump(): boolean {
     if (
       !this.state.isDestroyed &&
       !this.state.isJumping &&
       !this.offRoadVelocity
     ) {
       this.physics.startJump(this.position.y);
+      return true;
     }
+    return false;
   }
 
   public startShieldCooldown(duration: number) {
@@ -220,8 +227,11 @@ export class Car extends THREE.Group {
     // Обновляем прыжок
     const jumpResult = this.physics.updateJump(this.position.y, dt, groundY);
 
-    if (jumpResult.hasLanded)
+    if (jumpResult.hasLanded) {
       FlashEffectManager.getInstance().spawnLandingWave(this.position);
+      SoundManager.getInstance().playCue("forcedLanding");
+      RunTelemetry.recordForcedLanding();
+    }
 
     this.position.y = jumpResult.newY;
     this.state.isJumping = jumpResult.isJumping;
@@ -254,7 +264,7 @@ export class Car extends THREE.Group {
     this.offRoadGameOverTimer -= dt;
     if (this.offRoadGameOverTimer <= 0 && !this.state.isDestroyed) {
       this.state.isDestroyed = true;
-      useGameState().endGame();
+      useGameState().endGame("off_road");
     }
   }
 
@@ -344,19 +354,9 @@ export class Car extends THREE.Group {
       this.collider.disableDebug(this.scene);
     }
 
-    // Очищаем все кубики
-    this.cubes.forEach((cube) => this.scene.remove(cube));
-    this.cubes = [];
-
-    // Очищаем группу
-    while (this.children.length > 0) {
-      if (this.children[0]) {
-        this.remove(this.children[0]);
-      }
-    }
-
-    // Возвращаем камеру
-    this.add(cameraTarget);
+    // Удаляем только кубы корпуса. В группе машины также живут камера и
+    // эффекты CarManager (нитро/щит), их сбрасывать нельзя.
+    this.clearCubes();
 
     // Сбрасываем состояние
     this.currentLane = this.config.startLane;
@@ -378,35 +378,49 @@ export class Car extends THREE.Group {
 
     this.physics.reset();
 
-    console.log(
-      "[DEBUG Car.reset] before build, isShieldEnabled=%s, armor=%s",
-      usePlayerStore().isShieldEnabled,
-      usePlayerStore().armor,
-    );
+    // console.log(
+    //   "[DEBUG Car.reset] before build, isShieldEnabled=%s, armor=%s",
+    //   usePlayerStore().isShieldEnabled,
+    //   usePlayerStore().armor,
+    // );
 
     // Перестраиваем машину
     this.build(useGLB).then(() => {
-      console.log("[DEBUG Car.reset] build completed");
+    //   console.log("[DEBUG Car.reset] build completed");
       if (useGameState().isDebug) this.collider.enableDebug(this.scene);
       // Восстанавливаем визуальные эффекты после перестройки
       const player = usePlayerStore();
-      console.log(
-        "[DEBUG Car.reset] after build, isShieldEnabled=%s, armor=%s",
-        player.isShieldEnabled,
-        player.armor,
-      );
+    //   console.log(
+    //     "[DEBUG Car.reset] after build, isShieldEnabled=%s, armor=%s",
+    //     player.isShieldEnabled,
+    //     player.armor,
+    //   );
       if (player.isShieldEnabled && player.armor > 0) {
-        console.log("[DEBUG Car.reset] calling enableShield");
+        // console.log("[DEBUG Car.reset] calling enableShield");
         this.enableShield();
       }
     });
   }
 
-  private clearCubes(): void {
+  /** Кубы после взрыва становятся прямыми детьми scene. */
+  public clearCubes(): void {
     this.cubes.forEach((cube) => {
-      this.remove(cube);
+      cube.traverse((child) => {
+        if (child.name !== "neon-edge") return;
+
+        const outline = child as THREE.LineSegments;
+        outline.geometry.dispose();
+        const { material } = outline;
+        if (Array.isArray(material)) {
+          material.forEach((item) => item.dispose());
+        } else {
+          material.dispose();
+        }
+      });
+      cube.parent?.remove(cube);
     });
     this.cubes = [];
+    this.state.cubes = [];
   }
 
   public applyVisualConfig(): void {

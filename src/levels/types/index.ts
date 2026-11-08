@@ -8,6 +8,18 @@ export interface LevelConfig {
   name: string;
   description?: string;
 
+  /** Доступен ли уровень для выбора и запуска в текущем релизе. */
+  enabled: boolean;
+
+  /** Показывать ли карточку уровня на экране выбора. */
+  to_show: boolean;
+
+  /**
+   * Идентификаторы сложностей, доступных для этого визуального уровня.
+   * Если не указано, доступны все глобально опубликованные сложности.
+   */
+  difficultyIds?: readonly string[];
+
   visual: VisualConfig;
   environment: EnvironmentConfig;
   interactive: InteractiveConfig;
@@ -248,15 +260,24 @@ export interface RoadEnvironmentConfig {
    */
   sideObjects?: RoadSideObjectsConfig;
 
+  /** Неоновые фонарные столбы по обеим сторонам дороги. */
+  lampPosts?: RoadLampPostsConfig;
+
   /**
    * Короткие секции дороги, поднятые над базовой плоскостью.
    */
   elevatedSections?: RoadElevatedSectionConfig[];
 
   /**
-   * Рисовать дорожное полотно как часть runtime-сегментов вместо общей плоскости.
+   * Режим дорожного полотна. По умолчанию используется неподвижная плоскость.
    */
-  segmentSurfaces?: boolean;
+  roadMode?: "static" | "segmented";
+
+  /** Включает подъёмы/спуски в runtime-сегментах. */
+  enableElevatedSegments?: boolean;
+
+  /** Включает поворотные runtime-сегменты. */
+  enableCurvedSegments?: boolean;
 }
 
 export interface RoadElevatedSectionConfig {
@@ -290,6 +311,19 @@ export interface RoadSideObjectsConfig {
   offset: number;
   y: number;
   scale: [number, number, number];
+}
+
+export interface RoadLampPostsConfig {
+  enabled: boolean;
+  color: string;
+  opacity: number;
+  spacing: number;
+  offset: number;
+  height: number;
+  armLength: number;
+  /** Угол между стойкой и консолью, в градусах. */
+  armAngleDeg: number;
+  thickness: number;
 }
 
 export interface SceneryConfig {
@@ -505,6 +539,7 @@ export interface PlayerVisualConfig {
   defaultBlinkSpeed?: number;
   emissiveColors?: Partial<Record<PlayerVisualEffect, string>>;
   nitroTrail?: NitroTrailVisualConfig;
+  shield?: ShieldVisualConfig;
 }
 
 export type PlayerVisualEffect = "default" | "nitro" | "shield" | "damage";
@@ -516,6 +551,18 @@ export interface NitroTrailVisualConfig {
   offsetX: number;
   offsetY: number;
   offsetZ: number;
+  timeScale: number;
+}
+
+export interface ShieldVisualConfig {
+  color: string;
+  radius: number;
+  offsetY: number;
+  offsetZ: number;
+  scaleX: number;
+  scaleY: number;
+  scaleZ: number;
+  opacity: number;
   timeScale: number;
 }
 
@@ -567,6 +614,17 @@ export interface GameplayConfig {
    */
   corruptedBoostChance: number;
 
+  /** Chance that a normally spawned magnet becomes a temporary super-magnet. */
+  superMagnetChance: number;
+
+  /** Chance that a bullet pickup becomes a super-ammo pickup. */
+  superBulletChance: number;
+  superBulletWeights: Record<"piercing" | "explosive" | "fan" | "railgun", number>;
+  superNitroChance: number;
+  superShieldChance: number;
+  specialBoostChance: number;
+  specialBoostWeights: Record<"nitro" | "shield" | "magnet" | "bullet", Record<string, number>>;
+
   /**
    * Веса конкретных corrupted-вариантов внутри уже инвертированного буста.
    */
@@ -586,15 +644,18 @@ export interface GameplayConfig {
 export type CorruptedNitroVariant = "heavyNitro";
 export type CorruptedShieldVariant = "blindShield";
 export type CorruptedMagnetVariant = "lethalMagnet" | "repulseMagnet";
+export type CorruptedBulletVariant = "blankBullet";
 export type CorruptedBoostVariant =
   | CorruptedNitroVariant
   | CorruptedShieldVariant
-  | CorruptedMagnetVariant;
+  | CorruptedMagnetVariant
+  | CorruptedBulletVariant;
 
 export interface CorruptedBoostWeights {
   nitro: Record<CorruptedNitroVariant, number>;
   shield: Record<CorruptedShieldVariant, number>;
   magnet: Record<CorruptedMagnetVariant, number>;
+  bullet: Record<CorruptedBulletVariant, number>;
 }
 
 export interface MusicConfig {

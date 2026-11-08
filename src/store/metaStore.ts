@@ -3,7 +3,9 @@ import { defineStore } from "pinia";
 import { ref, computed } from "vue";
 import { Platform } from "@/sdk/Platform";
 
-import meta from "@/configs/meta";
+import { DEFAULT_FORTUNE_WHEEL_PRESET, isFortuneWheelPresetId, type FortuneWheelPresetId } from "@/configs/fortuneWheel";
+
+import meta, { getUpgradeMaxLevel, getUpgradeState } from "@/configs/meta";
 import { useCommonStore } from "@/store/commonStore";
 
 export interface TimedEffect {
@@ -12,6 +14,13 @@ export interface TimedEffect {
   durationHours: number; // длительность в часах (для иерархии)
   expiresAt: number; // timestamp ms
 }
+
+export type IapReceiptStatus = "granted" | "consumed";
+
+export type IapReceipt = {
+  productId: string;
+  status: IapReceiptStatus;
+};
 
 export const useMetaStore = defineStore("metaStore", () => {
   const platform = Platform.getInstance();
@@ -22,16 +31,19 @@ export const useMetaStore = defineStore("metaStore", () => {
   // Валюта
   const goldens = ref(0);
   const energons = ref(0);
+  const fortuneSpins = ref<Partial<Record<FortuneWheelPresetId, number>>>({});
 
   // Скины
   const ownedSkins = ref<string[]>([]);
+  const claimedRewardKeys = ref<string[]>([]);
   const activeSkin = ref<string | null>(null);
 
   // Апгрейды (уровни)
   const upgrades = ref<Record<string, number>>({
     ammoLevel: 0,
     armorLevel: 0,
-    magnetRadiusLevel: 0,
+    magnetLevel: 0,
+    nitroDurationLevel: 0,
   });
 
   // Постоянные возможности
@@ -39,25 +51,30 @@ export const useMetaStore = defineStore("metaStore", () => {
 
   // Временные эффекты
   const activeTimedEffects = ref<TimedEffect[]>([]);
+  const iapReceipts = ref<Record<string, IapReceipt>>({});
 
   // ===== COMPUTED (формулы из shop.md п.8) =====
-  const maxAmmo = computed(
-    () => meta.base_counts.ammo + upgrades.value.ammoLevel * 2,
-  );
-  const maxArmor = computed(
-    () => meta.base_counts.shield + upgrades.value.armorLevel,
-  );
+  const ammoUpgrade = computed(() => getUpgradeState("ammoLevel", upgrades.value.ammoLevel)!);
+  const armorUpgrade = computed(() => getUpgradeState("armorLevel", upgrades.value.armorLevel)!);
+  const magnetUpgrade = computed(() => getUpgradeState("magnetLevel", upgrades.value.magnetLevel)!);
+  const nitroUpgrade = computed(() => getUpgradeState("nitroDurationLevel", upgrades.value.nitroDurationLevel)!);
+  const maxAmmo = computed(() => ammoUpgrade.value.count);
+  const bulletSpeed = computed(() => ammoUpgrade.value.speed);
+  const nitroDuration = computed(() => nitroUpgrade.value.durationMs);
+  const maxArmor = computed(() => armorUpgrade.value.count);
+  const shieldWaveRadius = computed(() => armorUpgrade.value.waveRadius);
   const magnetRadiusLaneStep = computed(() => commonStore.config.xzScaling * 6);
-  const magnetRadius = computed(
-    () =>
-      meta.base_counts.magnetRadius +
-      upgrades.value.magnetRadiusLevel * magnetRadiusLaneStep.value,
+  const magnetRadius = computed(() =>
+    magnetUpgrade.value.radius + magnetUpgrade.value.radiusLaneBonus * magnetRadiusLaneStep.value,
   );
+  const magnetDuration = computed(() => magnetUpgrade.value.durationMs);
+  const magnetMaxTargets = computed(() => magnetUpgrade.value.maxTargets);
   // Апгрейды (уровни)
   const maxUpgrades = ref<Record<string, any>>({
-    ammoLevel: maxAmmo,
-    armorLevel: maxArmor,
-    magnetRadiusLevel: magnetRadius,
+    ammoLevel: getUpgradeMaxLevel("ammoLevel"),
+    armorLevel: getUpgradeMaxLevel("armorLevel"),
+    magnetLevel: getUpgradeMaxLevel("magnetLevel"),
+    nitroDurationLevel: getUpgradeMaxLevel("nitroDurationLevel"),
   });
 
   // ===== ВАЛЮТА =====
@@ -84,6 +101,22 @@ export const useMetaStore = defineStore("metaStore", () => {
 
   function getBalance(currency: "golden" | "energon"): number {
     return currency === "golden" ? goldens.value : energons.value;
+  }
+
+  function getFortuneSpins(presetId: FortuneWheelPresetId): number {
+    return fortuneSpins.value[presetId] ?? 0;
+  }
+
+  function addFortuneSpins(presetId: FortuneWheelPresetId, amount: number) {
+    if (!isFortuneWheelPresetId(presetId)) throw new Error(`Unknown wheel preset: ${presetId}`);
+    if (!Number.isFinite(amount) || amount <= 0) return;
+    fortuneSpins.value[presetId] = getFortuneSpins(presetId) + Math.floor(amount);
+  }
+
+  function consumeFortuneSpin(presetId: FortuneWheelPresetId): boolean {
+    if (!isFortuneWheelPresetId(presetId) || getFortuneSpins(presetId) < 1) return false;
+    fortuneSpins.value[presetId] = getFortuneSpins(presetId) - 1;
+    return true;
   }
 
   // ===== СКИНЫ =====
@@ -119,7 +152,7 @@ export const useMetaStore = defineStore("metaStore", () => {
       upgrades.value[key] = 0;
     }
 
-    const maxLevel = meta.max_upgrades[key];
+    const maxLevel = getUpgradeMaxLevel(key);
     if (maxLevel === undefined) {
       return;
     }
@@ -127,6 +160,14 @@ export const useMetaStore = defineStore("metaStore", () => {
     if (upgrades.value[key] < maxLevel) {
       upgrades.value[key] = Math.min(upgrades.value[key] + amount, maxLevel);
     }
+  }
+
+  function getMaxUpgradeLevel(key: string): number | undefined {
+    return getUpgradeMaxLevel(key);
+  }
+
+  function getUpgradeParameters(key: string, level = getUpgradeLevel(key)) {
+    return getUpgradeState(key, level);
   }
 
   // ===== ПОСТОЯННЫЕ ФИЧИ =====
@@ -201,6 +242,19 @@ export const useMetaStore = defineStore("metaStore", () => {
     return getActiveTimedEffects().find((e) => e.feature === feature) || null;
   }
 
+  function getIapReceipt(purchaseToken: string): IapReceipt | null {
+    return iapReceipts.value[purchaseToken] ?? null;
+  }
+
+  function setIapReceipt(
+    purchaseToken: string,
+    productId: string,
+    status: IapReceiptStatus,
+  ) {
+    if (!purchaseToken || !productId) throw new Error("Invalid IAP receipt");
+    iapReceipts.value[purchaseToken] = { productId, status };
+  }
+
   // ===== СОХРАНЕНИЕ / ЗАГРУЗКА =====
 
   async function saveProgress(): Promise<void> {
@@ -211,10 +265,13 @@ export const useMetaStore = defineStore("metaStore", () => {
 
     await platform.setPlayerData({
       ownedSkins: JSON.stringify(ownedSkins.value),
+      claimedRewardKeys: JSON.stringify(claimedRewardKeys.value),
       activeSkin: activeSkin.value ?? "",
       upgrades: JSON.stringify(upgrades.value),
       permanentFeatures: JSON.stringify(permanentFeatures.value),
       activeTimedEffects: JSON.stringify(activeTimedEffects.value),
+      fortuneSpins: JSON.stringify(fortuneSpins.value),
+      iapReceipts: JSON.stringify(iapReceipts.value),
     });
   }
 
@@ -228,6 +285,12 @@ export const useMetaStore = defineStore("metaStore", () => {
       if (e != null) energons.value = Number(e);
 
       const data = await platform.getPlayerData();
+      if (data?.claimedRewardKeys != null) {
+        try {
+          const keys = JSON.parse(String(data.claimedRewardKeys));
+          if (Array.isArray(keys)) claimedRewardKeys.value = keys.filter((key) => typeof key === "string");
+        } catch { /* Keep defaults for malformed saved keys. */ }
+      }
       const skins = data?.ownedSkins;
       if (skins != null) {
         try {
@@ -252,7 +315,12 @@ export const useMetaStore = defineStore("metaStore", () => {
             parsed !== null &&
             !Array.isArray(parsed)
           ) {
-            upgrades.value = { ...upgrades.value, ...parsed };
+            const legacyMagnetLevel = Math.max(
+              Number(parsed.magnetRadiusLevel) || 0,
+              Number(parsed.magnetDurationLevel) || 0,
+              Number(parsed.magnetCapacityLevel) || 0,
+            );
+            upgrades.value = { ...upgrades.value, ...parsed, magnetLevel: Math.max(parsed.magnetLevel ?? 0, legacyMagnetLevel) };
           }
         } catch {
           // keep defaults
@@ -279,6 +347,47 @@ export const useMetaStore = defineStore("metaStore", () => {
         }
       }
 
+      const spins = data?.fortuneSpins;
+      if (spins != null) {
+        try {
+          const parsed = typeof spins === "string" ? JSON.parse(spins) : spins;
+          const balances = typeof parsed === "number"
+            ? { [DEFAULT_FORTUNE_WHEEL_PRESET]: parsed }
+            : parsed;
+          if (balances && typeof balances === "object" && !Array.isArray(balances)) {
+            fortuneSpins.value = Object.fromEntries(
+              Object.entries(balances).filter(([id, amount]) =>
+                isFortuneWheelPresetId(id) && typeof amount === "number" && Number.isFinite(amount),
+              ).map(([id, amount]) => [id, Math.max(0, Math.floor(amount as number))]),
+            );
+          }
+        } catch {
+          // Keep defaults if saved balances are malformed.
+        }
+      }
+
+      const receipts = data?.iapReceipts;
+      if (receipts != null) {
+        try {
+          const parsed = JSON.parse(String(receipts));
+          if (parsed && typeof parsed === "object" && !Array.isArray(parsed)) {
+            iapReceipts.value = Object.fromEntries(
+              Object.entries(parsed).filter(
+                ([token, receipt]) =>
+                  typeof token === "string" &&
+                  typeof receipt === "object" &&
+                  receipt !== null &&
+                  typeof (receipt as IapReceipt).productId === "string" &&
+                  ((receipt as IapReceipt).status === "granted" ||
+                    (receipt as IapReceipt).status === "consumed"),
+              ),
+            ) as Record<string, IapReceipt>;
+          }
+        } catch {
+          // Keep defaults if persisted IAP receipts are malformed.
+        }
+      }
+
       // Очищаем истёкшие эффекты после загрузки
       cleanupExpiredEffects();
     } catch (err) {
@@ -290,17 +399,25 @@ export const useMetaStore = defineStore("metaStore", () => {
     // state
     goldens,
     energons,
+    fortuneSpins,
     ownedSkins,
+    claimedRewardKeys,
     activeSkin,
     upgrades,
     permanentFeatures,
     activeTimedEffects,
+    iapReceipts,
 
     // computed
     maxAmmo,
+    bulletSpeed,
+    nitroDuration,
     maxArmor,
+    shieldWaveRadius,
     magnetRadiusLaneStep,
     magnetRadius,
+    magnetDuration,
+    magnetMaxTargets,
     maxUpgrades,
 
     // валюта
@@ -309,6 +426,9 @@ export const useMetaStore = defineStore("metaStore", () => {
     spendGolden,
     spendEnergon,
     getBalance,
+    getFortuneSpins,
+    addFortuneSpins,
+    consumeFortuneSpin,
 
     // скины
     unlockSkin,
@@ -318,6 +438,8 @@ export const useMetaStore = defineStore("metaStore", () => {
     // апгрейды
     setUpgradeLevel,
     getUpgradeLevel,
+    getMaxUpgradeLevel,
+    getUpgradeParameters,
     increaseUpgrade,
 
     // постоянные фичи
@@ -331,6 +453,8 @@ export const useMetaStore = defineStore("metaStore", () => {
     isFeatureActive,
     cleanupExpiredEffects,
     getTimedEffect,
+    getIapReceipt,
+    setIapReceipt,
 
     // сохранение
     saveProgress,

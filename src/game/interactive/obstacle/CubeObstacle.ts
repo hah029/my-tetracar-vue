@@ -8,6 +8,8 @@ import { loadCubeModel } from "@/game/cube/loadCube";
 import { RoadManager } from "@/game/environment/road";
 import { OBSTACLE_ATLAS_SPRITES } from "@/assets/textures/atlasSprites";
 import { applyAtlasSpriteUV } from "@/helpers/applyAtlasUV";
+import { MaterialPool } from "@/helpers/MaterialPool";  // 👈 ДОБАВИТЬ ИМПОРТ
+import { atlas } from "@/assets/textures/TextureAtlas";  // 👈 ДОБАВИТЬ ИМПОРТ
 
 import {
   DestructionManager,
@@ -29,7 +31,8 @@ type DropType =
 
 export class CubeObstacle extends BaseObstacle {
   private static mergedAtlasGeometryCache = new Map<string, THREE.BufferGeometry>();
-  private static atlasMaterialCache = new Map<string, THREE.MeshStandardMaterial>();
+  // ❌ Удаляем старый кэш материалов
+  // private static atlasMaterialCache = new Map<string, THREE.MeshStandardMaterial>();
 
   private visualMesh?: THREE.Object3D;
   private destructionCells: DestructionCell[] = [];
@@ -82,45 +85,61 @@ export class CubeObstacle extends BaseObstacle {
     useGLB: boolean,
     materialConfig?: MaterialConfig,
     formDetailConfig?: GeometryConfig[],
-  ) {
-    const mergedVisual = await this.buildMergedAtlasVisual(
-      formConfig,
-      useGLB,
-      materialConfig,
-    );
-
-    if (mergedVisual) {
-      this.visualMesh = mergedVisual;
-      this.add(mergedVisual);
-      return;
+) {
+    // 👇 СОЗДАЁМ МАТЕРИАЛ ЧЕРЕЗ MaterialPool ЕСЛИ ЕСТЬ АТЛАС
+    let sharedMaterial: THREE.Material | null = null;
+    if (materialConfig?.atlas && materialConfig?.atlasSprite) {
+        sharedMaterial = MaterialPool.getMaterial({
+            type: 'atlas',
+            key: `obstacle_${materialConfig.atlasSprite}`,
+            atlasSprite: materialConfig.atlasSprite,
+            color: materialConfig.color ?? 0xffffff,
+            emissive: materialConfig.emissive ?? 0x000000,
+            emissiveIntensity: materialConfig.emissiveIntensity ?? 1,
+            transparent: true,
+        });
     }
 
     const group = new THREE.Group();
 
     for (let i = 0; i < formConfig.length; i++) {
-      const config = formConfig[i];
+        const config = formConfig[i];
+        if (!config) continue;
 
-      if (!config) continue;
+        const mesh = await CubeBuilder.build({
+            index: i,
+            geomConfig: config,
+            useGLB: true,
+            useTexture: true,
+            existingMaterial: sharedMaterial ?? undefined,
+            materialConfig,
+        });
 
-      const mesh = await CubeBuilder.build({
-        index: i,
-        geomConfig: config,
-        useGLB,
-        useTexture: true,
-        materialConfig,
+        group.add(mesh);
+    }
+
+    // `CubeBuilder.build` асинхронен: столкновение может уничтожить объект,
+    // пока его модель ещё загружается. Не добавляем поздно собранную модель
+    // обратно в уже разрушенное препятствие.
+    if (this.isDestroyed) {
+      group.traverse((child) => {
+        const mesh = child as THREE.Mesh;
+        if (mesh.geometry && !mesh.userData.sharedObstacleResources) {
+          mesh.geometry.dispose();
+        }
+        if (mesh.userData.sharedObstacleResources) return;
+        if (Array.isArray(mesh.material)) {
+          mesh.material.forEach((material) => material.dispose());
+        } else {
+          mesh.material?.dispose?.();
+        }
       });
-
-      group.add(mesh);
+      return;
     }
 
     this.visualMesh = group;
-
-    const size = new THREE.Vector3();
-    const box = new THREE.Box3().setFromObject(group);
-    box.getSize(size);
-
     this.add(group);
-  }
+}
 
   private async buildMergedAtlasVisual(
     formConfig: GeometryConfig[],
@@ -142,7 +161,8 @@ export class CubeObstacle extends BaseObstacle {
     const geometry = await this.getMergedAtlasGeometry(formConfig, materialConfig);
     if (!geometry) return null;
 
-    const material = this.getSharedAtlasMaterial(materialConfig, atlasTexture);
+    // ✅ ИСПОЛЬЗУЕМ MaterialPool ВМЕСТО ЛОКАЛЬНОГО КЭША
+    const material = this.getSharedAtlasMaterial(materialConfig);
     const mesh = new THREE.Mesh(geometry, material);
     mesh.userData.sharedObstacleResources = true;
     mesh.castShadow = true;
@@ -207,9 +227,9 @@ export class CubeObstacle extends BaseObstacle {
     return mergedGeometry;
   }
 
+  // ✅ НОВЫЙ МЕТОД — использует MaterialPool вместо локального кэша
   private getSharedAtlasMaterial(
     materialConfig: MaterialConfig,
-    atlasTexture: THREE.Texture,
   ): THREE.MeshStandardMaterial {
     const cacheKey = JSON.stringify({
       atlasSprite: materialConfig.atlasSprite,
@@ -218,18 +238,17 @@ export class CubeObstacle extends BaseObstacle {
       emissiveIntensity: materialConfig.emissiveIntensity ?? 1,
     });
 
-    const cached = CubeObstacle.atlasMaterialCache.get(cacheKey);
-    if (cached) return cached;
-
-    const material = new THREE.MeshStandardMaterial({
-      map: atlasTexture,
+    // Используем MaterialPool
+    const material = MaterialPool.getMaterial({
+      type: 'atlas',
+      key: `obstacle_${cacheKey}`,
+      atlasSprite: materialConfig.atlasSprite,
       color: materialConfig.color ?? 0xffffff,
       emissive: materialConfig.emissive ?? 0x000000,
       emissiveIntensity: materialConfig.emissiveIntensity ?? 1,
       transparent: true,
-    });
+    }) as THREE.MeshStandardMaterial;
 
-    CubeObstacle.atlasMaterialCache.set(cacheKey, material);
     return material;
   }
 
@@ -265,7 +284,7 @@ export class CubeObstacle extends BaseObstacle {
 
   public update(dt: number, speed: number): boolean {
     if (this.isDestroyed) {
-      return false;
+      return true;
     }
 
     const curvedState = this.userData.curvedItemState as
@@ -464,6 +483,9 @@ export class CubeObstacle extends BaseObstacle {
   ) {
     const ud = object.userData as any;
 
+    // Фрагменты и дропы создаются при разрушении вне исходного obstacle.
+    // Эта метка нужна для гарантированной очистки сцены при reset игры.
+    ud.isDestructionFragment = true;
     ud.status = "flying";
 
     const velocity = new THREE.Vector3(

@@ -23,7 +23,9 @@ export default {
   itemsRemovingZpos: 30,
   baseSegmentDifficultyStep: 100,
   segmentRowMinLength: 8,
+  // segmentRowMinLength: 4,
   segmentRowTargetTravelMs: 140,
+  // segmentRowTargetTravelMs: 80,
 
   // Монеты и бустеры
   baseCoinValue: 1,
@@ -41,19 +43,19 @@ export default {
   bulletDefaultMaterial: {
     color: 0xff0000,
     emissive: 0xff0000,
-    emissiveIntensity: 10,
+    emissiveIntensity: 20,
   },
   bulletGeometry: [1, 1, 1] as [number, number, number],
 
   // Дроп при разрушении
-  allowCorruptedBoostDrops: false,
+  allowCorruptedBoostDrops: true,
   destroyedRolldropWeights: {
-    golden_coin: 20,
-    bullet: 20,
+    golden_coin: 1000,
+    bullet: 10,
     shield_booster: 10,
-    energon_coin: 20,
-    nitro_booster: 1,
-    magnet_booster: 1,
+    energon_coin: 1,
+    nitro_booster: 10,
+    magnet_booster: 10,
   },
 
   // Опасная дистанция

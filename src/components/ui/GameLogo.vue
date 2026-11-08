@@ -1,6 +1,11 @@
 <template>
     <Transition name="game_logo_whole_menu_showing">
         <div v-show="isWholeLogoShown" class="game_logo__root">
+
+            <Transition name="game_logo_whole_menu_showing">
+                <div v-if="gameState.activeOverlay == 'dailyGift'" class="blured_layer"></div>
+            </Transition>
+
             <div class="background_animated" :class="backgroundClass"></div>
             <div class="gradient_bottom"></div>
 
@@ -52,6 +57,7 @@
             // console.log(gameState.currentState, state);
             // console.log(gameState.activeOverlay, activeOverlay);
             
+            // управляем логикой появления/исчезновения/перемещения лого игры
             switch (state) {
                 case GameStates.Preloader:
                     isWholeLogoShown.value = true;
@@ -109,6 +115,7 @@
         let topMenu;
         let widthPreloader;
         let widthMenu;
+        let logoOpacity;
 
         if (deviceType.value==='mobile') {
             // Mobile-first: базовые значения для мобильных
@@ -135,11 +142,15 @@
             widthPreloader = 81.5;
             widthMenu = 65.625;
         };
+
+        // управляем видимостью лого игры
+        logoOpacity = gameState.activeOverlay == 'dailyGift' ? 0.4 : 1;
         
         const myPos = gameState.isPreloaderShown ? topPreloader : topMenu;
         const myWidth = gameState.isPreloaderShown ? widthPreloader : widthMenu;
         
         return {
+            opacity: logoOpacity,
             top: `${myPos}vh`,
             width: `${myWidth}vw`
         };
@@ -173,6 +184,17 @@
         background-color: rgba(0, 0, 0, 0.5);
         backdrop-filter: blur(2px);
         z-index: z("game_logo__root");
+    }
+
+    .blured_layer {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.2);
+        backdrop-filter: blur(6px);
+        z-index: 4;
     }
 
     .background_animated {
@@ -211,6 +233,7 @@
         align-items: center;
         justify-content: space-between;
         z-index: z("logo");
+        transition: all 0.5s ease-out;
     }
 
     .logo_left {

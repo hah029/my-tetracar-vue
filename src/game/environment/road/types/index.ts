@@ -1,3 +1,8 @@
+import type { TextureAtlas } from "@/assets/textures/TextureAtlas";
+
+/** Rendering strategy for the main road surface. */
+export type RoadMode = "static" | "segmented";
+
 // Общие типы и интерфейсы
 export interface RoadLineConfig {
   x: number;
@@ -32,9 +37,20 @@ export interface RoadConfig {
   gap?: number;
   edgeOffset?: number;
   textureUrl?: string;
+  atlas?: TextureAtlas;
+  atlasSprite?: string;
   sideObjects?: RoadSideObjectsConfig;
+  lampPosts?: RoadLampPostsConfig;
   elevatedSections?: RoadElevatedSectionConfig[];
-  segmentSurfaces?: boolean;
+  /**
+   * `static` keeps one large immovable surface. `segmented` creates and moves
+   * runtime road sections together with gameplay segments.
+   */
+  roadMode?: RoadMode;
+  /** Enables raised/lowered runtime sections. Requires `roadMode: "segmented"`. */
+  enableElevatedSegments?: boolean;
+  /** Enables curved runtime sections. Requires `roadMode: "segmented"`. */
+  enableCurvedSegments?: boolean;
 }
 
 export interface RoadElevatedSectionConfig {
@@ -63,6 +79,28 @@ export interface RoadSideObjectsConfig {
   offset: number;
   y: number;
   scale: [number, number, number];
+}
+
+/** Decorative neon lamp posts placed outside both road edges. */
+export interface RoadLampPostsConfig {
+  enabled: boolean;
+  color: number;
+  opacity: number;
+  /** HDR brightness of the lamp post and its arm. */
+  emissiveIntensity?: number;
+  spacing: number;
+  offset: number;
+  height: number;
+  armLength: number;
+  /** Angle between the upward pole direction and the arm, in degrees. */
+  armAngleDeg: number;
+  thickness: number;
+  /** Maximum number of real, nearby spotlights per side of the road. */
+  realLightCount?: number;
+  realLightIntensity?: number;
+  realLightDistance?: number;
+  realLightAngle?: number;
+  realLightPenumbra?: number;
 }
 
 export interface SpeedLineConfig {

@@ -1,15 +1,12 @@
 // src/composables/useAnimate.ts
 import * as THREE from "three";
-import Stats from "three/examples/jsm/libs/stats.module.js";
 import { EffectComposer } from "three/examples/jsm/postprocessing/EffectComposer.js";
-// composables
 import { useGameState } from "@/store/gameState";
 import { usePlayerStore } from "@/store/playerStore";
 import { useProgressStore } from "@/store/progressStore";
 import { useGame } from "./useGame";
-// managers
 import { CameraSystem } from "@/game/camera/CameraSystem";
-import { DebugColliderVisualizer } from "@/helpers/debug/DebugColliderVisualizer";
+import type { DebugColliderVisualizer } from "@/helpers/debug/DebugColliderVisualizer";
 import { UpdateMode } from "@/game/core/UpdateMode";
 import { BulletSystem } from "@/game/combat/BulletSystem";
 import { GameStates } from "@/game/core/GameState";
@@ -18,11 +15,11 @@ import { BaseObstacle } from "@/game/interactive/obstacle/BaseObstacle";
 import { CoinItem } from "@/game/interactive/items/coin/CoinItem";
 import { BoosterItem } from "@/game/interactive/items/booster/BoosterItem";
 import type { BaseItem } from "@/game/interactive/items/BaseItem";
+import { RunTelemetry } from "@/telemetry";
 
 export function GameLoop(
   game: ReturnType<typeof useGame>,
   composer: EffectComposer,
-  // motionBlur: AfterimagePass,
   debugCollider?: DebugColliderVisualizer,
   setRGBShiftAmount?: any,
 ) {
@@ -30,30 +27,6 @@ export function GameLoop(
   const playerStore = usePlayerStore();
   const progressStore = useProgressStore();
 
-  let currentShiftAmount = 0;
-  const maxShift = 0.008; // максимум при полном нитро
-  const lerpSpeed = 500; // скорость изменения
-
-  // ----------------------------
-  // показываем / скрываем FPS-панель через Ctrl+Q
-  const stats = new Stats();
-  document.body.appendChild(stats.dom);
-  let isDevPanelVisible = false;
-  const el = document.body.appendChild(stats.dom);
-  el.style.visibility = isDevPanelVisible ? "visible" : "hidden";
-
-  function handleKeyDown(event: KeyboardEvent) {
-    switch (event.key) {
-      case "keyQ":
-        if (event.ctrlKey) {
-          isDevPanelVisible = !isDevPanelVisible;
-          el.style.visibility = isDevPanelVisible ? "visible" : "hidden";
-        }
-        break;
-    }
-  }
-
-  // --- Вспомогательные функции (без изменений) ---
   function updateDestruction(
     deltaTime: number,
     speed: number,
@@ -63,27 +36,25 @@ export function GameLoop(
     game.updateInteractiveItems(deltaTime, speed, UpdateMode.Destruction);
   }
 
-  // --- Основной цикл анимации ---
   let lastTime = 0;
   let rafId: number | null = null;
 
   function animate(time: number) {
     rafId = requestAnimationFrame(animate);
+
     if (lastTime === 0) {
       lastTime = time;
-      stats.begin();
-      composer.render();
-      stats.end();
+      if (composer) composer.render();
       return;
     }
 
     const deltaTime = time - lastTime;
     lastTime = time;
 
-    stats.begin();
-
     const currentState = gameState.currentState;
-    if (currentState === GameStates.Pause) return;
+    if (currentState === GameStates.Pause) {
+      return;
+    }
 
     if (
       currentState === GameStates.Play ||
@@ -96,7 +67,11 @@ export function GameLoop(
         } catch {}
       }
 
-      const isGameOver = game.car.value.isDestroyed;
+      // Gameover — терминальное состояние забега. Даже если конкретный путь
+      // завершения ещё не выставил флаг у машины, нельзя продолжать дистанцию,
+      // score и gameplay-telemetry в следующих кадрах.
+      const isGameOver =
+        currentState === GameStates.Gameover || game.car.value.isDestroyed;
       let currentSpeed = playerStore.getCurrentSpeed();
 
       if (!isGameOver) {
@@ -142,21 +117,16 @@ export function GameLoop(
 
         BulletSystem.getInstance().update(deltaTime);
 
-        // обрабатываем коллизии машинки с игровыми предметами
         let obstacleCollision = game.checkObstaclesCollision(performance.now());
 
-        // если произошло столкновение с любым препятствием -> обрабатываем его
         if (obstacleCollision != null) {
-          // обработка Jump
           if (obstacleCollision.impactSubject instanceof Jump) {
             game.handleJumpCollision(deltaTime);
-            // обработка BaseObstacle
           } else if (obstacleCollision.impactSubject instanceof BaseObstacle) {
-            // handleBaseObstacleCollision возвращает флаг уничтожения машины
             if (
               game.handleBaseObstacleCollision(obstacleCollision, currentSpeed)
             )
-              gameState.endGame();
+              gameState.endGame("obstacle_collision");
           }
         }
 
@@ -170,14 +140,15 @@ export function GameLoop(
             const impactSubject = itemCollision.impactSubject as BaseItem;
             game.destroyCar(impactSubject.position.clone());
             game.removeItem(impactSubject);
-            gameState.endGame();
+            gameState.endGame("lethal_magnet");
           } else if (itemCollision.impactSubject instanceof CoinItem) {
-            // обработка Coin
             game.handleCoinCollision(itemCollision);
             game.removeItem(itemCollision.impactSubject as BaseItem);
           } else if (itemCollision.impactSubject instanceof BoosterItem) {
-            game.handleBoosterCollision(itemCollision);
-            game.removeItem(itemCollision.impactSubject as BaseItem);
+            const booster = itemCollision.impactSubject as BaseItem;
+            if (game.handleBoosterCollision(itemCollision)) {
+              game.removeItem(booster);
+            }
           }
         }
 
@@ -201,19 +172,20 @@ export function GameLoop(
         game.updateEffects();
         usePlayerStore().updateNitro(deltaTime);
         usePlayerStore().updateStatusEffects(deltaTime);
+        if (playerStore.isShieldEnabled) {
+          RunTelemetry.recordShieldActiveTime(deltaTime);
+        }
         debugCollider?.update();
       }
 
       game.updateEffects();
     } else {
-      // Фоновые состояния: двигаем только дорогу и город
       const currentSpeed = playerStore.baseSpeed;
       game.updateRoad(deltaTime, currentSpeed);
       game.updateCity(deltaTime, currentSpeed);
     }
 
-    composer.render();
-    stats.end();
+    if (composer) composer.render();
   }
 
   function start() {
@@ -231,11 +203,5 @@ export function GameLoop(
   return {
     start,
     stop,
-    setupEventListeners: () => {
-      window.addEventListener("keydown", handleKeyDown);
-    },
-    cleanupEventListeners: () => {
-      window.removeEventListener("keydown", handleKeyDown);
-    },
   };
 }

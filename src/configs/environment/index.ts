@@ -1,4 +1,3 @@
-import textureUrl from "@/assets/textures/road_tile.svg";
 import { MODELS } from "@/assets/models";
 import { atlas } from "@/assets/textures/TextureAtlas";
 import { ATLAS_SPRITES } from "@/assets/textures/atlasSprites";
@@ -25,13 +24,15 @@ export default {
   // Базовый конфиг дороги (без lanes — они вычисляются динамически)
   defaultRoadBase: {
     length: 800,
+    // length: 200,
     color: 0xeeeeee,
     emissive: 0xeeeeee,
     opacity: 0.25,
     yPosition: 0.0,
     gap: 0,
     edgeOffset: 0.3,
-    textureUrl,
+    atlas,
+    atlasSprite: ATLAS_SPRITES.roadTile,
   },
 
   // Дополнительные параметры для неоновой дороги

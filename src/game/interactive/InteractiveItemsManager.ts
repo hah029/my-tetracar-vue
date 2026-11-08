@@ -14,6 +14,7 @@ import { usePlayerStore } from "@/store/playerStore";
 import { useProgressStore } from "@/store/progressStore";
 import { useCommonStore } from "@/store/commonStore";
 import { useLevelStore } from "@/store/levelStore";
+import { useEnvironmentStore } from "@/store/environmentStore";
 import type { BaseItem, CurvedItemState } from "./items/BaseItem";
 import type { BaseObstacle } from "./obstacle/BaseObstacle";
 import { MagnetSystem } from "../magnet/MagnetSystem";
@@ -24,8 +25,14 @@ import { BoosterItem } from "./items/booster/BoosterItem";
 import { NitroItem } from "./items/booster/NitroItem";
 import { ShieldItem } from "./items/booster/ShieldItem";
 import { MagnetItem } from "./items/booster/MagnetItem";
+import { BulletItem } from "./items/booster/BulletItem";
+import { Golden } from "./items/coin/Golden";
+import { Energon } from "./items/coin/Energon";
+import { RunTelemetry, type ItemType as TelemetryItemType } from "@/telemetry";
 import type { CorruptedBoostVariant } from "@/levels/types";
+import { SUPER_BULLET_VARIANTS, type BulletVariant } from "@/game/combat/BulletVariant";
 import { RoadManager } from "@/game/environment/road";
+import { SoundManager } from "@/game/sound/SoundManager";
 import type {
   Segment,
   SegmentCurve,
@@ -78,7 +85,7 @@ export class InteractiveItemsManager {
         return useLevelStore().currentGameplay.laneCount;
       },
       () => {
-        const interactive = useLevelStore().currentInteractive;
+        const interactive = useLevelStore().currentInteractive as any;
         if (
           !interactive.segmentSets?.length &&
           !interactive.segmentIds?.length
@@ -86,9 +93,20 @@ export class InteractiveItemsManager {
           return undefined;
         }
 
+        const road = useEnvironmentStore().getLevelRoadConfig();
+        const isSegmentedMode = road.roadMode === "segmented";
+
         return getSegmentsForLevel({
           segmentSets: interactive.segmentSets,
           segmentIds: interactive.segmentIds,
+        }).filter((segment) => {
+          if (segment.elevatedSections?.length) {
+            return isSegmentedMode && road.enableElevatedSegments === true;
+          }
+          if (segment.curve) {
+            return isSegmentedMode && road.enableCurvedSegments === true;
+          }
+          return true;
         });
       },
     );
@@ -144,6 +162,8 @@ export class InteractiveItemsManager {
       if (playerStore.nitroTimer <= 0) {
         CarManager.getInstance().disableNitro();
         playerStore.disableNitro();
+        SoundManager.getInstance().stopCueLoop("nitroActive");
+        SoundManager.getInstance().playCue("nitroEnd");
         this.nitroEnabledTimer = 0;
       }
     }
@@ -155,6 +175,8 @@ export class InteractiveItemsManager {
 
       if (playerStore.magnetTimer <= 0) {
         playerStore.disableMagnet();
+        SoundManager.getInstance().stopCueLoop("magnetActive");
+        SoundManager.getInstance().playCue("magnetEnd");
         this.magnetEnabledTimer = 0;
       }
     }
@@ -184,10 +206,25 @@ export class InteractiveItemsManager {
       this.worldFrontZ = this.worldFrontZ - length;
       spawned++;
     }
+
+    // console.log(`📊 World filled: spawned ${spawned} segments, total items: ${this.items.length}`);
   }
 
   public spawnSegment(dt: number, speed: number, baseZ: number) {
-    const segment = this.segmentQueue.getNext();
+    const sourceSegment = this.segmentQueue.getNext();
+    const road = useEnvironmentStore().getLevelRoadConfig();
+    const isSegmentedMode = road.roadMode === "segmented";
+    // Прямые сценарии всегда используют полный шаблон. Ограничение нужно
+    // только для дуг: их геометрия строится отдельно для каждого ряда.
+    const maxRows = sourceSegment.curve
+      ? Math.min(30, sourceSegment.pattern.length)
+      : sourceSegment.pattern.length;
+    const segment = {
+      ...sourceSegment,
+      // Не изменяем шаблон из библиотеки: очередь может выбрать его повторно.
+      pattern: sourceSegment.pattern.slice(0, maxRows),
+    };
+
     const isReversed = segment.canReversed ? Math.random() < 0.5 : false;
     const spawnRules = useLevelStore().getCurrentSpawnRules();
 
@@ -198,28 +235,28 @@ export class InteractiveItemsManager {
       speed * cfg.segmentRowTargetTravelMs,
     );
 
-    // Резолвим curve для этого сегмента
-    const curve = this.resolveSegmentCurve(
-      segment,
-      isReversed,
-      segmentRowLength,
-    );
+    const curve =
+      isSegmentedMode && road.enableCurvedSegments
+        ? this.resolveSegmentCurve(segment, isReversed, segmentRowLength)
+        : undefined;
 
-    this.spawnElevatedSectionsForSegment(
-      segment,
-      isReversed,
-      baseZ,
-      segmentRowLength,
-    );
-    const routeAttachment = this.spawnRoadSurfaceForSegment(
-      segment,
-      isReversed,
-      baseZ,
-      segmentRowLength,
-      curve,
-    );
-
-    // console.log("segmentRowLength", segmentRowLength);
+    if (isSegmentedMode && road.enableElevatedSegments) {
+      this.spawnElevatedSectionsForSegment(
+        segment,
+        isReversed,
+        baseZ,
+        segmentRowLength,
+      );
+    }
+    const routeAttachment = isSegmentedMode
+      ? this.spawnRoadSurfaceForSegment(
+          segment,
+          isReversed,
+          baseZ,
+          segmentRowLength,
+          curve,
+        )
+      : undefined;
 
     segment.pattern.forEach((row, rowIndex) => {
       const z = baseZ - rowIndex * segmentRowLength;
@@ -228,8 +265,6 @@ export class InteractiveItemsManager {
       row_.forEach((rawValue, lane) => {
         const value = resolveLanePatternBySpawnRules(rawValue, spawnRules);
 
-        // Для curved-сегмента создаём CurvedItemState
-        // Геометрия плоская — вращение pivotGroup создаёт дугу
         let curvedState: CurvedItemState | undefined;
         let itemSpawnX: number | undefined;
         let itemSpawnZ: number | undefined;
@@ -257,9 +292,7 @@ export class InteractiveItemsManager {
             motion: routeAttachment.motion,
           };
 
-          // Начальная мировая позиция (при максимальном угле поворота)
-          const angleSign = curve.direction === "left" ? 1 : -1;
-          const spawnAngle = angleSign * routeAttachment.motion.angleRad;
+          const spawnAngle = directionSign * routeAttachment.motion.angleRad;
           const cos = Math.cos(spawnAngle);
           const sin = Math.sin(spawnAngle);
           itemSpawnX = curve.pivotX + localPx * cos + localPz * sin;
@@ -297,8 +330,7 @@ export class InteractiveItemsManager {
           const cos = Math.cos(spawnAngle);
           const sin = Math.sin(spawnAngle);
           itemSpawnX = motion.pivotX + localPx * cos + localPz * sin;
-          itemSpawnZ =
-            motion.pivotZ + localPz * cos - localPx * sin;
+          itemSpawnZ = motion.pivotZ + localPz * cos - localPx * sin;
         }
 
         switch (value) {
@@ -723,19 +755,25 @@ export class InteractiveItemsManager {
     curve?: RoadSegmentSurfaceCurve,
   ): RoadRouteAttachment | undefined {
     const laneCount = useLevelStore().currentGameplay.laneCount;
-    const coverage = (segment.elevatedSections ?? []).map((section) => {
-      const rowStart = Math.max(0, Math.min(section.rowStart, section.rowEnd));
-      const rowEnd = Math.min(
-        segment.pattern.length,
-        Math.max(section.rowStart, section.rowEnd),
-      );
+    const coverage = useEnvironmentStore().getLevelRoadConfig()
+      .enableElevatedSegments
+      ? (segment.elevatedSections ?? []).map((section) => {
+          const rowStart = Math.max(
+            0,
+            Math.min(section.rowStart, section.rowEnd),
+          );
+          const rowEnd = Math.min(
+            segment.pattern.length,
+            Math.max(section.rowStart, section.rowEnd),
+          );
 
-      return {
-        lanes: this.resolveElevatedLanes(section, isReversed, laneCount),
-        rowStart,
-        rowEnd,
-      };
-    });
+          return {
+            lanes: this.resolveElevatedLanes(section, isReversed, laneCount),
+            rowStart,
+            rowEnd,
+          };
+        })
+      : [];
 
     return RoadManager.getInstance().spawnSegmentSurface(
       baseZ,
@@ -805,15 +843,6 @@ export class InteractiveItemsManager {
     return curve.direction === "left" ? "right" : "left";
   }
 
-  private getLaneWidth(): number {
-    const lanes = RoadManager.getInstance().getLanes();
-    if (lanes.length >= 2) {
-      return Math.abs(lanes[1]! - lanes[0]!);
-    }
-
-    return useCommonStore().config.xzScaling * 6;
-  }
-
   private getSurfaceItemY(
     baseZ: number,
     laneIndex?: number,
@@ -837,10 +866,10 @@ export class InteractiveItemsManager {
 
   public reset() {
     this.obstacleManager.reset();
+    this.magnetSystem.clear();
 
     this.items.forEach((item) => {
-      if (item.userData.magnetLine) this.scene.remove(item.userData.magnetLine);
-      this.magnetSystem.removeRepulseBeam(item);
+      this.magnetSystem.removeItemEffects(item);
       item.disposeCorruptedBoostMaterials();
 
       this.scene.remove(item);
@@ -859,6 +888,8 @@ export class InteractiveItemsManager {
     this.applyCorruptedBoostRoll(item, source);
     this.items.push(item);
     this.scene.add(item);
+    const telemetryType = this.getTelemetryItemType(item);
+    if (telemetryType) RunTelemetry.recordItemSpawned(telemetryType);
   }
 
   private applyCorruptedBoostRoll(item: BaseItem, source: ItemSpawnSource) {
@@ -871,34 +902,40 @@ export class InteractiveItemsManager {
     }
 
     const gameplay = useLevelStore().currentGameplay;
-    const chance = gameplay.corruptedBoostChance;
-    if (chance <= 0 || Math.random() > chance) return;
-
+    if (Math.random() > gameplay.specialBoostChance) return;
+    const resolve = (weights: Record<string, number>) => {
+      const entries = Object.entries(weights);
+      let roll = Math.random() * entries.reduce((sum, [, weight]) => sum + Math.max(0, weight), 0);
+      for (const [variant, weight] of entries) { roll -= Math.max(0, weight); if (roll <= 0) return variant; }
+      return entries[0]?.[0];
+    };
     if (item instanceof NitroItem) {
-      this.markCorruptedBoost(
-        item,
-        this.pickWeightedCorruptedVariant(gameplay.corruptedBoostWeights.nitro),
-      );
-      return;
+      const variant = resolve(gameplay.specialBoostWeights.nitro);
+      if (variant === "superNitro") {
+        item.userData.superNitro = true;
+        this.markNonStandardBoost(item);
+        return;
+      }
+      this.markCorruptedBoost(item, variant as CorruptedBoostVariant); return;
     }
-
     if (item instanceof ShieldItem) {
-      this.markCorruptedBoost(
-        item,
-        this.pickWeightedCorruptedVariant(
-          gameplay.corruptedBoostWeights.shield,
-        ),
-      );
-      return;
+      const variant = resolve(gameplay.specialBoostWeights.shield);
+      if (variant === "superShield") {
+        item.userData.superShield = true;
+        this.markNonStandardBoost(item);
+        return;
+      }
+      this.markCorruptedBoost(item, variant as CorruptedBoostVariant); return;
     }
-
     if (item instanceof MagnetItem) {
-      this.markCorruptedBoost(
-        item,
-        this.pickWeightedCorruptedVariant(
-          gameplay.corruptedBoostWeights.magnet,
-        ),
-      );
+      const variant = resolve(gameplay.specialBoostWeights.magnet);
+      if (variant === "superMagnet") { this.markSuperMagnet(item); return; }
+      this.markCorruptedBoost(item, variant as CorruptedBoostVariant); return;
+    }
+    if (item instanceof BulletItem) {
+      const variant = resolve(gameplay.specialBoostWeights.bullet);
+      if (variant === "blankBullet") { this.markCorruptedBoost(item, variant); return; }
+      this.markSuperBullet(item, variant as BulletVariant); return;
     }
   }
 
@@ -924,33 +961,49 @@ export class InteractiveItemsManager {
 
   private markCorruptedBoost(item: BaseItem, variant: CorruptedBoostVariant) {
     item.userData.corruptedBoost = variant;
+    this.markNonStandardBoost(item);
+  }
+
+  /** Keeps the original booster material/atlas sprite and pulses its own emission. */
+  private markNonStandardBoost(item: BaseItem) {
     item.userData.corruptedBoostPulse = {
-      color: this.getCorruptedEmissionColor(variant),
       time: Math.random() * 1000,
     };
   }
 
-  private getCorruptedEmissionColor(variant: CorruptedBoostVariant) {
-    const colorByVariant: Record<CorruptedBoostVariant, number> = {
-      heavyNitro: 0xff2a7a,
-      lethalMagnet: 0xff1f1f,
-      repulseMagnet: 0x28d7ff,
-      blindShield: 0xf7fbff,
-    };
-
-    return colorByVariant[variant] ?? 0xff2a7a;
+  private markSuperMagnet(item: MagnetItem) {
+    item.userData.superMagnet = true;
+    this.markNonStandardBoost(item);
   }
 
-  public removeItem(item: BaseItem) {
+  private pickSuperBulletVariant(weights: Record<Exclude<BulletVariant, "normal">, number>): BulletVariant {
+    const total = SUPER_BULLET_VARIANTS.reduce((sum, variant) => sum + Math.max(0, weights[variant]), 0);
+    let roll = Math.random() * total;
+    for (const variant of SUPER_BULLET_VARIANTS) {
+      roll -= Math.max(0, weights[variant]);
+      if (roll <= 0) return variant;
+    }
+    return "piercing";
+  }
+
+  private markSuperBullet(item: BulletItem, variant: BulletVariant) {
+    item.userData.superBullet = variant;
+    this.markNonStandardBoost(item);
+  }
+
+  public removeItem(item: BaseItem, reason: "expired" | "other" = "other") {
     const index = this.items.indexOf(item);
     if (index !== -1) {
       this.items.splice(index, 1);
     }
 
-    const line = item.userData.magnetLine;
-    if (line) this.scene.remove(line);
-    this.magnetSystem.removeRepulseBeam(item);
+    this.magnetSystem.removeItemEffects(item);
     item.disposeCorruptedBoostMaterials();
+
+    if (reason === "expired" && !item.userData.pickupRejected) {
+      const telemetryType = this.getTelemetryItemType(item);
+      if (telemetryType) RunTelemetry.recordItemExpiredUncollected(telemetryType);
+    }
 
     this.scene.remove(item);
   }
@@ -959,8 +1012,18 @@ export class InteractiveItemsManager {
     for (let i = items.length - 1; i >= 0; i--) {
       const item = items[i];
       if (item.update(deltaTime, speed)) {
-        this.removeItem(item);
+        this.removeItem(item, "expired");
       }
     }
+  }
+
+  private getTelemetryItemType(item: BaseItem): TelemetryItemType | null {
+    if (item instanceof Golden) return "golden";
+    if (item instanceof Energon) return "energon";
+    if (item instanceof BulletItem) return "ammo";
+    if (item instanceof ShieldItem) return "armor";
+    if (item instanceof NitroItem) return "nitro";
+    if (item instanceof MagnetItem) return "magnet";
+    return null;
   }
 }

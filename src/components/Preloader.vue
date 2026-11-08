@@ -13,6 +13,7 @@
     import { useGameState } from "@/store/gameState";
     import { useDevice } from '@/composables/useDevice';
     import { createNewText } from '@/helpers/functions';
+    import { Platform } from '@/sdk';
     import { onMounted, ref, computed } from "vue";
 
     // подключаем store
@@ -55,6 +56,8 @@
         if (event.animationName === 'buttonFadeIn') {
             // Анимация появления завершена
             isEntering.value = false;
+            // Первый видимый экран теперь готов принимать ввод игрока.
+            Platform.getInstance().gameReady();
         };
     };
 

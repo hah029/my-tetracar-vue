@@ -6,6 +6,15 @@ import { SoundManager } from "@/game/sound/SoundManager";
 import { Platform } from "@/sdk/Platform";
 import progressConfig from "@/configs/progress";
 import { fill } from "three/src/extras/TextureUtils.js";
+import { useObjectivesStore } from "@/store/objectivesStore";
+import { BOOST_SPECIAL_MODES } from "@/configs/meta";
+import type { BulletVariant } from "@/game/combat/BulletVariant";
+import type { ArmorVariant } from "@/store/playerStore";
+
+const BULLET_VARIANTS: readonly BulletVariant[] = [
+  "normal", "blank", "piercing", "explosive", "fan", "railgun",
+];
+const ARMOR_VARIANTS: readonly ArmorVariant[] = ["normal", "super"];
 
 export const useProgressStore = defineStore("progressStore", () => {
   const platform = Platform.getInstance();
@@ -44,7 +53,7 @@ export const useProgressStore = defineStore("progressStore", () => {
       if (!isNewRecord.value) {
         isNewRecord.value = true;
         playerStore.addNewMsg("newRecord");
-        soundManager.play("sfx_new_record");
+        soundManager.playCue("newRecord");
       }
       highScore.value = score.value;
     }
@@ -55,7 +64,7 @@ export const useProgressStore = defineStore("progressStore", () => {
     let mplr = cfg.scoreMultiplier.base;
 
     if (playerStore.isNitroEnabled) {
-      mplr *= cfg.scoreMultiplier.growNitro;
+      mplr *= playerStore.isSuperNitro ? BOOST_SPECIAL_MODES.nitro.super.scoreMultiplier : playerStore.corruptedNitroEnabled ? BOOST_SPECIAL_MODES.nitro.corrupted.scoreMultiplier : BOOST_SPECIAL_MODES.nitro.normal.scoreMultiplier;
     }
 
     if (metaStore.isFeatureActive("scoreMultiplier")) {
@@ -159,6 +168,10 @@ export const useProgressStore = defineStore("progressStore", () => {
         armor: playerStore.armor,
         ammo: playerStore.ammo,
       });
+      await platform.setPlayerData({
+        armorStack: JSON.stringify(playerStore.armorStack),
+        ammoStack: JSON.stringify(playerStore.ammoStack),
+      });
     } catch (err) {
       console.error("Failed to save armor/ammo:", err);
     }
@@ -166,16 +179,39 @@ export const useProgressStore = defineStore("progressStore", () => {
 
   async function restoreArmorAndAmmo(): Promise<void> {
     try {
-      const stats = await platform.getPlayerStats(["armor", "ammo"]);
-      const savedArmor = stats?.armor;
-      if (savedArmor != null) {
-        const armorVal = Number(savedArmor);
-        for (let i = 0; i < armorVal; i++) playerStore.addArmor();
+      const [stats, data] = await Promise.all([
+        platform.getPlayerStats(["armor", "ammo"]),
+        platform.getPlayerData(),
+      ]);
+      playerStore.armor = 0;
+      playerStore.ammo = 0;
+      playerStore.armorStack = [];
+      playerStore.ammoStack = [];
+
+      const parseStack = <T extends string>(raw: unknown, allowed: readonly T[]): T[] => {
+        if (raw == null) return [];
+        try {
+          const parsed = JSON.parse(String(raw));
+          return Array.isArray(parsed)
+            ? parsed.map((value) => allowed.includes(value) ? value : "normal" as T)
+            : [];
+        } catch {
+          return [];
+        }
+      };
+      const clampCount = (value: unknown, max: number) =>
+        Math.min(max, Math.max(0, Math.floor(Number(value) || 0)));
+
+      const armorStack = parseStack(data?.armorStack, ARMOR_VARIANTS);
+      const armorCount = clampCount(stats?.armor, playerStore.maxArmor);
+      for (let i = 0; i < armorCount; i++) {
+        playerStore.addArmor(armorStack[i] ?? "normal");
       }
-      const savedAmmo = stats?.ammo;
-      if (savedAmmo != null) {
-        const ammoVal = Number(savedAmmo);
-        for (let i = 0; i < ammoVal; i++) playerStore.addAmmo();
+
+      const ammoStack = parseStack(data?.ammoStack, BULLET_VARIANTS);
+      const ammoCount = clampCount(stats?.ammo, playerStore.maxAmmo);
+      for (let i = 0; i < ammoCount; i++) {
+        playerStore.addAmmo(ammoStack[i] ?? "normal");
       }
     } catch (err) {
       console.error("Failed to restore armor/ammo:", err);
@@ -187,6 +223,11 @@ export const useProgressStore = defineStore("progressStore", () => {
       await metaStore.saveProgress();
     } catch (error) {
       console.error("Failed to save meta progress:", error);
+    }
+    try {
+      await useObjectivesStore().persist();
+    } catch (error) {
+      console.error("Failed to save objectives progress:", error);
     }
     try {
       await saveHighScore();

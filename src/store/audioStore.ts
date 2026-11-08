@@ -8,7 +8,9 @@ import audio from "@/configs/audio";
 export const useAudioStore = defineStore("audio", () => {
   const storage = Platform.getInstance();
 
-  const masterEnabled = ref(false);
+  // Общий переключатель в интерфейсе не показывается, поэтому звук должен быть
+  // включён, пока игрок явно не отключил его через платформенную интеграцию.
+  const masterEnabled = ref(true);
   const musicEnabled = ref(false);
   const sfxEnabled = ref(false);
   const masterVolume = ref(audio.default_volume);
@@ -42,14 +44,33 @@ export const useAudioStore = defineStore("audio", () => {
   // загрузка сохранённых настроек
   async function loadFromStorage() {
     const data = await storage.getPlayerData();
+    const hasMusicSetting = typeof data?.musicEnabled === "boolean";
+    const hasSfxSetting = typeof data?.sfxEnabled === "boolean";
+    const hasVolumeSetting = typeof data?.masterVolume === "number";
 
-    masterEnabled.value = data?.masterEnabled ?? false;
-    musicEnabled.value = data?.musicEnabled ?? false;
-    sfxEnabled.value = data?.sfxEnabled ?? false;
-    masterVolume.value = data?.masterVolume ?? audio.default_volume;
+    // В интерфейсе нет общего переключателя. Старые сохранения содержат
+    // masterEnabled: false, который иначе навсегда блокирует весь звук.
+    masterEnabled.value = true;
+    musicEnabled.value = hasMusicSetting ? data.musicEnabled : true;
+    sfxEnabled.value = hasSfxSetting ? data.sfxEnabled : true;
+    masterVolume.value = hasVolumeSetting
+      ? data.masterVolume
+      : audio.default_volume;
+
+    // Для новых игроков (и старых сохранений без аудио-полей) сохраняем
+    // значения сразу, а не только после первого клика в настройках.
+    if (!hasMusicSetting || !hasSfxSetting || !hasVolumeSetting) {
+      await storage.setPlayerData({
+        ...(data ?? {}),
+        masterEnabled: true,
+        musicEnabled: musicEnabled.value,
+        sfxEnabled: sfxEnabled.value,
+        masterVolume: masterVolume.value,
+      });
+    }
   }
 
-  loadFromStorage();
+  const ready = loadFromStorage();
 
   return {
     masterVolume,
@@ -60,5 +81,6 @@ export const useAudioStore = defineStore("audio", () => {
     toggleMaster,
     toggleSFX,
     setVolume,
+    ready,
   };
 });

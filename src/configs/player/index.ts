@@ -1,4 +1,3 @@
-import { TEXTURES } from "@/assets/textures";
 import { ATLAS_SPRITES } from "@/assets/textures/atlasSprites";
 import { MODELS } from "@/assets/models";
 import type { GeometryConfig, MaterialConfig } from "@/game/cube/types";
@@ -20,7 +19,7 @@ export default {
   },
 
   // управление
-  laneChangeSpeed: 0.26,
+  laneChangeSpeed: 0.2,
   maxTilt: 0.05,
   tiltSmoothing: 0.2,
 
@@ -40,26 +39,21 @@ export default {
     controlPenaltyPerMassRatio: 0.18,
     jumpPenaltyPerMassRatio: 0.24,
     speedPenaltyPerMassRatio: 0.08,
-    corruptedNitroControlPenalty: 0.18,
     lateralAcceleration: 0.03,
     lateralDamping: 0.18,
   },
 
   // нитро
   nitro: {
-    multiplier: 1.5,
     afterImagePass: 0.8,
     rgbShift: 0.003,
-    baseTimer: 5000,
     accelInSpeed: 0.005,
     accelOutSpeed: 0.001,
   },
 
   // магнит
   magnet: {
-    baseTimer: 10000,
     force: 40,
-    maxTargets: 8,
   },
 
   // визуальные эффекты
@@ -67,12 +61,14 @@ export default {
   defaultBlinkDuration: 1,
   defaultBlinkSpeed: 10,
 
-  // материалы машины
+  // 👇 ИСПРАВЛЕНО: используем атлас вместо TEXTURES
+  // материалы машины — теперь через атлас
   carMaterialConfig: {
-    textureUrl: TEXTURES.cube.base,
+    atlas: null as any, // будет заменён при инициализации
+    atlasSprite: ATLAS_SPRITES.cube.base,
   } as MaterialConfig,
 
-  // маппинг текстур на состояния
+  // маппинг текстур на состояния (уже использует атлас)
   carMaterialConfigExtra: {
     default: ATLAS_SPRITES.cube.base,
     nitro: ATLAS_SPRITES.cube.nitro,
@@ -110,7 +106,7 @@ export default {
     xzScaling,
   ],
 
-  // генератор кубов машины — принимает вычисленные COLS, ROWS, HEIGHT, GLB_SCALES
+  // генератор кубов машины
   getCarCubesConfig: (
     cols: [number, number, number],
     rows: [number, number, number, number],

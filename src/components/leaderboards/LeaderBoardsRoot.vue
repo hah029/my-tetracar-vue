@@ -31,7 +31,7 @@
             <!-- CONTENT -->
             <TransitionGroup name="buttons_group_showing" tag="div" class="leaderboard_table">
                 <div v-for="(record, index) in leaderBoard" v-if="currentView !== LeaderboardsView.null"
-                    :key="record.player.uniqueId ?? record.rank"
+                    :key="getLeaderboardPlayerId(record.player) ?? record.rank"
                     class="leaderboard_row_first" :class="setPlayerRowStyle(record.player)"
                     :style="{ animationDelay: `${index * switchingDelay}s` }"
                 >
@@ -60,13 +60,14 @@
 
 
 <script setup lang="ts">
-    import { onMounted, computed, ref } from "vue";
+    import { onMounted, computed, ref, watch } from "vue";
     import { createNewText } from '@/helpers/functions';
     import { useGameState } from "@/store/gameState";
     import { useTranslation } from "i18next-vue";
 
     import { Platform } from "@/sdk/Platform";
     import type { LeaderBoardRecord } from "@/sdk/types/Leaderboard";
+    import { SoundManager } from "@/game/sound/SoundManager";
     // import type { LeaderBoard, LeaderBoardRecord } from "@/sdk/IGamePlatform";
 
     enum LeaderboardsView {
@@ -93,8 +94,10 @@
 
     const isHeaderShown = ref(false);
     const isBackButtonShown = ref(false);
+    const currentPlayerId = ref<string | null>(null);
     const { i18next } = useTranslation();
     const foo = createNewText();
+    const isClosing = ref(false);   // защита от повторного вызова, пока идёт закрытие окна
 
     // ===== TITLE =====
     const dynamicTitleName = computed(() => {
@@ -103,63 +106,6 @@
 
     const myLeaderBoard = ref<LeaderBoardRecord[]>([])
     const commonLeaderBoard = ref<LeaderBoardRecord[]>([])
-
-    const leaderBoardTest = [
-        {
-            player: {
-                publicName: 'Смерж***',
-                uniqueId: 'local_player_1',
-                getAvatarSrc: '/src/assets/images/avatars/15.jpg',
-            },
-            rank: 15,
-            score: 2500,
-        },
-        {
-            player: {
-                publicName: 'Nora',
-                uniqueId: 'local_player_2',
-                getAvatarSrc: '/src/assets/images/avatars/16.jpg',
-            },
-            rank: 16,
-            score: 2460,
-        },
-        {
-            player: {
-                publicName: 'Констант М',
-                uniqueId: 'local_player_3',
-                getAvatarSrc: '/src/assets/images/avatars/17.jpg',
-            },
-            rank: 17,
-            score: 2300,
-        },
-        {
-            player: {
-                publicName: 'Щукин***',
-                uniqueId: 'local_player_4',
-                getAvatarSrc: '/src/assets/images/avatars/18.jpg',
-            },
-            rank: 18,
-            score: 1905,
-        },
-        {
-            player: {
-                publicName: 'Степа***',
-                uniqueId: 'local_player_5',
-                getAvatarSrc: '/src/assets/images/avatars/19.jpg',
-            },
-            rank: 19,
-            score: 619,
-        },
-        {
-            player: {
-                publicName: 'Mia***',
-                uniqueId: 'local_player_6',
-                getAvatarSrc: '/src/assets/images/avatars/20.jpg',
-            },
-            rank: 20,
-            score: 84,
-        },
-    ];
 
     // генерируем таблицу игроков для ее последующего отображения
     const leaderBoard = computed(() => {
@@ -183,6 +129,7 @@
             if (currentView.value == LeaderboardsView.CommonLeaderBoard) return; // защита от повт. нажатия
             currentViewStaus.value = 'common';
         };
+        SoundManager.getInstance().playCue("uiSelect");
         
         // скрываем старые строки таблицы 
         switchingDelay.value = 0.03;
@@ -208,15 +155,28 @@
     };
 
     // подсвечиваем текст в строке с текущим игроком
-    function setPlayerRowStyle(player_) {
-        if (player_.uniqueId == 'local_player_3') {
+    function getLeaderboardPlayerId(player: LeaderBoardRecord["player"]): string | null {
+        // В контракте приложения используется uniqueId, но Yandex SDK
+        // возвращает uniqueID. Поддерживаем оба варианта на границе UI.
+        const rawPlayer = player as LeaderBoardRecord["player"] & { uniqueID?: unknown };
+        if (typeof rawPlayer.uniqueId === "string") return rawPlayer.uniqueId;
+        return typeof rawPlayer.uniqueID === "string" ? rawPlayer.uniqueID : null;
+    };
+
+    function isCurrentPlayer(player: LeaderBoardRecord["player"]): boolean {
+        const playerId = getLeaderboardPlayerId(player);
+        return playerId !== null && playerId === currentPlayerId.value;
+    };
+
+    function setPlayerRowStyle(player: LeaderBoardRecord["player"]) {
+        if (isCurrentPlayer(player)) {
             return 'row_text_markered';
         };
     };
 
     // меняем цвет рамки в строке с текущим игроком
-    function setPlayerCornerStyle(player_) {
-        if (player_.uniqueId == 'local_player_3') {
+    function setPlayerCornerStyle(player: LeaderBoardRecord["player"]) {
+        if (isCurrentPlayer(player)) {
             return 'img_container_markered';
         };
     };
@@ -229,6 +189,7 @@
 
     // ===== BACK =====
     function backButtonClick() {
+        SoundManager.getInstance().playCue("uiSelect");
         switchingDelay.value = 0.05;
         isHeaderShown.value = false;
         setTimeout(() => {
@@ -246,20 +207,29 @@
     // запрос с сервера Яндекса таблиц с рекордами
     async function loadLeaderboards() {
         const platform = Platform.getInstance();
-        const [myBoard, commonBoard] = await Promise.all([
-            platform.getLeaderboardEntries("debugLeaderboard1", 5, true, 1),
-            platform.getLeaderboardEntries("debugLeaderboard1", 5, false, 1),
-        ]);
+        try {
+            const [myBoard, commonBoard, playerId] = await Promise.all([
+                platform.getLeaderboardEntries("debugLeaderboard1", 5, true, 1),
+                // includeUser гарантирует, что активный игрок попадёт и в top
+                // board, даже если его результат не входит в top-5.
+                platform.getLeaderboardEntries("debugLeaderboard1", 5, true, 1),
+                platform.getPlayerId(),
+            ]);
 
-        // myLeaderBoard.value = myBoard.entries;
-        myLeaderBoard.value = leaderBoardTest;
-        commonLeaderBoard.value = commonBoard.entries;
+            currentPlayerId.value = typeof playerId === "string" ? playerId : null;
+            myLeaderBoard.value = myBoard?.entries ?? [];
+            commonLeaderBoard.value = commonBoard?.entries ?? [];
+        } catch (error) {
+            console.error("Failed to load leaderboards:", error);
+            myLeaderBoard.value = [];
+            commonLeaderBoard.value = [];
+        }
     };
 
     // выводим аватарку игрока в зависимости от разных условий
     function getAvatarUrl(player: any): string {
-        const imageIndex = Math.floor(Math.random() * 4);
-        if (!player) return DEFAULT_AVATAR[imageIndex];
+        const fallback = DEFAULT_AVATAR[0]!;
+        if (!player) return fallback;
         let src = '';
         if (typeof player.getAvatarSrc === 'function') {
             src = player.getAvatarSrc();
@@ -268,8 +238,18 @@
         };
 
         // если результат пустой или undefined, возвращаем дефолт
-        return src || DEFAULT_AVATAR[imageIndex];
+        return src || fallback;
     };
+
+    // следим за закрытием окна оверлея
+    watch(
+        () => gameState.overlayCloseRequestId,
+        () => {
+            if (isClosing.value) return;
+            isClosing.value = true;
+            backButtonClick();
+        },
+    );
 
     onMounted(() => {
         loadLeaderboards();

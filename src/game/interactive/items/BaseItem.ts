@@ -126,6 +126,35 @@ export class BaseItem extends THREE.Group {
     this.userData.curvedItemState = state;
   }
 
+  /** Отталкивает не поместившийся в запас бустер от машины. */
+  public rejectFromCar(carPosition: THREE.Vector3): void {
+    const physics = useCommonStore().getBasePhysics();
+    const direction = this.position.clone().sub(carPosition);
+
+    direction.y = 0;
+    if (direction.lengthSq() < 0.001) {
+      direction.set(Math.random() < 0.5 ? -1 : 1, 0, -0.5);
+    }
+    direction.x +=
+      (Math.random() * 2 - 1) * physics.rejectedPickupSideFactor;
+    direction.normalize();
+
+    this.userData.pickupRejected = true;
+    this.userData.status = "flying";
+    this.userData.followSurface = false;
+    delete this.userData.curvedItemState;
+
+    this.userData.velocity.copy(
+      direction.multiplyScalar(physics.rejectedPickupForce),
+    );
+    this.userData.velocity.y = physics.rejectedPickupUpward;
+    this.userData.rotationSpeed.set(
+      (Math.random() - 0.5) * physics.cubeRotationSpeed,
+      (Math.random() - 0.5) * physics.cubeRotationSpeed,
+      (Math.random() - 0.5) * physics.cubeRotationSpeed,
+    );
+  }
+
   private updateCurvedItem(
     deltaTime: number,
     speed: number,
@@ -178,7 +207,7 @@ export class BaseItem extends THREE.Group {
 
   private updateCorruptedEmission(deltaTime: number) {
     const pulseConfig = this.userData.corruptedBoostPulse as
-      | { color: number; time: number }
+      | { time: number }
       | undefined;
     if (!pulseConfig) return;
 
@@ -193,7 +222,6 @@ export class BaseItem extends THREE.Group {
     const intensity = 0.75 + Math.sin(pulseConfig.time * 0.014) * 0.45;
 
     materials.forEach((material) => {
-      material.emissive.setHex(pulseConfig.color);
       material.emissiveIntensity = intensity;
     });
   }

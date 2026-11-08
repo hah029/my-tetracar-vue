@@ -5,6 +5,9 @@ const nightCity = {
   name: "Night City",
   description:
     "Baseline neon route with dense city scenery and balanced visibility.",
+  enabled: true,
+  to_show: true,
+  difficultyIds: ["normal", "hard"],
 
   visual: {
     camera: {
@@ -24,23 +27,23 @@ const nightCity = {
       fogNear: 0.01,
       fogFar: 200,
       toneMappingExposure: 0.9,
-      bloomStrength: 0.3,
-      bloomRadius: 0.5,
-      bloomThreshold: 1.2,
+      bloomStrength: 0.1,
+      bloomRadius: 0.8,
+      bloomThreshold: 0.5,
     },
 
     lighting: {
       ambientLightColor: "#404060",
-      ambientLightIntensity: 0.3,
+      ambientLightIntensity: 0.12,
       directionalLightColor: "#aaccff",
       directionalLightPosition: [-10, 20, 5],
-      directionalLightIntensity: 2.0,
+      directionalLightIntensity: 0.7,
       fillLightColor: "#ccddff",
       fillLightPosition: [-5, 10, 5],
-      fillLightIntensity: 2.0,
+      fillLightIntensity: 0.5,
       backAccentLightColor: "#ffaa66",
       backAccentLightPosition: [0, 3, 15],
-      backAccentLightIntensity: 5.0,
+      backAccentLightIntensity: 1.5,
     },
   },
 
@@ -52,7 +55,12 @@ const nightCity = {
       opacity: 0.25,
       laneColor: "#FFFFFF",
       length: 800,
-      segmentSurfaces: true,
+      //   length: 200,
+      // Runtime-сегменты можно включать для профилирования отдельно от поворотов
+      // и вертикальных участков.
+      roadMode: "static",
+      enableElevatedSegments: false,
+      enableCurvedSegments: false,
       edges: {
         color: "#00ffff",
         height: 10,
@@ -68,6 +76,23 @@ const nightCity = {
         offset: 0.6,
         y: 0.4,
         scale: [1.75, 1.4, 1.75],
+      },
+      lampPosts: {
+        enabled: true,
+        color: "#4CAAFF",
+        opacity: 0.55,
+        emissiveIntensity: 5,
+        spacing: 150,
+        offset: 1.2,
+        height: 12,
+        armLength: 10,
+        armAngleDeg: 60,
+        thickness: 0.16,
+        realLightCount: 2,
+        realLightIntensity: 200,
+        realLightDistance: 34,
+        realLightAngle: 0.72,
+        realLightPenumbra: 0.9,
       },
     },
 

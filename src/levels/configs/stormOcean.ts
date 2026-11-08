@@ -5,6 +5,9 @@ const stormOcean = {
   name: "Storm Ocean",
   description:
     "Dark coastal route with blue storm lighting and heavier obstacle pressure.",
+  enabled: false,
+  to_show: true,
+  difficultyIds: ["normal", "hard"],
 
   visual: {
     camera: {

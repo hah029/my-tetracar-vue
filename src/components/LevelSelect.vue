@@ -1,57 +1,45 @@
 <template>
     <div class="container level_select">
         <section class="level_select_panel">
-            <div class="select_column">
+            <div class="select_columns">
                 <div class="select_group">
-                    <h2 class="select_title">визуальный уровень</h2>
+                    <h2 class="select_title">{{ $t("levelMenu.levelSelect.label") }}</h2>
                     <div class="option_grid">
-                        <button
-                            v-for="level in levelStore.levels"
-                            :key="level.id"
-                            class="option_btn"
-                            :class="{ active: levelStore.currentLevelId === level.id }"
-                            @click="selectLevel(level.id)"
-                        >
-                            <span
-                                class="option_swatch"
-                                :style="{
-                                    background: level.visual.render.backgroundColor,
-                                    borderColor: level.environment.road.laneColor,
-                                }"
-                            />
+                        <button v-for="level in levelStore.levels" :key="level.id" class="option_btn" :class="{
+                            active: levelStore.currentLevelId === level.id,
+                            unavailable: !level.enabled,
+                        }" :disabled="!level.enabled" @click="selectLevel(level.id)">
+                            <span class="option_swatch" :style="{
+                                background: level.visual.render.backgroundColor,
+                                borderColor: level.environment.road.laneColor,
+                            }" />
                             <span class="option_text">
-                                <span class="option_name">{{ level.name }}</span>
-                                <span class="option_meta">{{ level.environment.scenery.scenerySets.join(" / ") }}</span>
+                                <span class="option_name">{{ $t(`levelMenu.levelSelect.variants.${level.id}`) }}</span>
+                                <!-- <span class="option_meta">{{ level.environment.scenery.scenerySets.join(" / ") }}</span> -->
                             </span>
+                            <span v-if="!level.enabled" class="option_status">{{ $t("levelMenu.soon") }}</span>
                         </button>
                     </div>
                 </div>
 
                 <div class="select_group">
-                    <h2 class="select_title">сложность</h2>
+                    <h2 class="select_title">{{ $t("levelMenu.difficultySelect.label") }}</h2>
                     <div class="option_grid difficulty_grid">
-                        <button
-                            v-for="difficulty in levelStore.difficulties"
-                            :key="difficulty.id"
-                            class="option_btn"
-                            :class="{ active: levelStore.currentDifficultyId === difficulty.id }"
-                            @click="selectDifficulty(difficulty.id)"
-                        >
-                            <span class="option_name">{{ difficulty.name }}</span>
-                            <span class="option_meta">
-                                {{ difficulty.gameplay.startSpeed.toFixed(2) }} → {{ difficulty.gameplay.maxSpeed.toFixed(2) }}
-                                · {{ difficulty.gameplay.laneCount }} lanes
-                            </span>
+                        <button v-for="difficulty in levelStore.availableDifficulties" :key="difficulty.id"
+                            class="option_btn" :class="{ active: levelStore.currentDifficultyId === difficulty.id }"
+                            @click="selectDifficulty(difficulty.id)">
+                            <span class="option_name">{{ $t(`levelMenu.difficultySelect.variants.${difficulty.id}`)
+                            }}</span>
                         </button>
                     </div>
                 </div>
             </div>
 
-            <div class="actions">
-                <button class="menu_btn action_btn" @click="goBack">назад</button>
-                <button class="menu_btn action_btn primary" @click="startRace">старт</button>
-            </div>
         </section>
+        <div class="actions">
+            <button class="menu_btn btn_correction" @click="goBack">назад</button>
+            <button class="menu_btn btn_correction primary" @click="startRace">старт</button>
+        </div>
     </div>
 </template>
 
@@ -61,29 +49,42 @@ import { useLevelStore } from "@/store/levelStore";
 import { GameStates } from "@/game/core/GameState";
 import type { DifficultyId } from "@/levels/difficulties";
 import type { LevelId } from "@/levels";
+import { SoundManager } from "@/game/sound/SoundManager";
 
 const gameStore = useGameState();
 const levelStore = useLevelStore();
+const soundManager = SoundManager.getInstance();
 
 function selectLevel(id: string) {
+    soundManager.playCue("uiSelect");
     levelStore.selectLevel(id as LevelId);
 }
 
 function selectDifficulty(id: string) {
+    soundManager.playCue("uiSelect");
     levelStore.selectDifficulty(id as DifficultyId);
 }
 
 function goBack() {
-    gameStore.setState(GameStates.Menu);
+    soundManager.playCue("uiSelect");
+    gameStore.setState(GameStates.Menu, "menu_button");
 }
 
 function startRace() {
+    soundManager.playCue("uiSelect");
     gameStore.confirmLevelSelection();
 }
 </script>
 
 <style lang="scss" scoped>
 @use "@/styles/menu.scss";
+@use "@/styles/typography" as *;
+@use "@/styles/colors" as *;
+
+.btn_correction {
+    @include text-button-size-s;
+    color: $color-yellow-super-light;
+}
 
 .level_select {
     justify-content: center;
@@ -92,7 +93,7 @@ function startRace() {
 }
 
 .level_select_panel {
-    width: min(46rem, 92vw);
+    width: min(68rem, 92vw);
     max-height: calc(100vh - clamp(7rem, 14vmin, 9rem));
     display: grid;
     grid-template-columns: minmax(0, 1fr);
@@ -123,9 +124,11 @@ function startRace() {
     background: rgba(114, 179, 238, 0.82);
 }
 
-.select_column {
+.select_columns {
     display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
     gap: 1.4rem;
+    align-items: start;
 }
 
 .select_group {
@@ -150,11 +153,11 @@ function startRace() {
 }
 
 .difficulty_grid {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-template-columns: 1fr;
 }
 
 .option_btn {
-    min-height: 4.8rem;
+    min-height: 4.0rem;
     padding: 0.85rem 1rem;
     border: 1px solid rgba(215, 251, 255, 0.28);
     background: rgba(2, 7, 16, 0.56);
@@ -175,16 +178,39 @@ function startRace() {
     filter: drop-shadow(0 0 14px rgba(121, 190, 255, 0.55));
 }
 
+.option_btn.unavailable {
+    cursor: not-allowed;
+    opacity: 0.5;
+    filter: grayscale(0.75);
+}
+
+.option_btn.unavailable:hover {
+    border-color: rgba(215, 251, 255, 0.28);
+    background: rgba(2, 7, 16, 0.56);
+    filter: grayscale(0.75);
+}
+
 .option_name,
 .option_meta {
     display: block;
     overflow-wrap: anywhere;
+    align-items: center;
+    text-transform: capitalize;
+}
+
+.option_status {
+    margin-left: auto;
+    padding: 0.2rem 0.45rem;
+    border: 1px solid rgba(255, 217, 92, 0.72);
+    color: #FFD95C;
+    font-size: clamp(0.68rem, 1.2vmin, 0.78rem);
+    text-transform: uppercase;
 }
 
 .option_swatch {
-    flex: 0 0 2.2rem;
-    width: 2.2rem;
-    height: 2.2rem;
+    flex: 0 0 1.6rem;
+    width: 1.6rem;
+    height: 1.6rem;
     border: 2px solid rgba(215, 251, 255, 0.75);
     box-shadow: inset 0 0 16px rgba(255, 255, 255, 0.18);
 }
@@ -207,7 +233,7 @@ function startRace() {
     display: flex;
     justify-content: center;
     gap: 2rem;
-    margin-top: 0.5rem;
+    margin: 1rem;
 }
 
 .action_btn {
@@ -227,12 +253,12 @@ function startRace() {
         padding-bottom: 2rem;
     }
 
-    .difficulty_grid {
+    .select_columns {
         grid-template-columns: 1fr;
     }
 
     .option_btn {
-        min-height: 4.5rem;
+        min-height: 4.0rem;
     }
 
     .actions {

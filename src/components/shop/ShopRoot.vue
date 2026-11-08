@@ -1,6 +1,5 @@
 <template>
-    <div :class="setContainerPos()">
-    <!-- <div class="container" :class="setContainerPos()"> -->
+    <div class="container shop_root">
         <div class="shop_container">
 
             <!-- HEADER -->
@@ -148,6 +147,9 @@
                             </div>
 
                             <div class="card__bottom">
+                                <div v-if="item.type === 'upgrade'" class="card__upgrade_stats">
+                                    {{ getUpgradeValueString(item) }}
+                                </div>
                                 <div class="card__price_row">
                                     {{ getItemPrice(item) }}
                                     {{ getItemCurrency(item) }}
@@ -205,6 +207,7 @@
 
                             <button v-if="
                                 selectedItem.type === 'cosmetic' &&
+                                getProductStatus(selectedItem) === 'owned' &&
                                 selectedItem.effect.skinId !== metaStore.activeSkin
                             " class="preview__buy_btn" @click="handleApplyClick(selectedItem)">
                                 {{ foo.makeText("shop.previewBtn.apply") }}
@@ -212,6 +215,7 @@
 
                             <div v-else-if="
                                 selectedItem.type === 'cosmetic' &&
+                                getProductStatus(selectedItem) === 'owned' &&
                                 selectedItem.effect.skinId === metaStore.activeSkin
                             " class="preview__status">
                                 {{ foo.makeText("shop.previewBtn.applied") }}
@@ -265,7 +269,7 @@
     import { usePlayerStore } from "@/store/playerStore";
 
     import type { Product as PurchaseProduct } from "@/purchase/types/Product";
-    import meta from "@/configs/meta";
+    import { SoundManager } from "@/game/sound/SoundManager";
 
     const gameState = useGameState();
     const shopStore = useShopStore();
@@ -289,18 +293,6 @@
         | "available"
         | "owned"
         | "not_enough_currency";
-
-    const upgradeValueLabels: Record<string, string> = {
-        ammoLevel: "Патроны",
-        armorLevel: "Броня",
-        magnetRadiusLevel: "Бонус радиуса",
-    };
-
-    const upgradeValueSteps: Record<string, number> = {
-        ammoLevel: 2,
-        armorLevel: 1,
-        magnetRadiusLevel: 1,
-    };
 
     function getItemId(item: any): string {
         return item.id ?? item.title ?? "";
@@ -371,30 +363,32 @@
     }
 
     function getItemPrice(item: any): string {
+        const price = shopStore.getEffectivePrice(item as PurchaseProduct);
         if (item.platformPriceLabel) {
             return item.platformPriceLabel;
         }
 
         if (
-            typeof item.price === "object" &&
-            item.price !== null
+            typeof price === "object" &&
+            price !== null
         ) {
-            return String(item.price.value);
+            return String(price.value);
         }
 
         return String(item.price ?? "");
     }
 
     function getItemCurrency(item: any): string {
+        const price = shopStore.getEffectivePrice(item as PurchaseProduct);
         if (item.platformPriceLabel) {
             return "";
         }
 
         if (
-            typeof item.price === "object" &&
-            item.price !== null
+            typeof price === "object" &&
+            price !== null
         ) {
-            return getCurrencyLabel(item.price.currency);
+            return getCurrencyLabel(price.currency);
         }
 
         return getCurrencyLabel(
@@ -426,29 +420,36 @@
         return foo.makeText(`currency.${_c}`)
     }
 
-    function handleBuyClick(product: any) {
+    async function handleBuyClick(product: any) {
 
         const status = getProductStatus(product);
 
         if (status !== "available") {
+            SoundManager.getInstance().playCue("actionRejected");
             return;
         }
 
         if (!product.type) {
+            SoundManager.getInstance().playCue("uiSelect");
             alert(`Item ${product.id} bought!`);
             return;
         }
 
-        shopStore.buyItem(product as PurchaseProduct);
+        const bought = await shopStore.buyItem(product as PurchaseProduct);
+        SoundManager.getInstance().playCue(bought ? "goldenPickup" : "actionRejected");
     }
 
-    function handleApplyClick(product: PurchaseProduct) {
+    async function handleApplyClick(product: PurchaseProduct) {
 
         console.log("Apply click for", product);
         if (product.type !== "cosmetic") {
+            SoundManager.getInstance().playCue("actionRejected");
             return;
         }
-        metaStore.setActiveSkin(product.effect.skinId);
+        SoundManager.getInstance().playCue("uiSelect");
+        // `null` is the intentional ID of the built-in fallback skin.
+        metaStore.setActiveSkin(product.effect.defaultSkin ? null : product.effect.skinId);
+        await metaStore.saveProgress();
     }
 
     function getTimedProductTimer(product: any): string {
@@ -486,7 +487,7 @@
         }
 
         const level = metaStore.getUpgradeLevel(product.effect?.upgrade);
-        const maxLevel = meta.max_upgrades[product.effect?.upgrade];
+        const maxLevel = metaStore.getMaxUpgradeLevel(product.effect?.upgrade) ?? 0;
 
         if (level === null) {
             return { level, maxLevel };
@@ -519,55 +520,64 @@
         return `Уровень: ${upgradeInfo!.level} / ${upgradeInfo!.maxLevel}`;
     }
 
-    function getUpgradeValue(product: any): number | null {
-        switch (product.effect?.upgrade) {
-            case "ammoLevel":
-                return metaStore.maxAmmo;
-
-            case "armorLevel":
-                return metaStore.maxArmor;
-
-            case "magnetRadiusLevel":
-                return metaStore.getUpgradeLevel("magnetRadiusLevel");
-
-            default:
-                return null;
-        }
-    }
-
     function getUpgradeValueString(product: any): string {
         if (product.type !== "upgrade") {
             return "";
         }
 
         const upgradeKey = product.effect?.upgrade;
-        const currentValue = getUpgradeValue(product);
         const upgradeInfo = getUpgradeLevel(product);
-        const label = upgradeValueLabels[upgradeKey];
-        const step = upgradeValueSteps[upgradeKey] ?? product.effect?.value ?? 0;
-
-        if (!label || currentValue === null || !upgradeInfo) {
+        if (!upgradeKey || !upgradeInfo) {
             return "";
         }
 
-        if (upgradeKey === "magnetRadiusLevel") {
-            if (upgradeInfo.level >= upgradeInfo.maxLevel) {
-                return `${label}: ${currentValue} ${getLaneWord(currentValue)}`;
-            }
+        const formatTransition = (format: (level: number) => string) => {
+            const current = format(upgradeInfo.level);
+            return upgradeInfo.level >= upgradeInfo.maxLevel
+                ? current
+                : `${current} → ${format(upgradeInfo.level + 1)}`;
+        };
 
-            return `${label}: ${currentValue} -> ${currentValue + step} ${getLaneWord(currentValue + step)}`;
+        if (upgradeKey === "magnetLevel") {
+            const getMagnetStats = (level: number) => {
+                const parameters = metaStore.getUpgradeParameters("magnetLevel", level)!;
+                const duration = parameters.durationMs / 1000;
+                const targets = parameters.maxTargets;
+                const radiusBonus = parameters.radiusLaneBonus > 0 ? " • радиус +1 полоса" : "";
+                return `${duration} сек • захват ${targets}${radiusBonus}`;
+            };
+            return formatTransition(getMagnetStats);
         }
 
-        if (upgradeInfo.level >= upgradeInfo.maxLevel) {
-            return `${label}: ${currentValue}`;
+        if (upgradeKey === "ammoLevel") {
+            const getAmmoStats = (level: number) => {
+                const parameters = metaStore.getUpgradeParameters("ammoLevel", level)!;
+                return `боезапас ${parameters.count} • скорость ${parameters.speed.toFixed(2)}`;
+            };
+            return formatTransition(getAmmoStats);
         }
 
-        return `${label}: ${currentValue} -> ${currentValue + step}`;
+        if (upgradeKey === "armorLevel") {
+            const getArmorStats = (level: number) => {
+                const parameters = metaStore.getUpgradeParameters("armorLevel", level)!;
+                return `заряды ${parameters.count} • волна ${parameters.waveRadius}`;
+            };
+            return formatTransition(getArmorStats);
+        }
+
+        if (upgradeKey === "nitroDurationLevel") {
+            return formatTransition((level) => {
+                const parameters = metaStore.getUpgradeParameters("nitroDurationLevel", level)!;
+                return `длительность ${parameters.durationMs / 1000} сек`;
+            });
+        }
+
+        return "";
     }
 
     function getMagnetLevelString(): string {
-        const level = metaStore.getUpgradeLevel("magnetRadiusLevel");
-        const maxLevel = meta.max_upgrades.magnetRadiusLevel;
+        const level = metaStore.getUpgradeLevel("magnetLevel");
+        const maxLevel = metaStore.getMaxUpgradeLevel("magnetLevel") ?? 0;
 
         return `${level} / ${maxLevel}`;
     }
@@ -601,19 +611,6 @@
         setTimeout(() => {
             gameState.closeOverlay();
         }, 500);
-    }
-
-    function setContainerPos() {
-
-        if (gameState.currentState === "menu") {
-            return "container_pos_main_menu";
-        }
-
-        if (gameState.currentState === "pause") {
-            return "container_pos_pause";
-        }
-
-        return "";
     }
 
     function setHeaderSize() {
@@ -666,6 +663,10 @@
     //     background-color: rgba(0, 0, 0, 0.72);
     //     backdrop-filter: blur(2px);
     // }
+
+    .shop_root {
+        min-height: 0;
+    }
 
     .shop_container {
         width: min(86rem, 100%);
@@ -916,6 +917,14 @@
         align-items: center;
         flex-wrap: wrap;
         gap: .5rem;
+    }
+
+    .card__upgrade_stats {
+        flex: 1 1 100%;
+        color: #9fcaff;
+        font-family: 'jost-light';
+        font-size: clamp(.72rem, 1.3vmin, .9rem);
+        line-height: 1.2;
     }
 
     .card__title {

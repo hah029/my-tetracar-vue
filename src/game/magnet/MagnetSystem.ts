@@ -1,7 +1,9 @@
 import * as THREE from "three";
+import meta from "@/configs/meta";
 import { Car } from "@/game/car/Car";
 import { BaseItem } from "@/game/interactive/items/BaseItem";
 import { usePlayerStore } from "@/store/playerStore";
+import { SoundManager } from "@/game/sound/SoundManager";
 
 import magnetLineVertex from "@/game/shaders/magnet/line/vertex.glsl";
 import magnetLineFragment from "@/game/shaders/magnet/line/fragment.glsl";
@@ -10,8 +12,8 @@ export class MagnetSystem {
   private static instance: MagnetSystem | null = null;
   private scene!: THREE.Scene;
   private magnetField: THREE.Group | null = null;
-  private readonly fieldLineCount = 24;
   private readonly markersPerFieldLine = 1;
+  private lastPullSoundAt = 0;
 
   public static getInstance(): MagnetSystem {
     if (!MagnetSystem.instance) {
@@ -40,7 +42,9 @@ export class MagnetSystem {
 
     const force =
       (playerStore.magnetForce ?? 8) *
-      (playerStore.magnetMode === "lethalPull" ? 0.45 : 1);
+      (playerStore.magnetMode === "lethalPull"
+        ? meta.specialModes.magnet.corrupted.lethalPull.forceMultiplier
+        : 1);
     const dt = deltaTime / 1000;
 
     const carPos = car.position;
@@ -70,7 +74,7 @@ export class MagnetSystem {
     this.updateMagnetField(car, playerStore.isMagnetEnabled, now);
 
     if (!playerStore.isMagnetEnabled) {
-      items.forEach((item) => this.removeRepulseBeam(item));
+      items.forEach((item) => this.releaseItem(item));
       return;
     }
 
@@ -78,21 +82,25 @@ export class MagnetSystem {
     const radiusSq = radius * radius;
     const carPos = car.position;
 
-    for (let i = items.length - 1; i >= 0; i--) {
-      const item = items[i];
-      if (!item) continue;
+    const targets = items
+      .filter(
+        (item) =>
+          types.some((T) => item instanceof T) &&
+          !item.userData.corruptedBoost &&
+          !item.userData.pickupRejected &&
+          item.position.distanceToSquared(carPos) <= radiusSq,
+      )
+      .sort(
+        (a, b) =>
+          a.position.distanceToSquared(carPos) -
+          b.position.distanceToSquared(carPos),
+      )
+      .slice(0, playerStore.magnetMaxTargets);
+    const targetSet = new Set(targets);
 
-      const isAllowedType = types.some((T) => item instanceof T);
-      if (!isAllowedType) {
-        this.removeRepulseBeam(item);
-        continue;
-      }
-
-      const distSq = item.position.distanceToSquared(carPos);
-      const isInRadius = distSq <= radiusSq;
-
-      if (!isInRadius) {
-        this.removeRepulseBeam(item);
+    for (const item of items) {
+      if (!targetSet.has(item)) {
+        this.releaseItem(item);
         continue;
       }
 
@@ -102,7 +110,8 @@ export class MagnetSystem {
           dir.normalize();
           item.position.addScaledVector(
             dir,
-            (playerStore.magnetForce ?? 8) * 0.018,
+            (playerStore.magnetForce ?? 8) *
+              meta.specialModes.magnet.corrupted.repulse.pushDistance,
           );
           item.collider.center.copy(item.position);
         }
@@ -115,6 +124,10 @@ export class MagnetSystem {
 
       if (item.userData.magnetLine == undefined) {
         item.userData.status = "magnetized";
+        if (now - this.lastPullSoundAt > 120) {
+          SoundManager.getInstance().playCueOneShot("magnetPull");
+          this.lastPullSoundAt = now;
+        }
         if (playerStore.magnetMode === "lethalPull") {
           item.markAsLethalMagnetObstacle();
         }
@@ -185,13 +198,36 @@ export class MagnetSystem {
   }
 
   public removeRepulseBeam(item: BaseItem) {
-    const line = item.userData.repulseLine as THREE.Mesh | undefined;
+    this.removeItemBeam(item, "repulseLine");
+  }
+
+  private releaseItem(item: BaseItem): void {
+    this.removeItemEffects(item);
+    if (item.userData.status === "magnetized") item.userData.status = "landed";
+  }
+
+  /** Удаляет все визуальные следы магнита, привязанные к предмету. */
+  public removeItemEffects(item: BaseItem): void {
+    this.removeItemBeam(item, "magnetLine");
+    this.removeItemBeam(item, "repulseLine");
+  }
+
+  /** Очищает поле магнита при reset/dispose, без ожидания следующего тика. */
+  public clear(): void {
+    this.removeMagnetField();
+  }
+
+  private removeItemBeam(
+    item: BaseItem,
+    lineKey: "magnetLine" | "repulseLine",
+  ): void {
+    const line = item.userData[lineKey] as THREE.Mesh | undefined;
     if (!line) return;
 
     this.scene.remove(line);
     line.geometry.dispose();
     (line.material as THREE.Material).dispose();
-    item.userData.repulseLine = undefined;
+    item.userData[lineKey] = undefined;
   }
 
   private updateMagnetField(car: Car, enabled: boolean, now: number) {
@@ -210,12 +246,14 @@ export class MagnetSystem {
           ? "#ff7a2a"
           : "#00eaff";
 
+    const turns = playerStore.magnetFieldTurns;
     if (
       !this.magnetField ||
-      this.magnetField.userData.radius !== radius
+      this.magnetField.userData.radius !== radius ||
+      this.magnetField.userData.turns !== turns
     ) {
       this.removeMagnetField();
-      this.magnetField = this.createMagnetField(color, radius);
+      this.magnetField = this.createMagnetField(color, radius, turns);
       this.scene.add(this.magnetField);
     }
 
@@ -241,9 +279,14 @@ export class MagnetSystem {
     this.updateMagnetFieldMarkers(now, direction);
   }
 
-  private createMagnetField(color: string, radius: number): THREE.Group {
+  private createMagnetField(
+    color: string,
+    radius: number,
+    turns: number,
+  ): THREE.Group {
     const field = new THREE.Group();
     field.userData.radius = radius;
+    field.userData.turns = turns;
 
     const lineMaterial = new THREE.ShaderMaterial({
       transparent: true,
@@ -253,7 +296,7 @@ export class MagnetSystem {
       uniforms: {
         time: { value: 0 },
         color: { value: new THREE.Color(color) },
-        opacity: { value: 0.18 },
+        opacity: { value: 0.1 },
       },
       vertexShader: magnetLineVertex,
       fragmentShader: magnetLineFragment,
@@ -267,15 +310,15 @@ export class MagnetSystem {
       blending: THREE.AdditiveBlending,
     });
 
-    for (let i = 0; i < this.fieldLineCount; i++) {
+    for (let i = 0; i < turns; i++) {
       const lineGroup = new THREE.Group();
-      const majorAngle = (i / this.fieldLineCount) * Math.PI * 2;
+      const majorAngle = (i / turns) * Math.PI * 2;
       const majorRadius = radius * 0.58;
       const minorRadius = radius * 0.28;
       lineGroup.userData.majorRadius = majorRadius;
       lineGroup.userData.minorRadius = minorRadius;
       lineGroup.userData.majorAngle = majorAngle;
-      lineGroup.userData.phase = (i / this.fieldLineCount) * Math.PI * 2;
+      lineGroup.userData.phase = (i / turns) * Math.PI * 2;
 
       const geometry = this.createFieldLineGeometry(
         majorRadius,
@@ -358,10 +401,7 @@ export class MagnetSystem {
       "position",
       new THREE.Float32BufferAttribute(positions, 3),
     );
-    geometry.setAttribute(
-      "uv",
-      new THREE.Float32BufferAttribute(uvs, 2),
-    );
+    geometry.setAttribute("uv", new THREE.Float32BufferAttribute(uvs, 2));
     geometry.setIndex(indices);
     geometry.computeVertexNormals();
 

@@ -51,6 +51,7 @@
     import { createNewText, deleteTextLines } from '@/helpers/functions';
     import { useGameState } from "@/store/gameState";
     import { useDevice } from '@/composables/useDevice';
+    import { SoundManager } from "@/game/sound/SoundManager";
 
     enum SettingsView {
         Main,
@@ -73,6 +74,9 @@
     const isBackButtonClicked = ref(false);
     const isSettingsPreparing = ref(true);
     const { deviceType } = useDevice();
+    const soundManager = SoundManager.getInstance();
+    // const isClosing = ref(false);   // защита от повторного вызова, пока идёт закрытие окна
+    const isProcessingEsc = ref(false); // защита от повторного вызова, пока идёт закрытие окна
 
     // ===== TEXT =====
     const foo_1 = createNewText();
@@ -86,29 +90,34 @@
         {
             id: 1,
             text: foo_1.makeText("settings.menuList.graphics"),
-            action: () => currentView.value = SettingsView.Graphics,
+            action: () => openSubMenu(SettingsView.Graphics),
         },
         {
             id: 2,
             text: foo_1.makeText("settings.menuList.sounds"),
-            action: () => currentView.value = SettingsView.Sound,
+            action: () => openSubMenu(SettingsView.Sound),
         },
         {
             id: 3,
             text: foo_1.makeText("settings.menuList.lang"),
-            action: () => currentView.value = SettingsView.Language,
+            action: () => openSubMenu(SettingsView.Language),
         },
         {
             id: 4,
             text: foo_1.makeText("settings.menuList.controls"),
-            action: () => currentView.value = SettingsView.Controls,
+            action: () => openSubMenu(SettingsView.Controls),
         },
         {
             id: 5,
             text: foo_1.makeText("settings.menuList.about"),
-            action: () => currentView.value = SettingsView.About,
+            action: () => openSubMenu(SettingsView.About),
         },
     ]);
+
+    function openSubMenu(view: SettingsView) {
+        soundManager.playCue("uiSelect");
+        currentView.value = view;
+    }
 
     // ===== TITLE =====
     const dynamicTitleName = computed(() => {
@@ -128,6 +137,7 @@
 
     // ===== BACK =====
     function backButtonClick() {
+        soundManager.playCue("uiSelect");
         if (isInSubMenu.value) {
             isBackButtonClicked.value = true;
             setTimeout(() => {
@@ -182,6 +192,8 @@
     function setContainerClass() {
         if (gameState.currentState == 'menu') {
             return 'container_correction_menu';
+        } else if (gameState.currentState == 'pause') {
+            return 'container_correction_pause';   // ← было в PauseMenu, теперь вернём сюда
         } else {
             return 'settings_container_alternative';
         };
@@ -196,7 +208,7 @@
         };
     };
 
-    // 🔥 Следим за изменением секции настроек
+    // следим за изменением секции настроек
     watch(
         () => gameState.settingsSection,
         (section) => {
@@ -213,6 +225,27 @@
             } else if (section === 'main' || section === null) {
                 currentView.value = SettingsView.Main;
             }
+        },
+    );
+
+    // следим за закрытием окна оверлея
+    // watch(
+    //     () => gameState.overlayCloseRequestId,
+    //     () => {
+    //         if (isClosing.value) return;
+    //         isClosing.value = true;
+    //         backButtonClick();
+    //     },
+    // );
+
+    watch(
+        () => gameState.overlayCloseRequestId,
+        () => {
+            if (isProcessingEsc.value) return;
+            isProcessingEsc.value = true;
+            backButtonClick();
+            // сброс — длительность самой долгой ветки (у тебя максимум 900мс для pause)
+            setTimeout(() => { isProcessingEsc.value = false; }, 950);
         },
     );
 

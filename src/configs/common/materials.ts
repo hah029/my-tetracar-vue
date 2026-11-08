@@ -34,7 +34,7 @@ export const goldenMaterialConfig = {
   atlas,
   atlasSprite: ITEM_ATLAS_SPRITES.golden,
   emissive: 0xefbf04,
-  emissiveIntensity: 0.6,
+  emissiveIntensity: 2,
   metalness: 4.0,
 } as MaterialConfig;
 

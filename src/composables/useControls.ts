@@ -1,32 +1,26 @@
 // src/composables/useControls.ts
 
-import { onMounted, onUnmounted, ref } from "vue";
+import { onMounted, onUnmounted } from "vue";
 import { useGameState } from "@/store/gameState";
 import { usePlayerStore } from "@/store/playerStore";
+import { useModalMessageStore } from "@/store/modalMessageStore";
 import { CarManager } from "@/game/car";
 import { CameraSystem } from "@/game/camera/CameraSystem";
 import { BaseItem } from "@/game/interactive/items/BaseItem";
 import { GameStates } from "@/game/core/GameState";
+import { SoundManager } from "@/game/sound/SoundManager";
 import type { useGame } from "./useGame";
 
 export function useControls(game: ReturnType<typeof useGame>) {
   const gameStore = useGameState();
   const playerStore = usePlayerStore();
-
-  const touchZoneRef = ref<HTMLElement | null>(null);
+  const isDevMode = import.meta.env.DEV;
 
   const processedKeys = new Set<string>();
 
   const INPUT_DT = 1000 / 60;
   const MOVE_REPEAT_INTERVAL = 90;
 
-  const TAP_DISTANCE = 20;
-  const TAP_DURATION = 250;
-  const SWIPE_THRESHOLD = 40;
-
-  let startX = 0;
-  let startY = 0;
-  let startTime = 0;
   let lastMoveRepeatTime = 0;
 
   enum controlKeys {
@@ -46,6 +40,8 @@ export function useControls(game: ReturnType<typeof useGame>) {
 
     NITRO = "KeyN",
     MAGNET = "KeyM",
+    REFILL_AMMO = "KeyB",
+    REFILL_ARMOR = "KeyV",
 
     ESCAPE = "Escape",
 
@@ -57,6 +53,10 @@ export function useControls(game: ReturnType<typeof useGame>) {
     switch (gameStore.currentState) {
       case GameStates.Play:
         gameStore.pauseGame();
+        break;
+
+      case GameStates.LevelSelect:
+        gameStore.goToMenu();
         break;
 
       case GameStates.Pause:
@@ -73,7 +73,16 @@ export function useControls(game: ReturnType<typeof useGame>) {
       case GameStates.Menu:
         if (
           gameStore.activeOverlay === "settings" ||
-          gameStore.activeOverlay === "leaderBoards"
+          gameStore.activeOverlay === "leaderBoards" || 
+          gameStore.activeOverlay === "dailyGift"
+        ) {
+          // красиво закрываем окно (с каскадом анимаций)
+          gameStore.requestOverlayClose();
+        } else if (
+          // пока просто (по старинке) быстро закрываем окно (без каскада анимаций)
+          gameStore.activeOverlay === "shop" ||
+          gameStore.activeOverlay === "fortuneWheel" ||
+          gameStore.activeOverlay === "objectives"
         ) {
           gameStore.activeOverlay = null;
         }
@@ -126,73 +135,32 @@ export function useControls(game: ReturnType<typeof useGame>) {
     }
   }
 
-  function registerTouchZone(element: HTMLElement | null) {
-    cleanup();
-
-    touchZoneRef.value = element;
-
-    if (!element) return;
-
-    element.style.touchAction = "none";
-
-    const onTouchStart = (e: TouchEvent) => {
-      const touch = e.touches[0];
-
-      startX = touch.clientX;
-      startY = touch.clientY;
-      startTime = Date.now();
-    };
-
-    const onTouchEnd = (e: TouchEvent) => {
-      const touch = e.changedTouches[0];
-
-      const deltaX = touch.clientX - startX;
-      const deltaY = touch.clientY - startY;
-
-      const absX = Math.abs(deltaX);
-      const absY = Math.abs(deltaY);
-
-      const duration = Date.now() - startTime;
-
-      if (
-        absX < TAP_DISTANCE &&
-        absY < TAP_DISTANCE &&
-        duration < TAP_DURATION
-      ) {
-        handleGameGesture("tap");
-        return;
-      }
-
-      if (absX > absY) {
-        if (deltaX > SWIPE_THRESHOLD) {
-          handleGameGesture("right");
-        } else if (deltaX < -SWIPE_THRESHOLD) {
-          handleGameGesture("left");
-        }
-      } else {
-        if (deltaY < -SWIPE_THRESHOLD) {
-          handleGameGesture("up");
-        } else if (deltaY > SWIPE_THRESHOLD) {
-          handleGameGesture("down");
-        }
-      }
-    };
-
-    element.addEventListener("touchstart", onTouchStart, {
-      passive: true,
-    });
-
-    element.addEventListener("touchend", onTouchEnd, {
-      passive: true,
-    });
-
-    (element as any)._touchStartHandler = onTouchStart;
-    (element as any)._touchEndHandler = onTouchEnd;
+  function handleTouchControl(action: "left" | "right" | "up" | "down" | "fire") {
+    handleGameGesture(action === "fire" ? "tap" : action);
   }
 
   function handleKeyDown(e: KeyboardEvent) {
     if ((e.ctrlKey || e.metaKey) && e.code === "KeyQ") {
       return;
+    }
+
+    // 🔥 если открыто модальное сообщение — блокируем весь остальной ввод,
+    //    но разрешаем Enter (центральный и правый) и Esc закрыть его
+    const modal = useModalMessageStore();
+    if (modal.isVisible) {
+        if (
+            e.code === controlKeys.ESCAPE ||
+            e.code === controlKeys.ENTER ||
+            e.code === controlKeys.ENTER_NUMPAD
+        ) {
+            e.preventDefault();
+            if (processedKeys.has(e.code)) return;
+            processedKeys.add(e.code);
+
+            SoundManager.getInstance().playCue("uiSelect");
+            modal.hide();
+        }
+        return;  // всё остальное — игнорируем
     }
 
     if (e.key !== controlKeys.ESCAPE) {
@@ -233,6 +201,7 @@ export function useControls(game: ReturnType<typeof useGame>) {
         break;
 
       case controlKeys.NITRO:
+        if (!isDevMode) return;
         if (processedKeys.has(e.code)) return;
         processedKeys.add(e.code);
         playerStore.enableNitro();
@@ -241,9 +210,22 @@ export function useControls(game: ReturnType<typeof useGame>) {
         break;
 
       case controlKeys.MAGNET:
+        if (!isDevMode) return;
         if (processedKeys.has(e.code)) return;
         processedKeys.add(e.code);
         playerStore.enableMagnet([BaseItem]);
+        break;
+
+      case controlKeys.REFILL_AMMO:
+        if (!isDevMode || processedKeys.has(e.code)) return;
+        processedKeys.add(e.code);
+        playerStore.fillAmmo(true);
+        break;
+
+      case controlKeys.REFILL_ARMOR:
+        if (!isDevMode || processedKeys.has(e.code)) return;
+        processedKeys.add(e.code);
+        playerStore.fillArmor();
         break;
 
       case controlKeys.ESCAPE:
@@ -274,6 +256,7 @@ export function useControls(game: ReturnType<typeof useGame>) {
 
     switch (e.code) {
       case controlKeys.NITRO:
+        if (!isDevMode) return;
         playerStore.disableNitro();
         CarManager.getInstance().disableNitro();
         break;
@@ -282,22 +265,6 @@ export function useControls(game: ReturnType<typeof useGame>) {
       case controlKeys.DOWN_ALT:
         playerStore.forceJump = false;
         break;
-    }
-  }
-
-  function cleanup() {
-    if (touchZoneRef.value && (touchZoneRef.value as any)._touchStartHandler) {
-      touchZoneRef.value.removeEventListener(
-        "touchstart",
-        (touchZoneRef.value as any)._touchStartHandler,
-      );
-    }
-
-    if (touchZoneRef.value && (touchZoneRef.value as any)._touchEndHandler) {
-      touchZoneRef.value.removeEventListener(
-        "touchend",
-        (touchZoneRef.value as any)._touchEndHandler,
-      );
     }
   }
 
@@ -312,11 +279,9 @@ export function useControls(game: ReturnType<typeof useGame>) {
 
     processedKeys.clear();
 
-    cleanup();
   });
 
   return {
-    registerTouchZone,
-    cleanup,
+    handleTouchControl,
   };
 }

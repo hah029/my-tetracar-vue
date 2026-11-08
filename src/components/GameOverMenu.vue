@@ -59,6 +59,10 @@
                 {{ btn.text }}
             </button>
         </TransitionGroup>
+
+        <Transition name="game_logo_whole_menu_showing">
+            <div v-if="gameState.activeOverlay == 'dailyGift'" class="blured_layer"></div>
+        </Transition>
     </div>
 </template>
 
@@ -70,6 +74,8 @@ import { usePlayerStore } from "../store/playerStore";
 import { useProgressStore } from "@/store/progressStore";
 import { GameStates } from "@/game/core/GameState";
 import { createNewText } from '@/helpers/functions';
+import { SoundManager } from "@/game/sound/SoundManager";
+import { Telemetry } from "@/telemetry";
 
 // подключаем store
 const gameState = useGameState();
@@ -95,13 +101,16 @@ const menuButtons = computed(() => [
 ]);
 
 function restartGame() {
+    SoundManager.getInstance().playCue("uiSelect");
+    Telemetry.emit({ type: "ui.action", name: "restart_clicked", screen: "gameover" });
     playerStore.resetPlayerAchievements();
-    gameState.setState(GameStates.Countdown);
+    gameState.setState(GameStates.Countdown, "restart_button");
 };
 
 function goToMainMenu() {
+    SoundManager.getInstance().playCue("uiSelect");
     playerStore.resetPlayerAchievements();
-    gameState.setState(GameStates.Menu);
+    gameState.setState(GameStates.Menu, "menu_button");
 };
 
 onMounted(() => {
@@ -128,16 +137,40 @@ onMounted(() => {
     bottom: 0;
     width: 100%;
     height: 100%;
+    box-sizing: border-box;
+    padding: clamp(0.75rem, 3vh, 2rem) 1rem;
     background-color: rgba(0, 0, 0, 0.72);
     backdrop-filter: blur(2px);
+    gap: clamp(0.75rem, 3.4vh, 2.5rem);
+    overflow-y: auto;
+}
 
-    gap: 2.5rem;
-
+.blured_layer {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.8);
+    backdrop-filter: blur(6px);
+    z-index: 4;
 }
 
 .header_correction {
     @include text-button-size-xl;
     color: #F79CFF;
+}
+
+.container_correction .header_block {
+    margin-bottom: clamp(0.5rem, 2.2vh, 1.5rem);
+}
+
+.container_correction .header_text {
+    margin-bottom: clamp(0.35rem, 1.4vh, 0.9rem);
+}
+
+.container_correction .header_image {
+    width: min(102vh, 90vw);
 }
 
 .rotate_180 {
@@ -155,21 +188,21 @@ onMounted(() => {
 
 .group_correction {
     position: static !important;
-    min-height: 5.75rem;
+    min-height: 0;
     display: flex;
     flex-direction: column;
     justify-content: flex-start;
     align-items: center;
+    gap: clamp(0.75rem, 2.5vh, 2rem);
 
     &>*+* {
-        margin-top: 2rem; // 25px - row-gap (между кнопками)
+        margin-top: 0;
     }
 }
 
 .score_container {
     width: min(25rem, 90vw);
-    // margin: 2.5rem;
-    gap: 1rem;
+    gap: clamp(0.4rem, 1.5vh, 1rem);
     display: flex;
     flex-direction: column;
     // height: 100%;
@@ -199,6 +232,65 @@ onMounted(() => {
     &.newRecord {
         color: #ffd900bc;
         font-size: clamp(0.9rem, 1.55vmin, 1rem);
+    }
+}
+
+// На горизонтальных мобильных экранах размеры остальных меню привязаны к
+// высоте viewport; для Game Over используем ту же модель, чтобы все блоки
+// помещались без наложений.
+@media (min-width: $breakpoint-mobile) and (orientation: landscape) and (hover: none) and (pointer: coarse) {
+    .container_correction {
+        padding-block: 2.5vh;
+        gap: 2.8vh;
+    }
+
+    .score_container {
+        width: min(50vh, 72vw);
+    }
+}
+
+@media (min-width: $breakpoint-laptop) and (orientation: landscape) {
+    .container_correction {
+        padding-block: 2.2vw;
+        gap: 1.25vw;
+    }
+
+    .score_container {
+        width: min(22vw, 25rem);
+    }
+}
+
+@media (min-width: $breakpoint-desktop) and (orientation: landscape) {
+    .container_correction {
+        padding-block: 2.6vw;
+        gap: 1.45vw;
+    }
+
+    .score_container {
+        width: min(20.8vw, 25rem);
+    }
+}
+
+@media (max-height: 540px) and (orientation: landscape) {
+    .container_correction {
+        padding-block: 2vh;
+        gap: 1.2vh;
+    }
+
+    .container_correction .header_block {
+        margin-bottom: 0.8vh;
+    }
+
+    .container_correction .header_text {
+        margin-bottom: 0.6vh;
+    }
+
+    .score_container {
+        gap: 0.6vh;
+    }
+
+    .group_correction {
+        gap: 1.4vh;
     }
 }
 </style>

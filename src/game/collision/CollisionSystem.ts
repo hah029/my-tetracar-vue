@@ -84,6 +84,7 @@ export class CollisionSystem {
     for (let i = items.length - 1; i >= 0; i--) {
       const item = items[i];
       if (item === undefined) continue;
+      if (item.userData.pickupRejected) continue;
 
       if (carCollider.intersectsSphere(item.collider)) {
         return {

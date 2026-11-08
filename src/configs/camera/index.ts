@@ -50,6 +50,7 @@ export default {
     nitro: { strength: 0.28, duration: 0.6 },
     heavy_nitro: { strength: 0.42, duration: 0.7 },
     landing: { strength: 0.28, duration: 0.2 },
+    pickup_rejected: { amplitude: 0.32, duration: 0.2 },
   },
 
   // Поведение камеры при разрушении (destroyed state)

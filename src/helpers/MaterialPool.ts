@@ -9,7 +9,7 @@ import { useCommonStore } from "@/store/commonStore";
 
 export interface MaterialConfig {
   type: "standard" | "standardWithMap" | "atlas";
-  key?: string; // Уникальный ключ для кэша
+  key?: string;
   color?: number;
   textureUrl?: string;
   textureOptions?: TextureOptions;
@@ -19,165 +19,175 @@ export interface MaterialConfig {
   transparent?: boolean;
   opacity?: number;
   side?: THREE.Side;
+  applyUV?: boolean;
 }
 
 class MaterialPoolClass {
-  private materials = new Map<string, THREE.Material>();
+    private materials = new Map<string, THREE.Material>();
+    private textureCache = new Map<string, THREE.Texture>();  // 👈 КЭШ ТЕКСТУР ПО СПРАЙТУ
 
-  /**
-   * Получить или создать материал
-   */
-  getMaterial(config: MaterialConfig): THREE.Material {
-    // Генерируем уникальный ключ
-    const key = config.key || this.generateKey(config);
-
-    if (this.materials.has(key)) {
-      return this.materials.get(key)!;
-    }
-
-    const material = this.createMaterial(config);
-    this.materials.set(key, material);
-
-    console.log(
-      `🆕 New material created: ${key}. Total: ${this.materials.size}`,
-    );
-    return material;
-  }
-
-  private generateKey(config: MaterialConfig): string {
-    return JSON.stringify({
-      type: config.type,
-      color: config.color,
-      textureUrl: config.textureUrl,
-      atlasSprite: config.atlasSprite,
-      emissive: config.emissive,
-      emissiveIntensity: config.emissiveIntensity,
-      transparent: config.transparent,
-      opacity: config.opacity,
-    });
-  }
-
-  private createMaterial(config: MaterialConfig): THREE.Material {
-    const material = new THREE.MeshStandardMaterial({
-      color: config.color ?? 0xffffff,
-      emissive: config.emissive ?? 0x000000,
-      emissiveIntensity: config.emissiveIntensity ?? 1,
-      transparent: config.transparent ?? false,
-      opacity: config.opacity ?? 1,
-      side: config.side ?? THREE.FrontSide,
-    });
-
-    // Настройка текстуры
-    if (config.type === "standardWithMap" && config.textureUrl) {
-      const texture = loadTexture(config.textureUrl, config.textureOptions);
-      material.map = texture;
-    }
-
-    if (config.type === "atlas" && config.atlasSprite) {
-      const atlasTexture = atlas.getAtlasTexture();
-      const sprite = atlas.getSprite(config.atlasSprite);
-
-      if (atlasTexture) {
-        material.map = atlasTexture.clone();
-        material.map.needsUpdate = true;
-
-        if (sprite) {
-          material.map.repeat.set(sprite.uvRect.w, sprite.uvRect.h);
-          material.map.offset.set(sprite.uvRect.u, sprite.uvRect.v);
+    private getCachedTexture(atlasSprite: string): THREE.Texture | null {
+        // Проверяем кэш
+        if (this.textureCache.has(atlasSprite)) {
+        return this.textureCache.get(atlasSprite)!;
         }
-      }
+
+        const atlasTexture = atlas.getSharedTexture();
+        const sprite = atlas.getSprite(atlasSprite as AtlasSpriteName);
+
+        if (!atlasTexture || !sprite) return null;
+
+        // Создаём одну текстуру для каждого спрайта
+        const texture = new THREE.Texture();
+        texture.image = atlasTexture.image;
+        texture.colorSpace = atlasTexture.colorSpace;
+        texture.flipY = atlasTexture.flipY;
+        texture.magFilter = atlasTexture.magFilter;
+        texture.minFilter = atlasTexture.minFilter;
+        texture.generateMipmaps = atlasTexture.generateMipmaps;
+        texture.wrapS = atlasTexture.wrapS;
+        texture.wrapT = atlasTexture.wrapT;
+        
+        texture.repeat.set(sprite.uvRect.w, sprite.uvRect.h);
+        texture.offset.set(sprite.uvRect.u, sprite.uvRect.v);
+        texture.needsUpdate = true;
+
+        // Сохраняем в кэш
+        this.textureCache.set(atlasSprite, texture);
+        // console.log(`🆕 Texture cached: ${atlasSprite}`);
+        return texture;
     }
 
-    return material;
-  }
+    getMaterial(config: MaterialConfig): THREE.Material {
+        const key = config.key || this.generateKey(config);
+        if (this.materials.has(key)) {
+        return this.materials.get(key)!;
+        }
+        const material = this.createMaterial(config);
+        this.materials.set(key, material);
+        // console.log(`🆕 New material created: ${key}. Total: ${this.materials.size}`);
+        return material;
+    }
 
-  // ========== НОВЫЕ МЕТОДЫ ДЛЯ МОНЕТ И БУСТЕРОВ ==========
+    private generateKey(config: MaterialConfig): string {
+        return JSON.stringify({
+        type: config.type,
+        color: config.color,
+        textureUrl: config.textureUrl,
+        atlasSprite: config.atlasSprite,
+        emissive: config.emissive,
+        emissiveIntensity: config.emissiveIntensity,
+        transparent: config.transparent,
+        opacity: config.opacity,
+        });
+    }
 
-  getGoldenMaterial(): THREE.Material {
-    return this.getMaterial({
-      type: "atlas",
-      key: "golden_coin",
-      atlasSprite: ITEM_ATLAS_SPRITES.golden,
-      emissive: useCommonStore().config.materials.golden.emissive,
-      emissiveIntensity:
-        useCommonStore().config.materials.golden.emissiveIntensity,
-    });
-  }
+    private createMaterial(config: MaterialConfig): THREE.Material {
+        const material = new THREE.MeshStandardMaterial({
+        color: config.color ?? 0xffffff,
+        emissive: config.emissive ?? 0x000000,
+        emissiveIntensity: config.emissiveIntensity ?? 1,
+        transparent: config.transparent ?? false,
+        opacity: config.opacity ?? 1,
+        side: config.side ?? THREE.FrontSide,
+        });
 
-  getEnergonMaterial(): THREE.Material {
-    return this.getMaterial({
-      type: "atlas",
-      key: "energon_coin",
-      atlasSprite: ITEM_ATLAS_SPRITES.energon,
-      color: 0x82c8e5,
-      emissive: 0x82c8e5,
-      emissiveIntensity: 0.6,
-    });
-  }
+        if (config.type === "standardWithMap" && config.textureUrl) {
+        const texture = loadTexture(config.textureUrl, config.textureOptions);
+        material.map = texture;
+        }
 
-  getNitroMaterial(): THREE.Material {
-    return this.getMaterial({
-      type: "atlas",
-      key: "nitro_booster",
-      atlasSprite: ITEM_ATLAS_SPRITES.nitro,
-      color: 0x00dd00,
-      emissive: 0x00dd00,
-      emissiveIntensity: 0.6,
-    });
-  }
+        if (config.type === "atlas" && config.atlasSprite) {
+        // 👇 ИСПОЛЬЗУЕМ КЭШ ТЕКСТУР
+        const texture = this.getCachedTexture(config.atlasSprite);
+        if (texture) {
+            material.map = texture;
+        }
+        }
 
-  getShieldMaterial(): THREE.Material {
-    return this.getMaterial({
-      type: "atlas",
-      key: "shield_booster",
-      atlasSprite: ITEM_ATLAS_SPRITES.shield,
-      color: 0xffffff,
-      emissive: 0xffffff,
-      emissiveIntensity: 0.6,
-    });
-  }
+        return material;
+    }
 
-  getMagnetMaterial(): THREE.Material {
-    return this.getMaterial({
-      type: "atlas",
-      key: "magnet_booster",
-      atlasSprite: ITEM_ATLAS_SPRITES.magnet,
-      color: 0x0088ff,
-      emissive: 0x0088ff,
-      emissiveIntensity: 0.6,
-    });
-  }
+    // ===== МЕТОДЫ ДЛЯ МОНЕТ И БУСТЕРОВ =====
 
-  getBulletMaterial(): THREE.Material {
-    return this.getMaterial({
-      type: "atlas",
-      key: "bullet_booster",
-      atlasSprite: ITEM_ATLAS_SPRITES.bullet,
-      color: 0xdd0000,
-      emissive: 0xdd0000,
-      emissiveIntensity: 0.6,
-    });
-  }
+    getGoldenMaterial(): THREE.Material {
+        return this.getMaterial({
+        type: "atlas",
+        key: "golden_coin",
+        atlasSprite: ITEM_ATLAS_SPRITES.golden,
+        emissive: useCommonStore().config.materials.golden.emissive,
+        emissiveIntensity: useCommonStore().config.materials.golden.emissiveIntensity,
+        });
+    }
 
-  // ========== КОНЕЦ НОВЫХ МЕТОДОВ ==========
+    getEnergonMaterial(): THREE.Material {
+        return this.getMaterial({
+        type: "atlas",
+        key: "energon_coin",
+        atlasSprite: ITEM_ATLAS_SPRITES.energon,
+        color: 0x82c8e5,
+        emissive: 0x82c8e5,
+        emissiveIntensity: 0.6,
+        });
+    }
 
-  /**
-   * Получить статистику пула (для отладки)
-   */
-  getStats(): { size: number; keys: string[] } {
-    return {
-      size: this.materials.size,
-      keys: Array.from(this.materials.keys()),
-    };
-  }
+    getNitroMaterial(): THREE.Material {
+        return this.getMaterial({
+        type: "atlas",
+        key: "nitro_booster",
+        atlasSprite: ITEM_ATLAS_SPRITES.nitro,
+        color: 0x00dd00,
+        emissive: 0x00dd00,
+        emissiveIntensity: 0.6,
+        });
+    }
 
-  /**
-   * Очистить пул (при перезагрузке игры)
-   */
-  dispose(): void {
-    this.materials.forEach((material) => material.dispose());
-    this.materials.clear();
-  }
+    getShieldMaterial(): THREE.Material {
+        return this.getMaterial({
+        type: "atlas",
+        key: "shield_booster",
+        atlasSprite: ITEM_ATLAS_SPRITES.shield,
+        color: 0xffffff,
+        emissive: 0xffffff,
+        emissiveIntensity: 0.6,
+        });
+    }
+
+    getMagnetMaterial(): THREE.Material {
+        return this.getMaterial({
+        type: "atlas",
+        key: "magnet_booster",
+        atlasSprite: ITEM_ATLAS_SPRITES.magnet,
+        color: 0x0088ff,
+        emissive: 0x0088ff,
+        emissiveIntensity: 0.6,
+        });
+    }
+
+    getBulletMaterial(): THREE.Material {
+        return this.getMaterial({
+        type: "atlas",
+        key: "bullet_booster",
+        atlasSprite: ITEM_ATLAS_SPRITES.bullet,
+        color: 0xdd0000,
+        emissive: 0xdd0000,
+        emissiveIntensity: 0.6,
+        });
+    }
+
+    getStats(): { size: number; keys: string[] } {
+        return {
+        size: this.materials.size,
+        keys: Array.from(this.materials.keys()),
+        };
+    }
+
+    dispose(): void {
+        this.materials.forEach((material) => material.dispose());
+        this.materials.clear();
+        this.textureCache.forEach((texture) => texture.dispose());
+        this.textureCache.clear();
+    }
 }
 
 export const MaterialPool = new MaterialPoolClass();

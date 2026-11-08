@@ -6,7 +6,15 @@ import { useMetaStore } from "@/store/metaStore";
 import { useCommonStore } from "@/store/commonStore";
 import { useLevelStore } from "@/store/levelStore";
 import playerConfig from "@/configs/player";
-import type { GameplayConfig, NitroTrailVisualConfig } from "@/levels/types";
+import type {
+  GameplayConfig,
+  NitroTrailVisualConfig,
+  ShieldVisualConfig,
+} from "@/levels/types";
+import type { BulletVariant } from "@/game/combat/BulletVariant";
+import { getPlayerSkinConfig } from "@/configs/skins";
+import meta from "@/configs/meta";
+export type ArmorVariant = "normal" | "super";
 
 const DEFAULT_NITRO_TRAIL: NitroTrailVisualConfig = {
   color: "#66ff66",
@@ -18,7 +26,20 @@ const DEFAULT_NITRO_TRAIL: NitroTrailVisualConfig = {
   timeScale: 4,
 };
 
+const DEFAULT_SHIELD: ShieldVisualConfig = {
+  color: "#55dfff",
+  radius: 3,
+  offsetY: 0.55,
+  offsetZ: -3,
+  scaleX: 1.15,
+  scaleY: 0.9,
+  scaleZ: 0.9,
+  opacity: 0.1,
+  timeScale: 1.8,
+};
+
 export type MagnetMode = "pull" | "lethalPull" | "repulse";
+export type MagnetVariant = "normal" | "super";
 
 export const usePlayerStore = defineStore("playerStore", () => {
   const progressStore = useProgressStore();
@@ -50,6 +71,22 @@ export const usePlayerStore = defineStore("playerStore", () => {
   );
   const currentPlayerConfig = computed(() => levelStore.currentLevel.player);
   const currentPlayerVisual = computed(() => currentPlayerConfig.value.visual);
+  const activeSkinConfig = computed(() =>
+    getPlayerSkinConfig(metaStore.activeSkin),
+  );
+  const carMaterialConfig = computed(() => ({
+    ...config.value.carMaterialConfig,
+    ...activeSkinConfig.value?.material,
+  }));
+  const carMaterialConfigExtra = computed(() => ({
+    ...config.value.carMaterialConfigExtra,
+    ...activeSkinConfig.value?.textures,
+  }));
+  const neonEdgesConfig = computed(
+    () => activeSkinConfig.value?.effects?.neonEdges?.enabled
+      ? activeSkinConfig.value.effects.neonEdges
+      : null,
+  );
   const carEmissionConfigExtra = computed(() => ({
     ...config.value.carEmissionConfigExtra,
     ...currentPlayerVisual.value?.emissiveColors,
@@ -73,6 +110,10 @@ export const usePlayerStore = defineStore("playerStore", () => {
     ...DEFAULT_NITRO_TRAIL,
     ...currentPlayerVisual.value?.nitroTrail,
   }));
+  const shieldConfig = computed(() => ({
+    ...DEFAULT_SHIELD,
+    ...currentPlayerVisual.value?.shield,
+  }));
 
   const startSpeed = ref(config.value.baseSpeed);
   const speed = ref(config.value.baseSpeed);
@@ -87,17 +128,35 @@ export const usePlayerStore = defineStore("playerStore", () => {
   const corruptedNitroEnabled = ref(false);
 
   const isNitroEnabled = ref(false);
-  const nitroTimer = ref(config.value.nitro.baseTimer);
-  const goldenNitroMultiplier = ref(2);
-  const energonNitroMultiplier = ref(2);
+  const isSuperNitro = ref(false);
+  const nitroSafetyActive = ref(false);
+  const nitroTimer = ref(metaStore.nitroDuration);
+  const goldenNitroMultiplier = ref(meta.specialModes.nitro.normal.rewardMultiplier);
+  const energonNitroMultiplier = ref(meta.specialModes.nitro.normal.rewardMultiplier);
   const nitroMultiplierCurrent = ref(1);
   const nitroMultiplierTarget = ref(1);
 
   const isMagnetEnabled = ref(false);
-  const magnetTimer = ref(config.value.magnet.baseTimer);
-  const magnetRadius = computed(() => metaStore.magnetRadius);
+  const magnetTimer = ref(metaStore.magnetDuration);
+  const magnetVariant = ref<MagnetVariant>("normal");
+  const magnetRadius = computed(() =>
+    metaStore.magnetRadius *
+    (magnetVariant.value === "super"
+      ? meta.specialModes.magnet.super.radiusMultiplier
+      : 1),
+  );
   const magnetForce = ref(config.value.magnet.force);
-  const magnetMaxTargets = ref(config.value.magnet.maxTargets);
+  const magnetMaxTargets = computed(() =>
+    metaStore.magnetMaxTargets +
+    (magnetVariant.value === "super"
+      ? meta.specialModes.magnet.super.maxTargetsBonus
+      : 0),
+  );
+  const magnetFieldTurns = computed(() =>
+    Math.round(
+      6 * Math.pow(1.5, metaStore.getUpgradeLevel("magnetLevel")),
+    ),
+  );
   const magnetTypes = ref([] as any[]);
   const magnetMode = ref<MagnetMode>("pull");
 
@@ -105,10 +164,13 @@ export const usePlayerStore = defineStore("playerStore", () => {
   const corruptedShieldEnabled = ref(false);
   const shieldBlindnessTimer = ref(0);
   const armor = ref(0);
+  const armorStack = ref<ArmorVariant[]>([]);
   const maxArmor = computed(() => metaStore.maxArmor);
 
   const ammo = ref(0);
+  const ammoStack = ref<BulletVariant[]>([]);
   const maxAmmo = computed(() => metaStore.maxAmmo);
+  const bulletSpeed = computed(() => metaStore.bulletSpeed);
   const bodyMass = computed(() =>
     carCubesConfig.value.reduce((sum, cube) => {
       const [sx, sy, sz] = cube.scale;
@@ -123,7 +185,9 @@ export const usePlayerStore = defineStore("playerStore", () => {
   const temporaryMass = computed(
     () => extraTemporaryMass.value + corruptedNitroMass.value,
   );
-  const mass = computed(() => bodyMass.value + cargoMass.value + temporaryMass.value);
+  const mass = computed(
+    () => bodyMass.value + cargoMass.value + temporaryMass.value,
+  );
   const maxMass = computed(
     () => bodyMass.value * (1 + config.value.mass.maxExtraMassRatio),
   );
@@ -176,17 +240,22 @@ export const usePlayerStore = defineStore("playerStore", () => {
     shieldBlindnessTimer.value = 0;
   }
 
-  function enableNitro(corrupted = false) {
+  function enableNitro(corrupted = false, superNitro = false) {
     if (!isNitroEnabled.value) {
       progressStore.riseMultiplier(2, "multiply");
     }
     isNitroEnabled.value = true;
-    nitroTimer.value = config.value.nitro.baseTimer;
+    isSuperNitro.value = superNitro;
+    const nitroMode = superNitro ? meta.specialModes.nitro.super : corrupted ? meta.specialModes.nitro.corrupted : meta.specialModes.nitro.normal;
+    nitroSafetyActive.value = nitroMode.invulnerable;
+    nitroTimer.value = superNitro
+      ? meta.specialModes.nitro.super.durationMs
+      : metaStore.nitroDuration;
     corruptedNitroEnabled.value = corrupted;
-    corruptedNitroMass.value = corrupted && isMassEnabled.value
-      ? getClampedTemporaryMass(config.value.mass.corruptedNitroMass)
-      : 0;
-    nitroMultiplierTarget.value = config.value.nitro.multiplier;
+    corruptedNitroMass.value = 0;
+    nitroMultiplierTarget.value = nitroMode.speedMultiplier;
+    goldenNitroMultiplier.value = nitroMode.rewardMultiplier;
+    energonNitroMultiplier.value = goldenNitroMultiplier.value;
     if (renderInstance.value != null) {
       renderInstance.value.setAfterImagePassAmount(
         config.value.nitro.afterImagePass,
@@ -198,9 +267,12 @@ export const usePlayerStore = defineStore("playerStore", () => {
   function disableNitro() {
     isNitroEnabled.value = false;
     corruptedNitroEnabled.value = false;
+    isSuperNitro.value = false;
     corruptedNitroMass.value = 0;
-    nitroTimer.value = config.value.nitro.baseTimer;
+    nitroTimer.value = metaStore.nitroDuration;
     nitroMultiplierTarget.value = 1;
+    goldenNitroMultiplier.value = meta.specialModes.nitro.normal.rewardMultiplier;
+    energonNitroMultiplier.value = meta.specialModes.nitro.normal.rewardMultiplier;
     if (progressStore.currentMultiplier != 1) {
       progressStore.reduceMultiplier(2);
     }
@@ -220,28 +292,47 @@ export const usePlayerStore = defineStore("playerStore", () => {
       nitroMultiplierTarget.value,
       delta * transitionSpeed,
     );
+    if (
+      !isNitroEnabled.value &&
+      nitroSafetyActive.value &&
+      nitroMultiplierCurrent.value <= 1.01
+    ) {
+      nitroSafetyActive.value = false;
+    }
   }
 
-  function enableMagnet(types: any[], mode: MagnetMode = "pull") {
+  function enableMagnet(
+    types: any[],
+    mode: MagnetMode = "pull",
+    variant: MagnetVariant = "normal",
+  ) {
     isMagnetEnabled.value = true;
-    magnetTimer.value = config.value.magnet.baseTimer;
+    magnetVariant.value = variant;
+    magnetTimer.value =
+      variant === "super" ? meta.specialModes.magnet.super.durationMs : metaStore.magnetDuration;
     magnetTypes.value = types;
     magnetMode.value = mode;
   }
 
   function disableMagnet() {
     isMagnetEnabled.value = false;
-    magnetTimer.value = config.value.magnet.baseTimer;
+    magnetTimer.value = metaStore.magnetDuration;
     magnetTypes.value = [];
     magnetMode.value = "pull";
+    magnetVariant.value = "normal";
   }
 
-  function addArmor(): void {
-    if (armor.value < maxArmor.value) armor.value += 1;
+  function addArmor(variant: ArmorVariant = "normal"): boolean {
+    if (armor.value >= maxArmor.value) return false;
+    armor.value += 1;
+    armorStack.value.push(variant);
+    return true;
   }
 
-  function reduceShield() {
-    if (armor.value > 0) armor.value -= 1;
+  function reduceShield(): ArmorVariant | null {
+    if (armor.value <= 0) return null;
+    armor.value -= 1;
+    return armorStack.value.pop() ?? "normal";
   }
 
   function enableShield(corrupted = false) {
@@ -255,10 +346,7 @@ export const usePlayerStore = defineStore("playerStore", () => {
   }
 
   function triggerShieldBlindness(duration = 900) {
-    shieldBlindnessTimer.value = Math.max(
-      shieldBlindnessTimer.value,
-      duration,
-    );
+    shieldBlindnessTimer.value = Math.max(shieldBlindnessTimer.value, duration);
   }
 
   function updateStatusEffects(delta: number) {
@@ -274,11 +362,20 @@ export const usePlayerStore = defineStore("playerStore", () => {
     baseSpeed.value = startSpeed.value;
     speed.value = startSpeed.value;
     isNitroEnabled.value = false;
+    nitroSafetyActive.value = false;
     corruptedNitroEnabled.value = false;
     corruptedShieldEnabled.value = false;
     shieldBlindnessTimer.value = 0;
     resetMass();
     currentLane.value = 1;
+  }
+
+  function clearCombatInventory() {
+    armor.value = 0;
+    armorStack.value = [];
+    ammo.value = 0;
+    ammoStack.value = [];
+    disableShield();
   }
 
   function addMass(amount: number) {
@@ -311,7 +408,7 @@ export const usePlayerStore = defineStore("playerStore", () => {
     const massPenalty =
       getMassPenalty() * config.value.mass.controlPenaltyPerMassRatio;
     const nitroPenalty = corruptedNitroEnabled.value
-      ? config.value.mass.corruptedNitroControlPenalty
+      ? meta.specialModes.nitro.corrupted.controlPenalty
       : 0;
 
     return Math.max(
@@ -372,12 +469,52 @@ export const usePlayerStore = defineStore("playerStore", () => {
     setMassEnabled(!isMassEnabled.value);
   }
 
-  function addAmmo(): void {
-    if (ammo.value < maxAmmo.value) ammo.value += 1;
+  function addAmmo(variant: BulletVariant = "normal"): boolean {
+    if (ammo.value >= maxAmmo.value) return false;
+    ammo.value += 1;
+    ammoStack.value.push(variant);
+    return true;
   }
 
-  function consumeAmmo() {
-    if (ammo.value > 0) ammo.value -= 1;
+  function consumeAmmo(): BulletVariant | null {
+    if (ammo.value <= 0) return null;
+    ammo.value -= 1;
+    return ammoStack.value.pop() ?? "normal";
+  }
+
+  function getRandomSpawnedBulletVariant(): BulletVariant {
+    const gameplay = levelStore.currentGameplay;
+
+    if (Math.random() > gameplay.specialBoostChance) return "normal";
+
+    const entries = Object.entries(gameplay.specialBoostWeights.bullet);
+    const totalWeight = entries.reduce(
+      (sum, [, weight]) => sum + Math.max(0, weight),
+      0,
+    );
+    if (totalWeight <= 0) return "normal";
+
+    let roll = Math.random() * totalWeight;
+    for (const [variant, weight] of entries) {
+      roll -= Math.max(0, weight);
+      if (roll <= 0) {
+        return variant === "blankBullet"
+          ? "blank"
+          : variant as BulletVariant;
+      }
+    }
+
+    return "normal";
+  }
+
+  function fillAmmo(randomizeVariants = false): void {
+    while (ammo.value < maxAmmo.value) {
+      addAmmo(randomizeVariants ? getRandomSpawnedBulletVariant() : "normal");
+    }
+  }
+
+  function fillArmor(): void {
+    while (armor.value < maxArmor.value) addArmor();
   }
 
   function canShoot(): boolean {
@@ -426,6 +563,10 @@ export const usePlayerStore = defineStore("playerStore", () => {
     return nitroTrailConfig.value;
   }
 
+  function getShieldConfig(): ShieldVisualConfig {
+    return shieldConfig.value;
+  }
+
   function getDefaultCarConfig() {
     return {
       startLane: 2,
@@ -439,12 +580,11 @@ export const usePlayerStore = defineStore("playerStore", () => {
   return {
     config,
     CAR_CUBES_CONFIG: carCubesConfig,
-    CAR_MATERIAL_CONFIG: config.value.carMaterialConfig,
-    CAR_MATERIAL_CONFIG_EXTRA: config.value.carMaterialConfigExtra,
+    CAR_MATERIAL_CONFIG: carMaterialConfig,
+    CAR_MATERIAL_CONFIG_EXTRA: carMaterialConfigExtra,
     CAR_EMISSION_CONFIG_EXTRA: carEmissionConfigExtra,
-    NITRO_MULTIPLIER: config.value.nitro.multiplier,
-    BASE_NITRO_TIMER: config.value.nitro.baseTimer,
-    BASE_MAGNET_TIMER: config.value.magnet.baseTimer,
+    CAR_NEON_EDGES_CONFIG: neonEdgesConfig,
+    NITRO_MULTIPLIER: meta.specialModes.nitro.normal.speedMultiplier,
     BASE_SPEED: config.value.baseSpeed,
     FORCED_JUMP_MULTIPLIER: config.value.forcedJumpMultiplier,
     JUMP_HEIGHT: config.value.jumpHeight,
@@ -455,6 +595,8 @@ export const usePlayerStore = defineStore("playerStore", () => {
     startSpeed,
     baseSpeed,
     isNitroEnabled,
+    isSuperNitro,
+    nitroSafetyActive,
     corruptedNitroEnabled,
     isShieldEnabled,
     corruptedShieldEnabled,
@@ -467,9 +609,12 @@ export const usePlayerStore = defineStore("playerStore", () => {
     cameraPosition,
     nitroTimer,
     armor,
+    armorStack,
     maxArmor,
     ammo,
+    ammoStack,
     maxAmmo,
+    bulletSpeed,
     goldenNitroMultiplier,
     energonNitroMultiplier,
     notificationMsg,
@@ -480,8 +625,10 @@ export const usePlayerStore = defineStore("playerStore", () => {
     magnetRadius,
     magnetForce,
     magnetMaxTargets,
+    magnetFieldTurns,
     magnetTypes,
     magnetMode,
+    magnetVariant,
     forceJump,
     isMassEnabled,
     mass,
@@ -510,14 +657,18 @@ export const usePlayerStore = defineStore("playerStore", () => {
     getRuleOptions,
     getJumpOptions,
     resetGameData,
+    clearCombatInventory,
     applyGameplayConfig,
     getCurrentSpeed,
     getCurrentSpeedInCubesPerHour,
     getCurrentAcceleration,
     setAccelerationType,
     getNitroTrailConfig,
+    getShieldConfig,
     addAmmo,
     consumeAmmo,
+    fillAmmo,
+    fillArmor,
     addArmor,
     reduceShield,
     canShoot,

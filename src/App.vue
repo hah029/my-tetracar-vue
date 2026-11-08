@@ -8,19 +8,40 @@
     <component :is="getUIComponent" class="ui_components_root" />
     <RightsPanel />
     <TeamLogo />
-    <DebugPanel />
-    <div class="blindness_overlay" :style="{ opacity: playerStore.shieldBlindnessTimer > 0 ? 1 : 0 }" />
+    <component :is="DebugPanel" v-if="DebugPanel" />
+
+    <!-- Глобальные оверлеи — доступны из любого состояния -->
+    <div class="overlays_root">
+        <ShopRoot v-if="gameState.activeOverlay === 'shop'" />
+        <SettingsRoot v-if="gameState.activeOverlay === 'settings'" />
+        <LeaderBoardsRoot v-if="gameState.activeOverlay === 'leaderBoards'" />
+        <DailyGiftRoot v-if="gameState.activeOverlay === 'dailyGift'" />
+        <FortuneWheelRoot v-if="gameState.activeOverlay === 'fortuneWheel'" />
+        <ObjectivesRoot v-if="gameState.activeOverlay === 'objectives'" />
+    </div>
+
+    <!-- Панель с валютами -->
+    <CurrencyPanel v-if="currencyPanelVariant" :variant="currencyPanelVariant" />
+
+    <!-- Анимируемый полет спрайтов (валюты и бустеров к currencyPanel)  -->
+    <FlyingRewards />
+
+    <!-- Универсальное модальное сообщение -->
+    <ModalMessage />
+
+    <div class="blindness_overlay" :style="{ opacity: playerStore.shieldBlindnessTimer > 0 ? 0.35 : 0 }" />
 </template>
 
 
 <script setup lang="ts">
-    import { ref, onMounted, onUnmounted, computed } from "vue";
+    import { ref, onMounted, onUnmounted, computed, defineAsyncComponent } from "vue";
     // composable
     import { useThree } from "./composables/useThree";
     import { useGame } from "./composables/useGame";
     import { useGameState } from "./store/gameState";
     import { useControls } from "./composables/useControls";
     import { GameLoop } from "./composables/useAnimate";
+
     // components
     import MainMenu from "./components/MainMenu.vue";
     import LevelSelect from "./components/LevelSelect.vue";
@@ -32,15 +53,22 @@
     import GameLogo from "@/components/ui/GameLogo.vue";
     import RightsPanel from "@/components/ui/RightsPanel.vue";
     import TeamLogo from "@/components/ui/TeamLogo.vue";
+    import ShopRoot from "./components/shop/ShopRoot.vue";
+    import SettingsRoot from "./components/settings/SettingsRoot.vue";
+    import LeaderBoardsRoot from "./components/leaderboards/LeaderBoardsRoot.vue";
+    import FortuneWheelRoot from "@/components/business/FortuneWheelRoot.vue";
+    import DailyGiftRoot from "@/components/business/DailyGiftRoot.vue";
+    import ObjectivesRoot from "@/components/business/ObjectivesRoot.vue";
+    import ModalMessage from "@/components/ui/ModalMessage.vue";
+    import CurrencyPanel from "@/components/ui/CurrencyPanel.vue";
+    import FlyingRewards from "@/components/ui/FlyingRewards.vue";
+
     // managers
     import { CameraSystem } from "@/game/camera/CameraSystem";
     import { SoundManager } from "./game/sound/SoundManager";
-    import { DebugColliderVisualizer } from "./helpers/debug/DebugColliderVisualizer";
     import { GameStates } from "./game/core/GameState";
     import { provide } from 'vue';
-    import DebugPanel from '@/components/hud/panels/DebugPanel.vue';
     import { usePlayerStore } from "./store/playerStore";
-    // import { useProgressStore } from "./store/progressStore";
 
     const threeRoot = ref<HTMLDivElement | null>(null);
     const threeInstance = useThree(threeRoot);
@@ -48,6 +76,12 @@
     const gameState = useGameState();
     const playerStore = usePlayerStore();
     const controls = useControls(game);
+
+    // Инструменты диагностики не должны попадать в production-версию игры.
+    // Vite заменяет DEV на false при production-сборке и исключает этот chunk.
+    const DebugPanel = import.meta.env.DEV
+        ? defineAsyncComponent(() => import("@/components/hud/panels/DebugPanel.vue"))
+        : null;
 
     // Добавляем controls в объект game для доступа из HUD
     const gameWithControls = {
@@ -74,6 +108,7 @@
                 return Countdown;
         };
     });
+
     const showHUD = computed(() => {
         switch (gameState.currentState) {
             case GameStates.Play:
@@ -89,34 +124,35 @@
     let loop: ReturnType<typeof GameLoop>;
     let soundManager: SoundManager;
 
-    onMounted(() => {
+    // определяем: показать панель (и в каком варианте) или скрыть
+    const currencyPanelVariant = computed<"hud" | "menu" | null>(() => {
+        // скрываем на обучающем экране (первый вход)
+        if (gameState.isFirstGame) return null;
+        
+        switch (gameState.currentState) {
+
+            // показываем НЕкликабельную версию (с коэф-том умножения очков)
+            case GameStates.Play:
+            case GameStates.Countdown:
+                return "hud";
+
+            // показываем кликабельную версию (с плюсиком)
+            case GameStates.Menu:
+            case GameStates.LevelSelect:
+                return "menu";
+
+            // не показываем в: Preloader, Pause, Gameover и других любых новых state
+            default:
+                return null;
+        };
+    });
+
+    onMounted(async () => {
         const scene = threeInstance.getScene();
         const camera = threeInstance.getCamera();
         const composer = threeInstance.getComposer();
 
         playerStore.renderInstance = threeInstance;
-
-
-        // console.log('🔍 App: Got scene:', !!scene);
-        // console.log('🔍 App: Got composer:', !!composer);
-        // console.log('🔍 App: Got renderer:', !!composer?.renderer);
-
-        // регистрация ThreeJS объектов для дебаг панели
-        if (scene && composer?.renderer) {
-            (window as any).__THREE_DEBUG__ = {
-                scene: scene,
-                renderer: composer.renderer
-            };
-            console.log('✅ ThreeJS debug panel registered');
-
-            // Проверка - есть ли объекты в сцене
-            let objectCount = 0;
-            scene.traverse(() => objectCount++);
-            console.log(`📊 Scene has ${objectCount} objects`);
-        } else {
-            console.error('❌ Failed to register debug panel');
-        };
-
         // game init
         game.init(scene);
 
@@ -128,30 +164,28 @@
         soundManager.initialize(camera);
 
         // main loop initialize
-        const debugCollider = new DebugColliderVisualizer(scene);
+        let debugCollider;
+        if (import.meta.env.DEV && scene && composer?.renderer) {
+            const { DebugColliderVisualizer } = await import("./helpers/debug/DebugColliderVisualizer");
+            (window as any).__THREE_DEBUG__ = { scene, renderer: composer.renderer };
+            debugCollider = new DebugColliderVisualizer(scene);
+        }
         loop = GameLoop(game, composer, debugCollider, threeInstance.setRGBShiftAmount);
-        loop.setupEventListeners();
         loop.start();
 
         gameState.setResetCallback(() => {
-            console.log("🔄 FSM reset");
-
             game.reset();
 
             const carMesh = game.car.value.mesh;
             if (carMesh) {
                 CameraSystem.reset(carMesh.position.clone());
             };
-
-            console.log("✅ Game reset complete");
         });
     });
 
     onUnmounted(() => {
-        loop?.cleanupEventListeners();
         loop?.stop();
         game.dispose();
-        console.log('onUnmounted');
     });
 </script>
 
@@ -285,6 +319,15 @@
         background: #ffffff;
         transition: opacity 220ms ease-out;
     }
+
+    .overlays_root {
+        position: absolute;
+        inset: 0;
+        z-index: z("overlays");
+        pointer-events: none;  // чтобы не блокировать клики вне оверлеев
+    }
+
+    .overlays_root > * {
+        pointer-events: auto;  // но сами оверлеи кликаются
+    }
 </style>
-
-

@@ -149,6 +149,7 @@
     @use "@/styles/settings.scss";
     @use "@/styles/animations.scss";
     @use "@/styles/typography" as *;
+    @use "@/styles/mixins" as *;
 
     // #region - общее
     .controls_global_container {
@@ -287,11 +288,7 @@
             justify-content: center;
             align-items: center;
             border: solid 2px #FDFFE3;
-            
-            user-select: none;
-            -webkit-user-select: none;
-            -moz-user-select: none;
-            -ms-user-select: none;
+            @include unselectable;
 
             @media (min-width: $breakpoint-laptop) and (orientation: landscape) { 
                 width: 2.083vw;
