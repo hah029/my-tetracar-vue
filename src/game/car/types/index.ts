@@ -23,6 +23,8 @@ export interface CarConfig {
   laneChangeSpeed?: number;
   maxTilt?: number;
   tiltSmoothing?: number;
+  lateralAcceleration?: number;
+  lateralDamping?: number;
 
   // Прыжки
   jumpHeight?: number;

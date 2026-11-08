@@ -8,6 +8,9 @@ import { RenderPass } from "three/examples/jsm/postprocessing/RenderPass.js";
 import { useGameState } from "@/store/gameState";
 import { useEnvironmentStore } from "@/store/environmentStore";
 import { useGraphicsStore } from "@/store/graphicsStore";
+import { useLevelStore } from "@/store/levelStore";
+import { useCameraStore } from "@/store/cameraStore";
+import { applyLevelLights } from "@/game/light/setupLight";
 import { ShaderPass } from "three/examples/jsm/postprocessing/ShaderPass.js";
 import { FXAAShader } from "three/examples/jsm/shaders/FXAAShader.js";
 import { RGBShiftShader } from "three/examples/jsm/shaders/RGBShiftShader.js";
@@ -30,26 +33,31 @@ let fxaaPass: ShaderPass;
 let rgbShiftPass: ShaderPass;
 
 export function useThree(container: Ref<HTMLElement | null>) {
-  // Принудительный рендер одного кадра
   function forceRender() {
     if (composer && scene && camera) composer.render();
   }
 
-  // Применение всех графических настроек (эффекты, тени, освещение, пиксель-рейтинг)
   function applyGraphicsSettings() {
     if (!renderer || !container.value) return;
 
     const graphics = useGraphicsStore();
+    const pixelRatio = graphics.getPixelRatio();
 
-    // 1. Пиксельное соотношение
-    renderer.setPixelRatio(graphics.getPixelRatio());
+    renderer.setPixelRatio(pixelRatio);
 
-    // 2. Тени
+    // Эффекты рисуются в собственные render targets. Их плотность должна
+    // совпадать с canvas, иначе итоговый кадр растягивается и выглядит мягким.
+    composer.setPixelRatio(pixelRatio);
+    fxaaPass.material.uniforms.resolution!.value.set(
+      1 / (container.value.clientWidth * pixelRatio),
+      1 / (container.value.clientHeight * pixelRatio),
+    );
+
     const shadowEnabled = graphics.shadowEnabled;
     renderer.shadowMap.enabled = shadowEnabled;
 
     if (shadowEnabled) {
-      const quality = graphics.shadowQuality; // 'low' | 'medium' | 'high'
+      const quality = graphics.shadowQuality;
       if (quality === "high") {
         renderer.shadowMap.type = THREE.PCFSoftShadowMap;
       } else if (quality === "medium") {
@@ -59,7 +67,6 @@ export function useThree(container: Ref<HTMLElement | null>) {
       }
     }
 
-    // 3. Синхронизация castShadow у источников света
     if (scene.userData.lights) {
       for (const key of Object.keys(scene.userData.lights)) {
         const light = scene.userData.lights[key];
@@ -69,63 +76,40 @@ export function useThree(container: Ref<HTMLElement | null>) {
       }
     }
 
-    // 4. Постобработка (включение/выключение проходов)
     const vfxOn = graphics.vfxEnabled;
     bloomPass.enabled = vfxOn && graphics.bloomEnabled;
     fxaaPass.enabled = vfxOn && graphics.fxaaEnabled;
     rgbShiftPass.enabled = vfxOn && graphics.rgbShiftEnabled;
     afterimagePass.enabled = vfxOn && graphics.afterimageEnabled;
 
-    // 5. Режим день/ночь (фон, туман, освещение)
-    updateLightingMode();
-
-    // 6. Принудительная перерисовка
+    applyLevelVisualSettings();
     forceRender();
   }
 
-  // Смена дня и ночи
-  function updateLightingMode() {
+  function applyLevelVisualSettings() {
     if (!scene) return;
 
-    useEnvironmentStore().DAY_BACKGROUND;
+    const environmentStore = useEnvironmentStore();
+    const renderConfig = environmentStore.currentRender;
 
-    const graphics = useGraphicsStore();
-    const isNight = graphics.nightMode;
+    scene.background = new THREE.Color(renderConfig.backgroundColor);
+    scene.fog = new THREE.Fog(
+      renderConfig.fogColor,
+      renderConfig.fogNear,
+      renderConfig.fogFar,
+    );
 
-    // Фон и туман
-    if (isNight) {
-      scene.background = new THREE.Color(
-        useEnvironmentStore().NIGHT_BACKGROUND,
-      );
-      scene.fog = new THREE.Fog(
-        useEnvironmentStore().NIGHT_BACKGROUND,
-        useEnvironmentStore().FOG_NEAR,
-        useEnvironmentStore().FOG_FAR,
-      );
-    } else {
-      scene.background = new THREE.Color(useEnvironmentStore().DAY_BACKGROUND);
-      scene.fog = new THREE.Fog(
-        useEnvironmentStore().DAY_BACKGROUND,
-        useEnvironmentStore().FOG_NEAR,
-        useEnvironmentStore().FOG_FAR,
-      );
+    if (renderer) {
+      renderer.toneMappingExposure = renderConfig.toneMappingExposure;
     }
 
-    // Освещение (если сохранено в scene.userData.lights)
-    const lights = scene.userData.lights;
-    if (!lights) return;
-
-    if (isNight) {
-      lights.ambientLight.intensity = 0.3;
-      lights.dirLight.intensity = 2.0;
-      lights.dirLight.color.setHex("#aaccff");
-      lights.fillLight.intensity = 2.0;
-    } else {
-      lights.ambientLight.intensity = 0.1;
-      lights.dirLight.intensity = 2.0;
-      lights.dirLight.color.setHex("#ffeedd");
-      lights.fillLight.intensity = 2.5;
+    if (bloomPass) {
+      bloomPass.strength = renderConfig.bloomStrength ?? 1.0;
+      bloomPass.radius = renderConfig.bloomRadius ?? 0;
+      bloomPass.threshold = renderConfig.bloomThreshold ?? 1.2;
     }
+
+    applyLevelLights(scene);
   }
 
   function setRGBShiftAmount(amount: number) {
@@ -143,20 +127,23 @@ export function useThree(container: Ref<HTMLElement | null>) {
   function init() {
     if (!container.value) return;
 
-    // ---- Scene ----
     scene = new THREE.Scene();
 
-    // ---- Camera ----
     const aspect = container.value.clientWidth / container.value.clientHeight;
-    camera = new THREE.PerspectiveCamera(75, aspect, 0.1, 10000000);
+    camera = new THREE.PerspectiveCamera(
+      useCameraStore().config.fov.min,
+      aspect,
+      0.1,
+      10000000,
+    );
 
-    // Отладочные оси
     if (useGameState().isDebug) {
-      const axesHelper = new THREE.AxesHelper(useEnvironmentStore().AXES_SIZE);
+      const axesHelper = new THREE.AxesHelper(
+        useEnvironmentStore().config.axesSize,
+      );
       scene.add(axesHelper);
     }
 
-    // ---- Renderer ----
     renderer = new THREE.WebGLRenderer({
       antialias: false,
       alpha: false,
@@ -165,12 +152,11 @@ export function useThree(container: Ref<HTMLElement | null>) {
     renderer.setSize(container.value.clientWidth, container.value.clientHeight);
     renderer.outputColorSpace = THREE.SRGBColorSpace;
     renderer.toneMapping = THREE.ACESFilmicToneMapping;
-    renderer.toneMappingExposure = 0.9;
-    // Начальные значения (перезапишутся в applyGraphicsSettings)
+    renderer.toneMappingExposure =
+      useEnvironmentStore().currentRender.toneMappingExposure;
     renderer.shadowMap.enabled = false;
     renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 
-    // ---- Постобработка ----
     bloomPass = new UnrealBloomPass(
       new THREE.Vector2(
         container.value.clientWidth,
@@ -189,9 +175,8 @@ export function useThree(container: Ref<HTMLElement | null>) {
       1 / container.value.clientHeight,
     );
 
-    // ---- RGBShiftPass ----
     rgbShiftPass = new ShaderPass(RGBShiftShader);
-    rgbShiftPass.uniforms.amount.value = 0; // начальная сила сдвига (маленькая)
+    rgbShiftPass.uniforms.amount.value = 0;
 
     const outputPass = new OutputPass();
 
@@ -203,25 +188,31 @@ export function useThree(container: Ref<HTMLElement | null>) {
     composer.addPass(rgbShiftPass);
     composer.addPass(outputPass);
 
-    // Применить начальные настройки из стора
     applyGraphicsSettings();
 
     container.value.appendChild(renderer.domElement);
     window.addEventListener("resize", onWindowResize);
 
-    // Наблюдаем за группой настроек
     watch(
       () => [
         useGraphicsStore().vfxEnabled,
         useGraphicsStore().bloomEnabled,
         useGraphicsStore().fxaaEnabled,
-        useGraphicsStore().nightMode,
         useGraphicsStore().shadowEnabled,
         useGraphicsStore().shadowQuality,
         useGraphicsStore().rgbShiftEnabled,
+        useGraphicsStore().afterimageEnabled,
       ],
       () => {
         applyGraphicsSettings();
+      },
+    );
+
+    watch(
+      () => useLevelStore().currentLevelId,
+      () => {
+        applyLevelVisualSettings();
+        forceRender();
       },
     );
   }
@@ -237,13 +228,12 @@ export function useThree(container: Ref<HTMLElement | null>) {
     renderer.setSize(width, height);
     composer.setSize(width, height);
 
-    // Обновляем разрешение для FXAA
     if (fxaaPass) {
-      fxaaPass.material.uniforms.resolution!.value.set(1 / width, 1 / height);
-    }
-    // Для Bloom тоже нужно обновить размер
-    if (bloomPass) {
-      bloomPass.resolution.set(width, height);
+      const pixelRatio = renderer.getPixelRatio();
+      fxaaPass.material.uniforms.resolution!.value.set(
+        1 / (width * pixelRatio),
+        1 / (height * pixelRatio),
+      );
     }
 
     if (resizeFrameId) cancelAnimationFrame(resizeFrameId);
@@ -253,7 +243,6 @@ export function useThree(container: Ref<HTMLElement | null>) {
     });
   }
 
-  // ---- Cleanup ----
   function cleanup() {
     if (resizeFrameId) cancelAnimationFrame(resizeFrameId);
     window.removeEventListener("resize", onWindowResize);
@@ -264,7 +253,6 @@ export function useThree(container: Ref<HTMLElement | null>) {
   onMounted(init);
   onUnmounted(cleanup);
 
-  // ---- Геттеры ----
   function getScene(): THREE.Scene {
     return scene;
   }

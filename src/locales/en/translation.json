@@ -5,11 +5,25 @@
         "pressAnyButtonMob": "tap to start"
     },
     "mainMenu": {
-        "goBack": "back",
         "startGame": "play",
         "shop": "shop",
         "settings": "settings",
-        "leaderboards": "leaderboards"
+        "leaderboards": "leaderboards",
+        "goBack": "back"
+    },
+    "businessMenu": {
+        "namesList": {
+            "luckySpin": "lucky spin",
+            "dailyGift": "daily gift",
+            "quests": "quests",
+            "achievements": "achievements"
+        },
+        "remindersList": {
+            "luckySpin": "spin the wheel!",
+            "dailyGift": "claim your reward!",
+            "quests": "claim your reward!",
+            "achievements": "new achievement!"
+        }
     },
     "trainingScreen": {
         "earn": {
@@ -35,6 +49,10 @@
                 "magnet"
             ]
         },
+        "control": {
+            "title": "control"
+        },
+        "nextButton": "next",
         "startButton": "let's go!"
     },
     "gamePlay": {
@@ -44,13 +62,16 @@
         "keyStats": {
             "progress": "progress",
             "maxProgress": "max",
-            "speed": "speed"
+            "speed": "speed",
+            "mass": "mass"
         },
         "notificationsList": {
             "armorEquipped": "armor equipped!",
             "maxArmor": "max armor reached!",
             "nitroActivated": "nitro activated!",
+            "superNitroActivated": "super nitro activated!",
             "magnetActivated": "magnet activated!",
+            "superMagnetActivated": "super magnet activated!",
             "ammoRefilled": "ammo refilled!",
             "maxAmmo": "max ammo reached!",
             "outOfAmmo": "out of ammo!",
@@ -91,6 +112,31 @@
             "distance": {
                 "label": "distance",
                 "units": "cubes"
+            },
+            "goldens": {
+                "label": "goldens"
+            },
+            "energons": {
+                "label": "energons"
+            }
+        }
+    },
+    "levelMenu": {
+        "soon": "soon",
+        "levelSelect": {
+            "label": "Level",
+            "variants": {
+                "night_city": "Night city",
+                "misty_hills": "Misty hills",
+                "storm_ocean": "Storm ocean",
+                "volcanic_island": "Volcanic island"
+            }
+        },
+        "difficultySelect": {
+            "label": "Difficulty",
+            "variants": {
+                "normal": "Normal",
+                "hard": "Hard"
             }
         }
     },
@@ -98,6 +144,9 @@
         "title": "settings",
         "toggleOn": "on",
         "toggleOff": "off",
+        "low": "low",
+        "medium": "medium",
+        "high": "high",
         "menuList": {
             "graphics": "graphics",
             "sounds": "sounds",
@@ -113,7 +162,6 @@
             "rgbShiftEnabled": "RGB shift",
             "shadowEnabled": "shadows",
             "shadowQuality": "shadows quality",
-            "nightMode": "night",
             "musicEnabled": "music",
             "sfxEnabled": "sounds",
             "volumeLevel": "volume"
@@ -127,8 +175,8 @@
             "mobileLabels": {
                 "pause": "pause",
                 "fire": "fire",
-                "swipe": "swipe",
-                "switcher": "left / right handed"
+                "left": "left",
+                "right": "right"
             },
             "labels": {
                 "left": "left",
@@ -169,5 +217,202 @@
         "All rights neon-served",
         "All rights preserved… in neon",
         "All rights electrified"
-    ]
+    ],
+    "shop": {
+        "title": "shop",
+        "common": {
+            "stat": "stat",
+            "bestPrice": "best price"
+        },
+        "tabList": {
+            "currency": "currency",
+            "upgrades": "upgrades",
+            "skins": "skins",
+            "comfort": "comfort",
+
+            "stuff": "stuff",
+            "visual": "visual"
+        },
+        "purchaseList": {
+            "title": "buy",
+            "unit": {
+                "golden": "goldens",
+                "energon": "energons"
+            }
+        },
+        "upgradesList": {
+            "title": "upgrade",
+            "ammo": {
+                "title": "ammo",
+                "statsList": [
+                    "ammo per clip",
+                    "fire rate"
+                ]
+            },
+            "armor": {
+                "title": "armor",
+                "statsList": [
+                    "armor slots",
+                    "shield size"
+                ]
+            },
+            "magnet": {
+                "title": "magnet",
+                "statsList": [
+                    "strength",
+                    "pickup radius"
+                ]
+            },
+            "nitro": {
+                "title": "nitro",
+                "statsList": [
+                    "duration",
+                    "score & currency gain"
+                ]
+            }
+        },
+        "product": {
+            "owned": "owned",
+            "maxLevel": "max level",
+            "notEnoughCurrency": "not enough",
+            "alreadyOwned": "already owned",
+            "buy": "buy",
+            "activate": "activate",
+            "purchaseSuccess": "purchase successful!",
+            "purchaseError": "purchase failed"
+        },
+        "balance": {
+            "golden": "golden",
+            "energon": "energon"
+        },
+        "ownedBadge": "owned",
+        "previewBtn": {
+            "applied": "applied",
+            "apply": "apply",
+            "buy": "buy"
+        },
+        "noItems": "empty"
+    },
+    "dailyGift": {
+        "title": "daily gift",
+        "weekName": [
+            "week 1: basic rewards",
+            "week 2: enhanced rewards",
+            "week 3: mega rewards",
+            "week 4: premium rewards"
+        ],
+        "tipsList": {
+            "availableGift": "claim your gift!",
+            "firstGift": "grab your first gift!",
+            "todaysClaimed": "today's gift is claimed!\ncome back tomorrow.",
+            "allClaimed": "all done!\nyou've reached the end!"
+        },
+        "cardClickingList": {
+            "notTime": "not yet!\nkeep an eye on the timer...",
+            "locked": "hang tight!\ncome back later for your gift.",
+            "alreadyClaimed": "empty.\nlooks like someone already grabbed it...",
+            "missedButton": "you're almost there — hit \"claim\"!",
+            "allClaimed": "well done!\nyou've reached the end!\ncheck back later — we're already preparing new rewards."
+        },
+        "otherEventsList": {
+            "adError": "ad unavailable.\ntry again or claim the regular reward.",
+            "adNotCompleted": "ad not completed.\ntry again or claim the regular reward."
+        },
+        "day": "day {{day}}",
+        "claimButton": "claim",
+
+
+        "watchingAd": "Watching ad…",
+        "recovering": "Restoring…",
+        "retryRecovery": "Finish restoration",
+        "restart": "Start from day 1 for free",
+        "claiming": "claiming…",
+
+        "recoveryInfo": "Missed days: {{missed}}. The battle pass restores progress to the start of week {{week}} — day {{day}}.",
+        "recover": "Restore for {{cost}} energons",
+        "notEnoughEnergons": "Not enough energons",
+        "recoveryError": "Could not finish restoring progress. Try again: you will not be charged twice.",
+        "claimError": "could not save the reward. please try again."
+    },
+    "fortuneWheel": {
+        "preset": "preset",
+        "presets": {
+            "standard": "standard",
+            "supplies": "supplies",
+            "daily": "daily"
+        },
+        "title": "fortune wheel",
+        "spins": "spins: {{count}}",
+        "spin": "spin",
+        "spinning": "spinning…",
+        "spinUnit": "spin",
+        "won": "you won",
+        "continue": "continue",
+        "error": "could not grant the reward. please try again later."
+    },
+    "objectives": {
+        "title": "objectives",
+        "daily": "today",
+        "achievements": "achievements",
+        "claim": "claim",
+        "claiming": "claiming…",
+        "claimed": "claimed",
+        "error": "could not save the reward. please try again.",
+        "items": {
+            "daily_collect_goldens": {
+                "title": "golden collector",
+                "description": "collect {{target}} goldens"
+            },
+            "daily_drive_distance": {
+                "title": "on the road",
+                "description": "travel {{target}} cubes"
+            },
+            "daily_destroy_obstacles": {
+                "title": "clear the road",
+                "description": "destroy {{target}} obstacles"
+            },
+            "achievement_first_drive": {
+                "title": "first drive",
+                "description": "finish 1 drive"
+            },
+            "achievement_golden_collector": {
+                "title": "golden collection",
+                "description": "level {{level}}: collect {{target}} goldens"
+            },
+            "achievement_long_road": {
+                "title": "long road",
+                "description": "level {{level}}: travel {{target}} cubes"
+            },
+            "achievement_stunt_driver": {
+                "title": "stunt driver",
+                "description": "level {{level}}: perform {{target}} jumps"
+            },
+            "achievement_demolition": {
+                "title": "demolition",
+                "description": "level {{level}}: destroy {{target}} obstacles"
+            }
+        }
+    },
+    "items": {
+        "ammo": "ammo",
+        "armor": "armor",
+        "skin": "skin",
+        "reward": "reward",
+        "level": "lv",
+        "upgrade": "+1 Lv",
+        "now": "now"
+    },
+    "currency": {
+        "golden": "golden",
+        "energon": "energon",
+        "rub": "rub",
+        "usd": "usd",
+        "euro": "euro",
+        "yan": "yan"
+    },
+    "modalMessage": {
+        "ok": "ok",
+        "yes": "yes",
+        "no": "no"
+    }
 }

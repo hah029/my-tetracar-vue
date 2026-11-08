@@ -5,11 +5,25 @@
         "pressAnyButtonMob": "коснись, чтобы начать"
     },
     "mainMenu": {
-        "goBack": "назад",
         "startGame": "старт",
         "shop": "магазин",
         "settings": "настройки",
-        "leaderboards": "рекорды"
+        "leaderboards": "рекорды",
+        "goBack": "назад"
+    },
+    "businessMenu": {
+        "namesList": {
+            "luckySpin": "колесо фортуны",
+            "dailyGift": "награда дня",
+            "quests": "задания",
+            "achievements": "достижения"
+        },
+        "remindersList": {
+            "luckySpin": "крути колесо!",
+            "dailyGift": "забери награду!",
+            "quests": "забери награду!",
+            "achievements": "новое достижение!"
+        }
     },
     "trainingScreen": {
         "earn": {
@@ -35,6 +49,10 @@
                 "магнит"
             ]
         },
+        "control": {
+            "title": "управляй"
+        },
+        "nextButton": "далее",
         "startButton": "погнали!"
     },
     "gamePlay": {
@@ -44,13 +62,16 @@
         "keyStats": {
             "progress": "прогресс",
             "maxProgress": "макс.",
-            "speed": "скорость"
+            "speed": "скорость",
+            "mass": "масса"
         },
         "notificationsList": {
             "armorEquipped": "броня установлена!",
             "maxArmor": "достигнут максимум брони!",
             "nitroActivated": "нитро активировано!",
+            "superNitroActivated": "супер-нитро активировано!",
             "magnetActivated": "магнит запущен!",
+            "superMagnetActivated": "супермагнит запущен!",
             "ammoRefilled": "боезапас пополнен!",
             "maxAmmo": "достигнут максимум патронов!",
             "outOfAmmo": "нет патронов!",
@@ -91,6 +112,31 @@
             "distance": {
                 "label": "расстояние",
                 "units": "кубов"
+            },
+            "goldens": {
+                "label": "голдены"
+            },
+            "energons": {
+                "label": "энергоны"
+            }
+        }
+    },
+    "levelMenu": {
+        "soon": "скоро",
+        "levelSelect": {
+            "label": "Уровень",
+            "variants": {
+                "night_city": "ночной город",
+                "misty_hills": "туманные холмы",
+                "storm_ocean": "штормовой океан",
+                "volcanic_island": "вулканический остров"
+            }
+        },
+        "difficultySelect": {
+            "label": "Режим",
+            "variants": {
+                "normal": "обычный",
+                "hard": "сложный"
             }
         }
     },
@@ -98,6 +144,9 @@
         "title": "настройки",
         "toggleOn": "вкл",
         "toggleOff": "выкл",
+        "low": "низкие",
+        "medium": "средние",
+        "high": "высокие",
         "menuList": {
             "graphics": "графика",
             "sounds": "звуки",
@@ -113,7 +162,6 @@
             "rgbShiftEnabled": "RGB смещение",
             "shadowEnabled": "тени",
             "shadowQuality": "качество теней",
-            "nightMode": "ночь",
             "musicEnabled": "музыка",
             "sfxEnabled": "звуки",
             "volumeLevel": "громкость"
@@ -127,8 +175,8 @@
             "mobileLabels": {
                 "pause": "пауза",
                 "fire": "выстрел",
-                "swipe": "свайп",
-                "switcher": "левша / правша"
+                "left": "влево",
+                "right": "вправо"
             },
             "labels": {
                 "left": "влево",
@@ -168,6 +216,203 @@
     "rightsList": [
         "Все права светятся",
         "Все права под неоновой защитой",
-        "Все праsва защищены неоном"
-    ]
+        "Все права защищены неоном"
+    ],
+    "shop": {
+        "title": "магазин",
+        "common": {
+            "stat": "параметр",
+            "bestPrice": "лучшая цена"
+        },
+        "tabList": {
+            "currency": "валюта",
+            "upgrades": "прокачка",
+            "skins": "скины",
+            "comfort": "комфорт",
+
+            "stuff": "предметы",
+            "visual": "скины"
+        },
+        "purchaseList": {
+            "title": "купить",
+            "unit": {
+                "golden": "голдены",
+                "energon": "энергоны"
+            }
+        },
+        "upgradesList": {
+            "title": "улучшить",
+            "ammo": {
+                "title": "патроны",
+                "statsList": [
+                    "патронов в обойме",
+                    "скорость выстрела"
+                ]
+            },
+            "armor": {
+                "title": "броню",
+                "statsList": [
+                    "щитов на машине",
+                    "размер щита"
+                ]
+            },
+            "magnet": {
+                "title": "магнит",
+                "statsList": [
+                    "мощность",
+                    "радиус действия"
+                ]
+            },
+            "nitro": {
+                "title": "нитро",
+                "statsList": [
+                    "длительность",
+                    "рост очков и валюты"
+                ]
+            }
+        },
+        "product": {
+            "owned": "куплено",
+            "maxLevel": "макс. уровень",
+            "notEnoughCurrency": "не хватает",
+            "alreadyOwned": "уже куплено",
+            "buy": "купить",
+            "activate": "надеть",
+            "purchaseSuccess": "покупка удалась!",
+            "purchaseError": "ошибка покупки"
+        },
+        "balance": {
+            "golden": "голдены",
+            "energon": "энергоны"
+        },
+        "ownedBadge": "куплено",
+        "previewBtn": {
+            "applied": "применено",
+            "apply": "применить",
+            "buy": "купить"
+        },
+        "noItems": "пусто"
+    },
+    "dailyGift": {
+        "title": "награда дня",
+        "weekName": [
+            "неделя 1: базовые награды",
+            "неделя 2: усиленные награды",
+            "неделя 3: мега-награды",
+            "неделя 4: премиум-награды"
+        ],
+        "tipsList": {
+            "availableGift": "получи свой подарок!",
+            "firstGift": "твой первый подарок ждет!",
+            "todaysClaimed": "сегодняшний подарок уже твой!\nзаходи завтра за следующим.",
+            "allClaimed": "всё собрано!\nты прошёл до конца!"
+        },
+        "cardClickingList": {
+            "notTime": "ещё не время.\nследи за таймером…",
+            "locked": "терпения, мой друг!\nзаходи за подарком в свой день.",
+            "alreadyClaimed": "пусто.\nпохоже, эту награду уже забрали…",
+            "missedButton": "вы почти у цели — жмите \"забрать\"!",
+            "allClaimed": "молодец!\nты дошёл до конца!\nзаглядывай позже - мы уже готовим новые награды."
+        },
+        "otherEventsList": {
+            "adError": "реклама недоступна.\nпопробуйте ещё раз или заберите обычную награду.",
+            "adNotCompleted": "просмотр не завершён.\nможно повторить или забрать обычную награду."
+        },
+        "day": "день {{day}}",
+        "claimButton": "забрать",
+
+
+        "watchingAd": "Просмотр рекламы…",
+        "recovering": "Восстанавливаем…",
+        "retryRecovery": "Завершить восстановление",
+        "restart": "Начать с дня 1 бесплатно",
+        "claiming": "получаем…",
+
+        "recoveryInfo": "Пропущено дней: {{missed}}. Боевой пропуск вернёт к началу недели {{week}} — дню {{day}}.",
+        "recover": "Восстановить за {{cost}} энергонов",
+        "notEnoughEnergons": "Недостаточно энергонов",
+        "recoveryError": "Не удалось завершить восстановление. Попробуйте ещё раз: повторного списания не будет.",
+        "claimError": "не удалось сохранить награду. попробуйте ещё раз."
+    },
+    "fortuneWheel": {
+        "preset": "набор",
+        "presets": {
+            "standard": "стандартный",
+            "supplies": "снабжение",
+            "daily": "ежедневный"
+        },
+        "title": "колесо фортуны",
+        "spins": "крутки: {{count}}",
+        "spin": "крутить",
+        "spinning": "крутим…",
+        "spinUnit": "крутка",
+        "won": "вы выиграли",
+        "continue": "дальше",
+        "error": "не удалось выдать приз. попробуйте позже."
+    },
+    "objectives": {
+        "title": "задания",
+        "daily": "на сегодня",
+        "achievements": "достижения",
+        "claim": "забрать",
+        "claiming": "получаем…",
+        "claimed": "получено",
+        "error": "не удалось сохранить награду. попробуйте ещё раз.",
+        "items": {
+            "daily_collect_goldens": {
+                "title": "сборщик голдов",
+                "description": "соберите {{target}} голдов"
+            },
+            "daily_drive_distance": {
+                "title": "в путь",
+                "description": "проедьте {{target}} кубов"
+            },
+            "daily_destroy_obstacles": {
+                "title": "расчистка пути",
+                "description": "уничтожьте {{target}} препятствий"
+            },
+            "achievement_first_drive": {
+                "title": "первый заезд",
+                "description": "завершите 1 заезд"
+            },
+            "achievement_golden_collector": {
+                "title": "золотая коллекция",
+                "description": "уровень {{level}}: соберите {{target}} голдов"
+            },
+            "achievement_long_road": {
+                "title": "дальняя дорога",
+                "description": "уровень {{level}}: проедьте {{target}} кубов"
+            },
+            "achievement_stunt_driver": {
+                "title": "каскадёр",
+                "description": "уровень {{level}}: совершите {{target}} прыжков"
+            },
+            "achievement_demolition": {
+                "title": "разрушитель",
+                "description": "уровень {{level}}: уничтожьте {{target}} препятствий"
+            }
+        }
+    },
+    "items": {
+        "ammo": "патрон",
+        "armor": "броня",
+        "skin": "скин",
+        "reward": "награда",
+        "level": "ур.",
+        "upgrade": "+1 ур.",
+        "now": "сейчас"
+    },
+    "currency": {
+        "golden": "голд",
+        "energon": "энерг",
+        "rub": "руб",
+        "usd": "долл",
+        "euro": "евро",
+        "yan": "ян"
+    },
+    "modalMessage": {
+        "ok": "ок",
+        "yes": "да",
+        "no": "нет"
+    }
 }

@@ -1,6 +1,7 @@
 // 🔍 поддерживаемые языки
 const supportedLanguages = ["ru", "en"];
 export const uiLanguages = ["auto", "ru", "en"];
+// export const uiLanguages = ["auto", "ru", "en", "es", "zh", "ja", "ko"];
 
 // 🔍 определяем язык браузера
 export function detectBrowserLanguage(): string {

@@ -21,15 +21,9 @@ export type DestructionCell = {
 
 export class DestructionManager {
   private static instance: DestructionManager | null = null;
-  private physicsConfig: CubePhysicsConfig = {
-    gravity: useCommonStore().GRAVITY,
-    friction: useCommonStore().FRICTION,
-    bounceFactor: useCommonStore().BOUNCE_FACTOR,
-    collisionFactor: useCommonStore().COLLISION_FACTOR,
-    removalHeight: useCommonStore().REMOVAL_HEIGHT,
-  };
+  private physicsConfig: CubePhysicsConfig = useCommonStore().getBasePhysics();
 
-  private weightsMapping = useCommonStore().DESTROYED_ROLLDROP_WEIGHTS;
+  private weightsMapping = useCommonStore().config.destroyedRolldropWeights;
 
   public static getInstance(): DestructionManager {
     if (!DestructionManager.instance) {
@@ -80,13 +74,13 @@ export class DestructionManager {
     }
 
     const slowEnough = v.lengthSq() < 0.2;
-    const nearGround = item.position.y <= useCommonStore().BASE_ITEM_YPOS * 1.1;
+    const nearGround = item.position.y <= useCommonStore().baseItemYpos * 1.1;
 
     if (!slowEnough || !nearGround) return;
     ud.status = "landed";
 
     item.position.x = item.position.x;
-    item.position.y = useCommonStore().BASE_ITEM_YPOS / 2;
+    item.position.y = useCommonStore().baseItemYpos / 2;
 
     // останавливаем физику
     ud.velocity.set(0, 0, 0);

@@ -14,6 +14,7 @@ export class RoadEdge extends THREE.Mesh {
     height: number = 1,
     depth: number = 500,
     color: number = 0x00ffff,
+    opacity: number = 0,
   ) {
     // геометрия бортика
     const geometry = new THREE.BoxGeometry(0.2, height, depth);
@@ -26,7 +27,7 @@ export class RoadEdge extends THREE.Mesh {
       emissiveIntensity: 0,
       emissive: 0x000000,
       transparent: true,
-      opacity: 0,
+      opacity,
     });
 
     super(geometry, material);

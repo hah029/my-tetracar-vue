@@ -1,223 +1,281 @@
 import * as THREE from "three";
-
 import { defineStore } from "pinia";
-import { ref } from "vue";
+import { computed, ref, watch } from "vue";
 import { useProgressStore } from "@/store/progressStore";
+import { useMetaStore } from "@/store/metaStore";
 import { useCommonStore } from "@/store/commonStore";
-import { useThree } from "@/composables/useThree";
-import type { GeometryConfig, MaterialConfig } from "@/game/cube/types";
-import type { TextureMap } from "@/game/car/CarVisualState";
-import { MODELS } from "@/assets/models";
-import { TEXTURES } from "@/assets/textures";
+import { useLevelStore } from "@/store/levelStore";
+import playerConfig from "@/configs/player";
+import type {
+  GameplayConfig,
+  NitroTrailVisualConfig,
+  ShieldVisualConfig,
+} from "@/levels/types";
+import type { BulletVariant } from "@/game/combat/BulletVariant";
+import { getPlayerSkinConfig } from "@/configs/skins";
+import meta from "@/configs/meta";
+export type ArmorVariant = "normal" | "super";
+
+const DEFAULT_NITRO_TRAIL: NitroTrailVisualConfig = {
+  color: "#66ff66",
+  width: 2.2,
+  height: 0.8,
+  offsetX: 0.85,
+  offsetY: 0.25,
+  offsetZ: 2,
+  timeScale: 4,
+};
+
+const DEFAULT_SHIELD: ShieldVisualConfig = {
+  color: "#55dfff",
+  radius: 3,
+  offsetY: 0.55,
+  offsetZ: -3,
+  scaleX: 1.15,
+  scaleY: 0.9,
+  scaleZ: 0.9,
+  opacity: 0.1,
+  timeScale: 1.8,
+};
+
+export type MagnetMode = "pull" | "lethalPull" | "repulse";
+export type MagnetVariant = "normal" | "super";
 
 export const usePlayerStore = defineStore("playerStore", () => {
-  // #region - основные константы
   const progressStore = useProgressStore();
+  const metaStore = useMetaStore();
   const commonStore = useCommonStore();
+  const levelStore = useLevelStore();
+  const config = ref(playerConfig);
   const renderInstance = ref();
 
-  const COLS: [number, number, number] = [
-    -commonStore.XZ_SCALING * 2,
-    0,
-    commonStore.XZ_SCALING * 2,
-  ];
-  const ROWS: [number, number, number, number] = [
-    commonStore.XZ_SCALING * 3,
-    commonStore.XZ_SCALING,
-    -commonStore.XZ_SCALING,
-    -commonStore.XZ_SCALING * 3,
-  ];
-  const HEIGHT = commonStore.BASE_ITEM_YPOS / 2;
-  const GLB_SCALES: [number, number, number] = [
-    commonStore.XZ_SCALING,
-    commonStore.XZ_SCALING,
-    commonStore.XZ_SCALING,
-  ];
-  const CAR_CUBES_CONFIG: GeometryConfig[] = [
-    {
-      pos: [COLS[1], HEIGHT, ROWS[3]],
-      scale: GLB_SCALES,
-      name: "shield",
-      modelUrl: MODELS.cube,
-    },
+  const cols = computed(() =>
+    config.value.getCols(commonStore.config.xzScaling),
+  );
+  const rows = computed(() =>
+    config.value.getRows(commonStore.config.xzScaling),
+  );
+  const height = computed(() =>
+    config.value.getHeight(commonStore.baseItemYpos),
+  );
+  const glbScales = computed(() =>
+    config.value.getGlbScales(commonStore.config.xzScaling),
+  );
+  const carCubesConfig = computed(() =>
+    config.value.getCarCubesConfig(
+      cols.value,
+      rows.value,
+      height.value,
+      glbScales.value,
+    ),
+  );
+  const currentPlayerConfig = computed(() => levelStore.currentLevel.player);
+  const currentPlayerVisual = computed(() => currentPlayerConfig.value.visual);
+  const activeSkinConfig = computed(() =>
+    getPlayerSkinConfig(metaStore.activeSkin),
+  );
+  const carMaterialConfig = computed(() => ({
+    ...config.value.carMaterialConfig,
+    ...activeSkinConfig.value?.material,
+  }));
+  const carMaterialConfigExtra = computed(() => ({
+    ...config.value.carMaterialConfigExtra,
+    ...activeSkinConfig.value?.textures,
+  }));
+  const neonEdgesConfig = computed(
+    () => activeSkinConfig.value?.effects?.neonEdges?.enabled
+      ? activeSkinConfig.value.effects.neonEdges
+      : null,
+  );
+  const carEmissionConfigExtra = computed(() => ({
+    ...config.value.carEmissionConfigExtra,
+    ...currentPlayerVisual.value?.emissiveColors,
+  }));
+  const defaultEmissionIntensity = computed(
+    () =>
+      currentPlayerVisual.value?.defaultEmissionIntensity ??
+      config.value.defaultEmissionIntensity,
+  );
+  const defaultBlinkDuration = computed(
+    () =>
+      currentPlayerVisual.value?.defaultBlinkDuration ??
+      config.value.defaultBlinkDuration,
+  );
+  const defaultBlinkSpeed = computed(
+    () =>
+      currentPlayerVisual.value?.defaultBlinkSpeed ??
+      config.value.defaultBlinkSpeed,
+  );
+  const nitroTrailConfig = computed(() => ({
+    ...DEFAULT_NITRO_TRAIL,
+    ...currentPlayerVisual.value?.nitroTrail,
+  }));
+  const shieldConfig = computed(() => ({
+    ...DEFAULT_SHIELD,
+    ...currentPlayerVisual.value?.shield,
+  }));
 
-    {
-      pos: [COLS[1], HEIGHT, ROWS[2]],
-      scale: GLB_SCALES,
-      name: "default",
-      modelUrl: MODELS.cube,
-    },
-
-    {
-      pos: [COLS[1], HEIGHT, ROWS[1]],
-      scale: GLB_SCALES,
-      name: "default",
-      modelUrl: MODELS.cube,
-    },
-    // передние колеса
-    {
-      pos: [COLS[0], HEIGHT, ROWS[0]],
-      scale: GLB_SCALES,
-      name: "nitro",
-      modelUrl: MODELS.cube,
-    },
-    {
-      pos: [COLS[2], HEIGHT, ROWS[0]],
-      scale: GLB_SCALES,
-      name: "nitro",
-      modelUrl: MODELS.cube,
-    },
-    // передние колеса
-    {
-      pos: [COLS[2], HEIGHT, ROWS[2]],
-      scale: GLB_SCALES,
-      name: "nitro",
-      modelUrl: MODELS.cube,
-    },
-    {
-      pos: [COLS[0], HEIGHT, ROWS[2]],
-      scale: GLB_SCALES,
-      name: "nitro",
-      modelUrl: MODELS.cube,
-    },
-  ];
-  const CAR_MATERIAL_CONFIG: MaterialConfig = {
-    textureUrl: TEXTURES.cube.base,
-  };
-
-  const CAR_MATERIAL_CONFIG_EXTRA: TextureMap = {
-    default: TEXTURES.cube.base,
-    nitro: TEXTURES.cube.nitro,
-    shield: TEXTURES.cube.shield,
-    damage: TEXTURES.cube.bullet,
-  };
-
-  const CAR_EMISSION_CONFIG_EXTRA = {
-    default: 0x000000,
-    nitro: 0x005500,
-    shield: 0x555555,
-    damage: 0x550000,
-  };
-
-  const BASE_SPEED = 0.05; // м/с - стартовая скорость машинки
-  const MAX_SPEED = 1.0; // м/с - максимальная скорость машинки
-  const ACCELERATION = 0.000005; // - темп ускорения машинки
-  const FORCED_JUMP_MULTIPLIER = 5;
-  // size + collider
-  const COLLIDER_SHRINK_X = 1.0;
-  const COLLIDER_SHRINK_Z = 1.0;
-  const COLLIDER_Y_OFFSET = 0.0;
-  const COLLIDER_HEIGHT_FACTOR = 0.8;
-  //
-  const LANE_CHANGE_SPEED = 0.26;
-  const MAX_TILT = 0.05;
-  const TILT_SMOOTHING = 0.2;
-  // jumps
-  const JUMP_HEIGHT = 4.0;
-
-  const DEFAULT_EMISSION_INTENSITY = 5;
-  const DEFAULT_BLINK_DURATION = 1;
-  const DEFAULT_BLINK_SPEED = 10;
-
-  // speed
-  const speed = ref(BASE_SPEED);
-  const baseSpeed = ref(BASE_SPEED);
-  const maxSpeed = ref(MAX_SPEED);
-  const acceleration = ref(ACCELERATION);
+  const startSpeed = ref(config.value.baseSpeed);
+  const speed = ref(config.value.baseSpeed);
+  const baseSpeed = ref(config.value.baseSpeed);
+  const maxSpeed = ref(config.value.maxSpeed);
+  const acceleration = ref(config.value.acceleration);
   const accelerationType = ref<"exponential" | "logarithmic">("logarithmic");
   const forceJump = ref(false);
+  const isMassEnabled = ref(true);
+  const extraTemporaryMass = ref(0);
+  const corruptedNitroMass = ref(0);
+  const corruptedNitroEnabled = ref(false);
 
-  // nitro
-  const NITRO_MULTIPLIER = 1.5;
-  const NITRO_AFTER_IMAGE_PASS = 0.8;
-  const NITRO_RGB_SHIFT = 0.003;
-  const BASE_NITRO_TIMER = 5000;
   const isNitroEnabled = ref(false);
-  const nitroTimer = ref(BASE_NITRO_TIMER);
-  const goldenNitroMultiplier = ref(2);
-  const energonNitroMultiplier = ref(2);
+  const isSuperNitro = ref(false);
+  const nitroSafetyActive = ref(false);
+  const nitroTimer = ref(metaStore.nitroDuration);
+  const goldenNitroMultiplier = ref(meta.specialModes.nitro.normal.rewardMultiplier);
+  const energonNitroMultiplier = ref(meta.specialModes.nitro.normal.rewardMultiplier);
   const nitroMultiplierCurrent = ref(1);
   const nitroMultiplierTarget = ref(1);
-  // const nitroAfterImagePassCurrent = ref(0);
-  // const nitroAfterImagePassTarget = ref(0);
-  // const nitroRGBShiftCurrent = ref(0);
-  // const nitroRGBShiftTarget = ref(0);
-  const NITRO_ACCEL_IN_SPEED = 0.005;
-  const NITRO_ACCEL_OUT_SPEED = 0.001;
-  // const NITRO_AFTER_IMAGE_PASS_TRANSITION = 0.01;
-  // const NITRO_RGB_SHIFT_TRANSITION = 1;
 
-  // magnet
-  const BASE_MAGNET_TIMER = 10000;
   const isMagnetEnabled = ref(false);
-  const magnetTimer = ref(BASE_MAGNET_TIMER);
-  const magnetRadius = ref(20);
-  const magnetForce = ref(40);
-  const magnetMaxTargets = ref(8);
+  const magnetTimer = ref(metaStore.magnetDuration);
+  const magnetVariant = ref<MagnetVariant>("normal");
+  const magnetRadius = computed(() =>
+    metaStore.magnetRadius *
+    (magnetVariant.value === "super"
+      ? meta.specialModes.magnet.super.radiusMultiplier
+      : 1),
+  );
+  const magnetForce = ref(config.value.magnet.force);
+  const magnetMaxTargets = computed(() =>
+    metaStore.magnetMaxTargets +
+    (magnetVariant.value === "super"
+      ? meta.specialModes.magnet.super.maxTargetsBonus
+      : 0),
+  );
+  const magnetFieldTurns = computed(() =>
+    Math.round(
+      6 * Math.pow(1.5, metaStore.getUpgradeLevel("magnetLevel")),
+    ),
+  );
   const magnetTypes = ref([] as any[]);
+  const magnetMode = ref<MagnetMode>("pull");
 
-  // armor
   const isShieldEnabled = ref(false);
+  const corruptedShieldEnabled = ref(false);
+  const shieldBlindnessTimer = ref(0);
   const armor = ref(0);
-  const maxArmor = ref(1);
+  const armorStack = ref<ArmorVariant[]>([]);
+  const maxArmor = computed(() => metaStore.maxArmor);
 
-  //ammo
-  const ammo = ref(10);
-  const maxAmmo = ref(10);
+  const ammo = ref(0);
+  const ammoStack = ref<BulletVariant[]>([]);
+  const maxAmmo = computed(() => metaStore.maxAmmo);
+  const bulletSpeed = computed(() => metaStore.bulletSpeed);
+  const bodyMass = computed(() =>
+    carCubesConfig.value.reduce((sum, cube) => {
+      const [sx, sy, sz] = cube.scale;
+      return sum + sx * sy * sz * config.value.mass.cubeDensity;
+    }, 0),
+  );
+  const cargoMass = computed(
+    () =>
+      armor.value * config.value.mass.armorUnitMass +
+      ammo.value * config.value.mass.ammoUnitMass,
+  );
+  const temporaryMass = computed(
+    () => extraTemporaryMass.value + corruptedNitroMass.value,
+  );
+  const mass = computed(
+    () => bodyMass.value + cargoMass.value + temporaryMass.value,
+  );
+  const maxMass = computed(
+    () => bodyMass.value * (1 + config.value.mass.maxExtraMassRatio),
+  );
+  const massRatio = computed(() =>
+    bodyMass.value > 0 ? mass.value / bodyMass.value : 1,
+  );
+  const cargoMassRatio = computed(() => Math.max(0, massRatio.value - 1));
 
-  // position
-  const currentLane = ref(1); // 0..3 для полос
+  const currentLane = ref(1);
   const carPosition = ref({ x: 0, y: 0, z: 0 });
   const cameraPosition = ref({ x: 0, y: 0, z: 0 });
 
-  // быстрые сообщения
   const notificationMsg = ref("");
   const eventType = ref("");
   const eventCounter = ref(0);
-  // #endregion
 
-  // сбрасываем все бустеры игрока при поражении / выходе из игры
+  function applyGameplayConfig(gameplay: GameplayConfig) {
+    startSpeed.value = gameplay.startSpeed;
+    maxSpeed.value = gameplay.maxSpeed;
+    acceleration.value = gameplay.speedIncreaseRate;
+
+    if (
+      baseSpeed.value < startSpeed.value ||
+      baseSpeed.value === config.value.baseSpeed
+    ) {
+      baseSpeed.value = startSpeed.value;
+    }
+
+    if (
+      speed.value < startSpeed.value ||
+      speed.value === config.value.baseSpeed
+    ) {
+      speed.value = startSpeed.value;
+    }
+  }
+
+  watch(
+    () => levelStore.currentGameplay,
+    (gameplay) => {
+      applyGameplayConfig(gameplay);
+    },
+    { immediate: true },
+  );
+
   function resetPlayerAchievements() {
-    ammo.value = 0;
-    armor.value = 0;
     disableShield();
     disableNitro();
     disableMagnet();
-    console.log("all boosters reseted");
+    resetMass();
+    shieldBlindnessTimer.value = 0;
   }
 
-  // #region - работаем с нитро
-  // включаем нитро
-  function enableNitro() {
+  function enableNitro(corrupted = false, superNitro = false) {
     if (!isNitroEnabled.value) {
       progressStore.riseMultiplier(2, "multiply");
     }
-
     isNitroEnabled.value = true;
-
-    nitroMultiplierTarget.value = NITRO_MULTIPLIER;
-    // nitroAfterImagePassTarget.value = NITRO_AFTER_IMAGE_PASS;
-    // nitroRGBShiftTarget.value = NITRO_RGB_SHIFT;
-
+    isSuperNitro.value = superNitro;
+    const nitroMode = superNitro ? meta.specialModes.nitro.super : corrupted ? meta.specialModes.nitro.corrupted : meta.specialModes.nitro.normal;
+    nitroSafetyActive.value = nitroMode.invulnerable;
+    nitroTimer.value = superNitro
+      ? meta.specialModes.nitro.super.durationMs
+      : metaStore.nitroDuration;
+    corruptedNitroEnabled.value = corrupted;
+    corruptedNitroMass.value = 0;
+    nitroMultiplierTarget.value = nitroMode.speedMultiplier;
+    goldenNitroMultiplier.value = nitroMode.rewardMultiplier;
+    energonNitroMultiplier.value = goldenNitroMultiplier.value;
     if (renderInstance.value != null) {
-      renderInstance.value.setAfterImagePassAmount(NITRO_AFTER_IMAGE_PASS);
-      renderInstance.value.setRGBShiftAmount(NITRO_RGB_SHIFT);
+      renderInstance.value.setAfterImagePassAmount(
+        config.value.nitro.afterImagePass,
+      );
+      renderInstance.value.setRGBShiftAmount(config.value.nitro.rgbShift);
     }
   }
 
   function disableNitro() {
     isNitroEnabled.value = false;
-
-    nitroTimer.value = BASE_NITRO_TIMER;
-
+    corruptedNitroEnabled.value = false;
+    isSuperNitro.value = false;
+    corruptedNitroMass.value = 0;
+    nitroTimer.value = metaStore.nitroDuration;
     nitroMultiplierTarget.value = 1;
-    // nitroAfterImagePassTarget.value = 0;
-    // nitroRGBShiftTarget.value = 0;
-
+    goldenNitroMultiplier.value = meta.specialModes.nitro.normal.rewardMultiplier;
+    energonNitroMultiplier.value = meta.specialModes.nitro.normal.rewardMultiplier;
     if (progressStore.currentMultiplier != 1) {
       progressStore.reduceMultiplier(2);
     }
-
     if (renderInstance.value != null) {
       renderInstance.value.setAfterImagePassAmount(0);
       renderInstance.value.setRGBShiftAmount(0);
@@ -227,91 +285,159 @@ export const usePlayerStore = defineStore("playerStore", () => {
   function updateNitro(delta: number) {
     const transitionSpeed =
       nitroMultiplierCurrent.value < nitroMultiplierTarget.value
-        ? NITRO_ACCEL_IN_SPEED
-        : NITRO_ACCEL_OUT_SPEED;
-
+        ? config.value.nitro.accelInSpeed
+        : config.value.nitro.accelOutSpeed;
     nitroMultiplierCurrent.value = THREE.MathUtils.lerp(
       nitroMultiplierCurrent.value,
       nitroMultiplierTarget.value,
       delta * transitionSpeed,
     );
-
-    // nitroAfterImagePassCurrent.value = THREE.MathUtils.lerp(
-    //   nitroAfterImagePassCurrent.value,
-    //   nitroAfterImagePassTarget.value,
-    //   delta * NITRO_AFTER_IMAGE_PASS_TRANSITION,
-    // );
-
-    // nitroRGBShiftCurrent.value = THREE.MathUtils.lerp(
-    //   nitroRGBShiftCurrent.value,
-    //   nitroRGBShiftTarget.value,
-    //   delta * NITRO_RGB_SHIFT_TRANSITION,
-    // );
-
-    // renderInstance.value.setAfterImagePassAmount(
-    //   nitroAfterImagePassCurrent.value,
-    // );
-
-    // renderInstance.value.setRGBShiftAmount(nitroRGBShiftCurrent.value);
-
-    // console.log("nitroMultiplierCurrent", nitroMultiplierCurrent.value);
-    // console.log("nitroAfterImagePassCurrent", nitroAfterImagePassCurrent.value);
-    // console.log("nitroRGBShiftCurrent", nitroRGBShiftCurrent.value);
+    if (
+      !isNitroEnabled.value &&
+      nitroSafetyActive.value &&
+      nitroMultiplierCurrent.value <= 1.01
+    ) {
+      nitroSafetyActive.value = false;
+    }
   }
-  // #endregion
 
-  // #region - работаем с нитро
-  // включаем нитро
-  function enableMagnet(types: any[]) {
+  function enableMagnet(
+    types: any[],
+    mode: MagnetMode = "pull",
+    variant: MagnetVariant = "normal",
+  ) {
     isMagnetEnabled.value = true;
+    magnetVariant.value = variant;
+    magnetTimer.value =
+      variant === "super" ? meta.specialModes.magnet.super.durationMs : metaStore.magnetDuration;
     magnetTypes.value = types;
+    magnetMode.value = mode;
   }
-  // отключаем нитро
+
   function disableMagnet() {
     isMagnetEnabled.value = false;
-    magnetTimer.value = BASE_MAGNET_TIMER;
+    magnetTimer.value = metaStore.magnetDuration;
     magnetTypes.value = [];
-  }
-  // #endregion
-
-  // #region - работаем с броней
-  // добавляем кол-во брони (после поимки)
-  function addArmor(): void {
-    if (armor.value < maxArmor.value) armor.value += 1;
+    magnetMode.value = "pull";
+    magnetVariant.value = "normal";
   }
 
-  // уменьшаем кол-во брони (после выстрела)
-  function reduceShield() {
-    if (armor.value > 0) armor.value -= 1;
+  function addArmor(variant: ArmorVariant = "normal"): boolean {
+    if (armor.value >= maxArmor.value) return false;
+    armor.value += 1;
+    armorStack.value.push(variant);
+    return true;
   }
 
-  // включаем броню
-  function enableShield() {
+  function reduceShield(): ArmorVariant | null {
+    if (armor.value <= 0) return null;
+    armor.value -= 1;
+    return armorStack.value.pop() ?? "normal";
+  }
+
+  function enableShield(corrupted = false) {
     isShieldEnabled.value = true;
+    corruptedShieldEnabled.value = corrupted;
   }
 
-  // отключаем броню
   function disableShield() {
     isShieldEnabled.value = false;
+    corruptedShieldEnabled.value = false;
   }
-  // #endregion
 
-  // #region - работаем со скоростью и ускорением
+  function triggerShieldBlindness(duration = 900) {
+    shieldBlindnessTimer.value = Math.max(shieldBlindnessTimer.value, duration);
+  }
+
+  function updateStatusEffects(delta: number) {
+    if (shieldBlindnessTimer.value > 0) {
+      shieldBlindnessTimer.value = Math.max(
+        0,
+        shieldBlindnessTimer.value - delta,
+      );
+    }
+  }
+
   function resetGameData() {
-    baseSpeed.value = BASE_SPEED;
-    speed.value = BASE_SPEED;
+    baseSpeed.value = startSpeed.value;
+    speed.value = startSpeed.value;
     isNitroEnabled.value = false;
+    nitroSafetyActive.value = false;
+    corruptedNitroEnabled.value = false;
+    corruptedShieldEnabled.value = false;
+    shieldBlindnessTimer.value = 0;
+    resetMass();
     currentLane.value = 1;
+  }
+
+  function clearCombatInventory() {
+    armor.value = 0;
+    armorStack.value = [];
+    ammo.value = 0;
+    ammoStack.value = [];
+    disableShield();
+  }
+
+  function addMass(amount: number) {
+    extraTemporaryMass.value = getClampedTemporaryMass(
+      extraTemporaryMass.value + amount,
+    );
+  }
+
+  function resetMass() {
+    extraTemporaryMass.value = 0;
+    corruptedNitroMass.value = 0;
+  }
+
+  function getClampedTemporaryMass(amount: number) {
+    const maxTemporaryMass = Math.max(
+      0,
+      maxMass.value - bodyMass.value - cargoMass.value,
+    );
+    return Math.max(0, Math.min(maxTemporaryMass, amount));
+  }
+
+  function getMassPenalty() {
+    if (!isMassEnabled.value) return 0;
+    return cargoMassRatio.value;
+  }
+
+  function getControlMultiplier() {
+    if (!isMassEnabled.value) return 1;
+
+    const massPenalty =
+      getMassPenalty() * config.value.mass.controlPenaltyPerMassRatio;
+    const nitroPenalty = corruptedNitroEnabled.value
+      ? meta.specialModes.nitro.corrupted.controlPenalty
+      : 0;
+
+    return Math.max(
+      config.value.mass.minControlMultiplier,
+      1 - massPenalty - nitroPenalty,
+    );
+  }
+
+  function getJumpMultiplier() {
+    if (!isMassEnabled.value) return 1;
+
+    return Math.max(
+      config.value.mass.minJumpMultiplier,
+      1 - getMassPenalty() * config.value.mass.jumpPenaltyPerMassRatio,
+    );
+  }
+
+  function getSpeedMassMultiplier() {
+    if (!isMassEnabled.value) return 1;
+
+    return Math.max(
+      config.value.mass.minSpeedMultiplier,
+      1 - getMassPenalty() * config.value.mass.speedPenaltyPerMassRatio,
+    );
   }
 
   function getCurrentSpeed() {
     const curSpeed = baseSpeed.value * nitroMultiplierCurrent.value;
-
-    if (curSpeed > maxSpeed.value) {
-      return maxSpeed.value;
-    }
-
-    return curSpeed;
+    return Math.min(curSpeed, maxSpeed.value) * getSpeedMassMultiplier();
   }
 
   function getCurrentSpeedInCubesPerHour(precision = 2) {
@@ -323,40 +449,79 @@ export const usePlayerStore = defineStore("playerStore", () => {
     const ratio = currentSpeed / maxSpeed.value;
     if (accelerationType.value === "exponential") {
       return acceleration.value * (1 - ratio);
-    } else {
-      // Логарифмическая модель: ускорение обратно пропорционально скорости
-      // Формула: a = acceleration * (maxSpeed / (currentSpeed + 1)) * (1 - ratio)
-      // Это обеспечивает более медленный рост на высоких скоростях
-      const logFactor = maxSpeed.value / (currentSpeed + 1);
-      return acceleration.value * logFactor * (1 - ratio);
     }
+    const logFactor = maxSpeed.value / (currentSpeed + 1);
+    return (
+      acceleration.value * logFactor * (1 - ratio) * getSpeedMassMultiplier()
+    );
   }
 
   function setAccelerationType(type: "exponential" | "logarithmic") {
     accelerationType.value = type;
   }
-  // #endregion
 
-  // #region - работаем с патронами
-  // добавляем кол-во патронов (после поимки)
-  function addAmmo(): void {
-    if (ammo.value < maxAmmo.value) ammo.value += 1;
+  function setMassEnabled(enabled: boolean) {
+    isMassEnabled.value = enabled;
+    if (!enabled) resetMass();
   }
 
-  // уменьшаем кол-во патронов (после выстрела)
-  function consumeAmmo() {
-    if (ammo.value > 0) ammo.value -= 1;
+  function toggleMassEnabled() {
+    setMassEnabled(!isMassEnabled.value);
   }
 
-  // проверка на наличие патронов в обойме
+  function addAmmo(variant: BulletVariant = "normal"): boolean {
+    if (ammo.value >= maxAmmo.value) return false;
+    ammo.value += 1;
+    ammoStack.value.push(variant);
+    return true;
+  }
+
+  function consumeAmmo(): BulletVariant | null {
+    if (ammo.value <= 0) return null;
+    ammo.value -= 1;
+    return ammoStack.value.pop() ?? "normal";
+  }
+
+  function getRandomSpawnedBulletVariant(): BulletVariant {
+    const gameplay = levelStore.currentGameplay;
+
+    if (Math.random() > gameplay.specialBoostChance) return "normal";
+
+    const entries = Object.entries(gameplay.specialBoostWeights.bullet);
+    const totalWeight = entries.reduce(
+      (sum, [, weight]) => sum + Math.max(0, weight),
+      0,
+    );
+    if (totalWeight <= 0) return "normal";
+
+    let roll = Math.random() * totalWeight;
+    for (const [variant, weight] of entries) {
+      roll -= Math.max(0, weight);
+      if (roll <= 0) {
+        return variant === "blankBullet"
+          ? "blank"
+          : variant as BulletVariant;
+      }
+    }
+
+    return "normal";
+  }
+
+  function fillAmmo(randomizeVariants = false): void {
+    while (ammo.value < maxAmmo.value) {
+      addAmmo(randomizeVariants ? getRandomSpawnedBulletVariant() : "normal");
+    }
+  }
+
+  function fillArmor(): void {
+    while (armor.value < maxArmor.value) addArmor();
+  }
+
   function canShoot(): boolean {
     return ammo.value > 0;
   }
-  // #endregion
 
-  // #region - работаем с событиями и сообщениями
-  // ловим тип события (поймал патрон, броню, нитро или энергон)
-  function makeEventHappened(type_) {
+  function makeEventHappened(type_: string) {
     eventType.value = type_;
     eventCounter.value++;
     setTimeout(() => {
@@ -364,74 +529,78 @@ export const usePlayerStore = defineStore("playerStore", () => {
     }, 1000);
   }
 
-  // сохраняем новое сообщение в Store
-  function addNewMsg(msg_) {
+  function addNewMsg(msg_: string) {
     notificationMsg.value = msg_;
   }
 
   function getColliderOptions() {
     return {
-      colliderShrinkX: COLLIDER_SHRINK_X,
-      colliderShrinkZ: COLLIDER_SHRINK_Z,
-      colliderYOffset: COLLIDER_Y_OFFSET,
-      colliderHeightFactor: COLLIDER_HEIGHT_FACTOR,
+      colliderShrinkX: config.value.collider.shrinkX,
+      colliderShrinkZ: config.value.collider.shrinkZ,
+      colliderYOffset: config.value.collider.yOffset,
+      colliderHeightFactor: config.value.collider.heightFactor,
     };
   }
 
   function getRuleOptions() {
     return {
-      laneChangeSpeed: LANE_CHANGE_SPEED,
-      maxTilt: MAX_TILT,
-      tiltSmoothing: TILT_SMOOTHING,
+      laneChangeSpeed: config.value.laneChangeSpeed * getControlMultiplier(),
+      maxTilt: config.value.maxTilt,
+      tiltSmoothing: config.value.tiltSmoothing,
+      lateralAcceleration:
+        config.value.mass.lateralAcceleration * getControlMultiplier(),
+      lateralDamping: config.value.mass.lateralDamping,
     };
   }
 
   function getJumpOptions() {
     return {
-      jumpHeight: JUMP_HEIGHT,
+      jumpHeight: config.value.jumpHeight * getJumpMultiplier(),
     };
+  }
+
+  function getNitroTrailConfig(): NitroTrailVisualConfig {
+    return nitroTrailConfig.value;
+  }
+
+  function getShieldConfig(): ShieldVisualConfig {
+    return shieldConfig.value;
   }
 
   function getDefaultCarConfig() {
-    // Позиционирование
     return {
       startLane: 2,
-      startPosition: new THREE.Vector3(0, useCommonStore().BASE_ITEM_YPOS, 0),
-      // Размеры и коллайдер
+      startPosition: new THREE.Vector3(0, commonStore.baseItemYpos, 0),
       ...getColliderOptions(),
-
-      // // Управление
       ...getRuleOptions(),
-
-      // // Прыжки
       ...getJumpOptions(),
     };
   }
-  // #endregion
 
   return {
-    // constants
-    CAR_CUBES_CONFIG,
-    CAR_MATERIAL_CONFIG,
-    CAR_MATERIAL_CONFIG_EXTRA,
-    CAR_EMISSION_CONFIG_EXTRA,
-
-    NITRO_MULTIPLIER,
-    BASE_NITRO_TIMER,
-    BASE_MAGNET_TIMER,
-    BASE_SPEED,
-    FORCED_JUMP_MULTIPLIER,
-    JUMP_HEIGHT,
-
-    DEFAULT_EMISSION_INTENSITY,
-    DEFAULT_BLINK_DURATION,
-    DEFAULT_BLINK_SPEED,
-
-    // states
+    config,
+    CAR_CUBES_CONFIG: carCubesConfig,
+    CAR_MATERIAL_CONFIG: carMaterialConfig,
+    CAR_MATERIAL_CONFIG_EXTRA: carMaterialConfigExtra,
+    CAR_EMISSION_CONFIG_EXTRA: carEmissionConfigExtra,
+    CAR_NEON_EDGES_CONFIG: neonEdgesConfig,
+    NITRO_MULTIPLIER: meta.specialModes.nitro.normal.speedMultiplier,
+    BASE_SPEED: config.value.baseSpeed,
+    FORCED_JUMP_MULTIPLIER: config.value.forcedJumpMultiplier,
+    JUMP_HEIGHT: config.value.jumpHeight,
+    DEFAULT_EMISSION_INTENSITY: defaultEmissionIntensity,
+    DEFAULT_BLINK_DURATION: defaultBlinkDuration,
+    DEFAULT_BLINK_SPEED: defaultBlinkSpeed,
     speed,
+    startSpeed,
     baseSpeed,
     isNitroEnabled,
+    isSuperNitro,
+    nitroSafetyActive,
+    corruptedNitroEnabled,
     isShieldEnabled,
+    corruptedShieldEnabled,
+    shieldBlindnessTimer,
     currentLane,
     maxSpeed,
     acceleration,
@@ -440,9 +609,12 @@ export const usePlayerStore = defineStore("playerStore", () => {
     cameraPosition,
     nitroTimer,
     armor,
+    armorStack,
     maxArmor,
     ammo,
+    ammoStack,
     maxAmmo,
+    bulletSpeed,
     goldenNitroMultiplier,
     energonNitroMultiplier,
     notificationMsg,
@@ -453,37 +625,56 @@ export const usePlayerStore = defineStore("playerStore", () => {
     magnetRadius,
     magnetForce,
     magnetMaxTargets,
+    magnetFieldTurns,
     magnetTypes,
+    magnetMode,
+    magnetVariant,
     forceJump,
-
-    // methods
+    isMassEnabled,
+    mass,
+    maxMass,
+    bodyMass,
+    cargoMass,
+    temporaryMass,
+    corruptedNitroMass,
+    massRatio,
     resetPlayerAchievements,
     enableNitro,
     disableNitro,
     updateNitro,
-
+    updateStatusEffects,
     enableShield,
+    triggerShieldBlindness,
     disableShield,
-
     enableMagnet,
     disableMagnet,
-
+    addMass,
+    resetMass,
+    getControlMultiplier,
+    getJumpMultiplier,
+    setMassEnabled,
+    toggleMassEnabled,
+    getRuleOptions,
+    getJumpOptions,
     resetGameData,
+    clearCombatInventory,
+    applyGameplayConfig,
     getCurrentSpeed,
     getCurrentSpeedInCubesPerHour,
     getCurrentAcceleration,
     setAccelerationType,
-
+    getNitroTrailConfig,
+    getShieldConfig,
     addAmmo,
     consumeAmmo,
+    fillAmmo,
+    fillArmor,
     addArmor,
     reduceShield,
     canShoot,
     makeEventHappened,
     addNewMsg,
-
     getDefaultCarConfig,
-
     renderInstance,
   };
 });

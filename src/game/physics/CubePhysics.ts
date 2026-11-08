@@ -19,7 +19,7 @@ export class CubePhysics {
     dt: number = 0.016, // дефолтное значение ~60 FPS
     onRemove?: (cube: THREE.Object3D) => void,
   ) {
-    const groundY = useCommonStore().BASE_ITEM_YPOS;
+    const groundY = useCommonStore().baseItemYpos;
     let dtSeconds = dt / 1000;
 
     for (let i = 0; i < cubes.length; i++) {

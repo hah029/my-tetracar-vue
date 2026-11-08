@@ -1,6 +1,6 @@
 // src/composables/useGame.ts
 import * as THREE from "three";
-import { ref } from "vue";
+import { ref, watch, type WatchStopHandle } from "vue";
 // managers
 import { type CollisionResult } from "@/game/collision/CollisionSystem";
 import { type FlashType } from "@/game/effects/FlashEffectManager";
@@ -18,12 +18,18 @@ import { UpdateMode } from "@/game/core/UpdateMode";
 // stores
 import { useProgressStore } from "@/store/progressStore";
 import { usePlayerStore } from "@/store/playerStore";
+import { useLevelStore } from "@/store/levelStore";
+import { useMetaStore } from "@/store/metaStore";
+import { BOOST_SPECIAL_MODES } from "@/configs/meta";
 // objects
 import type { CarRef } from "@/game/car";
 import { CameraSystem } from "@/game/camera/CameraSystem";
 import { useGameState } from "@/store/gameState";
 import { GameStates } from "@/game/core/GameState";
-import { setupLights } from "@/game/light/setupLight";
+import {
+  setupLights,
+  updateDirectionalLightShadow,
+} from "@/game/light/setupLight";
 import { BaseObstacle } from "@/game/interactive/obstacle/BaseObstacle";
 import { Golden } from "@/game/interactive/items/coin/Golden";
 import { Energon } from "@/game/interactive/items/coin/Energon";
@@ -32,12 +38,17 @@ import { BulletItem } from "@/game/interactive/items/booster/BulletItem";
 import { NitroItem } from "@/game/interactive/items/booster/NitroItem";
 import { ShieldItem } from "@/game/interactive/items/booster/ShieldItem";
 import { MagnetItem } from "@/game/interactive/items/booster/MagnetItem";
+import { CoinItem } from "@/game/interactive/items/coin/CoinItem";
+import { BoosterItem } from "@/game/interactive/items/booster/BoosterItem";
 import { MagnetSystem } from "@/game/magnet/MagnetSystem";
 import { useEnvironmentStore } from "@/store/environmentStore";
+import { RunTelemetry } from "@/telemetry";
+import { getObstacleKind } from "@/game/interactive/obstacle/telemetry";
 
 export function useGame() {
   const playerStore = usePlayerStore();
   const progressStore = useProgressStore();
+  const levelStore = useLevelStore();
   const car = ref<CarRef>({
     mesh: new THREE.Group(),
     targetX: 0,
@@ -70,6 +81,19 @@ export function useGame() {
 
   let bulletSystem: BulletSystem;
   let collisionSystem: CollisionSystem;
+  let stopRoadConfigWatcher: WatchStopHandle | null = null;
+  const SHIELD_WAVE_DURATION = 600;
+  const pendingShieldWaves: {
+    impactPoint: THREE.Vector3;
+    radius: number;
+    createdAt: number;
+    destroyed: Set<BaseObstacle>;
+  }[] = [];
+
+  function rebuildRoadRuntime() {
+    if (!roadManager) return;
+    roadManager.updateConfig(useEnvironmentStore().getLevelRoadConfig());
+  }
 
   function init(scene: THREE.Scene) {
     sceneRef = scene;
@@ -79,7 +103,7 @@ export function useGame() {
 
     // === Инициализация менеджеров ===
     roadManager = RoadManager.getInstance();
-    roadManager.initialize(useEnvironmentStore().DEFAULT_ROAD_CONFIG, scene);
+    roadManager.initialize(useEnvironmentStore().getLevelRoadConfig(), scene);
 
     cityManager = CityManager.getInstance();
     cityManager.initialize(scene);
@@ -108,6 +132,16 @@ export function useGame() {
 
     // === Создание дороги и машины ===
     roadManager.createRoad();
+    stopRoadConfigWatcher?.();
+    stopRoadConfigWatcher = watch(
+      () => ({
+        road: useEnvironmentStore().currentRoad,
+        laneCount: useLevelStore().currentGameplay.laneCount,
+      }),
+      rebuildRoadRuntime,
+      { deep: true },
+    );
+
     const newCar = carManager.createCar();
     car.value.mesh = newCar;
     car.value.targetX = 0;
@@ -130,8 +164,9 @@ export function useGame() {
   function updatePlayer(dt: number) {
     if (!carManager || !roadManager) return;
 
+    carManager.update(dt);
     const realCar = carManager.getCar();
-    realCar.update(dt);
+    if (sceneRef) updateDirectionalLightShadow(sceneRef, realCar.position);
 
     car.value.mesh = realCar;
     car.value.isDestroyed = realCar.isDestroyed();
@@ -140,12 +175,22 @@ export function useGame() {
     if (realCar.isDestroyed()) {
       car.value.cubes = realCar.getCubes();
     }
+
+    if (!playerStore.isShieldEnabled && playerStore.armor > 0) {
+      // логика для случая, когда щит не активен и но броня есть
+      playerStore.enableShield();
+      realCar.enableShield();
+    }
   }
 
-  function updateCity(deltaTime: number, speed: number) {
+  function updateCity(
+    deltaTime: number,
+    speed: number,
+    carPosition?: THREE.Vector3,
+  ) {
     if (!cityManager) return;
 
-    cityManager.update(deltaTime, speed);
+    cityManager.update(deltaTime, speed, carPosition);
   }
 
   function destroyObstacles(
@@ -163,6 +208,67 @@ export function useGame() {
         o.destroy(impactPoint, transformRequired);
       });
     }
+  }
+
+  function clearPendingShieldWaves() {
+    pendingShieldWaves.length = 0;
+  }
+
+  function updatePendingShieldWaves(now = performance.now()) {
+    for (let i = pendingShieldWaves.length - 1; i >= 0; i--) {
+      const wave = pendingShieldWaves[i];
+      const progress = Math.min(
+        (now - wave.createdAt) / SHIELD_WAVE_DURATION,
+        1,
+      );
+      const frontRadius = wave.radius * progress;
+
+      obstacleManager.getObstacles().forEach((obstacle) => {
+        if (wave.destroyed.has(obstacle)) return;
+
+        const dx = obstacle.position.x - wave.impactPoint.x;
+        const dz = obstacle.position.z - wave.impactPoint.z;
+
+        // The shader expands along the road surface, so compare XZ distance
+        // rather than 3D distance including the obstacle's height.
+        if (Math.hypot(dx, dz) <= frontRadius) {
+          destroyObstacles(wave.impactPoint, [obstacle]);
+          wave.destroyed.add(obstacle);
+        }
+      });
+
+      if (progress >= 1) {
+        pendingShieldWaves.splice(i, 1);
+      }
+    }
+  }
+
+  function destroyObstaclesWithShieldWave(
+    impactPoint: THREE.Vector3,
+    collisionObstacle: BaseObstacle,
+    radius: number,
+    animateWave: boolean,
+  ) {
+    // The obstacle already touching the car must disappear immediately to
+    // prevent a second collision before the next frame.
+    destroyObstacles(impactPoint, [collisionObstacle]);
+
+    if (radius <= 0) return;
+
+    if (!animateWave) {
+      const affected = obstacleManager
+        .getObstacles()
+        .filter((obstacle) => obstacle.position.distanceTo(impactPoint) <= radius);
+      destroyObstacles(impactPoint, affected);
+      return;
+    }
+
+    pendingShieldWaves.push({
+      impactPoint: impactPoint.clone(),
+      radius,
+      createdAt: performance.now(),
+      destroyed: new Set([collisionObstacle]),
+    });
   }
 
   function destroyCar(impactPoint?: THREE.Vector3) {
@@ -183,23 +289,33 @@ export function useGame() {
 
   function movePlayerLeft(dt: number) {
     if (useGameState().currentState != GameStates.Play) return;
-    carManager.getCar().moveLeft();
-    soundManager.play("sfx_moving");
+    const moved = carManager.moveLeft();
+    soundManager.playCue(moved ? "laneChange" : "actionRejected");
     updatePlayer(dt);
   }
 
   function movePlayerRight(dt: number) {
     if (useGameState().currentState != GameStates.Play) return;
-    carManager.getCar().moveRight();
-    soundManager.play("sfx_moving");
+    const moved = carManager.moveRight();
+    soundManager.playCue(moved ? "laneChange" : "actionRejected");
     updatePlayer(dt);
   }
 
-  function jumpPlayer(dt: number) {
-    if (useGameState().currentState != GameStates.Play) return;
-    carManager.getCar().jump();
-    car.value.isJumping = true;
+  function jumpPlayer(
+    dt: number,
+    source: "manual" | "ramp" = "manual",
+  ): boolean {
+    if (useGameState().currentState != GameStates.Play) return false;
+    if (source === "manual") RunTelemetry.recordManualJumpAttempt();
+    const jumped = carManager.getCar().jump();
+    if (jumped) {
+      if (source === "manual") RunTelemetry.recordManualJumpStarted();
+      else RunTelemetry.recordRampJumpStarted();
+      car.value.isJumping = true;
+      soundManager.playCue("jumpStart");
+    }
     updatePlayer(dt);
+    return jumped;
   }
 
   let obstacleSyncTimer = 0;
@@ -213,6 +329,7 @@ export function useGame() {
     mode: UpdateMode,
   ) {
     interactiveManager.update(carManager.getCar(), deltaTime, speed, mode);
+    updatePendingShieldWaves();
 
     obstacleSyncTimer += deltaTime;
     if (obstacleSyncTimer < 1000) return; // ⛔ 1 раз в сек
@@ -315,10 +432,10 @@ export function useGame() {
 
     carManager.resetCar();
     interactiveManager.reset();
-    roadManager.clear();
     collisionSystem.reset();
     bulletSystem.reset();
     flashEffectManager.clear();
+    clearPendingShieldWaves();
 
     // Дополнительная очистка: удаляем оставшиеся объекты по тегам
     if (sceneRef) {
@@ -327,7 +444,12 @@ export function useGame() {
       sceneRef.traverse((obj) => {
         const ud = obj.userData;
 
-        if (ud.isObstacle || ud.isJump || ud.isInteractiveItem) {
+        if (
+          ud.isObstacle ||
+          ud.isJump ||
+          ud.isInteractiveItem ||
+          ud.isDestructionFragment
+        ) {
           const root = findRootTaggedObject(obj);
           toRemove.add(root);
         }
@@ -338,7 +460,7 @@ export function useGame() {
       });
     }
 
-    roadManager.createRoad();
+    rebuildRoadRuntime();
 
     const newCar = carManager.getCar();
     car.value.mesh = newCar;
@@ -351,12 +473,34 @@ export function useGame() {
 
     playerStore.disableNitro();
     playerStore.disableMagnet();
+    soundManager.stopCueLoop("nitroActive");
+    soundManager.stopCueLoop("magnetActive");
     playerStore.resetGameData();
+
     // reset progress
     progressStore.resetScore();
     progressStore.resetDistance();
+    progressStore.resetCoins();
 
     CameraSystem.reset(car.value.mesh.position);
+  }
+
+  function dispose() {
+    stopRoadConfigWatcher?.();
+    stopRoadConfigWatcher = null;
+
+    interactiveManager?.reset();
+    obstacleManager?.reset();
+    bulletSystem?.reset();
+    flashEffectManager?.clear();
+    clearPendingShieldWaves();
+    roadManager?.dispose();
+    cityManager?.dispose();
+    carManager?.dispose();
+
+    sceneRef = null;
+    obstacles.value = [];
+    jumps.value = [];
   }
 
   function shoot() {
@@ -364,37 +508,74 @@ export function useGame() {
     const playerStore = usePlayerStore();
 
     if (!playerStore.canShoot()) {
+      RunTelemetry.recordShotBlockedNoAmmo();
       playerStore.addNewMsg("outOfAmmo");
+      soundManager.playCue("outOfAmmo");
       return;
     }
 
-    bulletSystem.spawnBullet(carManager.getCar());
-    playerStore.consumeAmmo();
-    soundManager.play("sfx_shot");
+    const variant = playerStore.consumeAmmo();
+    if (!variant) return;
+    bulletSystem.spawnBullet(carManager.getCar(), variant, playerStore.bulletSpeed);
+    RunTelemetry.recordShotFired();
+    soundManager.playCue("shot");
+    CameraSystem.triggerShotShake();
   }
 
   function handleJumpCollision(deltaTime: number) {
-    jumpPlayer(deltaTime);
+    jumpPlayer(deltaTime, "ramp");
     progressStore.calcScore("jump", 1);
-    soundManager.play("sfx_jump");
   }
 
   function handleBaseObstacleCollision(
     collision: CollisionResult,
     currentSpeed: number,
   ): boolean {
+    if (playerStore.nitroSafetyActive) {
+      destroyObstacles(collision.impactPoint!, [collision.impactSubject as BaseObstacle]);
+      RunTelemetry.recordObstacleDestroyed("nitro", getObstacleKind(collision.impactSubject as BaseObstacle));
+      soundManager.playCue("obstacleDestroy");
+      return false;
+    }
     // Проверка наличия брони
     if (playerStore.isShieldEnabled) {
-      destroyObstacles(collision.impactPoint!, [
-        collision.impactSubject as BaseObstacle,
-      ]);
+      const impact = collision.impactPoint!;
+      const chargeVariant = playerStore.armorStack[playerStore.armorStack.length - 1] ?? "normal";
+      const radius = chargeVariant === "super" ? BOOST_SPECIAL_MODES.shield.super.waveRadius : useMetaStore().shieldWaveRadius;
+      const collisionObstacle = collision.impactSubject as BaseObstacle;
+      destroyObstaclesWithShieldWave(
+        impact,
+        collisionObstacle,
+        radius,
+        !playerStore.corruptedShieldEnabled,
+      );
+      if (!playerStore.corruptedShieldEnabled) {
+        flashEffectManager.spawnShieldWave(
+          impact,
+          radius,
+          SHIELD_WAVE_DURATION,
+        );
+      }
 
-      playerStore.reduceShield();
+      if (playerStore.corruptedShieldEnabled) {
+        playerStore.triggerShieldBlindness(BOOST_SPECIAL_MODES.shield.corrupted.blindnessMs);
+        while (playerStore.armor > 0) playerStore.reduceShield();
+      } else {
+        playerStore.reduceShield();
+      }
+      soundManager.playCue("shieldHit");
+      RunTelemetry.recordShieldHit();
       if (playerStore.armor == 0) {
         CarManager.getInstance().disableShield();
         playerStore.disableShield();
+        soundManager.playCue("shieldBreak");
+        RunTelemetry.recordShieldBreak();
       }
       progressStore.calcScore("reduceShield", 1);
+      RunTelemetry.recordObstacleDestroyed(
+        "shield",
+        getObstacleKind(collision.impactSubject as BaseObstacle),
+      );
       return false;
     }
 
@@ -405,7 +586,7 @@ export function useGame() {
       [collision.impactSubject as BaseObstacle],
       false,
     );
-    soundManager.play("sfx_destroy_bot");
+    soundManager.playCue("obstacleDestroy");
     const strength = Math.min(currentSpeed / playerStore.maxSpeed, 1);
     CameraSystem.triggerImpactShake(strength);
 
@@ -421,7 +602,8 @@ export function useGame() {
         ? playerStore.goldenNitroMultiplier
         : 1;
       progressStore.addGolden(coins);
-      soundManager.play("sfx_add_golden");
+      RunTelemetry.recordItemCollected("golden", coins);
+      soundManager.playCue("goldenPickup");
       spawnFlash("golden", carPos, 4);
       return;
     }
@@ -431,73 +613,134 @@ export function useGame() {
         ? playerStore.energonNitroMultiplier
         : 1;
       progressStore.addEnergon(coins);
+      RunTelemetry.recordItemCollected("energon", coins);
       playerStore.makeEventHappened("addEnergon");
 
-      soundManager.play("sfx_add_energon");
+      soundManager.playCue("energonPickup");
       spawnFlash("energon", carPos);
       return;
     }
   }
 
-  function handleBoosterCollision(collision: CollisionResult) {
+  function handleBoosterCollision(collision: CollisionResult): boolean {
     const carPos = car.value.mesh.position;
 
     if (collision.impactSubject instanceof BulletItem) {
       if (playerStore.ammo >= playerStore.maxAmmo) {
         playerStore.addNewMsg("maxAmmo");
-        return;
+        soundManager.playCue("actionRejected");
+        collision.impactSubject.rejectFromCar(carPos);
+        MagnetSystem.getInstance().removeItemEffects(collision.impactSubject as BaseItem);
+        RunTelemetry.recordItemRejected("ammo");
+        CameraSystem.triggerPickupRejectedShake();
+        return false;
       }
 
-      playerStore.addAmmo();
+      playerStore.addAmmo(
+        collision.impactSubject.userData.corruptedBoost === "blankBullet"
+          ? "blank"
+          : (collision.impactSubject.userData.superBullet as import("@/game/combat/BulletVariant").BulletVariant | undefined) ?? "normal",
+      );
+      RunTelemetry.recordItemCollected("ammo");
       playerStore.addNewMsg("ammoRefilled");
       playerStore.makeEventHappened("addBullet");
 
-      soundManager.play("sfx_add_patron");
+      soundManager.playCue("ammoPickup");
       spawnFlash("bullet", carPos);
-      return;
+      return true;
     }
 
     if (collision.impactSubject instanceof NitroItem) {
+      const corrupted =
+        collision.impactSubject.userData.corruptedBoost === "heavyNitro";
+      const superNitro = collision.impactSubject.userData.superNitro === true;
       CarManager.getInstance().enableNitro();
 
-      playerStore.enableNitro();
-      playerStore.addNewMsg("nitroActivated");
+      playerStore.enableNitro(corrupted, superNitro);
+      RunTelemetry.recordItemCollected("nitro");
+      soundManager.startCueLoop("nitroActive");
+      playerStore.addNewMsg(corrupted ? "heavyNitroActivated" : superNitro ? "superNitroActivated" : "nitroActivated");
       playerStore.makeEventHappened("addNitro");
 
-      soundManager.play("sfx_add_nitro");
+      soundManager.playCue("nitroPickup");
       spawnFlash("nitro", carPos);
+      CameraSystem.triggerNitroShake(corrupted);
 
-      return;
+      return true;
     }
 
     if (collision.impactSubject instanceof ShieldItem) {
       if (playerStore.armor >= playerStore.maxArmor) {
         playerStore.addNewMsg("maxArmor");
-        return;
+        soundManager.playCue("actionRejected");
+        collision.impactSubject.rejectFromCar(carPos);
+        MagnetSystem.getInstance().removeItemEffects(collision.impactSubject as BaseItem);
+        RunTelemetry.recordItemRejected("armor");
+        CameraSystem.triggerPickupRejectedShake();
+        return false;
       }
 
-      playerStore.addArmor();
+      const corrupted =
+        collision.impactSubject.userData.corruptedBoost === "blindShield";
+      const wasShieldEnabled = playerStore.isShieldEnabled;
 
-      if (!playerStore.isShieldEnabled) {
-        playerStore.enableShield();
+      playerStore.addArmor(
+        collision.impactSubject.userData.superShield === true ? "super" : "normal",
+      );
+      playerStore.enableShield(corrupted);
+      RunTelemetry.recordItemCollected("armor");
+      if (wasShieldEnabled) RunTelemetry.recordArmorAddedWhileShieldActive();
+      else RunTelemetry.recordShieldActivated();
+
+      if (!wasShieldEnabled) {
         CarManager.getInstance().enableShield();
       }
 
-      playerStore.addNewMsg("armorEquipped");
+      playerStore.addNewMsg(
+        corrupted ? "unstableArmorEquipped" : "armorEquipped",
+      );
       playerStore.makeEventHappened("addArmor");
 
-      soundManager.play("sfx_add_armor");
+      soundManager.playCue("shieldPickup");
       spawnFlash("shield", carPos);
-      return;
+      return true;
     }
 
     if (collision.impactSubject instanceof MagnetItem) {
-      playerStore.enableMagnet(collision.impactSubject.userData.magnetTypes!);
-      playerStore.addNewMsg("magnetActivated");
+      const corruptedBoost = collision.impactSubject.userData.corruptedBoost;
+      const isSuperMagnet = collision.impactSubject.userData.superMagnet === true;
+      const magnetMode =
+        corruptedBoost === "lethalMagnet"
+          ? "lethalPull"
+          : corruptedBoost === "repulseMagnet"
+            ? "repulse"
+            : "pull";
+
+      playerStore.enableMagnet(
+        isSuperMagnet
+          ? [CoinItem, BoosterItem]
+          : collision.impactSubject.userData.magnetTypes!,
+        magnetMode,
+        isSuperMagnet ? "super" : "normal",
+      );
+      RunTelemetry.recordItemCollected("magnet");
+      soundManager.startCueLoop("magnetActive");
+      playerStore.addNewMsg(
+        magnetMode === "lethalPull"
+          ? "unstableMagnetActivated"
+          : magnetMode === "repulse"
+            ? "inverseMagnetActivated"
+            : isSuperMagnet
+              ? "superMagnetActivated"
+              : "magnetActivated",
+      );
       playerStore.makeEventHappened("addMagnet");
+      soundManager.playCue("magnetPickup");
       spawnFlash("magnet", carPos);
-      return;
+      return true;
     }
+
+    return false;
   }
 
   function removeItem(item: BaseItem) {
@@ -535,6 +778,7 @@ export function useGame() {
     resetJumps,
     getDangerLevel,
     reset,
+    dispose,
     spawnFlash,
 
     checkObstaclesCollision,

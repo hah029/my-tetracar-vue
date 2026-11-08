@@ -1,102 +1,62 @@
 // src/composables/useControls.ts
-import { onMounted, onUnmounted, ref } from "vue";
-import { useGameState } from "@/store/gameState";
-import type { useGame } from "./useGame";
-import { usePlayerStore } from "@/store/playerStore";
-import { CarManager } from "@/game/car";
-import { GameStates } from "@/game/core/GameState";
 
-import Hammer from "hammerjs";
+import { onMounted, onUnmounted } from "vue";
+import { useGameState } from "@/store/gameState";
+import { usePlayerStore } from "@/store/playerStore";
+import { useModalMessageStore } from "@/store/modalMessageStore";
+import { CarManager } from "@/game/car";
+import { CameraSystem } from "@/game/camera/CameraSystem";
 import { BaseItem } from "@/game/interactive/items/BaseItem";
+import { GameStates } from "@/game/core/GameState";
+import { SoundManager } from "@/game/sound/SoundManager";
+import type { useGame } from "./useGame";
 
 export function useControls(game: ReturnType<typeof useGame>) {
   const gameStore = useGameState();
   const playerStore = usePlayerStore();
+  const isDevMode = import.meta.env.DEV;
 
-  // Refs для DOM элементов (будут установлены из HUD.vue)
-  const swipeZoneRef = ref<HTMLElement | null>(null);
-  let hammerManager: HammerManager | null = null;
-
-  // Множество для отслеживания обработанных клавиш (защита от автоповтора)
   const processedKeys = new Set<string>();
+
+  const INPUT_DT = 1000 / 60;
+  const MOVE_REPEAT_INTERVAL = 90;
+
+  let lastMoveRepeatTime = 0;
 
   enum controlKeys {
     LEFT = "ArrowLeft",
     LEFT_ALT = "KeyA",
+
     RIGHT = "ArrowRight",
     RIGHT_ALT = "KeyD",
+
     DOWN = "ArrowDown",
     DOWN_ALT = "KeyS",
+
     UP = "ArrowUp",
     UP_ALT = "KeyW",
 
     SPACE = "Space",
+
     NITRO = "KeyN",
     MAGNET = "KeyM",
-    SHOP = "KeyB",
+    REFILL_AMMO = "KeyB",
+    REFILL_ARMOR = "KeyV",
+
     ESCAPE = "Escape",
+
     ENTER = "Enter",
     ENTER_NUMPAD = "NumpadEnter",
   }
 
-  // Функция для регистрации зоны свайпов (вызывается из HUD.vue)
-  function registerSwipeZone(element: HTMLElement | null) {
-    // Очищаем предыдущий менеджер если есть
-    if (hammerManager) {
-      hammerManager.destroy();
-      hammerManager = null;
-    }
-
-    swipeZoneRef.value = element;
-
-    if (!element) return;
-
-    // Создаем менеджер жестов
-    hammerManager = new Hammer.Manager(element);
-
-    // Настраиваем распознаватель свайпов (только горизонтальные)
-    const swipeRecognizer = new Hammer.Swipe({
-      direction: Hammer.DIRECTION_HORIZONTAL,
-      threshold: 15, // Минимальное расстояние в пикселях
-      velocity: 0.3, // Минимальная скорость
-    });
-
-    hammerManager.add(swipeRecognizer);
-
-    // Обработка свайпа влево
-    hammerManager.on("swipeleft", (e) => {
-      e.preventDefault();
-      if (gameStore.currentState === GameStates.Play) {
-        game.movePlayerLeft(60 / 1000);
-      }
-    });
-
-    // Обработка свайпа вправо
-    hammerManager.on("swiperight", (e) => {
-      e.preventDefault();
-      if (gameStore.currentState === GameStates.Play) {
-        game.movePlayerRight(60 / 1000);
-      }
-    });
-
-    // Предотвращаем скролл страницы в зоне свайпов
-    const preventScroll = (e: TouchEvent) => {
-      if (gameStore.currentState === GameStates.Play) {
-        e.preventDefault();
-      }
-    };
-
-    element.addEventListener("touchmove", preventScroll, { passive: false });
-
-    // Сохраняем обработчик для очистки
-    (element as any)._preventScrollHandler = preventScroll;
-  }
-
-  // события на кнопку Escape
   function processEscape() {
     switch (gameStore.currentState) {
       case GameStates.Play:
         gameStore.pauseGame();
+        break;
+
+      case GameStates.LevelSelect:
+        gameStore.goToMenu();
         break;
 
       case GameStates.Pause:
@@ -113,9 +73,19 @@ export function useControls(game: ReturnType<typeof useGame>) {
       case GameStates.Menu:
         if (
           gameStore.activeOverlay === "settings" ||
-          gameStore.activeOverlay === "leaderBoards"
-        )
+          gameStore.activeOverlay === "leaderBoards" || 
+          gameStore.activeOverlay === "dailyGift"
+        ) {
+          // красиво закрываем окно (с каскадом анимаций)
+          gameStore.requestOverlayClose();
+        } else if (
+          // пока просто (по старинке) быстро закрываем окно (без каскада анимаций)
+          gameStore.activeOverlay === "shop" ||
+          gameStore.activeOverlay === "fortuneWheel" ||
+          gameStore.activeOverlay === "objectives"
+        ) {
           gameStore.activeOverlay = null;
+        }
         break;
 
       case GameStates.Gameover:
@@ -125,7 +95,6 @@ export function useControls(game: ReturnType<typeof useGame>) {
     }
   }
 
-  // события на кнопку Enter
   function processEnter() {
     switch (gameStore.currentState) {
       case GameStates.Preloader:
@@ -135,87 +104,167 @@ export function useControls(game: ReturnType<typeof useGame>) {
     }
   }
 
+  function handleGameGesture(action: "left" | "right" | "up" | "down" | "tap") {
+    if (gameStore.currentState !== GameStates.Play) return;
+
+    switch (action) {
+      case "left":
+        game.movePlayerLeft(INPUT_DT);
+        break;
+
+      case "right":
+        game.movePlayerRight(INPUT_DT);
+        break;
+
+      case "up":
+        game.jumpPlayer(INPUT_DT);
+        break;
+
+      case "down":
+        playerStore.forceJump = true;
+
+        setTimeout(() => {
+          playerStore.forceJump = false;
+        }, 50);
+
+        break;
+
+      case "tap":
+        game.shoot();
+        break;
+    }
+  }
+
+  function handleTouchControl(action: "left" | "right" | "up" | "down" | "fire") {
+    handleGameGesture(action === "fire" ? "tap" : action);
+  }
+
   function handleKeyDown(e: KeyboardEvent) {
-    if (e.key !== controlKeys.ESCAPE) e.preventDefault();
+    if ((e.ctrlKey || e.metaKey) && e.code === "KeyQ") {
+      return;
+    }
+
+    // 🔥 если открыто модальное сообщение — блокируем весь остальной ввод,
+    //    но разрешаем Enter (центральный и правый) и Esc закрыть его
+    const modal = useModalMessageStore();
+    if (modal.isVisible) {
+        if (
+            e.code === controlKeys.ESCAPE ||
+            e.code === controlKeys.ENTER ||
+            e.code === controlKeys.ENTER_NUMPAD
+        ) {
+            e.preventDefault();
+            if (processedKeys.has(e.code)) return;
+            processedKeys.add(e.code);
+
+            SoundManager.getInstance().playCue("uiSelect");
+            modal.hide();
+        }
+        return;  // всё остальное — игнорируем
+    }
+
+    if (e.key !== controlKeys.ESCAPE) {
+      e.preventDefault();
+    }
 
     switch (e.code) {
       case controlKeys.LEFT:
       case controlKeys.LEFT_ALT:
-        game.movePlayerLeft(60 / 1000);
+        if (e.repeat && !canProcessMoveRepeat()) return;
+        handleGameGesture("left");
         break;
 
       case controlKeys.RIGHT:
       case controlKeys.RIGHT_ALT:
-        game.movePlayerRight(60 / 1000);
-        break;
-
-      case controlKeys.DOWN:
-      case controlKeys.DOWN_ALT:
-        playerStore.forceJump = true;
+        if (e.repeat && !canProcessMoveRepeat()) return;
+        handleGameGesture("right");
         break;
 
       case controlKeys.UP:
       case controlKeys.UP_ALT:
-        game.jumpPlayer(60 / 1000);
+        if (processedKeys.has(e.code)) return;
+        processedKeys.add(e.code);
+        handleGameGesture("up");
+        break;
+
+      case controlKeys.DOWN:
+      case controlKeys.DOWN_ALT:
+        if (processedKeys.has(e.code)) return;
+        processedKeys.add(e.code);
+        playerStore.forceJump = true;
         break;
 
       case controlKeys.SPACE:
-        game.shoot();
+        if (processedKeys.has(e.code)) return;
+        processedKeys.add(e.code);
+        handleGameGesture("tap");
         break;
 
       case controlKeys.NITRO:
-        usePlayerStore().enableNitro();
+        if (!isDevMode) return;
+        if (processedKeys.has(e.code)) return;
+        processedKeys.add(e.code);
+        playerStore.enableNitro();
         CarManager.getInstance().enableNitro();
+        CameraSystem.triggerNitroShake();
         break;
 
       case controlKeys.MAGNET:
-        usePlayerStore().enableMagnet([BaseItem]);
+        if (!isDevMode) return;
+        if (processedKeys.has(e.code)) return;
+        processedKeys.add(e.code);
+        playerStore.enableMagnet([BaseItem]);
+        break;
+
+      case controlKeys.REFILL_AMMO:
+        if (!isDevMode || processedKeys.has(e.code)) return;
+        processedKeys.add(e.code);
+        playerStore.fillAmmo(true);
+        break;
+
+      case controlKeys.REFILL_ARMOR:
+        if (!isDevMode || processedKeys.has(e.code)) return;
+        processedKeys.add(e.code);
+        playerStore.fillArmor();
         break;
 
       case controlKeys.ESCAPE:
+        if (processedKeys.has(e.code)) return;
+        processedKeys.add(e.code);
         processEscape();
         break;
 
       case controlKeys.ENTER:
       case controlKeys.ENTER_NUMPAD:
+        if (processedKeys.has(e.code)) return;
+        processedKeys.add(e.code);
         processEnter();
         break;
     }
   }
 
+  function canProcessMoveRepeat(): boolean {
+    const now = performance.now();
+    if (now - lastMoveRepeatTime < MOVE_REPEAT_INTERVAL) return false;
+
+    lastMoveRepeatTime = now;
+    return true;
+  }
+
   function handleKeyUp(e: KeyboardEvent) {
-    // Убираем клавишу из множества обработанных при отпускании
     processedKeys.delete(e.code);
-    if (e.key !== controlKeys.ESCAPE) e.preventDefault();
 
     switch (e.code) {
       case controlKeys.NITRO:
+        if (!isDevMode) return;
         playerStore.disableNitro();
         CarManager.getInstance().disableNitro();
         break;
+
       case controlKeys.DOWN:
       case controlKeys.DOWN_ALT:
         playerStore.forceJump = false;
         break;
-    }
-  }
-
-  // Очистка ресурсов
-  function cleanup() {
-    if (hammerManager) {
-      hammerManager.destroy();
-      hammerManager = null;
-    }
-
-    if (
-      swipeZoneRef.value &&
-      (swipeZoneRef.value as any)._preventScrollHandler
-    ) {
-      swipeZoneRef.value.removeEventListener(
-        "touchmove",
-        (swipeZoneRef.value as any)._preventScrollHandler,
-      );
-      delete (swipeZoneRef.value as any)._preventScrollHandler;
     }
   }
 
@@ -227,13 +276,12 @@ export function useControls(game: ReturnType<typeof useGame>) {
   onUnmounted(() => {
     window.removeEventListener("keydown", handleKeyDown);
     window.removeEventListener("keyup", handleKeyUp);
-    processedKeys.clear(); // Очищаем множество при размонтировании
-    cleanup();
+
+    processedKeys.clear();
+
   });
 
-  // Возвращаем функцию регистрации для использования в компоненте
   return {
-    registerSwipeZone,
-    cleanup,
+    handleTouchControl,
   };
 }
