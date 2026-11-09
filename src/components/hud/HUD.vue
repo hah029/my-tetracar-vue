@@ -41,7 +41,7 @@
         </div>
 
         <!-- Нижняя панель (бустеры) -->
-        <div v-if="showGameplayPanels" class="bottom_panel">
+        <div v-if="showGameplayPanels && !glassStore.isActive" class="bottom_panel">
             <div class="bottom_subpanel">
                 <template v-for="(group, groupIndex) in boosterGroups" :key="group.key">
                     <div class="booster_group" :class="`booster_group--${group.key}`">
@@ -78,7 +78,7 @@
             </div>
         </div>
 
-        <button v-if="showGameplayPanels" class="mobile_fire_button" :class="{ 'mobile_fire_button--ready': hasAmmo }" aria-label="Выстрел"
+        <button v-if="showGameplayPanels && !glassStore.isActive" class="mobile_fire_button" :class="{ 'mobile_fire_button--ready': hasAmmo }" aria-label="Выстрел"
             :disabled="!hasAmmo" @pointerdown.stop.prevent="shoot">
             <img class="mobile_fire_button__icon" src="@/assets/images/hud/cube_bullet.svg" alt="" />
         </button>
@@ -102,6 +102,8 @@ import { SoundManager } from '@/game/sound/SoundManager';
 import TouchZone from './panels/TouchZone.vue';
 import HudNotifications from './panels/HudNotifications.vue';
 import HudEffects from './panels/HudEffects.vue';
+import { useGlassStore } from '@/store/glassStore';
+
 // import CurrencyPanel from "@/components/ui/CurrencyPanel.vue";
 
 const gameStore = useGameState();
@@ -111,6 +113,7 @@ const progressStore = useProgressStore();
 const metaStore = useMetaStore();
 const environmentStore = useEnvironmentStore();
 const foo = createNewText();
+const glassStore = useGlassStore();
 
 function getColorLuminance(hexColor: string): number {
     const normalized = hexColor.replace('#', '').trim();

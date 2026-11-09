@@ -45,6 +45,9 @@ import { useEnvironmentStore } from "@/store/environmentStore";
 import { RunTelemetry } from "@/telemetry";
 import { getObstacleKind } from "@/game/interactive/obstacle/telemetry";
 
+import { useGlassStore } from '@/store/glassStore';
+import type { CubeColor } from '@/game/modes/glass/types';
+
 export function useGame() {
   const playerStore = usePlayerStore();
   const progressStore = useProgressStore();
@@ -69,8 +72,9 @@ export function useGame() {
       progress?: number;
     }[]
   >([]);
-  let sceneRef: THREE.Scene | null = null;
+  const glassStore = useGlassStore();
 
+  let sceneRef: THREE.Scene | null = null;
   let roadManager: RoadManager;
   let carManager: CarManager;
   let obstacleManager: ObstacleManager;
@@ -478,6 +482,7 @@ export function useGame() {
     playerStore.resetGameData();
 
     // reset progress
+    glassStore.reset();
     progressStore.resetScore();
     progressStore.resetDistance();
     progressStore.resetCoins();
@@ -597,6 +602,10 @@ export function useGame() {
     let coins = 1;
     const carPos = car.value.mesh.position;
 
+    if (glassStore.isActive && collision.impactSubject instanceof Golden) {
+        return;
+    }
+
     if (collision.impactSubject instanceof Golden) {
       coins *= playerStore.isNitroEnabled
         ? playerStore.goldenNitroMultiplier
@@ -624,6 +633,49 @@ export function useGame() {
 
   function handleBoosterCollision(collision: CollisionResult): boolean {
     const carPos = car.value.mesh.position;
+
+    // === Стакан: превращаем бустер в кубик и отправляем его в HUD ===
+    if (glassStore.isActive) {
+        const item = collision.impactSubject;
+        let cubeColor: CubeColor | null = null;
+        let flashType: FlashType | null = null;
+        let telemetryType: 'ammo' | 'armor' | 'nitro' | 'magnet' | null = null;
+
+        if (item instanceof BulletItem) {
+            cubeColor = 'bullet'; flashType = 'bullet'; telemetryType = 'ammo';
+        } else if (item instanceof ShieldItem) {
+            cubeColor = 'shield'; flashType = 'shield'; telemetryType = 'armor';
+        } else if (item instanceof NitroItem) {
+            cubeColor = 'nitro'; flashType = 'nitro'; telemetryType = 'nitro';
+        } else if (item instanceof MagnetItem) {
+            cubeColor = 'magnet'; flashType = 'magnet'; telemetryType = 'magnet';
+        }
+
+        if (cubeColor && flashType && telemetryType) {
+            // Точка «машина» — центр по X, ~80% высоты по Y.
+            const startX = window.innerWidth / 2;
+            const startY = window.innerHeight * 0.8;
+            // Точка «очки» — центр верхней панели HUD.
+            const endX = window.innerWidth / 2;
+            const endY = window.innerHeight * 0.06;
+
+            glassStore.queuePickup(cubeColor, startX, startY, endX, endY);
+
+            RunTelemetry.recordItemCollected(telemetryType);
+            spawnFlash(flashType, carPos);
+
+            const cue =
+                cubeColor === 'bullet' ? 'ammoPickup' :
+                cubeColor === 'shield' ? 'shieldPickup' :
+                cubeColor === 'nitro' ? 'nitroPickup' : 'magnetPickup';
+            soundManager.playCue(cue);
+
+            return true;
+        }
+
+        // Неизвестный предмет в режиме стакана — просто убираем.
+        return true;
+    }
 
     if (collision.impactSubject instanceof BulletItem) {
       if (playerStore.ammo >= playerStore.maxAmmo) {

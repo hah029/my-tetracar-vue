@@ -39,6 +39,7 @@
         <div class="actions">
             <button class="menu_btn btn_correction" @click="goBack">назад</button>
             <button class="menu_btn btn_correction primary" @click="startRace">старт</button>
+            <button class="menu_btn btn_correction glass_mode" @click="startGlassRace">стакан</button>
         </div>
     </div>
 </template>
@@ -50,10 +51,12 @@ import { GameStates } from "@/game/core/GameState";
 import type { DifficultyId } from "@/levels/difficulties";
 import type { LevelId } from "@/levels";
 import { SoundManager } from "@/game/sound/SoundManager";
+import { useGlassStore } from '@/store/glassStore';
 
 const gameStore = useGameState();
 const levelStore = useLevelStore();
 const soundManager = SoundManager.getInstance();
+const glassStore = useGlassStore();
 
 function selectLevel(id: string) {
     soundManager.playCue("uiSelect");
@@ -72,6 +75,13 @@ function goBack() {
 
 function startRace() {
     soundManager.playCue("uiSelect");
+    glassStore.deactivate();
+    gameStore.confirmLevelSelection();
+}
+
+function startGlassRace() {
+    soundManager.playCue("uiSelect");
+    glassStore.activate();
     gameStore.confirmLevelSelection();
 }
 </script>
@@ -265,5 +275,9 @@ function startRace() {
         gap: 1rem;
         flex-wrap: wrap;
     }
+}
+
+.glass_mode {
+    color: #b780ff;
 }
 </style>

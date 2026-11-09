@@ -5,6 +5,8 @@
     <!-- UI -->
     <GameLogo />
     <HUD v-if="showHUD" />
+    <GlassTower v-if="showGlass" />
+    <GlassFlyLayer v-if="showGlass" />
     <component :is="getUIComponent" class="ui_components_root" />
     <RightsPanel />
     <TeamLogo />
@@ -69,6 +71,11 @@
     import { GameStates } from "./game/core/GameState";
     import { provide } from 'vue';
     import { usePlayerStore } from "./store/playerStore";
+
+    // механика "Стакан"
+    import GlassTower from '@/components/glass/GlassTower.vue';
+    import GlassFlyLayer from '@/components/glass/GlassFlyLayer.vue';
+    import { useGlassStore } from '@/store/glassStore';
 
     const threeRoot = ref<HTMLDivElement | null>(null);
     const threeInstance = useThree(threeRoot);
@@ -146,6 +153,16 @@
                 return null;
         };
     });
+
+    const glassStore = useGlassStore();
+
+    const showGlass = computed(() =>
+        glassStore.isActive && (
+            gameState.currentState === GameStates.Play ||
+            gameState.currentState === GameStates.Pause ||
+            gameState.currentState === GameStates.Gameover
+        )
+    );
 
     onMounted(async () => {
         const scene = threeInstance.getScene();

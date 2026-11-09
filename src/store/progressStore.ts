@@ -43,6 +43,7 @@ export const useProgressStore = defineStore("progressStore", () => {
       jump: cfg.multipliers.jump,
       reduceShield: cfg.multipliers.obstacleCrushed,
       bulletHit: cfg.multipliers.obstacleCrushed,
+      glassMatch: cfg.multipliers.glassMatch,
     };
 
     const points = amount_ * pointsMapper[type_];

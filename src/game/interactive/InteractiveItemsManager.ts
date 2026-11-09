@@ -41,6 +41,7 @@ import type {
 import { getSegmentsForLevel } from "./segments/SegmentLibrary";
 import type { RoadSegmentSurfaceCurve } from "@/game/environment/road/RoadSegmentSurface";
 import type { RoadRouteAttachment } from "@/game/environment/road/RoadSegmentSurface";
+import { useGlassStore } from '@/store/glassStore';
 
 type ItemSpawnSource = "segment" | "drop";
 
@@ -481,19 +482,26 @@ export class InteractiveItemsManager {
     allowedTypes?: ("golden" | "energon")[],
     source: ItemSpawnSource = "segment",
   ) {
-    const item = this.coinManager.spawnRandom(
-      baseZ,
-      laneIndex,
-      posX,
-      this.getSurfaceItemY(baseZ, laneIndex),
-      undefined,
-      allowedTypes,
-    ) as BaseItem;
-    if (item) {
-      this.addItem(item, source);
-      return item;
-    }
-    return null;
+      const glassActive = useGlassStore().isActive;
+      const filteredTypes = glassActive && allowedTypes
+          ? allowedTypes.filter((t) => t !== "golden")
+          : allowedTypes;
+
+      if (filteredTypes && filteredTypes.length === 0) return null;
+
+      const item = this.coinManager.spawnRandom(
+          baseZ,
+          laneIndex,
+          posX,
+          this.getSurfaceItemY(baseZ, laneIndex),
+          undefined,
+          filteredTypes,
+      ) as BaseItem;
+      if (item) {
+          this.addItem(item, source);
+          return item;
+      }
+      return null;
   }
 
   public spawnEnergonCoin(
@@ -521,17 +529,15 @@ export class InteractiveItemsManager {
     xPos?: number,
     source: ItemSpawnSource = "segment",
   ) {
-    const item = this.coinManager.spawnGolden(
-      baseZ,
-      laneIndex,
-      xPos,
-      this.getSurfaceItemY(baseZ, laneIndex),
-    ) as BaseItem;
-    if (item) {
-      this.addItem(item, source);
-      return item;
-    }
-    return null;
+      if (useGlassStore().isActive) return null;
+      const item = this.coinManager.spawnGolden(
+          baseZ, laneIndex, xPos, this.getSurfaceItemY(baseZ, laneIndex),
+      ) as BaseItem;
+      if (item) {
+          this.addItem(item, source);
+          return item;
+      }
+      return null;
   }
 
   public spawnCoinLine(
@@ -663,6 +669,9 @@ export class InteractiveItemsManager {
   ) {
     const jumpZ = baseZ + this.getJumpDistance(deltaTime, speed);
     this.obstacleManager.spawnJump(lane, jumpZ);
+    
+    if (useGlassStore().isActive) return;
+
     const groundY =
       this.getSurfaceItemY(jumpZ, lane) ?? useCommonStore().baseItemYpos;
 

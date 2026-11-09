@@ -16,6 +16,7 @@ import { CoinItem } from "@/game/interactive/items/coin/CoinItem";
 import { BoosterItem } from "@/game/interactive/items/booster/BoosterItem";
 import type { BaseItem } from "@/game/interactive/items/BaseItem";
 import { RunTelemetry } from "@/telemetry";
+import { useGlassStore } from '@/store/glassStore';
 
 export function GameLoop(
   game: ReturnType<typeof useGame>,
@@ -26,6 +27,7 @@ export function GameLoop(
   const gameState = useGameState();
   const playerStore = usePlayerStore();
   const progressStore = useProgressStore();
+  const glassStore = useGlassStore();
 
   function updateDestruction(
     deltaTime: number,
@@ -105,6 +107,10 @@ export function GameLoop(
               ? carPos
               : undefined;
         updateDestruction(deltaTime, 0, safePosition);
+
+      } else if (glassStore.isOverflow) {
+        gameState.endGame("glass_overflow" as any);
+        
       } else {
         progressStore.addDistance(deltaTime * currentSpeed);
         game.updateInteractiveItems(
